@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "code-repair-agent"
+version = "0.1.0"
+description = "Command-line input validation for Python code repair tasks."
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools]
+py-modules = ["agent_cli"]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
