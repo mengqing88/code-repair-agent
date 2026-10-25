@@ -1,18 +1,32 @@
+# 构建配置：指定由哪个工具将当前项目构建成可安装的 Python 包。
 [build-system]
+# requires：构建时需要的依赖；setuptools 64 起支持此处使用的可编辑安装流程。
 requires = ["setuptools>=64"]
+# build-backend：交由 setuptools 的标准构建后端处理打包和安装。
 build-backend = "setuptools.build_meta"
 
+# 项目元数据：描述包名称、版本、用途及运行依赖。
 [project]
+# name：安装工具识别的发行包名，不要求与 Python 模块名相同。
 name = "code-repair-agent"
+# version：当前项目版本号。
 version = "0.1.0"
+# description：安装工具展示的简短项目说明。
 description = "Command-line input validation for Python code repair tasks."
+# dependencies：运行依赖；当前代码只用标准库，因此为空。
 dependencies = []
 
+# 可选依赖分组：安装时选择对应组，才会额外安装这些工具。
 [project.optional-dependencies]
+# dev：开发依赖组，通过 pip install -e ".[dev]" 安装 pytest。
 dev = ["pytest"]
 
+# setuptools 的打包范围配置。
 [tool.setuptools]
+# py-modules：只打包根目录的 agent_cli.py，不自动收录其他目录或测试模块。
 py-modules = ["agent_cli"]
 
+# pytest 的项目级配置。
 [tool.pytest.ini_options]
+# testpaths：从项目根目录开始收集符合 pytest 命名规则的测试。
 testpaths = ["."]
