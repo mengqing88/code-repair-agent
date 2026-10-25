@@ -13,8 +13,8 @@ name = "code-repair-agent"
 version = "0.1.0"
 # description：安装工具展示的简短项目说明。
 description = "Command-line input validation for Python code repair tasks."
-# dependencies：运行依赖；当前代码只用标准库，因此为空。
-dependencies = []
+# dependencies：运行依赖；openai 提供兼容接口客户端，python-dotenv 读取本地 .env 配置。
+dependencies = ["openai>=2.0,<3.0", "python-dotenv>=1.0,<2.0"]
 
 # 可选依赖分组：安装时选择对应组，才会额外安装这些工具。
 [project.optional-dependencies]
@@ -23,8 +23,8 @@ dev = ["pytest"]
 
 # setuptools 的打包范围配置。
 [tool.setuptools]
-# py-modules：只打包根目录的 agent_cli.py，不自动收录其他目录或测试模块。
-py-modules = ["agent_cli"]
+# py-modules：打包输入校验模块 agent_cli.py 和模型调用模块 llm_client.py，不收录测试模块。
+py-modules = ["agent_cli", "llm_client"]
 
 # pytest 的项目级配置。
 [tool.pytest.ini_options]
