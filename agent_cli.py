@@ -32,8 +32,8 @@ def make_parser() -> argparse.ArgumentParser:
     # 第一个参数是选项名；这些选项默认各接收一个值，例如 --python-file example.py。
     # type=Path 会调用 Path()，把输入的路径字符串转成路径对象；它本身不检查文件是否存在。
     # help 是 --help 显示的选项说明；解析时选项名里的连字符变成下划线。
-    # 此处登记文件选项，解析后的路径保存在 args.python_file 中。
-    source.add_argument("--python-file", type=Path, help="单个 .py 文件的路径")
+    # 此处登记包含 Python 代码的文件选项，扩展名不限；解析后的路径保存在 args.python_file 中。
+    source.add_argument("--python-file", type=Path, help="包含 Python 代码的文本文件路径（扩展名不限）")
     # add_argument() 登记仓库选项，将输入转成 Path 对象并保存到 args.repository。
     source.add_argument("--repository", type=Path, help="Python Git 仓库目录")
     # add_argument() 登记代码文本选项；未指定 type，输入按字符串保存在 args.code_text。
@@ -78,12 +78,9 @@ def read_text_file(path: Path, description: str) -> str:
 def check_source(args: argparse.Namespace) -> dict[str, object]:
     """校验代码来源并返回元数据；args 保存解析后的来源路径、代码文本和 revision。"""
     if args.python_file is not None:
-        # path：用户提供的单个 Python 文件路径。
+        # path：用户提供的 Python 代码文件路径；args.python_file 是解析 --python-file 后生成的属性。
         path = args.python_file
-        # suffix 是 Path 的扩展名属性，例如 .PY；str.lower() 返回小写副本，使检查忽略大小写。
-        if path.suffix.lower() != ".py":
-            # ValueError 表示文件扩展名不满足输入约定。
-            raise ValueError("--python-file 必须指向 .py 文件")
+        # Python 代码可以保存在 .txt 或无扩展名的文件中，因此这里不限制文件后缀。
         # read_text_file() 读取并检查文件非空；这里仅验证输入，不保留返回的源码文本。
         read_text_file(path, "Python 文件")
         if args.revision is not None:
