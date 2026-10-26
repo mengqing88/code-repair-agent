@@ -1,6 +1,7 @@
 """读取本地模型配置，调用兼容 OpenAI 的 Responses API；直接运行可测试连通性。"""
 
-# os：读取进程环境变量；sys：访问标准错误流，便于区分正常回复和错误提示。
+# math：检查向量中的数字是否为有限值；os：读取进程环境变量；sys：访问标准错误流。
+import math
 import os
 import sys
 # Path：表示文件路径；urlsplit：拆分地址，检查 API 地址的协议和主机部分。
@@ -88,6 +89,63 @@ def ask_model(prompt: str, env_path: Path | None = None) -> str:
     if not text.strip():
         raise RuntimeError("模型没有返回文字内容")
     return text
+
+
+def embed_text(text: str, env_path: Path | None = None) -> list[float]:
+    """调用兼容 API 的 embeddings 接口并返回向量；模型名从 EMBEDDING_MODEL 读取。
+
+    参数：
+        text：需要转换为向量的知识库文本，不能是空白字符串。
+        env_path：可选的配置文件路径；不传时读取当前模块旁的 .env。
+
+    返回：
+        非空的浮点数列表；接口错误或返回格式异常时抛出 RuntimeError。
+    """
+    # strip() 只用于判断输入是否为空，不改变发送给服务的原文。
+    if not text.strip():
+        raise ValueError("需要向量化的文本不能为空")
+
+    # 配置读取规则与 ask_model 一致：进程环境变量优先于 .env，密钥不会写入错误信息。
+    config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
+    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
+    api_key = (os.getenv("API_KEY") or settings.get("API_KEY") or "").strip()
+    base_url = (os.getenv("BASE_URL") or settings.get("BASE_URL") or "").strip().rstrip("/")
+    model = (os.getenv("EMBEDDING_MODEL") or settings.get("EMBEDDING_MODEL") or "").strip()
+
+    if not api_key:
+        raise ValueError("请在 .env 或环境变量中填写 API_KEY")
+    if not base_url:
+        raise ValueError("请在 .env 或环境变量中填写 BASE_URL")
+    if not model:
+        raise ValueError("请在 .env 或环境变量中填写 EMBEDDING_MODEL")
+    address = urlsplit(base_url)
+    if address.scheme not in ("http", "https") or not address.netloc:
+        raise ValueError("BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
+
+    try:
+        # embeddings.create() 将输入文本发送到向量接口；返回对象的 data[0].embedding 是向量正文。
+        with OpenAI(api_key=api_key, base_url=base_url, timeout=60.0, max_retries=0) as client:
+            response = client.embeddings.create(model=model, input=text)
+    except APITimeoutError:
+        raise RuntimeError("向量请求超时，请稍后重试") from None
+    except APIConnectionError:
+        raise RuntimeError("无法连接向量服务，请检查 BASE_URL 和网络连接") from None
+    except APIStatusError as error:
+        raise RuntimeError(f"向量服务返回 HTTP {error.status_code}，请检查密钥、嵌入模型权限或服务状态") from None
+
+    data = getattr(response, "data", None)
+    if not isinstance(data, list) or not data:
+        raise RuntimeError("向量服务没有返回 data 数组")
+    embedding = getattr(data[0], "embedding", None)
+    if not isinstance(embedding, list) or not embedding:
+        raise RuntimeError("向量服务没有返回有效 embedding")
+    try:
+        vector = [float(value) for value in embedding]
+    except (TypeError, ValueError):
+        raise RuntimeError("向量服务返回了非数字 embedding") from None
+    if any(not math.isfinite(value) for value in vector):
+        raise RuntimeError("向量服务返回了无效数字")
+    return vector
 
 
 def main() -> int:

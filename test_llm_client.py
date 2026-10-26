@@ -14,8 +14,8 @@ import httpx
 # APIStatusError 和 APITimeoutError 分别模拟服务端拒绝请求和请求超时。
 from openai import APIStatusError, APITimeoutError
 
-# ask_model：被测试的模型调用函数。
-from llm_client import ask_model
+# ask_model：被测试的模型调用函数；embed_text：被测试的向量调用函数。
+from llm_client import ask_model, embed_text
 
 
 # patch.dict(目标字典路径, 替换内容, clear=True) 创建临时替换上下文；clear=True 先清空字典。
@@ -66,6 +66,24 @@ class ModelClientTests(unittest.TestCase):
             # assert_called_once_with() 检查请求发送了模型、提示词和输出限制。
             client.responses.create.assert_called_once_with(
                 model="test-model", input="测试消息", max_output_tokens=4096, store=False
+            )
+
+    def test_embed_text_reads_embedding_model_and_returns_vector(self) -> None:
+        """检查 embeddings 接口使用 EMBEDDING_MODEL 并返回浮点向量。"""
+        self.env_path.write_text(
+            "API_KEY=test-only-key\nBASE_URL=https://example.invalid/v1\n"
+            "MODEL=test-model\nEMBEDDING_MODEL=test-embedding-model\n",
+            encoding="utf-8",
+        )
+        with patch("llm_client.OpenAI") as factory:
+            client = factory.return_value.__enter__.return_value
+            client.embeddings.create.return_value = SimpleNamespace(
+                data=[SimpleNamespace(embedding=[0.25, -0.5, 1])]
+            )
+
+            self.assertEqual(embed_text("待向量化案例", self.env_path), [0.25, -0.5, 1.0])
+            client.embeddings.create.assert_called_once_with(
+                model="test-embedding-model", input="待向量化案例"
             )
 
     def test_environment_variables_override_local_config(self) -> None:

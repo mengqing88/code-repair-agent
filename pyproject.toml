@@ -29,8 +29,8 @@ dev = ["pytest"]
 
 # setuptools 的打包范围配置。
 [tool.setuptools]
-# py-modules：打包 CLI、模型调用、独立错误复现、修复状态和工作流模块，不收录测试模块。
-py-modules = ["agent_cli", "llm_client", "reproduction", "repair_state", "repair_workflow"]
+# py-modules：打包 CLI、模型调用、独立错误复现、修复状态、工作流和知识库模块，不收录测试模块。
+py-modules = ["agent_cli", "llm_client", "reproduction", "repair_state", "repair_workflow", "knowledge_base"]
 
 # pytest 的项目级配置。
 [tool.pytest.ini_options]
