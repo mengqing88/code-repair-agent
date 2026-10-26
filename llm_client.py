@@ -14,8 +14,21 @@ from dotenv import dotenv_values
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
 
+def _read_setting(settings: dict[str, str | None], primary: str, fallback: str | None = None) -> str:
+    """按环境变量优先、配置文件其次的顺序读取一个配置项；可选 fallback 用于兼容旧名称。"""
+    # names：先查新配置名，再查可选的旧配置名；tuple 保证读取顺序固定。
+    names = (primary,) if fallback is None else (primary, fallback)
+    for name in names:
+        # os.getenv() 读取进程环境变量；settings.get() 读取 .env 字典；or 跳过空值并继续回退。
+        value = os.getenv(name) or settings.get(name)
+        if value and value.strip():
+            # strip() 去掉配置值两端的空白，返回可以直接交给 SDK 的字符串。
+            return value.strip()
+    return ""
+
+
 def ask_model(prompt: str, env_path: Path | None = None) -> str:
-    """发送文字并返回模型回复；prompt 是发送内容，env_path 可指定配置文件，默认用本模块旁的 .env。"""
+    """发送文字并返回模型回复；prompt 是发送内容，env_path 可指定配置文件。"""
     # str.strip() 返回去掉两端空格、换行等空白的新字符串，不修改原 prompt；空字符串视为 False。
     if not prompt.strip():
         # 内置 ValueError 表示调用者传入的内容不符合要求。
@@ -28,31 +41,27 @@ def ask_model(prompt: str, env_path: Path | None = None) -> str:
     # dotenv_values(路径, ...) 读取配置，返回“配置名 -> 值”的字典，不修改进程环境变量。
     # encoding 指定文本解码方式；interpolate=False 保留原始值，不展开值中的变量引用。
     settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
-    # api_key：访问模型服务的密钥，只交给客户端认证，不写入输出。
-    # os.getenv("API_KEY") 返回环境变量值，未设置时返回 None；settings.get("API_KEY") 读取字典项。
-    # dict.get(键) 在键缺失时返回 None，不会抛出 KeyError；or 依次选择非空值，最后用空字符串兜底。
-    # 非空的进程环境变量优先于 .env；strip() 去掉配置值两端的多余空白。
-    api_key = (os.getenv("API_KEY") or settings.get("API_KEY") or "").strip()
-    # base_url：服务商的 API 根地址，例如 https://tokenrhythm.studio/v1。
-    # getenv()/get() 仍按环境变量、配置字典的顺序取值；strip() 去掉地址两端空白。
-    # str.rstrip("/") 返回去掉末尾所有 / 的新字符串，不移除开头或中间的 /；/responses 路径由 SDK 添加。
-    base_url = (os.getenv("BASE_URL") or settings.get("BASE_URL") or "").strip().rstrip("/")
+    # api_key：聊天模型服务的密钥；新配置名是 CHAT_API_KEY，API_KEY 只作为旧配置回退。
+    api_key = _read_setting(settings, "CHAT_API_KEY", "API_KEY")
+    # base_url：聊天模型 API 根地址；CHAT_BASE_URL 优先，BASE_URL 只作为旧配置回退。
+    # rstrip("/") 去掉地址末尾斜杠，避免 SDK 拼接路径时产生双斜杠。
+    base_url = _read_setting(settings, "CHAT_BASE_URL", "BASE_URL").rstrip("/")
     # model：服务商提供的准确模型 ID，与界面显示名称可能不同。
     # getenv()/get() 读取 MODEL；strip() 返回去掉模型名两端空白的字符串。
     model = (os.getenv("MODEL") or settings.get("MODEL") or "").strip()
 
     # ValueError 报告配置缺失，提示配置项名称，不显示密钥内容。
     if not api_key:
-        raise ValueError("请在 .env 或环境变量中填写 API_KEY")
+        raise ValueError("请在 .env 或环境变量中填写 CHAT_API_KEY")
     if not base_url:
-        raise ValueError("请在 .env 或环境变量中填写 BASE_URL")
+        raise ValueError("请在 .env 或环境变量中填写 CHAT_BASE_URL")
     if not model:
         raise ValueError("请在 .env 或环境变量中填写 MODEL")
     # address：urlsplit(base_url) 返回 SplitResult 对象，仅拆分 URL，不发送网络请求。
     # .scheme 是协议属性，.netloc 是主机和可选端口属性；它们是数据属性，不是方法。
     address = urlsplit(base_url)
     if address.scheme not in ("http", "https") or not address.netloc:
-        raise ValueError("BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
+        raise ValueError("CHAT_BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
 
     try:
         # client：OpenAI(...) 返回的接口客户端；api_key 用于认证，base_url 指向用户指定的兼容服务。
@@ -74,7 +83,7 @@ def ask_model(prompt: str, env_path: Path | None = None) -> str:
         # RuntimeError 表示运行时调用失败；from None 隐藏底层异常链，避免输出认证细节。
         raise RuntimeError("模型请求超时，请稍后重试") from None
     except APIConnectionError:
-        raise RuntimeError("无法连接模型服务，请检查 BASE_URL 和网络连接") from None
+        raise RuntimeError("无法连接模型服务，请检查 CHAT_BASE_URL 和网络连接") from None
     # error：HTTP 错误对象；status_code 属性是 HTTP 状态码，例如 401 或 429。
     except APIStatusError as error:
         # 不直接显示服务商的原始响应体，以免其中包含敏感内容。
@@ -108,19 +117,22 @@ def embed_text(text: str, env_path: Path | None = None) -> list[float]:
     # 配置读取规则与 ask_model 一致：进程环境变量优先于 .env，密钥不会写入错误信息。
     config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
     settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
-    api_key = (os.getenv("API_KEY") or settings.get("API_KEY") or "").strip()
-    base_url = (os.getenv("BASE_URL") or settings.get("BASE_URL") or "").strip().rstrip("/")
-    model = (os.getenv("EMBEDDING_MODEL") or settings.get("EMBEDDING_MODEL") or "").strip()
+    # api_key：向量服务的密钥；EMBEDDING_API_KEY 优先，API_KEY 只作为旧配置回退。
+    api_key = _read_setting(settings, "EMBEDDING_API_KEY", "API_KEY")
+    # base_url：向量服务 API 根地址；EMBEDDING_BASE_URL 优先，BASE_URL 只作为旧配置回退。
+    base_url = _read_setting(settings, "EMBEDDING_BASE_URL", "BASE_URL").rstrip("/")
+    # model：向量模型 ID；EMBEDDING_MODEL 没有旧的同义配置名，因此只读取这一项。
+    model = _read_setting(settings, "EMBEDDING_MODEL")
 
     if not api_key:
-        raise ValueError("请在 .env 或环境变量中填写 API_KEY")
+        raise ValueError("请在 .env 或环境变量中填写 EMBEDDING_API_KEY")
     if not base_url:
-        raise ValueError("请在 .env 或环境变量中填写 BASE_URL")
+        raise ValueError("请在 .env 或环境变量中填写 EMBEDDING_BASE_URL")
     if not model:
         raise ValueError("请在 .env 或环境变量中填写 EMBEDDING_MODEL")
     address = urlsplit(base_url)
     if address.scheme not in ("http", "https") or not address.netloc:
-        raise ValueError("BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
+        raise ValueError("EMBEDDING_BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
 
     try:
         # embeddings.create() 将输入文本发送到向量接口；返回对象的 data[0].embedding 是向量正文。
@@ -129,7 +141,7 @@ def embed_text(text: str, env_path: Path | None = None) -> list[float]:
     except APITimeoutError:
         raise RuntimeError("向量请求超时，请稍后重试") from None
     except APIConnectionError:
-        raise RuntimeError("无法连接向量服务，请检查 BASE_URL 和网络连接") from None
+        raise RuntimeError("无法连接向量服务，请检查 EMBEDDING_BASE_URL 和网络连接") from None
     except APIStatusError as error:
         raise RuntimeError(f"向量服务返回 HTTP {error.status_code}，请检查密钥、嵌入模型权限或服务状态") from None
 

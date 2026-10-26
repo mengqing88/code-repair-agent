@@ -38,7 +38,7 @@ class ModelClientTests(unittest.TestCase):
         # write_text(文本, encoding="utf-8") 创建或覆盖配置文件，返回写入的字符数；这里不使用返回值。
         # example.invalid 是用于测试的无效域名，测试中也会用模拟客户端阻止网络访问。
         self.env_path.write_text(
-            "API_KEY=test-only-key\nBASE_URL=https://example.invalid/v1\nMODEL=test-model\n",
+            "CHAT_API_KEY=chat-test-only-key\nCHAT_BASE_URL=https://chat.example.invalid/v1\nMODEL=test-model\n",
             encoding="utf-8",
         )
 
@@ -58,8 +58,8 @@ class ModelClientTests(unittest.TestCase):
             # Mock.assert_called_once_with(参数...) 要求模拟对象恰好调用一次，且参数完全匹配，否则测试失败。
             # 这里检查客户端构造器收到的配置、超时秒数和重试次数。
             factory.assert_called_once_with(
-                api_key="test-only-key",
-                base_url="https://example.invalid/v1",
+                api_key="chat-test-only-key",
+                base_url="https://chat.example.invalid/v1",
                 timeout=60.0,
                 max_retries=0,
             )
@@ -71,7 +71,9 @@ class ModelClientTests(unittest.TestCase):
     def test_embed_text_reads_embedding_model_and_returns_vector(self) -> None:
         """检查 embeddings 接口使用 EMBEDDING_MODEL 并返回浮点向量。"""
         self.env_path.write_text(
-            "API_KEY=test-only-key\nBASE_URL=https://example.invalid/v1\n"
+            "CHAT_API_KEY=chat-test-only-key\nCHAT_BASE_URL=https://chat.example.invalid/v1\n"
+            "EMBEDDING_API_KEY=embedding-test-only-key\n"
+            "EMBEDDING_BASE_URL=https://embedding.example.invalid/v1\n"
             "MODEL=test-model\nEMBEDDING_MODEL=test-embedding-model\n",
             encoding="utf-8",
         )
@@ -82,6 +84,12 @@ class ModelClientTests(unittest.TestCase):
             )
 
             self.assertEqual(embed_text("待向量化案例", self.env_path), [0.25, -0.5, 1.0])
+            factory.assert_called_once_with(
+                api_key="embedding-test-only-key",
+                base_url="https://embedding.example.invalid/v1",
+                timeout=60.0,
+                max_retries=0,
+            )
             client.embeddings.create.assert_called_once_with(
                 model="test-embedding-model", input="待向量化案例"
             )
@@ -92,7 +100,11 @@ class ModelClientTests(unittest.TestCase):
         # patch() 同时将 OpenAI 名称替换成模拟对象 factory，阻止创建真实客户端。
         with patch.dict(
             "llm_client.os.environ",
-            {"API_KEY": "environment-key", "BASE_URL": "https://other.invalid/v1/", "MODEL": "other-model"},
+            {
+                "CHAT_API_KEY": "environment-chat-key",
+                "CHAT_BASE_URL": "https://other-chat.invalid/v1/",
+                "MODEL": "other-model",
+            },
         ), patch("llm_client.OpenAI") as factory:
             # client：模拟客户端；return_value 指定调用方法时要返回的对象。
             client = factory.return_value.__enter__.return_value
@@ -102,20 +114,42 @@ class ModelClientTests(unittest.TestCase):
             ask_model("测试消息", self.env_path)
             # assertEqual() 检查传给构造器的密钥和去掉末尾斜杠后的地址。
             # call_args.kwargs 是最近一次模拟调用的关键字参数字典。
-            self.assertEqual(factory.call_args.kwargs["api_key"], "environment-key")
-            self.assertEqual(factory.call_args.kwargs["base_url"], "https://other.invalid/v1")
+            self.assertEqual(factory.call_args.kwargs["api_key"], "environment-chat-key")
+            self.assertEqual(factory.call_args.kwargs["base_url"], "https://other-chat.invalid/v1")
             # assertEqual() 检查接口请求使用了环境变量中的模型 ID。
             self.assertEqual(client.responses.create.call_args.kwargs["model"], "other-model")
+
+    def test_legacy_config_names_are_used_as_fallback(self) -> None:
+        """检查只有旧配置名时，聊天和向量调用仍能兼容已有 .env。"""
+        self.env_path.write_text(
+            "API_KEY=legacy-test-only-key\nBASE_URL=https://legacy.example.invalid/v1\n"
+            "MODEL=test-model\nEMBEDDING_MODEL=test-embedding-model\n",
+            encoding="utf-8",
+        )
+        with patch("llm_client.OpenAI") as factory:
+            client = factory.return_value.__enter__.return_value
+            client.responses.create.return_value = SimpleNamespace(status="completed", output_text="正常")
+            client.embeddings.create.return_value = SimpleNamespace(
+                data=[SimpleNamespace(embedding=[1.0, 0.0])]
+            )
+
+            ask_model("测试消息", self.env_path)
+            embed_text("待向量化案例", self.env_path)
+
+            self.assertEqual(factory.call_args_list[0].kwargs["api_key"], "legacy-test-only-key")
+            self.assertEqual(factory.call_args_list[0].kwargs["base_url"], "https://legacy.example.invalid/v1")
+            self.assertEqual(factory.call_args_list[1].kwargs["api_key"], "legacy-test-only-key")
+            self.assertEqual(factory.call_args_list[1].kwargs["base_url"], "https://legacy.example.invalid/v1")
 
     def test_missing_key_stops_before_creating_client(self) -> None:
         """检查缺少密钥时先提示配置错误，不创建网络客户端。"""
         # write_text() 覆盖临时配置，保留地址和模型，故意去掉密钥。
-        self.env_path.write_text("BASE_URL=https://example.invalid/v1\nMODEL=test-model\n", encoding="utf-8")
+        self.env_path.write_text("CHAT_BASE_URL=https://chat.example.invalid/v1\nMODEL=test-model\n", encoding="utf-8")
         # factory：patch() 临时替换的 OpenAI 模拟构造器，用来确认配置不全时没有创建客户端。
         with patch("llm_client.OpenAI") as factory:
             # assertRaisesRegex(异常类型, 正则表达式) 返回断言上下文，要求 with 中抛出类型和消息匹配的异常。
-            # 异常没发生、类型或消息不匹配都会使测试失败；这里要求 ValueError 的消息包含 API_KEY。
-            with self.assertRaisesRegex(ValueError, "API_KEY"):
+            # 异常没发生、类型或消息不匹配都会使测试失败；这里要求 ValueError 的消息包含 CHAT_API_KEY。
+            with self.assertRaisesRegex(ValueError, "CHAT_API_KEY"):
                 # ask_model() 读取缺少密钥的临时配置，预期在请求模型之前抛出配置错误。
                 ask_model("测试消息", self.env_path)
             # Mock.assert_not_called() 要求模拟对象的调用次数为 0，否则测试失败。
@@ -124,11 +158,13 @@ class ModelClientTests(unittest.TestCase):
     def test_invalid_url_stops_before_creating_client(self) -> None:
         """检查没有协议和主机的地址会在发送请求前被拒绝。"""
         # write_text() 将临时地址改成无效值，保留测试用假密钥。
-        self.env_path.write_text("API_KEY=test-only-key\nBASE_URL=invalid\nMODEL=test-model\n", encoding="utf-8")
+        self.env_path.write_text(
+            "CHAT_API_KEY=chat-test-only-key\nCHAT_BASE_URL=invalid\nMODEL=test-model\n", encoding="utf-8"
+        )
         # patch() 在本次 with 内用 factory 模拟 OpenAI 构造器，退出时恢复原对象。
         with patch("llm_client.OpenAI") as factory:
-            # assertRaisesRegex() 核对配置错误类型和消息中的 BASE_URL。
-            with self.assertRaisesRegex(ValueError, "BASE_URL"):
+            # assertRaisesRegex() 核对配置错误类型和消息中的 CHAT_BASE_URL。
+            with self.assertRaisesRegex(ValueError, "CHAT_BASE_URL"):
                 # ask_model() 读取无效地址，预期抛出 ValueError，不发送请求。
                 ask_model("测试消息", self.env_path)
             # assert_not_called() 确认没有创建客户端。
@@ -154,7 +190,7 @@ class ModelClientTests(unittest.TestCase):
             # APITimeoutError(request=...) 创建 SDK 超时异常对象，赋给 side_effect 后 create() 调用会抛出它。
             # httpx.Request("POST", 地址) 仅创建请求信息对象，不发送请求；供超时异常记录请求信息使用。
             client.responses.create.side_effect = APITimeoutError(
-                request=httpx.Request("POST", "https://example.invalid/v1/responses")
+                request=httpx.Request("POST", "https://chat.example.invalid/v1/responses")
             )
             # assertRaisesRegex() 检查输出异常是 RuntimeError，且消息说明超时。
             with self.assertRaisesRegex(RuntimeError, "请求超时"):
@@ -169,7 +205,9 @@ class ModelClientTests(unittest.TestCase):
             client = factory.return_value.__enter__.return_value
             # httpx.Request() 创建请求信息对象；httpx.Response(401, request=...) 创建与该请求关联的响应对象。
             # 状态码 401 表示认证未通过，这两个构造调用都不发送网络请求。
-            response = httpx.Response(401, request=httpx.Request("POST", "https://example.invalid/v1/responses"))
+            response = httpx.Response(
+                401, request=httpx.Request("POST", "https://chat.example.invalid/v1/responses")
+            )
             # APIStatusError() 构造包含假密钥的异常，检查它不会出现在对外错误消息中。
             client.responses.create.side_effect = APIStatusError(
                 "sensitive test-only-key", response=response, body={"error": "sensitive test-only-key"}
