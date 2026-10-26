@@ -33,13 +33,26 @@ def fenced(text: str, language: str = "text") -> str:
 
 
 def model_json(prompt: str, model_call: Callable[[str], str]) -> dict[str, object]:
-    """调用 model_call 处理 prompt 并解析 JSON 对象；格式不合法时拒绝继续执行。"""
+    """调用模型并解析 JSON 对象；格式不合法时拒绝继续执行。
+
+    参数：
+        prompt：发送给模型的提示词字符串，说明本次任务及期望的回复格式。
+        model_call：负责调用模型的函数；接收一个提示词字符串，返回模型回复字符串。
+            这里传入函数本身，由 model_json 内部调用；测试时可以传入模拟函数。
+
+    返回：
+        模型回复中的 JSON 对象解析成的 Python 字典。
+    """
     # model_call(prompt) 调用传入的模型函数，参数是提示词，返回模型回复字符串。
     # text：模型的回复；str.strip() 返回去除两端空格、换行等空白后的新字符串，不改动中间内容。
+    # strip(chars=None) 的 chars 指定从两端去除的字符集合；这里不传参数，默认去除空白字符。
     text = model_call(prompt).strip()
     # 模型有时会给 JSON 加 Markdown 围栏；围栏可能有三个、四个或更多反引号。
-    # fenced_reply：re.fullmatch(正则表达式, 文本, flags=匹配选项) 检查整个文本是否符合格式。
-    # 匹配成功返回 Match 对象，失败返回 None；re.DOTALL 让表达式中的 . 也能匹配换行。
+    # fenced_reply：re.fullmatch(pattern, string, flags=0) 检查整个文本是否符合格式。
+    # 第一个参数 pattern 是正则表达式，也就是匹配规则；这里用下面的 r"..." 描述围栏格式。
+    # 第二个参数 string 是待检查的完整字符串；这里传入 text，也就是去掉两端空白的模型回复。
+    # flags 是可选的匹配选项，默认 0；这里用 flags=re.DOTALL，让规则中的 . 也能匹配换行。
+    # 匹配成功返回 Match 对象，失败返回 None；r 前缀让 Python 保留字符串中的反斜杠交给正则解释。
     # (?P<fence>`{3,}) 用 fence 这个名字保存开头至少三个反引号，{3,} 表示出现三次或更多。
     # (?:json)? 表示可选的 json 标签，不单独保存；\r?\n 同时兼容 Windows 和通常的换行。
     # (?P<body>.*?) 用 body 保存正文；.*? 尽量少取字符，直到后面的换行和结尾围栏能够匹配。
@@ -48,17 +61,22 @@ def model_json(prompt: str, model_call: Callable[[str], str]) -> dict[str, objec
         r"(?P<fence>`{3,})(?:json)?\r?\n(?P<body>.*?)\r?\n(?P=fence)", text, flags=re.DOTALL,
     )
     if fenced_reply is not None:
-        # Match.group("body") 返回正文分组的字符串；strip() 去除正文两端空白，不改动内部反引号。
+        # Match.group(分组名或编号) 读取匹配结果中的某一组；参数 "body" 对应上面 (?P<body>...) 的名字。
+        # group("body") 返回正文字符串；strip() 不传 chars 参数，去除正文两端空白，保留内部反引号。
         text = fenced_reply.group("body").strip()
     try:
         # value：json.loads(text) 将 JSON 文本解析为 Python 对象；对象、数组分别变成 dict、list。
+        # 第一个参数 s 是待解析的 JSON 文本；这里传入 text，内容应已去除外层围栏。
         # JSON 语法不合法时抛出 JSONDecodeError，由下面的 except 转成易读的错误提示。
         value = json.loads(text)
     except json.JSONDecodeError:
         # RuntimeError 表示模型没有按协议返回；不把未解析的文字作为程序执行。
+        # RuntimeError(错误消息) 的字符串参数是异常的说明，供调用者捕获后显示或记录。
         raise RuntimeError("模型未返回有效 JSON，已停止复现") from None
-    # isinstance() 检查对象类型，禁止将列表、数字等误当成协议字典。
+    # isinstance(object, classinfo) 检查类型，返回 True 或 False；object 是待检查的对象，这里是 value。
+    # classinfo 是要求的类型，这里传入 dict（字典类型），禁止将列表、数字等误当成协议字典。
     if not isinstance(value, dict):
+        # RuntimeError() 的字符串参数说明本次错误：JSON 虽合法，但最外层不是要求的对象。
         raise RuntimeError("模型返回的复现数据必须是 JSON 对象")
     return value
 
