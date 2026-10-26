@@ -4,6 +4,8 @@
 import math
 import os
 import sys
+# dataclass：定义不可变的模型调用结果，集中保存回复和用量统计。
+from dataclasses import dataclass
 # Path：表示文件路径；urlsplit：拆分地址，检查 API 地址的协议和主机部分。
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -12,6 +14,19 @@ from urllib.parse import urlsplit
 from dotenv import dotenv_values
 # OpenAI：兼容接口客户端；其他三个类分别表示连接失败、HTTP 错误和请求超时。
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
+
+
+@dataclass(frozen=True)
+class ModelCallResult:
+    """模型文字回复及本次调用的用量统计；费用无法估算时使用 None。"""
+
+    # text：模型返回的完整文字；input_tokens、output_tokens：服务端记录的输入和输出 Token 数。
+    text: str
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    # cost_yuan：按 .env 中的价格配置估算的人民币费用，没有价格配置时为 None。
+    cost_yuan: float | None
 
 
 def _read_setting(settings: dict[str, str | None], primary: str, fallback: str | None = None) -> str:
@@ -27,8 +42,49 @@ def _read_setting(settings: dict[str, str | None], primary: str, fallback: str |
     return ""
 
 
-def ask_model(prompt: str, env_path: Path | None = None) -> str:
-    """发送文字并返回模型回复；prompt 是发送内容，env_path 可指定配置文件。"""
+def _read_optional_rate(settings: dict[str, str | None], name: str) -> float | None:
+    """读取可选的每千 Token 价格；未配置返回 None，配置非法则抛出 ValueError。"""
+    # value：从环境变量或 .env 读取价格文字；环境变量优先，便于部署时覆盖本地配置。
+    value = os.getenv(name) or settings.get(name)
+    if value is None or not value.strip():
+        return None
+    try:
+        # float() 将配置文字转换成浮点数；价格允许使用小数，但不能是负数或无穷值。
+        rate = float(value.strip())
+    except ValueError:
+        raise ValueError(f"{name} 必须是非负有限数字") from None
+    if not math.isfinite(rate) or rate < 0:
+        raise ValueError(f"{name} 必须是非负有限数字")
+    return rate
+
+
+def _usage_value(usage: object, name: str) -> int:
+    """读取 SDK usage 对象中的非负整数；服务端未返回时按 0 处理。"""
+    # getattr() 读取对象属性；没有 usage 或没有字段时返回 None，不让统计逻辑影响文本解析。
+    value = getattr(usage, name, None)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return 0
+    return value
+
+
+def _estimate_cost_yuan(
+    settings: dict[str, str | None], input_tokens: int, output_tokens: int,
+) -> float | None:
+    """按每千 Token 价格估算费用；没有任何价格配置时返回 None。"""
+    # input_rate、output_rate：分别读取输入和输出 Token 的人民币价格；单位都是元/千 Token。
+    input_rate = _read_optional_rate(settings, "CHAT_INPUT_PRICE_PER_1K_TOKENS")
+    output_rate = _read_optional_rate(settings, "CHAT_OUTPUT_PRICE_PER_1K_TOKENS")
+    # total_rate：兼容只配置一个总 Token 价格的简化场景。
+    total_rate = _read_optional_rate(settings, "CHAT_PRICE_PER_1K_TOKENS")
+    if input_rate is None and output_rate is None and total_rate is None:
+        return None
+    if total_rate is not None:
+        return (input_tokens + output_tokens) / 1000 * total_rate
+    return input_tokens / 1000 * (input_rate or 0.0) + output_tokens / 1000 * (output_rate or 0.0)
+
+
+def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCallResult:
+    """发送文字并返回模型回复及用量；prompt 是发送内容，env_path 可指定配置文件。"""
     # str.strip() 返回去掉两端空格、换行等空白的新字符串，不修改原 prompt；空字符串视为 False。
     if not prompt.strip():
         # 内置 ValueError 表示调用者传入的内容不符合要求。
@@ -97,7 +153,24 @@ def ask_model(prompt: str, env_path: Path | None = None) -> str:
     # strip() 仅用于检测回复是否为空白，不改动 text；通过检查后仍返回原始回复全文。
     if not text.strip():
         raise RuntimeError("模型没有返回文字内容")
-    return text
+    # usage：Responses API 返回的 Token 统计对象；旧服务或测试响应没有该字段时使用空对象。
+    usage = getattr(response, "usage", None)
+    input_tokens = _usage_value(usage, "input_tokens")
+    output_tokens = _usage_value(usage, "output_tokens")
+    total_tokens = _usage_value(usage, "total_tokens") or input_tokens + output_tokens
+    return ModelCallResult(
+        text=text,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        cost_yuan=_estimate_cost_yuan(settings, input_tokens, output_tokens),
+    )
+
+
+def ask_model(prompt: str, env_path: Path | None = None) -> str:
+    """发送文字并只返回模型回复，保持旧调用方的字符串接口。"""
+    # ask_model_with_usage() 负责请求、错误处理和统计；这里只取兼容旧接口所需的 text 字段。
+    return ask_model_with_usage(prompt, env_path).text
 
 
 def embed_text(text: str, env_path: Path | None = None) -> list[float]:
