@@ -18,7 +18,8 @@ from openai import APIStatusError, APITimeoutError
 from llm_client import ask_model
 
 
-# patch.dict() 临时清空环境变量，使测试只使用临时配置；不读取真实 API Key。
+# patch.dict(目标字典路径, 替换内容, clear=True) 创建临时替换上下文；clear=True 先清空字典。
+# 这里测试期间清空环境变量，使模型调用只使用临时配置；退出后恢复原环境，不读取真实 API Key。
 # 作为类装饰器使用时，它会在每个 test_ 方法执行期间生效。
 @patch.dict("llm_client.os.environ", {}, clear=True)
 # unittest.TestCase 是测试基类，提供 assertEqual()、assertRaisesRegex() 等断言。
@@ -27,13 +28,14 @@ class ModelClientTests(unittest.TestCase):
 
     def setUp(self) -> None:
         """为每个测试创建一份独立的临时配置，仅填写用于测试的假密钥。"""
-        # self.directory：TemporaryDirectory() 创建的临时目录管理对象。
+        # self.directory：TemporaryDirectory() 创建的临时目录管理对象，.name 属性是目录路径字符串。
         self.directory = tempfile.TemporaryDirectory()
-        # addCleanup() 登记清理函数；cleanup() 在测试结束时删除该临时目录。
+        # addCleanup(清理函数) 将函数登记到当前测试实例，返回 None；测试结束时自动调用。
+        # self.directory.cleanup 是方法对象，没有括号表示暂不执行；之后调用 cleanup() 时删除临时目录。
         self.addCleanup(self.directory.cleanup)
         # self.env_path：临时配置文件路径；Path() 转成路径对象，/ 拼接文件名。
         self.env_path = Path(self.directory.name) / ".env"
-        # write_text() 创建配置文件；encoding="utf-8" 指定文本编码。
+        # write_text(文本, encoding="utf-8") 创建或覆盖配置文件，返回写入的字符数；这里不使用返回值。
         # example.invalid 是用于测试的无效域名，测试中也会用模拟客户端阻止网络访问。
         self.env_path.write_text(
             "API_KEY=test-only-key\nBASE_URL=https://example.invalid/v1\nMODEL=test-model\n",
@@ -42,16 +44,19 @@ class ModelClientTests(unittest.TestCase):
 
     def test_reads_config_sends_prompt_and_returns_text(self) -> None:
         """检查配置能传给客户端，提示词能传给 Responses 接口，回复文字能返回给调用者。"""
-        # factory：patch() 替换后的 OpenAI 构造器，负责返回模拟客户端。
+        # patch("llm_client.OpenAI") 创建替换上下文；进入 with 时用 Mock 对象替换指定名称，退出时恢复。
+        # factory：进入 with 得到的模拟构造器；调用时返回 factory.return_value，不创建真实网络客户端。
         with patch("llm_client.OpenAI") as factory:
             # client：模拟 with OpenAI(...) as client 得到的对象；__enter__ 是进入 with 时调用的方法。
             client = factory.return_value.__enter__.return_value
-            # SimpleNamespace() 创建带 status、output_text 属性的对象，模拟一次成功响应。
+            # SimpleNamespace(status=..., output_text=...) 返回带这两个属性的简单对象，模拟一次成功响应。
             client.responses.create.return_value = SimpleNamespace(status="completed", output_text="连接成功")
 
-            # assertEqual() 检查模型函数返回了模拟服务给出的文字。
+            # ask_model(提示词, 配置路径) 返回模型回复字符串；此处模型客户端已被模拟对象替换。
+            # assertEqual(实际值, 期望值) 要求两者相等，不相等则测试失败。
             self.assertEqual(ask_model("测试消息", self.env_path), "连接成功")
-            # assert_called_once_with() 检查构造器仅调用一次，且配置和超时设置正确。
+            # Mock.assert_called_once_with(参数...) 要求模拟对象恰好调用一次，且参数完全匹配，否则测试失败。
+            # 这里检查客户端构造器收到的配置、超时秒数和重试次数。
             factory.assert_called_once_with(
                 api_key="test-only-key",
                 base_url="https://example.invalid/v1",
@@ -65,14 +70,17 @@ class ModelClientTests(unittest.TestCase):
 
     def test_environment_variables_override_local_config(self) -> None:
         """检查进程环境变量可覆盖本地配置，避免部署时被 .env 的旧值覆盖。"""
-        # patch.dict() 临时提供三项环境变量；factory 是模拟的客户端构造器。
+        # patch.dict() 临时写入给定的三项环境变量，退出 with 后恢复；未指定 clear=True 时保留其他键。
+        # patch() 同时将 OpenAI 名称替换成模拟对象 factory，阻止创建真实客户端。
         with patch.dict(
             "llm_client.os.environ",
             {"API_KEY": "environment-key", "BASE_URL": "https://other.invalid/v1/", "MODEL": "other-model"},
         ), patch("llm_client.OpenAI") as factory:
             # client：模拟客户端；return_value 指定调用方法时要返回的对象。
             client = factory.return_value.__enter__.return_value
+            # SimpleNamespace() 创建带响应属性的对象，指定模拟 create() 返回正常回复。
             client.responses.create.return_value = SimpleNamespace(status="completed", output_text="正常")
+            # ask_model() 读取环境变量和临时配置并调用模拟客户端；此处只检查调用参数，不使用返回值。
             ask_model("测试消息", self.env_path)
             # assertEqual() 检查传给构造器的密钥和去掉末尾斜杠后的地址。
             # call_args.kwargs 是最近一次模拟调用的关键字参数字典。
@@ -85,53 +93,64 @@ class ModelClientTests(unittest.TestCase):
         """检查缺少密钥时先提示配置错误，不创建网络客户端。"""
         # write_text() 覆盖临时配置，保留地址和模型，故意去掉密钥。
         self.env_path.write_text("BASE_URL=https://example.invalid/v1\nMODEL=test-model\n", encoding="utf-8")
-        # factory：用于确认构造器没有被调用的模拟对象。
+        # factory：patch() 临时替换的 OpenAI 模拟构造器，用来确认配置不全时没有创建客户端。
         with patch("llm_client.OpenAI") as factory:
-            # assertRaisesRegex() 要求下面的调用抛出 ValueError，且消息包含 API_KEY。
+            # assertRaisesRegex(异常类型, 正则表达式) 返回断言上下文，要求 with 中抛出类型和消息匹配的异常。
+            # 异常没发生、类型或消息不匹配都会使测试失败；这里要求 ValueError 的消息包含 API_KEY。
             with self.assertRaisesRegex(ValueError, "API_KEY"):
+                # ask_model() 读取缺少密钥的临时配置，预期在请求模型之前抛出配置错误。
                 ask_model("测试消息", self.env_path)
-            # assert_not_called() 检查模拟对象从未被调用。
+            # Mock.assert_not_called() 要求模拟对象的调用次数为 0，否则测试失败。
             factory.assert_not_called()
 
     def test_invalid_url_stops_before_creating_client(self) -> None:
         """检查没有协议和主机的地址会在发送请求前被拒绝。"""
         # write_text() 将临时地址改成无效值，保留测试用假密钥。
         self.env_path.write_text("API_KEY=test-only-key\nBASE_URL=invalid\nMODEL=test-model\n", encoding="utf-8")
+        # patch() 在本次 with 内用 factory 模拟 OpenAI 构造器，退出时恢复原对象。
         with patch("llm_client.OpenAI") as factory:
             # assertRaisesRegex() 核对配置错误类型和消息中的 BASE_URL。
             with self.assertRaisesRegex(ValueError, "BASE_URL"):
+                # ask_model() 读取无效地址，预期抛出 ValueError，不发送请求。
                 ask_model("测试消息", self.env_path)
             # assert_not_called() 确认没有创建客户端。
             factory.assert_not_called()
 
     def test_empty_prompt_stops_before_creating_client(self) -> None:
         """检查只有空白的提示词不能触发模型请求。"""
+        # patch() 临时替换客户端构造器；factory 记录是否有人尝试创建客户端。
         with patch("llm_client.OpenAI") as factory:
             # assertRaisesRegex() 核对空内容的错误提示。
             with self.assertRaisesRegex(ValueError, "内容不能为空"):
+                # ask_model() 收到空白提示词，应在创建客户端之前报错。
                 ask_model("   \n", self.env_path)
             # assert_not_called() 确认没有创建客户端。
             factory.assert_not_called()
 
     def test_timeout_reports_a_readable_error(self) -> None:
         """检查 SDK 超时异常会转换为简洁的中文错误。"""
+        # patch() 临时用模拟对象 factory 替换客户端构造器。
         with patch("llm_client.OpenAI") as factory:
             # client：模拟客户端；httpx.Request() 只构造请求信息，不发送网络请求。
             client = factory.return_value.__enter__.return_value
-            # side_effect 指定调用模拟方法时抛出的异常；request 提供 SDK 异常需要的请求对象。
+            # APITimeoutError(request=...) 创建 SDK 超时异常对象，赋给 side_effect 后 create() 调用会抛出它。
+            # httpx.Request("POST", 地址) 仅创建请求信息对象，不发送请求；供超时异常记录请求信息使用。
             client.responses.create.side_effect = APITimeoutError(
                 request=httpx.Request("POST", "https://example.invalid/v1/responses")
             )
             # assertRaisesRegex() 检查输出异常是 RuntimeError，且消息说明超时。
             with self.assertRaisesRegex(RuntimeError, "请求超时"):
+                # ask_model() 遇到模拟的 SDK 超时后，应将其转换成面向用户的 RuntimeError。
                 ask_model("测试消息", self.env_path)
 
     def test_http_error_does_not_expose_the_response_body(self) -> None:
         """检查认证失败会提示 HTTP 状态码，同时隐藏原始异常中的敏感文字。"""
+        # patch() 临时替换 OpenAI 构造器，以便指定模拟 create() 抛出的异常。
         with patch("llm_client.OpenAI") as factory:
             # client：模拟客户端；response：构造给 APIStatusError 使用的 HTTP 响应对象。
             client = factory.return_value.__enter__.return_value
-            # httpx.Response() 仅创建响应对象；status_code=401 表示认证未通过。
+            # httpx.Request() 创建请求信息对象；httpx.Response(401, request=...) 创建与该请求关联的响应对象。
+            # 状态码 401 表示认证未通过，这两个构造调用都不发送网络请求。
             response = httpx.Response(401, request=httpx.Request("POST", "https://example.invalid/v1/responses"))
             # APIStatusError() 构造包含假密钥的异常，检查它不会出现在对外错误消息中。
             client.responses.create.side_effect = APIStatusError(
@@ -139,8 +158,9 @@ class ModelClientTests(unittest.TestCase):
             )
             # caught：断言上下文，exception 属性保存被捕获的异常对象。
             with self.assertRaisesRegex(RuntimeError, "HTTP 401") as caught:
+                # ask_model() 收到模拟的 HTTP 错误后，应抛出包含状态码、隐藏原响应正文的 RuntimeError。
                 ask_model("测试消息", self.env_path)
-            # assertNotIn() 检查字符串不包含假密钥；内置 str() 将异常转换为提示文字。
+            # assertNotIn(成员, 容器) 要求成员不在容器中，否则测试失败；str() 将异常转为提示字符串。
             self.assertNotIn("test-only-key", str(caught.exception))
 
     def test_incomplete_or_empty_reply_is_rejected(self) -> None:
@@ -150,17 +170,19 @@ class ModelClientTests(unittest.TestCase):
             ("incomplete", "未写完", "未完成回复"),
             ("completed", "   ", "没有返回文字"),
         ):
-            # subTest() 为循环中的每个情形分别记录测试结果；factory 替换客户端构造器。
+            # self.subTest(status=status) 创建子测试上下文，按 status 分别记录循环中每个情形的结果。
+            # patch() 在该子测试内用 factory 替换客户端构造器，退出后恢复。
             with self.subTest(status=status), patch("llm_client.OpenAI") as factory:
                 # client：本轮模拟的客户端；SimpleNamespace() 构造对应的响应属性。
                 client = factory.return_value.__enter__.return_value
                 client.responses.create.return_value = SimpleNamespace(status=status, output_text=text)
                 # assertRaisesRegex() 检查该情形出现对应的运行错误。
                 with self.assertRaisesRegex(RuntimeError, message):
+                    # ask_model() 检查模拟响应；状态未完成或回复为空时，应抛出对应提示的 RuntimeError。
                     ask_model("测试消息", self.env_path)
 
 
 # __name__ 为 __main__ 时表示直接运行该测试文件。
 if __name__ == "__main__":
-    # unittest.main() 发现并运行本文件中的测试。
+    # unittest.main() 创建测试运行器、发现并执行本文件测试，并以执行结果设置进程退出码。
     unittest.main()

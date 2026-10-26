@@ -35,6 +35,7 @@ def make_parser() -> argparse.ArgumentParser:
     # 第一个参数是选项名；这些选项默认各接收一个值，例如 --python-file example.py。
     # type=Path 会调用 Path()，把输入的路径字符串转成路径对象；它本身不检查文件是否存在。
     # help 是 --help 显示的选项说明；解析时选项名里的连字符变成下划线。
+    # add_argument() 返回表示该选项规则的 Action 对象；这里仅登记规则，不使用返回值。
     # 此处登记包含 Python 代码的文件选项，扩展名不限；解析后的路径保存在 args.python_file 中。
     source.add_argument("--python-file", type=Path, help="包含 Python 代码的文本文件路径（扩展名不限）")
     # add_argument() 登记仓库选项，将输入转成 Path 对象并保存到 args.repository。
@@ -106,8 +107,9 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
         if args.revision is None:
             # ValueError 表示仓库输入缺少必需的固定版本。
             raise ValueError("使用 --repository 时必须提供固定版本 --revision")
-        # 内置 len() 计算 ID 长度；any() 在任意字符非法时返回 True。
-        # character：生成器每次从 revision 中取出的一个字符，用于十六进制校验。
+        # 内置 len() 返回 ID 的字符数；any() 在生成器产生任意一个 True 时返回 True，否则返回 False。
+        # character：生成器每次从 revision 中取出的一个字符；character not in ... 检查它是否不是十六进制字符。
+        # for ... 逐个检查字符，不需要先构建完整列表；any() 遇到非法字符后就可以停止检查。
         if len(args.revision) not in (40, 64) or any(
             character not in "0123456789abcdefABCDEF" for character in args.revision
         ):
@@ -117,7 +119,7 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
             "type": "git_repository",
             # Path.resolve() 取得绝对路径并解析符号链接；内置 str() 将其转换为字符串。
             "path": str(path.resolve()),
-            # str.lower() 返回小写形式的 ID，让输入中的 A～F 统一变成 a～f。
+            # str.lower() 返回字母全部转为小写的新字符串，让输入中的 A～F 统一变成 a～f；不修改原值。
             "revision": args.revision.lower(),
             "revision_check": "仅检查了 ID 格式；尚未检查该 commit 是否存在",
         }
@@ -165,9 +167,9 @@ def check_error_report(args: argparse.Namespace) -> dict[str, object]:
 
 def build_result(args: argparse.Namespace) -> dict[str, object]:
     """接收参数对象 args，汇总校验后的输入和输出占位说明，返回结果字典。"""
-    # source：标准化后的代码来源元数据，包含类型、路径或字符数等信息。
+    # source：check_source(args) 校验代码来源后返回的元数据字典，包含类型、路径或字符数等信息。
     source = check_source(args)
-    # error_report：标准化后的错误信息来源元数据；错误报告是必需输入。
+    # error_report：check_error_report(args) 校验必需的错误报告后返回的来源元数据字典。
     error_report = check_error_report(args)
 
     return {
@@ -204,18 +206,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     # 互斥规则、必填规则或参数格式出错时，parse_args() 会显示提示并以退出码 2 退出。
     args = parser.parse_args(argv)
     try:
-        # result：通过校验后待输出的结果字典。
+        # result：build_result(args) 调用输入校验并返回汇总字典，其中保留尚未生成产物的占位说明。
         result = build_result(args)
         # error_report_text：读取的原始报告文字，供独立复现工作文档保存；不会执行报告中的代码。
         error_report_text = get_error_report_text(args)
         # reproduction：检查源码副本和原始报告的结果；需要用户确认时会附带具体问题。
         # project_root：仓库输入使用仓库目录，单文件输入使用文件所在目录，粘贴代码使用当前目录。
         if args.repository is not None:
+            # Path.resolve() 返回规范化的绝对路径，并解析符号链接；不创建或修改目标目录。
             project_root = args.repository.resolve()
         elif args.python_file is not None:
+            # resolve() 先取得文件的绝对路径；.parent 是该路径的父目录属性，不需要调用括号。
             project_root = args.python_file.resolve().parent
         else:
+            # Path.cwd() 返回当前进程工作目录的绝对 Path 对象；它是 Path 类提供的方法。
             project_root = Path.cwd()
+        # reproduce() 根据来源、报告和粘贴代码执行复现流程，返回状态、结论及工作文档路径等记录。
+        # work_root 指定文档保存目录，Path 的 / 运算把 project_root 与 work 拼成新路径。
         reproduction = reproduce(
             source=result["input"]["source"],
             error_report=error_report_text,
@@ -223,6 +230,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             work_root=project_root / "work",
         )
         # 向用户提供复现结论和工作文档地址；完整执行日志另存于任务目录中。
+        # dict.get(键, 默认值) 在键存在时返回对应值，键缺失时返回默认值；这里用空字符串兜底。
         result["reproduction"] = {
             "status": reproduction["status"],
             "conclusion": reproduction.get("conclusion", ""),
@@ -251,5 +259,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 # __name__ 是 Python 设置的模块名，只有直接运行本文件时才等于 __main__。
 if __name__ == "__main__":
-    # 内置异常类 SystemExit 结束进程，并把 main() 的返回值作为退出码。
+    # main() 不传参数时读取真实命令行并运行 CLI，正常结束返回整数 0。
+    # 内置异常类 SystemExit(退出码) 创建终止进程的异常；raise 抛出它，把 main() 的返回值作为退出码。
     raise SystemExit(main())
