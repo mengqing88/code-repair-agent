@@ -7,6 +7,10 @@
 # hashlib：根据补丁正文计算稳定哈希；json：把状态数据编码为模型提示词中的 JSON。
 import hashlib
 import json
+# math：检查模型回调提供的费用是否为有限数。
+import math
+# time：测量每个外部节点的实际耗时，并从任务总运行预算中扣除。
+import time
 # Callable：标注服务回调的输入和返回值；dataclass：组织不可变配置对象；Mapping：表示字典式返回值。
 from dataclasses import dataclass
 from typing import Callable, Mapping
@@ -14,8 +18,8 @@ from typing import Callable, Mapping
 # END、START：LangGraph 图的结束和起点；StateGraph：根据状态类型创建状态图。
 from langgraph.graph import END, START, StateGraph
 
-# ask_model：读取 .env 并调用兼容 OpenAI 的模型服务；model_json：解析模型返回的 JSON 对象。
-from llm_client import ask_model
+# ModelCallResult、ask_model_with_usage：调用模型并取得回复及用量；model_json：解析模型返回的 JSON 对象。
+from llm_client import ModelCallResult, ask_model_with_usage
 from reproduction import model_json
 # RepairState：所有节点共享的状态结构。
 from repair_state import RepairState
@@ -41,6 +45,80 @@ class RepairServices:
     validate_patch: Callable[[RepairState], Mapping[str, object]]
     # save_case：人工接受后保存修复经验；失败时不能标记任务成功。
     save_case: Callable[[RepairState], None]
+
+
+def _record_elapsed(state: RepairState, elapsed: float) -> dict[str, object]:
+    """把本节点耗时累计到状态，并同步扣减剩余运行秒数。"""
+    # remaining：复制预算字典，避免节点直接修改 LangGraph 传入的旧状态。
+    remaining = dict(state["remaining_budget"])
+    # safe_elapsed：time.monotonic() 的差值应为非负数；max() 防止系统异常造成预算增加。
+    safe_elapsed = max(0.0, float(elapsed))
+    # elapsed_total：get() 兼容没有该字段的旧状态快照，默认从 0 秒开始累计。
+    elapsed_total = float(state.get("elapsed_seconds", 0.0)) + safe_elapsed
+    # seconds_left：剩余秒数不能降到负数，0 表示时间预算已耗尽。
+    seconds_left = max(0.0, float(remaining.get("seconds", 0.0)) - safe_elapsed)
+    remaining["seconds"] = seconds_left
+    return {"elapsed_seconds": elapsed_total, "remaining_budget": remaining}
+
+
+def _budget_exceeded(state: RepairState, message: str) -> dict[str, object]:
+    """生成统一的预算耗尽更新，阻止当前节点继续产生副作用。"""
+    return {"status": "budget_exceeded", "last_error": message}
+
+
+def _time_available(state: RepairState) -> bool:
+    """判断是否还有正数的自动运行时间。"""
+    # get() 兼容旧状态；预算缺失按 0 处理，避免没有时间限制时误放行。
+    return float(state["remaining_budget"].get("seconds", 0.0)) > 0
+
+
+def _model_usage(result: Mapping[str, object]) -> tuple[int, float | None]:
+    """读取模型回调返回的 Token 和费用字段；缺少字段表示本次无法统计。"""
+    # usage：模型适配器返回的 token_usage 字典；没有统计时保持 0，不猜测 Token 数。
+    usage = result.get("token_usage")
+    total_tokens = 0
+    if usage is not None:
+        if not isinstance(usage, Mapping):
+            raise WorkflowContractError("token_usage 必须是字典")
+        value = usage.get("total_tokens", 0)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise WorkflowContractError("token_usage.total_tokens 必须是非负整数")
+        total_tokens = value
+    # cost：estimated_cost 是模型适配器根据价格配置估算的人民币费用。
+    cost = result.get("estimated_cost")
+    if cost is not None:
+        if (
+            isinstance(cost, bool)
+            or not isinstance(cost, (int, float))
+            or not math.isfinite(float(cost))
+            or cost < 0
+        ):
+            raise WorkflowContractError("estimated_cost 必须是非负数字")
+        cost = float(cost)
+    return total_tokens, cost
+
+
+def _charge_model_budget(
+    state: RepairState, result: Mapping[str, object], update: dict[str, object],
+) -> dict[str, object]:
+    """扣减一次模型调用的 Token 和费用，并在超限时停止后续节点。"""
+    total_tokens, cost = _model_usage(result)
+    # remaining：复制带有秒数、Token、尝试次数和费用的完整预算快照。
+    # 优先使用本节点已经扣减耗时后的预算，避免模型扣减覆盖运行时间扣减。
+    remaining = dict(update.get("remaining_budget", state["remaining_budget"]))
+    tokens_left = int(remaining.get("tokens", 0))
+    cost_left = float(remaining.get("cost", 0.0))
+    # new_tokens/new_cost：即使本次超限也记录扣减后的下限，便于最终报告显示实际预算状态。
+    new_tokens = max(0, tokens_left - total_tokens)
+    new_cost = max(0.0, cost_left - (cost or 0.0))
+    remaining["tokens"] = new_tokens
+    remaining["cost"] = new_cost
+    update["remaining_budget"] = remaining
+    if total_tokens > tokens_left:
+        update.update(_budget_exceeded(state, "模型 Token 预算已耗尽。"))
+    elif cost is not None and cost > cost_left:
+        update.update(_budget_exceeded(state, "模型费用预算已耗尽。"))
+    return update
 
 
 def _mapping(value: object, name: str) -> dict[str, object]:
@@ -69,13 +147,14 @@ def _optional_question(data: Mapping[str, object]) -> str | None:
 
 
 def llm_propose_patch(
-    state: RepairState, model_call: Callable[[str], str] = ask_model,
+    state: RepairState,
+    model_call: Callable[[str], str | ModelCallResult] = ask_model_with_usage,
 ) -> Mapping[str, object]:
     """调用模型生成候选补丁；补丁哈希由程序计算，不信任模型自行填写的哈希。
 
     参数：
         state：当前工作流状态，包含报告、复现记录和代码证据。
-        model_call：接收提示词并返回模型文字的函数；默认使用 ask_model，测试时可替换。
+        model_call：接收提示词并返回模型文字或 ModelCallResult 的函数；测试时可替换。
 
     返回：
         包含 diagnosis、patch_diff 和 patch_hash 的字典，可直接作为 propose_patch 回调。
@@ -103,24 +182,57 @@ def llm_propose_patch(
         "patch_diff（完整 unified diff；无法提出可靠补丁时返回空字符串）。\n"
         + json.dumps(payload, ensure_ascii=False, default=str)
     )
-    # model_json() 负责调用模型并校验最外层是 JSON 对象，也支持模型返回的 Markdown JSON 围栏。
-    result = model_json(prompt, model_call)
+    # response：模型调用结果；带用量的适配器返回 ModelCallResult，旧测试回调仍可直接返回字符串。
+    response = model_call(prompt)
+    if isinstance(response, ModelCallResult):
+        # model_text：只把模型文字交给 JSON 解析器，统计字段由程序单独保存。
+        model_text = response.text
+    elif isinstance(response, str):
+        model_text = response
+    else:
+        raise WorkflowContractError("模型调用必须返回字符串或 ModelCallResult")
+    # model_json() 校验最外层是 JSON 对象，也支持模型返回的 Markdown JSON 围栏；lambda 只返回已取得的文字，避免二次调用模型。
+    result = model_json(prompt, lambda _: model_text)
     diagnosis = _required_string(result, "diagnosis")
     patch_diff = _required_string(result, "patch_diff")
     # sha256() 创建 SHA-256 哈希对象；hexdigest() 返回便于保存和比较的十六进制字符串。
     patch_hash = hashlib.sha256(patch_diff.encode("utf-8")).hexdigest()
-    return {"diagnosis": diagnosis, "patch_diff": patch_diff, "patch_hash": patch_hash}
+    update: dict[str, object] = {
+        "diagnosis": diagnosis, "patch_diff": patch_diff, "patch_hash": patch_hash,
+    }
+    if isinstance(response, ModelCallResult):
+        update["token_usage"] = {
+            "input_tokens": response.input_tokens,
+            "output_tokens": response.output_tokens,
+            "total_tokens": response.total_tokens,
+        }
+        if response.cost_yuan is not None:
+            update["estimated_cost"] = response.cost_yuan
+    return update
 
 
 def baseline_reproduction_node(state: RepairState, services: RepairServices) -> dict[str, object]:
     """执行基线复现；成功后进入上下文收集，无法确认时暂停等待用户。"""
-    result = _mapping(services.reproduce(state), "reproduce")
+    if not _time_available(state):
+        return _budget_exceeded(state, "自动运行时间预算已耗尽，无法开始复现。")
+    started = time.monotonic()
+    try:
+        raw_result = services.reproduce(state)
+    except Exception as error:  # noqa: BLE001 - 复现服务失败必须记录耗时和错误。
+        update = _record_elapsed(state, time.monotonic() - started)
+        update.update(status="failed", last_error=f"复现服务失败：{error}")
+        return update
+    timing = _record_elapsed(state, time.monotonic() - started)
+    if timing["remaining_budget"]["seconds"] <= 0:  # type: ignore[index]
+        timing.update(_budget_exceeded(state, "自动运行时间预算已耗尽，复现完成后停止流程。"))
+        return timing
+    result = _mapping(raw_result, "reproduce")
     matched = result.get("matched")
     record = result.get("record")
     if not isinstance(matched, bool) or not isinstance(record, Mapping):
         raise WorkflowContractError("reproduce 必须返回 bool 类型 matched 和字典类型 record")
 
-    update: dict[str, object] = {"reproduction": dict(record), "question": None}
+    update: dict[str, object] = {**timing, "reproduction": dict(record), "question": None}
     question = _optional_question(result)
     if question is not None:
         update["question"] = question
@@ -134,12 +246,25 @@ def baseline_reproduction_node(state: RepairState, services: RepairServices) -> 
 
 def collect_context_node(state: RepairState, services: RepairServices) -> dict[str, object]:
     """读取代码证据并检索案例；没有案例仍然可以继续常规诊断。"""
-    result = _mapping(services.collect_context(state), "collect_context")
+    if not _time_available(state):
+        return _budget_exceeded(state, "自动运行时间预算已耗尽，无法收集上下文。")
+    started = time.monotonic()
+    try:
+        raw_result = services.collect_context(state)
+    except Exception as error:  # noqa: BLE001 - 上下文服务失败必须记录耗时和错误。
+        update = _record_elapsed(state, time.monotonic() - started)
+        update.update(status="failed", last_error=f"上下文收集失败：{error}")
+        return update
+    timing = _record_elapsed(state, time.monotonic() - started)
+    if timing["remaining_budget"]["seconds"] <= 0:  # type: ignore[index]
+        timing.update(_budget_exceeded(state, "自动运行时间预算已耗尽，上下文收集完成后停止流程。"))
+        return timing
+    result = _mapping(raw_result, "collect_context")
     evidence = result.get("code_evidence", [])
     matches = result.get("case_matches", [])
     if not isinstance(evidence, list) or not isinstance(matches, list):
         raise WorkflowContractError("collect_context 必须返回列表类型的 code_evidence 和 case_matches")
-    update: dict[str, object] = {"code_evidence": evidence, "case_matches": matches, "question": None}
+    update: dict[str, object] = {**timing, "code_evidence": evidence, "case_matches": matches, "question": None}
     question = _optional_question(result)
     if question is not None:
         update["question"] = question
@@ -151,31 +276,57 @@ def collect_context_node(state: RepairState, services: RepairServices) -> dict[s
 
 def analyze_and_propose_node(state: RepairState, services: RepairServices) -> dict[str, object]:
     """调用模型或其他诊断服务，生成当前尝试的根因说明和候选补丁。"""
+    if not _time_available(state):
+        return _budget_exceeded(state, "自动运行时间预算已耗尽，无法调用模型。")
+    if int(state["remaining_budget"].get("tokens", 0)) <= 0:
+        return _budget_exceeded(state, "模型 Token 预算已耗尽，无法调用模型。")
+    if float(state["remaining_budget"].get("cost", 0.0)) < 0:
+        return _budget_exceeded(state, "模型费用预算配置无效，无法调用模型。")
+    started = time.monotonic()
     try:
         result = _mapping(services.propose_patch(state), "propose_patch")
     except Exception as error:  # noqa: BLE001 - 模型配置、网络和协议错误都要写入状态。
-        return {"status": "failed", "last_error": f"模型分析失败：{error}"}
+        update = _record_elapsed(state, time.monotonic() - started)
+        update.update(status="failed", last_error=f"模型分析失败：{error}")
+        return update
     update = {
+        **_record_elapsed(state, time.monotonic() - started),
         "diagnosis": _required_string(result, "diagnosis"),
         "patch_diff": _required_string(result, "patch_diff"),
         "patch_hash": _required_string(result, "patch_hash"),
         "status": "repairing",
         "last_error": None,
     }
+    update = _charge_model_budget(state, result, update)
+    if update.get("status") != "budget_exceeded" and update["remaining_budget"]["seconds"] <= 0:  # type: ignore[index]
+        update.update(_budget_exceeded(state, "自动运行时间预算已耗尽，模型分析完成后停止流程。"))
     return update
 
 
 def apply_patch_node(state: RepairState, services: RepairServices) -> dict[str, object]:
     """应用候选补丁；补丁应用失败时结束任务，不让验证节点误报结果。"""
+    if not _time_available(state):
+        return _budget_exceeded(state, "自动运行时间预算已耗尽，无法应用补丁。")
+    started = time.monotonic()
     try:
         services.apply_patch(state)
     except Exception as error:  # noqa: BLE001 - 工作流需要把服务失败写入状态。
-        return {"status": "failed", "last_error": f"补丁应用失败：{error}"}
-    return {"status": "validating", "last_error": None}
+        update = _record_elapsed(state, time.monotonic() - started)
+        update.update(status="failed", last_error=f"补丁应用失败：{error}")
+        return update
+    update = _record_elapsed(state, time.monotonic() - started)
+    if update["remaining_budget"]["seconds"] <= 0:  # type: ignore[index]
+        update.update(_budget_exceeded(state, "自动运行时间预算已耗尽，补丁应用完成后停止流程。"))
+        return update
+    update.update(status="validating", last_error=None)
+    return update
 
 
 def validate_patch_node(state: RepairState, services: RepairServices) -> dict[str, object]:
     """运行独立测试并按结果决定审核、重试或失败。"""
+    if not _time_available(state):
+        return _budget_exceeded(state, "自动运行时间预算已耗尽，无法运行测试。")
+    started = time.monotonic()
     try:
         validation = _mapping(services.validate_patch(state), "validate_patch")
     except Exception as error:  # noqa: BLE001 - 环境或测试服务失败必须留下可解释状态。
@@ -185,10 +336,16 @@ def validate_patch_node(state: RepairState, services: RepairServices) -> dict[st
             "summary": f"验证服务失败：{error}",
             "report_path": "",
         }
+    timing = _record_elapsed(state, time.monotonic() - started)
+    if timing["remaining_budget"]["seconds"] <= 0:  # type: ignore[index]
+        timing.update(validation=validation)
+        timing.update(_budget_exceeded(state, "自动运行时间预算已耗尽，测试完成后停止流程。"))
+        return timing
 
     expected_hash = state["patch_hash"]
     if validation.get("patch_hash") != expected_hash:
         return {
+            **timing,
             "status": "failed",
             "validation": validation,
             "last_error": "验证结果对应的补丁哈希与当前补丁不一致。",
@@ -196,12 +353,13 @@ def validate_patch_node(state: RepairState, services: RepairServices) -> dict[st
     passed = validation.get("passed")
     if not isinstance(passed, (bool, type(None))):
         return {
+            **timing,
             "status": "failed",
             "validation": validation,
             "last_error": "验证结果的 passed 字段必须是 True、False 或 None。",
         }
 
-    update: dict[str, object] = {"validation": validation, "question": None}
+    update: dict[str, object] = {**timing, "validation": validation, "question": None}
     if passed is True:
         update["status"] = "reviewable"
         return update
@@ -230,11 +388,21 @@ def review_patch_node(state: RepairState) -> dict[str, object]:
 
 def save_case_node(state: RepairState, services: RepairServices) -> dict[str, object]:
     """保存用户接受的修复经验；保存失败时保留失败状态和错误原因。"""
+    if not _time_available(state):
+        return _budget_exceeded(state, "自动运行时间预算已耗尽，无法保存修复经验。")
+    started = time.monotonic()
     try:
         services.save_case(state)
     except Exception as error:  # noqa: BLE001 - 保存失败不能伪造成成功。
-        return {"status": "failed", "last_error": f"保存修复经验失败：{error}"}
-    return {"status": "succeeded", "memory_saved": True, "last_error": None}
+        update = _record_elapsed(state, time.monotonic() - started)
+        update.update(status="failed", last_error=f"保存修复经验失败：{error}")
+        return update
+    update = _record_elapsed(state, time.monotonic() - started)
+    if update["remaining_budget"]["seconds"] <= 0:  # type: ignore[index]
+        update.update(_budget_exceeded(state, "自动运行时间预算已耗尽，修复经验保存完成后停止流程。"))
+        return update
+    update.update(status="succeeded", memory_saved=True, last_error=None)
+    return update
 
 
 def reject_patch_node(state: RepairState) -> dict[str, object]:
