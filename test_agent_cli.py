@@ -139,18 +139,24 @@ class AgentCliTests(unittest.TestCase):
                 "evidence": "1",
                 "question": "",
             }, ensure_ascii=False)
+            # patch：模拟修复模型返回的诊断和 unified diff；临时工作区没有 .git，后续会验证失败状态。
+            patch = json.dumps({
+                "diagnosis": "x 的初始值与错误报告不一致。",
+                "patch_diff": "diff --git a/target.py b/target.py\n--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-x = 1\n+x = 2\n",
+            }, ensure_ascii=False)
             # bootstrap：子进程启动代码；将项目路径加入导入路径，用固定回复替代网络调用。
             # str(script.parent) 将脚本父目录转成字符串；f 字符串的 !r 相当于 repr()，保留引号和转义。
             # 生成代码中的 sys.path.insert(0, 路径) 在模块搜索列表开头插入项目目录，返回 None。
-            # responses：iter((plan, comparison)) 创建依次提供两条回复的迭代器。
+            # responses：iter((plan, comparison, patch)) 创建依次提供三条回复的迭代器。
             # next(responses) 每次取出一条回复，耗尽时抛出 StopIteration；lambda 定义接收 prompt 的匿名函数。
             # prompt 是模拟函数收到但不使用的提示词；agent_cli.main(sys.argv[1:]) 读取传入的 CLI 参数。
             # sys.argv[1:] 跳过启动代码名；SystemExit() 将 main() 返回的整数作为子进程退出码。
             bootstrap = (
                 "import json, sys; "
                 f"sys.path.insert(0, {str(script.parent)!r}); "
-                f"responses = iter(({plan!r}, {comparison!r})); "
+                f"responses = iter(({plan!r}, {comparison!r}, {patch!r})); "
                 "import reproduction; reproduction.ask_model = lambda prompt: next(responses); "
+                "import repair_workflow; repair_workflow.ask_model_with_usage = lambda prompt: next(responses); "
                 "import agent_cli; raise SystemExit(agent_cli.main(sys.argv[1:]))"
             )
             # completed：子进程执行结果，保存退出码、标准输出和标准错误。
@@ -189,8 +195,12 @@ class AgentCliTests(unittest.TestCase):
             # assertIn() 检查工作文档保留了原始错误报告。
             self.assertIn("x 应为 2，实际为 1", document)
 
-        # assertEqual() 检查 CLI 状态表示已复现问题，但尚未进入补丁修复阶段。
-        self.assertEqual(result["status"], "错误已复现；尚未开始修复")
+        # assertEqual() 检查 CLI 状态表示完整工作流已经运行到补丁应用阶段。
+        # 临时目录不是 Git 仓库，因此补丁应用按预期失败并保留失败状态。
+        self.assertEqual(result["status"], "修复失败")
+        self.assertEqual(result["workflow"]["status"], "failed")
+        self.assertIn(".git", result["workflow"]["last_error"])
+        self.assertIn("diff --git", result["outputs"]["patch"])
 
     def test_error_report_is_required(self) -> None:
         """检查只提供代码而没有错误报告时，参数解析会拒绝任务。"""
