@@ -104,6 +104,10 @@ class RepairState(TypedDict):
     # question：需要向用户确认的具体问题；last_error：流程异常的说明，没有时为 None。
     question: str | None
     last_error: str | None
+    # review_decision：人工审核结果；pending 表示工作流已暂停等待用户，不能自动当作接受。
+    review_decision: Literal["pending", "accepted", "rejected"]
+    # memory_saved：用户接受后是否已经保存修复经验，初始为 False。
+    memory_saved: bool
 
 
 def create_initial_state(
@@ -150,4 +154,6 @@ def create_initial_state(
         },
         "question": None,
         "last_error": None,
+        "review_decision": "pending",
+        "memory_saved": False,
     }
