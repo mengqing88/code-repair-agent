@@ -14,6 +14,19 @@ from agent_cli import build_result, make_parser
 class AgentCliTests(unittest.TestCase):
     """集中测试输入接收器；各方法的 self 表示当前测试实例，提供断言方法。"""
 
+    def test_code_source_can_be_used_without_error_report(self) -> None:
+        """只提供代码来源时也能生成结果，并将错误报告标记为 None。"""
+        # args：只包含代码来源的解析结果；错误报告互斥组没有提供任何选项。
+        # make_parser() 创建解析器；parse_args() 允许省略可选的错误报告组。
+        args = make_parser().parse_args(["--code-text", "x = 1"])
+
+        # result：代码来源校验通过后的结果字典；build_result() 会保留 None 这个明确状态。
+        result = build_result(args)
+
+        # assertEqual() 检查代码来源正常识别，并确认没有错误报告。
+        self.assertEqual(result["input"]["source"]["type"], "pasted_code")
+        self.assertIsNone(result["input"]["error_report"])
+
     def test_pasted_code_and_error_text_return_all_output_placeholders(self) -> None:
         """输入粘贴代码和错误文字，检查来源类型及全部输出占位字段。"""
         # args：由模拟命令行生成的参数对象；代码字符串仅作为输入，不执行。

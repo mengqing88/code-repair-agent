@@ -18,7 +18,7 @@ from typing import Sequence
 
 
 def make_parser() -> argparse.ArgumentParser:
-    """定义 CLI 参数并返回解析器；代码来源须三选一，错误报告来源须二选一。"""
+    """定义 CLI 参数并返回解析器；代码来源须三选一，错误报告来源可不提供或二选一。"""
     # parser：保存全部参数规则，并负责解析参数、输出帮助和参数错误。
     # argparse.ArgumentParser() 创建命令行解析器；description 是 --help 显示的程序说明。
     parser = argparse.ArgumentParser(
@@ -47,9 +47,9 @@ def make_parser() -> argparse.ArgumentParser:
         help="仓库的固定完整 commit ID（40 或 64 位十六进制字符）",
     )
 
-    # report：错误报告来源互斥组，要求文件和直接输入文字二者恰好选一个。
-    # add_mutually_exclusive_group(required=True) 再建一个独立的互斥组，约束错误来源。
-    report = parser.add_mutually_exclusive_group(required=True)
+    # report：错误报告来源互斥组；可不提供，也不能同时提供文件和直接输入文字。
+    # add_mutually_exclusive_group() 创建互斥组；这里不设置 required=True，所以整组可以省略。
+    report = parser.add_mutually_exclusive_group()
     # add_argument() 登记报告文件选项；type=Path 将值转成路径，保存到 args.error_file。
     report.add_argument("--error-file", type=Path, help="错误报告文件的路径")
     # add_argument() 登记错误文本选项，将输入的字符串保存到 args.error_text。
@@ -131,8 +131,8 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
     return {"type": "pasted_code", "character_count": len(args.code_text)}
 
 
-def check_error_report(args: argparse.Namespace) -> dict[str, object]:
-    """校验错误信息并返回元数据；args 保存错误报告文件路径或直接输入的错误文本。"""
+def check_error_report(args: argparse.Namespace) -> dict[str, object] | None:
+    """校验可选的错误信息并返回元数据；未提供时返回 None。"""
     if args.error_file is not None:
         # content：读到的错误报告原文，用于确认非空并统计字符数。
         content = read_text_file(args.error_file, "错误报告")
@@ -144,6 +144,11 @@ def check_error_report(args: argparse.Namespace) -> dict[str, object]:
             "character_count": len(content),
         }
 
+    # args.error_text：解析 --error-text 后保存的文本；未提供时为 None。
+    # if 判断 None 可以避免对不存在的错误文本调用 strip()。
+    if args.error_text is None:
+        # None 表示用户没有提供错误报告；这不是错误，调用者可以继续处理代码来源。
+        return None
     # str.strip() 临时去掉两端空白，用来识别空文本或只有空白的错误描述。
     if not args.error_text.strip():
         # ValueError 表示直接输入的错误信息为空或只有空白。
@@ -156,7 +161,7 @@ def build_result(args: argparse.Namespace) -> dict[str, object]:
     """接收参数对象 args，汇总校验后的输入和输出占位说明，返回结果字典。"""
     # source：标准化后的代码来源元数据，包含类型、路径或字符数等信息。
     source = check_source(args)
-    # error_report：标准化后的错误信息来源元数据。
+    # error_report：标准化后的错误信息来源元数据；没有提供错误报告时为 None。
     error_report = check_error_report(args)
 
     return {
