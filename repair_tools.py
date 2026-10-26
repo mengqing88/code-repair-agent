@@ -21,7 +21,7 @@ from pathlib import Path, PurePosixPath
 import re
 from typing import Any, Callable, Mapping, Sequence
 
-from knowledge_base import KnowledgeBaseError, build_case_document
+from knowledge_base import KnowledgeBaseError, build_case_document, build_rejection_document
 from llm_client import embed_text
 from reproduction import fenced
 from repair_state import RepairState
@@ -248,6 +248,17 @@ class PostgresKnowledgeBase:
                     )
                     """
                 )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS repair_reviews (
+                        task_id TEXT PRIMARY KEY,
+                        decision TEXT NOT NULL,
+                        reason TEXT NOT NULL,
+                        document JSONB NOT NULL,
+                        created_at TIMESTAMPTZ NOT NULL
+                    )
+                    """
+                )
             connection.commit()
         except Exception as error:
             connection.rollback()
@@ -320,6 +331,33 @@ class PostgresKnowledgeBase:
         except Exception as error:
             connection.rollback()
             raise KnowledgeBaseError(f"保存 PostgreSQL 修复案例失败：{error}") from error
+        finally:
+            connection.close()
+
+    def record_rejection(self, state: RepairState) -> None:
+        """记录用户拒绝补丁的理由；拒绝审核不写入已验收案例表。"""
+        document = build_rejection_document(state)
+        reason = str(state["review_reason"]).strip()
+        self.ensure_schema()
+        connection = self._connect()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO repair_reviews (task_id, decision, reason, document, created_at)
+                    VALUES (%s, %s, %s, %s::jsonb, NOW())
+                    ON CONFLICT (task_id) DO UPDATE SET
+                        decision = EXCLUDED.decision,
+                        reason = EXCLUDED.reason,
+                        document = EXCLUDED.document,
+                        created_at = NOW()
+                    """,
+                    (state["task_id"], "rejected", reason, document),
+                )
+            connection.commit()
+        except Exception as error:
+            connection.rollback()
+            raise KnowledgeBaseError(f"保存 PostgreSQL 拒绝审核记录失败：{error}") from error
         finally:
             connection.close()
 
@@ -559,6 +597,15 @@ class RepairToolbox:
         """由固定工作流在人工接受后保存修复经验。"""
         save_repair_experience(state, knowledge_base=self.knowledge_base)
 
+    def record_rejection(self, state: RepairState) -> None:
+        """把拒绝理由交给配置的知识库审核记录表。"""
+        if self.knowledge_base is None:
+            raise RepairToolError("尚未配置修复经验知识库，无法记录拒绝理由")
+        recorder = getattr(self.knowledge_base, "record_rejection", None)
+        if not callable(recorder):
+            raise RepairToolError("当前知识库不支持记录拒绝理由")
+        recorder(state)
+
     def collect_context_for_state(self, state: RepairState) -> dict[str, object]:
         """为工作流收集源码证据并检索原始报告相关的历史案例。"""
         evidence: list[dict[str, object]] = []
@@ -645,6 +692,7 @@ class RepairToolbox:
             apply_patch=self.apply_patch_for_state,
             validate_patch=self.validate_patch_for_state,
             save_case=self.save_repair_experience,
+            record_rejection=self.record_rejection,
         )
 
     def call_model_tool(self, name: str, arguments: Mapping[str, object]) -> object:

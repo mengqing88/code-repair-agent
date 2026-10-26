@@ -283,6 +283,7 @@ def _update_workflow_result(result: dict[str, object], state: RepairState) -> No
         "question": state["question"],
         "last_error": state["last_error"],
         "review_decision": state["review_decision"],
+        "review_reason": state["review_reason"],
         "memory_saved": state["memory_saved"],
     }
     # patch_diff：模型生成的 unified diff；只有它存在时才覆盖初始占位文字。

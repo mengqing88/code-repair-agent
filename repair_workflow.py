@@ -29,6 +29,11 @@ class WorkflowContractError(RuntimeError):
     """服务回调没有遵守工作流约定时抛出的错误。"""
 
 
+def _ignore_rejection(state: RepairState) -> None:
+    """默认忽略拒绝记录，保持未配置知识库的离线工作流测试可运行。"""
+    return None
+
+
 @dataclass(frozen=True)
 class RepairServices:
     """工作流依赖的外部动作；每个回调接收当前状态并返回本节点需要的数据。"""
@@ -45,6 +50,8 @@ class RepairServices:
     validate_patch: Callable[[RepairState], Mapping[str, object]]
     # save_case：人工接受后保存修复经验；失败时不能标记任务成功。
     save_case: Callable[[RepairState], None]
+    # record_rejection：人工拒绝后保存拒绝理由；未配置知识库时由默认空操作兼容离线流程。
+    record_rejection: Callable[[RepairState], None] = _ignore_rejection
 
 
 def _record_elapsed(state: RepairState, elapsed: float) -> dict[str, object]:
@@ -407,9 +414,33 @@ def save_case_node(state: RepairState, services: RepairServices) -> dict[str, ob
     return update
 
 
-def reject_patch_node(state: RepairState) -> dict[str, object]:
-    """记录用户拒绝结果；不保存修复经验，但保留现有补丁和验证记录。"""
-    return {"status": "failed", "last_error": "用户拒绝了候选修复补丁。", "memory_saved": False}
+def reject_patch_node(state: RepairState, services: RepairServices) -> dict[str, object]:
+    """要求拒绝理由并记录审核结果；不把拒绝补丁保存为修复经验。"""
+    reason = state.get("review_reason")
+    if not isinstance(reason, str) or not reason.strip():
+        return {
+            "status": "needs_input",
+            "question": "请说明拒绝补丁的理由，补充后才能记录审核结果。",
+            "last_error": None,
+            "memory_saved": False,
+        }
+    if not _time_available(state):
+        return _budget_exceeded(state, "自动运行时间预算已耗尽，无法记录拒绝理由。")
+    started = time.monotonic()
+    try:
+        services.record_rejection(state)
+    except Exception as error:  # noqa: BLE001 - 审核记录失败必须回写状态。
+        update = _record_elapsed(state, time.monotonic() - started)
+        update.update(status="failed", last_error=f"记录拒绝理由失败：{error}", memory_saved=False)
+        return update
+    update = _record_elapsed(state, time.monotonic() - started)
+    update.update(
+        status="failed",
+        question=None,
+        last_error=f"用户拒绝了候选修复补丁：{reason.strip()}",
+        memory_saved=False,
+    )
+    return update
 
 
 def _start_route(state: RepairState) -> str:
@@ -418,6 +449,15 @@ def _start_route(state: RepairState) -> str:
         return "baseline_reproduction"
     if state["status"] == "reviewable":
         return "review_patch"
+    if (
+        state["status"] == "needs_input"
+        and state["review_decision"] == "rejected"
+        and isinstance(state.get("review_reason"), str)
+        and bool(state["review_reason"].strip())
+        and state.get("patch_hash")
+        and state.get("validation") is not None
+    ):
+        return "reject_patch"
     return "finish"
 
 
@@ -470,11 +510,16 @@ def build_repair_workflow(services: RepairServices):
     builder.add_node("validate_patch", lambda state: validate_patch_node(state, services))
     builder.add_node("review_patch", review_patch_node)
     builder.add_node("save_case", lambda state: save_case_node(state, services))
-    builder.add_node("reject_patch", reject_patch_node)
+    builder.add_node("reject_patch", lambda state: reject_patch_node(state, services))
 
     builder.add_conditional_edges(
         START, _start_route,
-        {"baseline_reproduction": "baseline_reproduction", "review_patch": "review_patch", "finish": END},
+        {
+            "baseline_reproduction": "baseline_reproduction",
+            "review_patch": "review_patch",
+            "reject_patch": "reject_patch",
+            "finish": END,
+        },
     )
     builder.add_conditional_edges(
         "baseline_reproduction", lambda state: _status_route(state, "collect_context"),

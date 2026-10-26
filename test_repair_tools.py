@@ -82,6 +82,7 @@ class RepairToolsTests(unittest.TestCase):
 
             def __init__(self) -> None:
                 self.saved = []
+                self.rejections = []
 
             def search(self, query: str, limit: int = 5):
                 return [{
@@ -92,6 +93,9 @@ class RepairToolsTests(unittest.TestCase):
 
             def save_case(self, state):
                 self.saved.append(state["task_id"])
+
+            def record_rejection(self, state):
+                self.rejections.append((state["task_id"], state["review_reason"]))
 
         knowledge_base = FakeKnowledgeBase()
         toolbox = RepairToolbox(
@@ -120,6 +124,11 @@ class RepairToolsTests(unittest.TestCase):
         toolbox.save_repair_experience(state)
         self.assertEqual(knowledge_base.saved, ["task-1"])
 
+        state["review_decision"] = "rejected"
+        state["review_reason"] = "拒绝原因"
+        toolbox.record_rejection(state)
+        self.assertEqual(knowledge_base.rejections, [("task-1", "拒绝原因")])
+
     def test_toolbox_can_build_workflow_service_adapters(self) -> None:
         """工具箱可直接提供当前 LangGraph 工作流所需的固定节点回调。"""
         toolbox = RepairToolbox(workspace_root=self.root, test_targets=("test_sample.py",))
@@ -133,6 +142,7 @@ class RepairToolsTests(unittest.TestCase):
         self.assertIsNotNone(services.propose_patch)
         self.assertIsNotNone(services.apply_patch)
         self.assertIsNotNone(services.validate_patch)
+        self.assertIsNotNone(services.record_rejection)
 
 
 if __name__ == "__main__":

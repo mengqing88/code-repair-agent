@@ -57,6 +57,37 @@ def build_case_document(state: RepairState) -> str:
     return json.dumps(document, ensure_ascii=False, sort_keys=True, default=str)
 
 
+def build_rejection_document(state: RepairState) -> str:
+    """把用户拒绝补丁的审核记录整理成可审阅的 JSON 文档。
+
+    参数：
+        state：修复工作流状态；必须是 rejected 且包含非空 review_reason。
+
+    返回：
+        保存到审核记录表的 UTF-8 文本；拒绝记录不作为已验收案例向量化。
+    """
+    if state["review_decision"] != "rejected":
+        raise KnowledgeBaseError("只有拒绝的审核结果才能记录拒绝理由")
+    reason = state.get("review_reason")
+    if not isinstance(reason, str) or not reason.strip():
+        raise KnowledgeBaseError("拒绝补丁必须提供理由")
+
+    # 保留审核所需的上下文，便于之后分析补丁为何被拒绝；不把它写入已验收案例表。
+    document = {
+        "task_id": state["task_id"],
+        "review_decision": "rejected",
+        "review_reason": reason.strip(),
+        "source": state["source"],
+        "original_report": state["original_report"],
+        "reproduction": state["reproduction"],
+        "diagnosis": state["diagnosis"],
+        "patch_diff": state["patch_diff"],
+        "patch_hash": state["patch_hash"],
+        "validation": state["validation"],
+    }
+    return json.dumps(document, ensure_ascii=False, sort_keys=True, default=str)
+
+
 def _validated_vector(values: Sequence[float], name: str) -> list[float]:
     """把嵌入结果转换成有限浮点列表；空向量和非数字都会停止流程。"""
     if isinstance(values, (str, bytes)):
@@ -111,6 +142,17 @@ class KnowledgeBase:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS repair_reviews (
+                task_id TEXT PRIMARY KEY,
+                decision TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                document TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
         connection.commit()
         return connection
 
@@ -139,6 +181,32 @@ class KnowledgeBase:
         except sqlite3.Error as error:
             connection.rollback()
             raise KnowledgeBaseError(f"保存修复案例失败：{error}") from error
+        finally:
+            connection.close()
+
+    def record_rejection(self, state: RepairState) -> None:
+        """记录用户拒绝补丁的理由；拒绝记录不会进入已验收案例表。"""
+        document = build_rejection_document(state)
+        reason = str(state["review_reason"]).strip()
+        timestamp = datetime.now(timezone.utc).isoformat()
+        connection = self._connect()
+        try:
+            connection.execute(
+                """
+                INSERT INTO repair_reviews (task_id, decision, reason, document, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(task_id) DO UPDATE SET
+                    decision = excluded.decision,
+                    reason = excluded.reason,
+                    document = excluded.document,
+                    created_at = excluded.created_at
+                """,
+                (state["task_id"], "rejected", reason, document, timestamp),
+            )
+            connection.commit()
+        except sqlite3.Error as error:
+            connection.rollback()
+            raise KnowledgeBaseError(f"保存拒绝审核记录失败：{error}") from error
         finally:
             connection.close()
 

@@ -97,6 +97,44 @@ class RepairWorkflowTests(unittest.TestCase):
         self.assertTrue(succeeded["memory_saved"])
         self.assertEqual(events[-1], "save_case")
 
+    def test_rejection_requires_reason_then_records_it(self) -> None:
+        """拒绝补丁时先询问理由，补充理由后才调用拒绝记录回调。"""
+        events: list[str] = []
+        rejection_reasons: list[str] = []
+        services = self.make_services(events, [True])
+
+        def record_rejection(state):
+            """模拟把拒绝理由写入审核数据库。"""
+            events.append("record_rejection")
+            rejection_reasons.append(state["review_reason"])
+
+        services = RepairServices(
+            services.reproduce,
+            services.collect_context,
+            services.propose_patch,
+            services.apply_patch,
+            services.validate_patch,
+            services.save_case,
+            record_rejection,
+        )
+        graph = build_repair_workflow(services)
+
+        reviewable = graph.invoke(self.initial_state())
+        reviewable["review_decision"] = "rejected"
+        waiting = graph.invoke(reviewable)
+
+        self.assertEqual(waiting["status"], "needs_input")
+        self.assertIn("拒绝补丁", waiting["question"])
+        self.assertEqual(rejection_reasons, [])
+
+        waiting["review_reason"] = "补丁修改了不允许变更的行为。"
+        rejected = graph.invoke(waiting)
+
+        self.assertEqual(rejected["status"], "failed")
+        self.assertEqual(rejection_reasons, ["补丁修改了不允许变更的行为。"])
+        self.assertEqual(events[-1], "record_rejection")
+        self.assertIn("补丁修改了不允许变更的行为", rejected["last_error"])
+
     def test_llm_propose_patch_calls_model_and_computes_hash(self) -> None:
         """模型返回诊断和补丁后，适配器返回完整字段并由程序计算哈希。"""
         state = self.initial_state()

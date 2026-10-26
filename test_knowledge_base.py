@@ -3,6 +3,7 @@
 # tempfile：创建测试数据库目录；unittest：组织测试并提供断言。
 import tempfile
 import unittest
+import sqlite3
 # Path：表示临时数据库路径。
 from pathlib import Path
 
@@ -80,6 +81,39 @@ class KnowledgeBaseTests(unittest.TestCase):
             with self.assertRaisesRegex(KnowledgeBaseError, "验证通过"):
                 knowledge_base.save_case(state)
             self.assertEqual(knowledge_base.count(), 0)
+
+    def test_rejection_is_saved_to_review_table_without_vectorizing(self) -> None:
+        """拒绝理由写入审核表，但不写入已验收案例或调用嵌入模型。"""
+        embed_calls: list[str] = []
+
+        def tracking_embed(text: str) -> list[float]:
+            """记录嵌入调用，确认拒绝记录不会被向量化。"""
+            embed_calls.append(text)
+            return self.fake_embed(text)
+
+        with tempfile.TemporaryDirectory() as directory:
+            database_path = Path(directory) / "knowledge.sqlite"
+            knowledge_base = KnowledgeBase(database_path, tracking_embed)
+            state = self.make_state()
+            state["review_decision"] = "rejected"
+            state["review_reason"] = "补丁没有修复原始问题。"
+
+            knowledge_base.record_rejection(state)
+
+            self.assertEqual(knowledge_base.count(), 0)
+            self.assertEqual(embed_calls, [])
+            connection = sqlite3.connect(database_path)
+            try:
+                row = connection.execute(
+                    "SELECT decision, reason, document FROM repair_reviews WHERE task_id = ?",
+                    (state["task_id"],),
+                ).fetchone()
+            finally:
+                connection.close()
+            self.assertIsNotNone(row)
+            self.assertEqual(row[0], "rejected")
+            self.assertEqual(row[1], "补丁没有修复原始问题。")
+            self.assertIn("补丁没有修复原始问题", row[2])
 
 
 if __name__ == "__main__":
