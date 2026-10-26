@@ -9,12 +9,20 @@ import json
 import platform
 # sys：访问当前进程的标准输出、标准错误等运行环境信息。
 import sys
+# uuid4：为每次 CLI 修复任务生成独立的状态标识。
+from uuid import uuid4
 # Path：用对象表示路径；Sequence：标注有顺序的参数序列，例如列表或元组。
 from pathlib import Path
 from typing import Sequence
 
 # reproduce() 管理独立源码副本、模型辅助的错误复现和工作文档。
 from reproduction import reproduce
+# create_initial_state：创建 LangGraph 的共享修复状态；RepairState：标注节点回调的状态类型。
+from repair_state import RepairState, create_initial_state
+# RepairToolbox：绑定工作区读取、补丁应用和测试工具。
+from repair_tools import RepairToolbox
+# build_repair_workflow：构建并执行完整的 LangGraph 修复流程。
+from repair_workflow import build_repair_workflow
 
 # 类型注解中的 str 表示字符串，int 表示整数，dict 表示字典；
 # object 允许字典的值具有不同类型，None 表示没有提供可选值。
@@ -58,6 +66,15 @@ def make_parser() -> argparse.ArgumentParser:
     report.add_argument("--error-file", type=Path, help="错误报告文件的路径")
     # add_argument() 登记错误文本选项，将输入的字符串保存到 args.error_text。
     report.add_argument("--error-text", help="直接输入的错误描述或失败信息")
+    # add_argument(action="append") 允许多次提供测试目标，并按出现顺序保存到 args.test_targets。
+    # 未提供时使用当前工作区根目录，让 pytest 自动发现项目中的测试；显式目标可缩小测试范围。
+    parser.add_argument(
+        "--test-target",
+        dest="test_targets",
+        action="append",
+        default=None,
+        help="pytest 测试目标，可重复提供；默认使用工作区目录 .",
+    )
     return parser
 
 
@@ -187,6 +204,112 @@ def build_result(args: argparse.Namespace) -> dict[str, object]:
     }
 
 
+def _workflow_workspace(
+    args: argparse.Namespace, source: dict[str, object], project_root: Path,
+) -> tuple[Path, tuple[str, ...]]:
+    """确定工具箱工作区和补丁允许修改的路径范围。"""
+    # 仓库模式允许仓库内任意路径；固定 revision 仍由 reproduce() 用于生成复现源码快照。
+    if source["type"] == "git_repository":
+        return project_root, (".",)
+    # 单文件模式只允许补丁修改用户指定的文件，避免模型改动同目录的其他文件。
+    if source["type"] == "python_file":
+        path = Path(str(source["path"])).resolve()
+        return project_root, (path.name,)
+    # 粘贴代码模式统一使用 target.py；补丁工具仍会检查工作区和 Git 范围。
+    return project_root, ("target.py",)
+
+
+def _run_repair_workflow(
+    args: argparse.Namespace,
+    source: dict[str, object],
+    error_report: str,
+    project_root: Path,
+) -> RepairState:
+    """把 CLI 输入交给 LangGraph，并返回流程结束时的完整状态。"""
+    # workspace_root：工具实际读取、应用补丁和运行测试的目录；allowed_paths：补丁允许触及的范围。
+    workspace_root, allowed_paths = _workflow_workspace(args, source, project_root)
+    # test_targets：固定测试节点执行的 pytest 目标；没有显式参数时使用工作区根目录。
+    test_targets = tuple(args.test_targets or (".",))
+    # toolbox：把当前工作区和测试配置绑定到固定工具节点；未配置知识库时仍可完成普通修复。
+    toolbox = RepairToolbox(
+        workspace_root=workspace_root,
+        allowed_paths=allowed_paths,
+        test_targets=test_targets,
+    )
+
+    def reproduce_for_state(state: RepairState) -> dict[str, object]:
+        """按共享状态执行一次基线复现，并转换成工作流要求的回调结果。"""
+        # seconds：将本轮剩余时间传给复现子进程；至少保留一个正数，避免 timeout=0 被拒绝。
+        seconds = max(0.1, float(state["remaining_budget"]["seconds"]))
+        record = reproduce(
+            source=state["source"],
+            error_report=state["original_report"],
+            code_text=state["code_text"],
+            work_root=project_root / "work",
+            timeout=min(10.0, seconds),
+        )
+        # matched：只有复现模块已经用真实输出确认报告一致时，才允许进入修复阶段。
+        matched = record.get("status") == "已复现，与报告一致"
+        result: dict[str, object] = {"matched": matched, "record": record}
+        if not matched:
+            result["question"] = record.get("question") or "复现未能确认报告中的问题，请补充触发条件。"
+        return result
+
+    # create_initial_state() 使用项目约定的默认预算：10 次、120 秒、20000 Token、0.10 元。
+    initial_state = create_initial_state(
+        task_id=uuid4().hex,
+        source=source,
+        error_report=error_report,
+        code_text=args.code_text,
+    )
+    # as_repair_services() 将复现、上下文收集、模型提议、补丁应用、测试和经验保存绑定到固定节点。
+    services = toolbox.as_repair_services(reproduce_for_state)
+    # invoke() 执行编译后的 LangGraph；返回值包含每个节点写回的最终状态快照。
+    return build_repair_workflow(services).invoke(initial_state)
+
+
+def _update_workflow_result(result: dict[str, object], state: RepairState) -> None:
+    """把修复状态转换成 CLI 输出中的工作流和产物字段。"""
+    # validation：独立测试节点生成的真实验证结果；没有运行测试时保持 None。
+    validation = state["validation"]
+    result["workflow"] = {
+        "status": state["status"],
+        "attempt_count": state["attempt_count"],
+        "elapsed_seconds": state["elapsed_seconds"],
+        "remaining_budget": state["remaining_budget"],
+        "diagnosis": state["diagnosis"],
+        "patch_hash": state["patch_hash"],
+        "validation": validation,
+        "question": state["question"],
+        "last_error": state["last_error"],
+        "review_decision": state["review_decision"],
+        "memory_saved": state["memory_saved"],
+    }
+    # patch_diff：模型生成的 unified diff；只有它存在时才覆盖初始占位文字。
+    if state["patch_diff"] is not None:
+        result["outputs"]["patch"] = state["patch_diff"]
+    # diagnosis：根因分析作为根因证据摘要；详细代码证据保存在工作流状态中。
+    if state["diagnosis"] is not None:
+        result["outputs"]["root_cause_evidence"] = state["diagnosis"]
+    if isinstance(validation, dict):
+        result["outputs"]["acceptance_report"] = validation.get("report_path", "")
+        result["outputs"]["failure_reproduction_record"] = validation.get("summary", "")
+
+    status = state["status"]
+    if status == "reviewable":
+        result["status"] = "补丁已通过自动测试；等待人工确认"
+    elif status == "succeeded":
+        result["status"] = "修复成功，修复经验已保存"
+    elif status == "budget_exceeded":
+        result["status"] = "修复因预算耗尽而停止"
+    elif status == "needs_input":
+        result["status"] = "复现需要用户确认；尚未开始修复"
+    elif status == "failed":
+        result["status"] = "修复失败"
+    else:
+        result["status"] = f"修复流程结束：{status}"
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """CLI 主流程：解析、校验并打印 JSON；argv 为参数序列，None 时读取真实命令行。"""
     # 内置 hasattr() 检查输出流是否有 reconfigure 属性，兼容不支持它的输出流。
@@ -210,7 +333,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = build_result(args)
         # error_report_text：读取的原始报告文字，供独立复现工作文档保存；不会执行报告中的代码。
         error_report_text = get_error_report_text(args)
-        # reproduction：检查源码副本和原始报告的结果；需要用户确认时会附带具体问题。
         # project_root：仓库输入使用仓库目录，单文件输入使用文件所在目录，粘贴代码使用当前目录。
         if args.repository is not None:
             # Path.resolve() 返回规范化的绝对路径，并解析符号链接；不创建或修改目标目录。
@@ -221,30 +343,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:
             # Path.cwd() 返回当前进程工作目录的绝对 Path 对象；它是 Path 类提供的方法。
             project_root = Path.cwd()
-        # reproduce() 根据来源、报告和粘贴代码执行复现流程，返回状态、结论及工作文档路径等记录。
-        # work_root 指定文档保存目录，Path 的 / 运算把 project_root 与 work 拼成新路径。
-        reproduction = reproduce(
-            source=result["input"]["source"],
-            error_report=error_report_text,
-            code_text=args.code_text,
-            work_root=project_root / "work",
+        # _run_repair_workflow() 执行完整 LangGraph 流程；工作流状态保留每个固定节点的结果。
+        workflow_state = _run_repair_workflow(
+            args,
+            result["input"]["source"],
+            error_report_text,
+            project_root,
         )
-        # 向用户提供复现结论和工作文档地址；完整执行日志另存于任务目录中。
-        # dict.get(键, 默认值) 在键存在时返回对应值，键缺失时返回默认值；这里用空字符串兜底。
+        # reproduction：基线复现节点写入的完整记录；工作流未开始时用空字典兜底。
+        reproduction = workflow_state["reproduction"] or {}
+        # 向用户提供复现结论和工作文档地址；完整执行日志仍保存在任务目录中。
         result["reproduction"] = {
-            "status": reproduction["status"],
+            "status": reproduction.get("status", "未生成"),
             "conclusion": reproduction.get("conclusion", ""),
-            "work_document": reproduction["work_document"],
-            "task_document": reproduction["task_document"],
+            "work_document": reproduction.get("work_document", ""),
+            "task_document": reproduction.get("task_document", ""),
             "question": reproduction.get("question", ""),
         }
-        # status：汇总状态明确表示错误复现不等于已经开始修复或生成补丁。
-        if reproduction["status"] == "已复现，与报告一致":
-            result["status"] = "错误已复现；尚未开始修复"
-        elif reproduction["status"] == "需要用户确认":
-            result["status"] = "复现需要用户确认；尚未开始修复"
-        else:
-            result["status"] = "复现未完成；尚未开始修复"
+        # _update_workflow_result() 把节点状态和补丁、验证结果映射到 CLI 的稳定输出结构。
+        _update_workflow_result(result, workflow_state)
     # error：校验过程中抛出的内置 ValueError 异常，保存用户可理解的错误消息。
     except ValueError as error:
         # 内置 str() 提取错误文字；parser.error() 打印使用说明并以退出码 2 退出。
