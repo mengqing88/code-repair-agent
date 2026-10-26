@@ -14,19 +14,6 @@ from agent_cli import build_result, make_parser
 class AgentCliTests(unittest.TestCase):
     """集中测试输入接收器；各方法的 self 表示当前测试实例，提供断言方法。"""
 
-    def test_code_source_can_be_used_without_error_report(self) -> None:
-        """只提供代码来源时也能生成结果，并将错误报告标记为 None。"""
-        # args：只包含代码来源的解析结果；错误报告互斥组没有提供任何选项。
-        # make_parser() 创建解析器；parse_args() 允许省略可选的错误报告组。
-        args = make_parser().parse_args(["--code-text", "x = 1"])
-
-        # result：代码来源校验通过后的结果字典；build_result() 会保留 None 这个明确状态。
-        result = build_result(args)
-
-        # assertEqual() 检查代码来源正常识别，并确认没有错误报告。
-        self.assertEqual(result["input"]["source"]["type"], "pasted_code")
-        self.assertIsNone(result["input"]["error_report"])
-
     def test_pasted_code_and_error_text_return_all_output_placeholders(self) -> None:
         """输入粘贴代码和错误文字，检查来源类型及全部输出占位字段。"""
         # args：由模拟命令行生成的参数对象；代码字符串仅作为输入，不执行。
@@ -128,35 +115,78 @@ class AgentCliTests(unittest.TestCase):
                 build_result(args)
 
     def test_command_line_prints_json(self) -> None:
-        """通过真实 Python 子进程运行 CLI，检查标准输出可以解析为 JSON。"""
-        # script：与测试文件同目录的 CLI 路径；__file__ 是当前测试文件路径。
-        # Path() 包装当前文件路径；with_name() 返回只替换文件名后的路径，不改动实际文件。
-        script = Path(__file__).with_name("agent_cli.py")
-        # completed：子进程执行结果，保存退出码、标准输出和标准错误。
-        # subprocess.run() 按列表给出的程序及参数启动子进程，等待结束后返回 CompletedProcess。
-        # sys.executable 使用当前解释器；check=True 使非零退出码触发异常。
-        # capture_output=True 将标准输出和标准错误保存在结果对象中，默认保存为 bytes 字节数据。
-        completed = subprocess.run(
-            [
-                sys.executable,
-                # 内置 str() 把脚本路径转成子进程参数所需的字符串。
-                str(script),
-                "--code-text",
-                "x = 1",
-                "--error-text",
-                "失败信息",
-            ],
-            check=True,
-            capture_output=True,
-        )
+        """通过子进程和模拟模型回复运行 CLI，检查工作文档和 JSON 输出。"""
+        # directory：临时工作目录；CLI 会在其中创建 work/reproduction.md，测试结束后自动清理。
+        with tempfile.TemporaryDirectory() as directory:
+            # script：与测试文件同目录的 CLI 路径；__file__ 是当前测试文件路径。
+            # Path() 包装当前文件路径；with_name() 返回只替换文件名后的路径，不改动实际文件。
+            script = Path(__file__).with_name("agent_cli.py")
+            # plan：模拟模型根据报告生成的复现计划；json.dumps() 将字典转换成 JSON 文本。
+            plan = json.dumps({
+                "revised_report": "x 应为 2，实际为 1；导入源码并打印 x 以核对。",
+                "steps": "从 target 模块导入 x 并打印真实值。",
+                "reproduction_code": "from target import x\nprint(x)",
+                "question": "",
+            })
+            # comparison：模拟模型对真实输出的核对结论，证据必须出现在运行日志中。
+            comparison = json.dumps({
+                "comparison": "matched",
+                "conclusion": "实际输出 1，复现了报告所述的 x 不等于 2 的问题。",
+                "evidence": "1",
+                "question": "",
+            }, ensure_ascii=False)
+            # bootstrap：子进程启动代码；将项目路径加入导入路径，用固定回复替代网络调用。
+            # repr() 生成合法的 Python 字符串字面量；iter() 创建依次提供两条回复的迭代器。
+            # responses：模拟回复迭代器；next() 每次取出一条回复，lambda 定义接收 prompt 的匿名函数。
+            bootstrap = (
+                "import json, sys; "
+                f"sys.path.insert(0, {str(script.parent)!r}); "
+                f"responses = iter(({plan!r}, {comparison!r})); "
+                "import reproduction; reproduction.ask_model = lambda prompt: next(responses); "
+                "import agent_cli; raise SystemExit(agent_cli.main(sys.argv[1:]))"
+            )
+            # completed：子进程执行结果，保存退出码、标准输出和标准错误。
+            # subprocess.run() 用 -c 启动 bootstrap；cwd 让 CLI 在临时目录创建工作文档。
+            # sys.executable 使用当前解释器；check=True 使非零退出码触发异常。
+            # capture_output=True 保存标准输出和标准错误，默认保存为 bytes 字节数据。
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    bootstrap,
+                    "--code-text",
+                    "x = 1",
+                    "--error-text",
+                    "x 应为 2，实际为 1",
+                ],
+                check=True,
+                capture_output=True,
+                cwd=directory,
+            )
 
-        # result：解析子进程的 JSON 输出后得到的结果字典。
-        # bytes.decode("utf-8") 将标准输出字节转成字符串；json.loads() 再把 JSON 字符串还原成字典。
-        result = json.loads(completed.stdout.decode("utf-8"))
-        # assertIn(成员, 容器) 检查成员是否存在；容器为字典时检查键，这里检查 outputs 键。
-        self.assertIn("outputs", result)
-        # assertEqual() 检查结果中的状态文字符合当前尚未开始修复的行为。
-        self.assertEqual(result["status"], "已接收输入；本版本尚未开始复现或修复")
+            # result：解析子进程的 JSON 输出后得到的结果字典。
+            # bytes.decode("utf-8") 将标准输出字节转成字符串；json.loads() 再还原成字典。
+            result = json.loads(completed.stdout.decode("utf-8"))
+            # assertIn() 检查复现结果包含工作文档路径字段。
+            self.assertIn("reproduction", result)
+            self.assertIn("work_document", result["reproduction"])
+            # work_document：CLI 返回的独立工作文档路径；Path() 将它包装成路径对象。
+            work_document = Path(result["reproduction"]["work_document"])
+            # assertTrue() 检查工作文档存在；read_text() 读取文档内容供下面断言。
+            self.assertTrue(work_document.exists())
+            document = work_document.read_text(encoding="utf-8")
+            # assertIn() 检查工作文档保留了原始错误报告。
+            self.assertIn("x 应为 2，实际为 1", document)
+
+        # assertEqual() 检查 CLI 状态表示已复现问题，但尚未进入补丁修复阶段。
+        self.assertEqual(result["status"], "错误已复现；尚未开始修复")
+
+    def test_error_report_is_required(self) -> None:
+        """检查只提供代码而没有错误报告时，参数解析会拒绝任务。"""
+        # assertRaises() 检查 parse_args() 没有报告参数时抛出 SystemExit；argparse 用它表示参数错误。
+        with self.assertRaises(SystemExit):
+            # make_parser() 创建必填错误报告组；parse_args() 检查命令行是否满足 required=True。
+            make_parser().parse_args(["--code-text", "x = 1"])
 
 
 # __name__ 由 Python 设置；直接运行此文件时为 __main__，导入时为模块名。

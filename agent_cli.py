@@ -13,12 +13,15 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
+# reproduce() 管理独立源码副本、模型辅助的错误复现和工作文档。
+from reproduction import reproduce
+
 # 类型注解中的 str 表示字符串，int 表示整数，dict 表示字典；
 # object 允许字典的值具有不同类型，None 表示没有提供可选值。
 
 
 def make_parser() -> argparse.ArgumentParser:
-    """定义 CLI 参数并返回解析器；代码来源须三选一，错误报告来源可不提供或二选一。"""
+    """定义 CLI 参数并返回解析器；代码来源和错误报告来源都必须各选一种。"""
     # parser：保存全部参数规则，并负责解析参数、输出帮助和参数错误。
     # argparse.ArgumentParser() 创建命令行解析器；description 是 --help 显示的程序说明。
     parser = argparse.ArgumentParser(
@@ -47,9 +50,9 @@ def make_parser() -> argparse.ArgumentParser:
         help="仓库的固定完整 commit ID（40 或 64 位十六进制字符）",
     )
 
-    # report：错误报告来源互斥组；可不提供，也不能同时提供文件和直接输入文字。
-    # add_mutually_exclusive_group() 创建互斥组；这里不设置 required=True，所以整组可以省略。
-    report = parser.add_mutually_exclusive_group()
+    # report：错误报告来源互斥组，要求文件和直接输入文字二者恰好选一个。
+    # add_mutually_exclusive_group(required=True) 创建必填互斥组，禁止同时提供两种报告来源。
+    report = parser.add_mutually_exclusive_group(required=True)
     # add_argument() 登记报告文件选项；type=Path 将值转成路径，保存到 args.error_file。
     report.add_argument("--error-file", type=Path, help="错误报告文件的路径")
     # add_argument() 登记错误文本选项，将输入的字符串保存到 args.error_text。
@@ -131,37 +134,40 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
     return {"type": "pasted_code", "character_count": len(args.code_text)}
 
 
-def check_error_report(args: argparse.Namespace) -> dict[str, object] | None:
-    """校验可选的错误信息并返回元数据；未提供时返回 None。"""
+def get_error_report_text(args: argparse.Namespace) -> str:
+    """读取必需的错误报告并返回原文；args 保存文件路径或直接输入的报告文字。"""
     if args.error_file is not None:
-        # content：读到的错误报告原文，用于确认非空并统计字符数。
-        content = read_text_file(args.error_file, "错误报告")
-        return {
-            "type": "file",
-            # Path.resolve() 取得绝对路径并解析符号链接；内置 str() 将该路径转成字符串。
-            "path": str(args.error_file.resolve()),
-            # 内置 len() 计算错误报告原文的字符数。
-            "character_count": len(content),
-        }
-
-    # args.error_text：解析 --error-text 后保存的文本；未提供时为 None。
-    # if 判断 None 可以避免对不存在的错误文本调用 strip()。
-    if args.error_text is None:
-        # None 表示用户没有提供错误报告；这不是错误，调用者可以继续处理代码来源。
-        return None
+        # read_text_file() 读取文件、检查非空并返回原始报告文字。
+        return read_text_file(args.error_file, "错误报告")
+    # args.error_text：解析 --error-text 后保存的直接报告文字；required=True 保证它不为 None。
     # str.strip() 临时去掉两端空白，用来识别空文本或只有空白的错误描述。
     if not args.error_text.strip():
         # ValueError 表示直接输入的错误信息为空或只有空白。
         raise ValueError("--error-text 不能为空")
-    # 内置 len() 统计错误文本的字符数，输出只含数量而不包含原文。
-    return {"type": "text", "character_count": len(args.error_text)}
+    return args.error_text
+
+
+def check_error_report(args: argparse.Namespace) -> dict[str, object]:
+    """校验必需的错误信息并返回元数据；原始文字由 get_error_report_text() 读取。"""
+    # content：错误报告原文；先读取并检查，确保后面的工作文档有可靠的原始记录。
+    content = get_error_report_text(args)
+    if args.error_file is not None:
+        return {
+            "type": "file",
+            # Path.resolve() 取得绝对路径并解析符号链接；内置 str() 将其转换为字符串。
+            "path": str(args.error_file.resolve()),
+            # 内置 len() 计算错误报告原文的字符数。
+            "character_count": len(content),
+        }
+    # 内置 len() 统计直接输入报告的字符数，输出只含数量而不包含原文。
+    return {"type": "text", "character_count": len(content)}
 
 
 def build_result(args: argparse.Namespace) -> dict[str, object]:
     """接收参数对象 args，汇总校验后的输入和输出占位说明，返回结果字典。"""
     # source：标准化后的代码来源元数据，包含类型、路径或字符数等信息。
     source = check_source(args)
-    # error_report：标准化后的错误信息来源元数据；没有提供错误报告时为 None。
+    # error_report：标准化后的错误信息来源元数据；错误报告是必需输入。
     error_report = check_error_report(args)
 
     return {
@@ -200,6 +206,37 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         # result：通过校验后待输出的结果字典。
         result = build_result(args)
+        # error_report_text：读取的原始报告文字，供独立复现工作文档保存；不会执行报告中的代码。
+        error_report_text = get_error_report_text(args)
+        # reproduction：检查源码副本和原始报告的结果；需要用户确认时会附带具体问题。
+        # project_root：仓库输入使用仓库目录，单文件输入使用文件所在目录，粘贴代码使用当前目录。
+        if args.repository is not None:
+            project_root = args.repository.resolve()
+        elif args.python_file is not None:
+            project_root = args.python_file.resolve().parent
+        else:
+            project_root = Path.cwd()
+        reproduction = reproduce(
+            source=result["input"]["source"],
+            error_report=error_report_text,
+            code_text=args.code_text,
+            work_root=project_root / "work",
+        )
+        # 向用户提供复现结论和工作文档地址；完整执行日志另存于任务目录中。
+        result["reproduction"] = {
+            "status": reproduction["status"],
+            "conclusion": reproduction.get("conclusion", ""),
+            "work_document": reproduction["work_document"],
+            "task_document": reproduction["task_document"],
+            "question": reproduction.get("question", ""),
+        }
+        # status：汇总状态明确表示错误复现不等于已经开始修复或生成补丁。
+        if reproduction["status"] == "已复现，与报告一致":
+            result["status"] = "错误已复现；尚未开始修复"
+        elif reproduction["status"] == "需要用户确认":
+            result["status"] = "复现需要用户确认；尚未开始修复"
+        else:
+            result["status"] = "复现未完成；尚未开始修复"
     # error：校验过程中抛出的内置 ValueError 异常，保存用户可理解的错误消息。
     except ValueError as error:
         # 内置 str() 提取错误文字；parser.error() 打印使用说明并以退出码 2 退出。

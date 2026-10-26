@@ -23,8 +23,8 @@ dev = ["pytest"]
 
 # setuptools 的打包范围配置。
 [tool.setuptools]
-# py-modules：打包输入校验模块 agent_cli.py 和模型调用模块 llm_client.py，不收录测试模块。
-py-modules = ["agent_cli", "llm_client"]
+# py-modules：打包 CLI、模型调用和独立错误复现模块，不收录测试模块。
+py-modules = ["agent_cli", "llm_client", "reproduction"]
 
 # pytest 的项目级配置。
 [tool.pytest.ini_options]
