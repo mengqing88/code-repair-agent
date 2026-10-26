@@ -37,18 +37,19 @@ def model_json(prompt: str, model_call: Callable[[str], str]) -> dict[str, objec
     # model_call(prompt) 调用传入的模型函数，参数是提示词，返回模型回复字符串。
     # text：模型的回复；str.strip() 返回去除两端空格、换行等空白后的新字符串，不改动中间内容。
     text = model_call(prompt).strip()
-    # 模型有时会给 JSON 加 Markdown 围栏；只移除包住整个回复的这一层。
-    # str.startswith(前缀) 判断字符串是否以该前缀开头，返回 True 或 False，不修改字符串。
-    # str.endswith(后缀) 判断字符串是否以该后缀结尾，同样返回 True 或 False。
-    # 这里要求开头是 ```json 加换行，结尾是 ```；and 表示两个条件都满足才进入分支。
-    if text.startswith("```json\n") and text.endswith("```"):
-        # text[8:-3] 是切片：去掉开头 8 个字符（```json 和换行）及结尾 3 个反引号。
-        # strip() 再去掉围栏内部两端的空白，返回待解析的 JSON 文本。
-        text = text[8:-3].strip()
-    # startswith() 这里检查没有语言名的 ``` 加换行；endswith() 仍检查结尾的 3 个反引号。
-    elif text.startswith("```\n") and text.endswith("```"):
-        # text[4:-3] 去掉开头的 ``` 和换行以及末尾的 ```；strip() 去掉剩余文本两端空白。
-        text = text[4:-3].strip()
+    # 模型有时会给 JSON 加 Markdown 围栏；围栏可能有三个、四个或更多反引号。
+    # fenced_reply：re.fullmatch(正则表达式, 文本, flags=匹配选项) 检查整个文本是否符合格式。
+    # 匹配成功返回 Match 对象，失败返回 None；re.DOTALL 让表达式中的 . 也能匹配换行。
+    # (?P<fence>`{3,}) 用 fence 这个名字保存开头至少三个反引号，{3,} 表示出现三次或更多。
+    # (?:json)? 表示可选的 json 标签，不单独保存；\r?\n 同时兼容 Windows 和通常的换行。
+    # (?P<body>.*?) 用 body 保存正文；.*? 尽量少取字符，直到后面的换行和结尾围栏能够匹配。
+    # (?P=fence) 要求结尾与开头保存的反引号完全相同；fullmatch() 同时防止遗漏围栏外的说明。
+    fenced_reply = re.fullmatch(
+        r"(?P<fence>`{3,})(?:json)?\r?\n(?P<body>.*?)\r?\n(?P=fence)", text, flags=re.DOTALL,
+    )
+    if fenced_reply is not None:
+        # Match.group("body") 返回正文分组的字符串；strip() 去除正文两端空白，不改动内部反引号。
+        text = fenced_reply.group("body").strip()
     try:
         # value：json.loads(text) 将 JSON 文本解析为 Python 对象；对象、数组分别变成 dict、list。
         # JSON 语法不合法时抛出 JSONDecodeError，由下面的 except 转成易读的错误提示。

@@ -41,6 +41,60 @@ class ReproductionTests(unittest.TestCase):
             # model_json() 尝试解析固定回复 "not json"；lambda 的 prompt 参数在本测试中不使用。
             model_json("prompt", lambda prompt: "not json")
 
+    def test_model_json_accepts_matching_fences_of_different_lengths(self) -> None:
+        """模型回复使用三个或更多反引号时，移除匹配的首尾围栏并正确读取 JSON。"""
+        # responses：手写不同围栏长度、可选 json 标签及换行格式的回复，避免依赖围栏生成函数。
+        responses = (
+            '```json\n{"result": "成功"}\n```',
+            '```\n{"result": "成功"}\n```',
+            '````json\n{"result": "成功"}\n````',
+            '`````json\n{"result": "成功"}\n`````',
+            '````\n{"result": "成功"}\n````',
+            '````json\r\n{"result": "成功"}\r\n````',
+        )
+        # response：本轮被测试的模型回复字符串。
+        for response in responses:
+            # subTest(response=...) 将每种回复作为独立子用例，失败时显示具体输入，继续检查其他输入。
+            with self.subTest(response=response):
+                # lambda prompt: response 定义模拟模型函数，忽略提示词 prompt，立即返回当前回复。
+                # model_json() 解析回复；assertEqual(实际值, 期望值) 检查返回字典的字段和值完全正确。
+                self.assertEqual(model_json("prompt", lambda prompt: response), {"result": "成功"})
+
+    def test_model_json_preserves_fences_inside_json_strings(self) -> None:
+        """无围栏和外层带围栏的 JSON 都能解析，字符串内部的代码围栏保持原样。"""
+        # expected：期望解析得到的字典；code 字段中的反引号和换行是业务内容，不能被删除。
+        expected = {"code": "```python\nprint('bug')\n```"}
+        # payload：json.dumps() 将字典转换成 JSON 字符串，字符串中的换行会转义为合法 JSON 内容。
+        payload = json.dumps(expected)
+        # response：依次使用纯 JSON 和四反引号包裹的 JSON 回复。
+        for response in (payload, f"````json\n{payload}\n````"):
+            # subTest() 为当前输入建立独立子用例，便于定位纯 JSON 或带围栏回复的解析问题。
+            with self.subTest(response=response):
+                # lambda 接收但不使用 prompt，返回当前 response；model_json() 调用它并解析结果。
+                # assertEqual() 比较整个字典，确认内部代码文本没有改变。
+                self.assertEqual(model_json("prompt", lambda prompt: response), expected)
+
+    def test_model_json_rejects_malformed_fences_and_extra_text(self) -> None:
+        """拒绝首尾长度不符、不支持的围栏和额外说明，避免只提取回复中的部分 JSON。"""
+        # responses：不符合约定的回复，包括过短围栏、其他语言、多个代码块和围栏外的说明。
+        responses = (
+            '````json\n{}\n```',
+            '```json\n{}\n````',
+            '``json\n{}\n``',
+            '```python\n{}\n```',
+            '说明\n```json\n{}\n```',
+            '```json\n{}\n```\n说明',
+            '```json\n{}\n```\n```json\n{}\n```',
+        )
+        # response：本轮应被拒绝的模型回复。
+        for response in responses:
+            # subTest() 将每种非法回复作为独立子用例，失败信息会指出是哪一种输入。
+            with self.subTest(response=response):
+                # assertRaisesRegex() 要求调用抛出 RuntimeError，且异常消息包含“有效 JSON”。
+                with self.assertRaisesRegex(RuntimeError, "有效 JSON"):
+                    # lambda prompt: response 模拟模型返回非法回复；model_json() 应停止解析并报错。
+                    model_json("prompt", lambda prompt: response)
+
     def test_reproduce_records_matching_real_output_and_preserves_source(self) -> None:
         """在独立副本中运行复现脚本，记录真实输出并保留用户源码原文。"""
         # TemporaryDirectory() 创建临时目录管理对象；进入 with 后得到目录路径字符串 directory。
