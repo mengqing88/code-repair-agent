@@ -1,10 +1,13 @@
 """使用 FakeAI 风格的回调测试修复工作流的顺序、重试和人工审核分支。"""
 
+# hashlib：计算测试中预期的补丁哈希；json：构造模拟模型的 JSON 回复。
+import hashlib
+import json
 # unittest：组织测试。
 import unittest
 
 # RepairServices、build_repair_workflow：创建并运行 LangGraph 工作流。
-from repair_workflow import RepairServices, build_repair_workflow
+from repair_workflow import RepairServices, build_repair_workflow, llm_propose_patch
 # create_initial_state：创建图的完整初始输入。
 from repair_state import create_initial_state
 
@@ -91,6 +94,43 @@ class RepairWorkflowTests(unittest.TestCase):
         self.assertEqual(succeeded["status"], "succeeded")
         self.assertTrue(succeeded["memory_saved"])
         self.assertEqual(events[-1], "save_case")
+
+    def test_llm_propose_patch_calls_model_and_computes_hash(self) -> None:
+        """模型返回诊断和补丁后，适配器返回完整字段并由程序计算哈希。"""
+        state = self.initial_state()
+        state["code_text"] = "value = 1\n"
+        prompts: list[str] = []
+
+        def fake_model(prompt: str) -> str:
+            """记录发送给模型的提示词，并返回符合协议的 JSON。"""
+            prompts.append(prompt)
+            return json.dumps({"diagnosis": "赋值使用了错误的默认值", "patch_diff": "diff --git a/target.py b/target.py"})
+
+        result = llm_propose_patch(state, fake_model)
+
+        self.assertEqual(len(prompts), 1)
+        self.assertIn("original_report", prompts[0])
+        self.assertEqual(result["diagnosis"], "赋值使用了错误的默认值")
+        self.assertEqual(result["patch_hash"], hashlib.sha256(result["patch_diff"].encode("utf-8")).hexdigest())
+
+    def test_llm_failure_becomes_workflow_failure_state(self) -> None:
+        """模型调用失败时，提议节点返回失败状态而不是让异常冒出图外。"""
+        events: list[str] = []
+        services = self.make_services(events, [True])
+
+        def failing_proposal(state):
+            """模拟模型服务不可用。"""
+            raise RuntimeError("模型服务不可用")
+
+        services = RepairServices(
+            services.reproduce, services.collect_context, failing_proposal,
+            services.apply_patch, services.validate_patch, services.save_case,
+        )
+        result = build_repair_workflow(services).invoke(self.initial_state())
+
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("模型分析失败", result["last_error"])
+        self.assertNotIn("apply_patch", events)
 
     def test_failed_validation_retries_until_a_later_pass(self) -> None:
         """验证失败且仍有次数时回到模型提议节点，后续通过才进入人工审核。"""
