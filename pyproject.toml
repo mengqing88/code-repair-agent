@@ -13,10 +13,12 @@ name = "code-repair-agent"
 version = "0.1.0"
 # description：安装工具展示的简短项目说明。
 description = "Command-line input validation for Python code repair tasks."
-# dependencies：运行依赖；openai 提供兼容接口客户端，python-dotenv 读取本地 .env 配置。
+# dependencies：运行依赖；openai 提供兼容接口客户端，python-dotenv 读取本地 .env 配置，
+# psycopg 提供 PostgreSQL/pgvector 知识库连接。
 # langgraph 提供 StateGraph；typing-extensions 提供兼容图状态解析的 TypedDict 类型声明。
 dependencies = [
     "openai>=2.0,<3.0",
+    "psycopg[binary]>=3.1,<4.0",
     "python-dotenv>=1.0,<2.0",
     "langgraph>=1.0,<2.0",
     "typing-extensions>=4.8,<5.0",
@@ -30,7 +32,7 @@ dev = ["pytest"]
 # setuptools 的打包范围配置。
 [tool.setuptools]
 # py-modules：打包 CLI、模型调用、独立错误复现、修复状态、工作流和知识库模块，不收录测试模块。
-py-modules = ["agent_cli", "llm_client", "reproduction", "repair_state", "repair_workflow", "knowledge_base"]
+py-modules = ["agent_cli", "llm_client", "reproduction", "repair_state", "repair_workflow", "knowledge_base", "repair_tools"]
 
 # pytest 的项目级配置。
 [tool.pytest.ini_options]
