@@ -148,13 +148,13 @@ def _optional_question(data: Mapping[str, object]) -> str | None:
 
 def llm_propose_patch(
     state: RepairState,
-    model_call: Callable[[str], str | ModelCallResult] = ask_model_with_usage,
+    model_call: Callable[[str], str | ModelCallResult] | None = None,
 ) -> Mapping[str, object]:
     """调用模型生成候选补丁；补丁哈希由程序计算，不信任模型自行填写的哈希。
 
     参数：
         state：当前工作流状态，包含报告、复现记录和代码证据。
-        model_call：接收提示词并返回模型文字或 ModelCallResult 的函数；测试时可替换。
+        model_call：接收提示词并返回模型文字或 ModelCallResult 的函数；省略时使用默认模型客户端，测试时可替换。
 
     返回：
         包含 diagnosis、patch_diff 和 patch_hash 的字典，可直接作为 propose_patch 回调。
@@ -182,8 +182,10 @@ def llm_propose_patch(
         "patch_diff（完整 unified diff；无法提出可靠补丁时返回空字符串）。\n"
         + json.dumps(payload, ensure_ascii=False, default=str)
     )
+    # call：显式传入回调时使用它；否则在调用时读取模块级默认函数，方便测试替换模型服务。
+    call = model_call or ask_model_with_usage
     # response：模型调用结果；带用量的适配器返回 ModelCallResult，旧测试回调仍可直接返回字符串。
-    response = model_call(prompt)
+    response = call(prompt)
     if isinstance(response, ModelCallResult):
         # model_text：只把模型文字交给 JSON 解析器，统计字段由程序单独保存。
         model_text = response.text
