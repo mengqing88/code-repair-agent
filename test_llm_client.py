@@ -14,8 +14,8 @@ import httpx
 # APIStatusError 和 APITimeoutError 分别模拟服务端拒绝请求和请求超时。
 from openai import APIStatusError, APITimeoutError
 
-# ask_model：被测试的模型调用函数；embed_text：被测试的向量调用函数。
-from llm_client import ask_model, embed_text
+# ask_model：被测试的模型调用函数；ask_model_with_usage：带用量统计的调用函数；embed_text：向量调用函数。
+from llm_client import ask_model, ask_model_with_usage, embed_text
 
 
 # patch.dict(目标字典路径, 替换内容, clear=True) 创建临时替换上下文；clear=True 先清空字典。
@@ -67,6 +67,28 @@ class ModelClientTests(unittest.TestCase):
             client.responses.create.assert_called_once_with(
                 model="test-model", input="测试消息", max_output_tokens=4096, store=False
             )
+
+    def test_usage_result_contains_tokens_and_estimated_cost(self) -> None:
+        """带 usage 的响应能返回 Token，并按总 Token 价格估算费用。"""
+        # 价格只用于测试估算公式，不代表任何服务商的真实价格。
+        self.env_path.write_text(
+            "CHAT_API_KEY=chat-test-only-key\nCHAT_BASE_URL=https://chat.example.invalid/v1\n"
+            "MODEL=test-model\nCHAT_PRICE_PER_1K_TOKENS=0.5\n",
+            encoding="utf-8",
+        )
+        with patch("llm_client.OpenAI") as factory:
+            client = factory.return_value.__enter__.return_value
+            client.responses.create.return_value = SimpleNamespace(
+                status="completed",
+                output_text="连接成功",
+                usage=SimpleNamespace(input_tokens=100, output_tokens=50, total_tokens=150),
+            )
+
+            result = ask_model_with_usage("测试消息", self.env_path)
+
+            self.assertEqual(result.text, "连接成功")
+            self.assertEqual(result.total_tokens, 150)
+            self.assertEqual(result.cost_yuan, 0.075)
 
     def test_embed_text_reads_embedding_model_and_returns_vector(self) -> None:
         """检查 embeddings 接口使用 EMBEDDING_MODEL 并返回浮点向量。"""

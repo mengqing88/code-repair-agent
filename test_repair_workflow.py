@@ -6,6 +6,8 @@ import json
 # unittest：组织测试。
 import unittest
 
+# ModelCallResult：模拟带 Token 和费用统计的模型回复。
+from llm_client import ModelCallResult
 # RepairServices、build_repair_workflow：创建并运行 LangGraph 工作流。
 from repair_workflow import RepairServices, build_repair_workflow, llm_propose_patch
 # create_initial_state：创建图的完整初始输入。
@@ -113,6 +115,24 @@ class RepairWorkflowTests(unittest.TestCase):
         self.assertEqual(result["diagnosis"], "赋值使用了错误的默认值")
         self.assertEqual(result["patch_hash"], hashlib.sha256(result["patch_diff"].encode("utf-8")).hexdigest())
 
+    def test_llm_propose_patch_preserves_model_usage(self) -> None:
+        """带用量的模型回复会转换为工作流可扣减的字段。"""
+        # fake_model：返回完整模型结果，文字正文仍然是工作流要求的 JSON。
+        def fake_model(prompt: str) -> ModelCallResult:
+            """模拟服务端同时返回 JSON 文字和 usage。"""
+            return ModelCallResult(
+                text=json.dumps({"diagnosis": "根因", "patch_diff": "diff"}),
+                input_tokens=80,
+                output_tokens=20,
+                total_tokens=100,
+                cost_yuan=0.02,
+            )
+
+        result = llm_propose_patch(self.initial_state(), fake_model)
+
+        self.assertEqual(result["token_usage"]["total_tokens"], 100)
+        self.assertEqual(result["estimated_cost"], 0.02)
+
     def test_llm_failure_becomes_workflow_failure_state(self) -> None:
         """模型调用失败时，提议节点返回失败状态而不是让异常冒出图外。"""
         events: list[str] = []
@@ -153,6 +173,67 @@ class RepairWorkflowTests(unittest.TestCase):
         self.assertEqual(result["status"], "failed")
         self.assertEqual(result["last_error"], "测试失败")
         self.assertNotIn("save_case", events)
+
+    def test_model_token_budget_stops_before_applying_patch(self) -> None:
+        """模型返回的 Token 超过剩余预算时停止，不应用候选补丁。"""
+        events: list[str] = []
+        services = self.make_services(events, [True])
+
+        def over_budget_proposal(state):
+            """模拟一次超出 Token 预算的模型调用。"""
+            events.append("propose_patch")
+            return {
+                "diagnosis": "根因",
+                "patch_diff": "diff",
+                "patch_hash": "hash",
+                "token_usage": {"total_tokens": 101},
+            }
+
+        services = RepairServices(
+            services.reproduce, services.collect_context, over_budget_proposal,
+            services.apply_patch, services.validate_patch, services.save_case,
+        )
+        initial = create_initial_state(
+            "task-budget", {"type": "python_file", "path": "target.py"}, "结果错误",
+            remaining_seconds=60, remaining_tokens=100, remaining_attempts=1, remaining_cost=0.10,
+        )
+
+        result = build_repair_workflow(services).invoke(initial)
+
+        self.assertEqual(result["status"], "budget_exceeded")
+        self.assertEqual(result["remaining_budget"]["tokens"], 0)
+        self.assertNotIn("apply_patch", events)
+
+    def test_model_cost_budget_stops_before_applying_patch(self) -> None:
+        """模型估算费用超过剩余额度时停止，不应用候选补丁。"""
+        events: list[str] = []
+        services = self.make_services(events, [True])
+
+        def over_budget_proposal(state):
+            """模拟一次超出费用预算的模型调用。"""
+            events.append("propose_patch")
+            return {
+                "diagnosis": "根因",
+                "patch_diff": "diff",
+                "patch_hash": "hash",
+                "token_usage": {"total_tokens": 10},
+                "estimated_cost": 0.11,
+            }
+
+        services = RepairServices(
+            services.reproduce, services.collect_context, over_budget_proposal,
+            services.apply_patch, services.validate_patch, services.save_case,
+        )
+        initial = create_initial_state(
+            "task-cost", {"type": "python_file", "path": "target.py"}, "结果错误",
+            remaining_seconds=60, remaining_tokens=100, remaining_attempts=1, remaining_cost=0.10,
+        )
+
+        result = build_repair_workflow(services).invoke(initial)
+
+        self.assertEqual(result["status"], "budget_exceeded")
+        self.assertEqual(result["remaining_budget"]["cost"], 0.0)
+        self.assertNotIn("apply_patch", events)
 
     def test_unmatched_baseline_waits_for_user_input(self) -> None:
         """基线没有确认报告问题时暂停，不读取案例也不提出补丁。"""

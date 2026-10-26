@@ -10,7 +10,14 @@ from unittest.mock import patch
 from langgraph.graph import END, START, StateGraph
 
 # RepairState：共享状态类型；create_initial_state：从已校验的输入创建新任务状态。
-from repair_state import RepairState, create_initial_state
+from repair_state import (
+    DEFAULT_MAX_COST_YUAN,
+    DEFAULT_MAX_MODEL_TOKENS,
+    DEFAULT_MAX_REPAIR_ATTEMPTS,
+    DEFAULT_MAX_RUNTIME_SECONDS,
+    RepairState,
+    create_initial_state,
+)
 
 
 # patch.dict(目标字典, 更新项) 在测试期间临时设置环境变量，结束后恢复；不清空其他变量。
@@ -18,6 +25,34 @@ from repair_state import RepairState, create_initial_state
 @patch.dict("os.environ", {"LANGSMITH_TRACING": "false", "LANGCHAIN_TRACING_V2": "false"})
 class RepairStateTests(unittest.TestCase):
     """检查状态作为任务数据和真实 LangGraph schema 使用时的行为。"""
+
+    def test_default_budget_matches_project_limits(self) -> None:
+        """不传预算时使用项目约定的 10 次、120 秒、20000 Token 和 0.10 元。"""
+        # state：只提供任务必需字段，验证初始化函数会补齐四项默认预算。
+        state = create_initial_state("default-budget", {"type": "pasted_code"}, "报告")
+
+        self.assertEqual(state["remaining_budget"]["attempts"], DEFAULT_MAX_REPAIR_ATTEMPTS)
+        self.assertEqual(state["remaining_budget"]["seconds"], DEFAULT_MAX_RUNTIME_SECONDS)
+        self.assertEqual(state["remaining_budget"]["tokens"], DEFAULT_MAX_MODEL_TOKENS)
+        self.assertEqual(state["remaining_budget"]["cost"], DEFAULT_MAX_COST_YUAN)
+        self.assertEqual(state["elapsed_seconds"], 0.0)
+
+    def test_invalid_budget_is_rejected(self) -> None:
+        """负数、零秒数和布尔值不能进入工作流预算。"""
+        # cases：每项包含参数名和值；subTest() 让每种非法输入都单独报告失败原因。
+        cases = (
+            ("remaining_seconds", 0),
+            ("remaining_tokens", -1),
+            ("remaining_attempts", -1),
+            ("remaining_cost", -0.01),
+            ("remaining_attempts", True),
+        )
+        for name, value in cases:
+            with self.subTest(name=name, value=value):
+                with self.assertRaises(ValueError):
+                    create_initial_state(
+                        "invalid-budget", {"type": "pasted_code"}, "报告", **{name: value}
+                    )
 
     def test_tasks_do_not_share_source_lists_or_budget(self) -> None:
         """任务之间以及任务与原始输入之间不共享可变容器，防止一次修改污染其他任务。"""
