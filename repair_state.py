@@ -8,10 +8,19 @@ TypedDict 提供字段类型说明，不会在运行时自动校验数据或阻�
 
 # deepcopy：复制包含字典和列表的输入，避免一个任务的修改影响调用方或其他任务。
 from copy import deepcopy
+# math：检查预算数值是否为有限数，避免 NaN 或无穷大绕过限制。
+import math
 # Literal：限定字段可使用的具体值，例如任务状态只能使用下面列出的字符串。
 from typing import Literal
 # TypedDict：声明字典各字段的名字及类型；使用 typing_extensions 兼容 LangGraph 的类型解析。
 from typing_extensions import TypedDict
+
+
+# 默认预算：新任务没有显式传入预算时，使用项目约定的限制。
+DEFAULT_MAX_REPAIR_ATTEMPTS = 10
+DEFAULT_MAX_RUNTIME_SECONDS = 120.0
+DEFAULT_MAX_MODEL_TOKENS = 20_000
+DEFAULT_MAX_COST_YUAN = 0.10
 
 
 # RepairStatus：流程阶段和结束原因；reviewable 只表示可供审核，尚不代表用户已接受。
@@ -68,6 +77,8 @@ class RemainingBudget(TypedDict):
     seconds: float
     tokens: int
     attempts: int
+    # cost：剩余模型费用上限，单位为人民币元；实际费用由模型调用回调提供。
+    cost: float
 
 
 class RepairState(TypedDict):
@@ -99,6 +110,8 @@ class RepairState(TypedDict):
     validation: ValidationSummary | None
     # attempt_count：已经进行的修复尝试次数，初始为 0；后续节点负责显式更新。
     attempt_count: int
+    # elapsed_seconds：已经消耗的自动执行时间，人工审核等待不由状态节点计入。
+    elapsed_seconds: float
     # remaining_budget：剩余预算快照，不包含或修改服务端的原始预算上限。
     remaining_budget: RemainingBudget
     # question：需要向用户确认的具体问题；last_error：流程异常的说明，没有时为 None。
@@ -112,7 +125,10 @@ class RepairState(TypedDict):
 
 def create_initial_state(
     task_id: str, source: dict[str, object], error_report: str, *,
-    remaining_seconds: float, remaining_tokens: int, remaining_attempts: int,
+    remaining_seconds: float = DEFAULT_MAX_RUNTIME_SECONDS,
+    remaining_tokens: int = DEFAULT_MAX_MODEL_TOKENS,
+    remaining_attempts: int = DEFAULT_MAX_REPAIR_ATTEMPTS,
+    remaining_cost: float = DEFAULT_MAX_COST_YUAN,
     code_text: str | None = None,
 ) -> RepairState:
     """把经过输入校验的任务转换成待执行状态，不调用模型，也不执行复现或修复。
@@ -121,16 +137,45 @@ def create_initial_state(
         task_id：由调用方分配的任务唯一标识。
         source：CLI 校验后的代码来源元数据；仓库来源须已包含固定 revision。
         error_report：原始错误报告文字，原样保存。
-        remaining_seconds：任务当前剩余的运行秒数。
-        remaining_tokens：任务当前剩余的模型 token 数。
-        remaining_attempts：任务当前剩余的修复尝试次数。
+        remaining_seconds：任务当前剩余的运行秒数，默认 120 秒。
+        remaining_tokens：任务当前剩余的模型 token 数，默认 20,000。
+        remaining_attempts：任务当前剩余的修复尝试次数，默认 10 次。
+        remaining_cost：任务当前剩余的模型费用，单位为元，默认 0.10 元。
         code_text：粘贴模式的源码字符串，其他模式不传，默认 None。
         *：表示其后的预算和源码参数必须写参数名，防止把多个数值的位置传反。
 
     返回：
         新的 RepairState 字典；可变容器互相独立，未产生的结果使用 None 或空列表。
-        预算数值的合法性应在任务输入边界校验，本函数只负责构造状态。
+        预算数值不符合要求时抛出 ValueError，避免非法预算进入工作流。
     """
+    # isinstance(..., bool) 单独排除布尔值，因为 bool 虽然是 int 的子类，但不是有效预算。
+    if (
+        isinstance(remaining_seconds, bool)
+        or not isinstance(remaining_seconds, (int, float))
+        or not math.isfinite(float(remaining_seconds))
+        or remaining_seconds <= 0
+    ):
+        raise ValueError("remaining_seconds 必须是大于 0 的有限数")
+    if (
+        isinstance(remaining_tokens, bool)
+        or not isinstance(remaining_tokens, int)
+        or remaining_tokens < 0
+    ):
+        raise ValueError("remaining_tokens 必须是非负整数")
+    if (
+        isinstance(remaining_attempts, bool)
+        or not isinstance(remaining_attempts, int)
+        or remaining_attempts < 0
+    ):
+        raise ValueError("remaining_attempts 必须是非负整数")
+    if (
+        isinstance(remaining_cost, bool)
+        or not isinstance(remaining_cost, (int, float))
+        or not math.isfinite(float(remaining_cost))
+        or remaining_cost < 0
+    ):
+        raise ValueError("remaining_cost 必须是非负有限数")
+
     # deepcopy(source) 的参数 source 是待复制的来源字典，返回包含内部容器在内的独立副本。
     # 字典、列表字面量每次调用都会新建；调用方之后修改 source 不会影响这里保存的输入快照。
     return {
@@ -147,10 +192,12 @@ def create_initial_state(
         "patch_hash": None,
         "validation": None,
         "attempt_count": 0,
+        "elapsed_seconds": 0.0,
         "remaining_budget": {
-            "seconds": remaining_seconds,
+            "seconds": float(remaining_seconds),
             "tokens": remaining_tokens,
             "attempts": remaining_attempts,
+            "cost": float(remaining_cost),
         },
         "question": None,
         "last_error": None,
