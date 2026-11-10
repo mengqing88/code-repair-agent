@@ -1,7 +1,7 @@
 """为代码修复工作流提供受限工具。
 
-工具只操作指定工作区。读取、搜索和经验检索可以作为模型工具使用；补丁应用、测试和
-经验保存由固定工作流节点调用，避免模型直接执行有副作用的动作。
+工具只操作指定工作区。读取、搜索、经验检索、补丁应用和固定 pytest 目标可以由模型调用；
+补丁仍受路径范围和 checkpoint 限制，最终补丁验证与经验保存仍由固定工作流节点负责。
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 # dataclass：保存工具箱配置；PurePosixPath：按 Git 的斜杠路径解析补丁文件名。
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -756,10 +757,38 @@ class RetrieveRepairExperienceArguments(_ToolArguments):
         return value
 
 
+class ApplyPatchArguments(_ToolArguments):
+    """模型应用补丁工具的参数。"""
+
+    patch_diff: str = Field(min_length=1, description="相对于任务 checkpoint 的完整 unified diff。")
+
+    @field_validator("patch_diff")
+    @classmethod
+    def patch_must_not_be_blank(cls, value: str) -> str:
+        """拒绝只有空白字符的补丁文本。"""
+        if not value.strip():
+            raise ValueError("不能为空白字符串")
+        return value
+
+
+class RunTestsArguments(_ToolArguments):
+    """运行任务预先配置的 pytest 目标；模型不能更改测试范围。"""
+
+
 TOOL_ARGUMENT_MODELS: tuple[tuple[str, str, type[_ToolArguments]], ...] = (
     ("read_code", "读取工作区内指定的 UTF-8 代码文件。", ReadCodeArguments),
     ("search_code", "在工作区中搜索文本并返回文件、行号、列号和匹配行。", SearchCodeArguments),
     ("retrieve_repair_experience", "检索已验收的历史修复案例及其相似度。", RetrieveRepairExperienceArguments),
+    (
+        "apply_patch",
+        "在任务隔离工作区应用相对于 checkpoint 的完整 unified diff；每次调用会先恢复 checkpoint 并检查允许修改路径。",
+        ApplyPatchArguments,
+    ),
+    (
+        "run_tests",
+        "运行任务预先配置的 pytest 目标并返回真实退出码和输出；模型不能指定测试命令或目标。",
+        RunTestsArguments,
+    ),
 )
 
 TOOL_DEFINITIONS: tuple[dict[str, object], ...] = tuple(
@@ -788,7 +817,7 @@ class RepairToolbox:
     _definitions: tuple[dict[str, object], ...] = field(default=TOOL_DEFINITIONS, init=False, repr=False)
 
     def model_tool_definitions(self) -> list[dict[str, object]]:
-        """返回可交给模型的只读工具定义。"""
+        """返回可交给模型的工具定义。"""
         return [dict(definition) for definition in self._definitions]
 
     def read_code(self, path: str, max_bytes: int = 1_000_000) -> dict[str, object]:
@@ -804,18 +833,30 @@ class RepairToolbox:
         return retrieve_repair_experience(query, knowledge_base=self.knowledge_base, limit=limit)
 
     def apply_patch(self, patch_diff: str) -> dict[str, object]:
-        """由固定工作流调用补丁应用工具。"""
+        """在任务工作区应用补丁，并检查调用方允许修改的路径。"""
         return apply_patch(
             patch_diff, workspace_root=self.workspace_root, allowed_paths=self.allowed_paths,
         )
 
-    def run_tests(self) -> dict[str, object]:
-        """由固定工作流调用测试工具。"""
+    def run_tests(self, remaining_seconds: float | None = None) -> dict[str, object]:
+        """运行固定 pytest 目标，并把超时限制在任务剩余时间内。"""
+        timeout_seconds = self.test_timeout_seconds
+        if remaining_seconds is not None:
+            if remaining_seconds <= 0:
+                raise RepairToolError("自动运行时间预算已耗尽，无法运行模型请求的测试")
+            timeout_seconds = min(timeout_seconds, remaining_seconds)
         return run_tests(
             workspace_root=self.workspace_root,
             test_targets=self.test_targets,
-            timeout_seconds=self.test_timeout_seconds,
+            timeout_seconds=timeout_seconds,
         )
+
+    def apply_model_patch(self, patch_diff: str) -> dict[str, object]:
+        """从任务 checkpoint 开始应用模型的完整补丁，避免叠加上一版试验。"""
+        if self.checkpoint_revision is None:
+            raise RepairToolError("模型应用补丁需要任务基线 checkpoint")
+        restore_checkpoint_workspace(self.workspace_root, self.checkpoint_revision)
+        return self.apply_patch(patch_diff)
 
     def save_repair_experience(self, state: RepairState) -> None:
         """由固定工作流在人工接受后保存修复经验。"""
@@ -917,12 +958,30 @@ class RepairToolbox:
         from repair_workflow import RepairServices, llm_propose_patch
 
         def propose_with_tools(state: RepairState) -> Mapping[str, object]:
-            """默认模型诊断启用只读工具循环；测试或调用方可注入自定义提议函数。"""
-            return llm_propose_patch(
-                state,
-                tool_definitions=self.model_tool_definitions(),
-                tool_executor=self.call_model_tool,
-            )
+            """模型可迭代调用工具；清理试验性修改后再交给固定验证节点。"""
+            started = time.monotonic()
+            used_side_effect_tool = False
+
+            def execute_tool(name: str, arguments: Mapping[str, object]) -> object:
+                """执行模型请求，并为测试工具传入本任务剩余时间。"""
+                nonlocal used_side_effect_tool
+                if name in ("apply_patch", "run_tests"):
+                    used_side_effect_tool = True
+                remaining_seconds = (
+                    float(state["remaining_budget"].get("seconds", 0.0))
+                    - (time.monotonic() - started)
+                )
+                return self.call_model_tool(name, arguments, remaining_seconds=remaining_seconds)
+
+            try:
+                return llm_propose_patch(
+                    state,
+                    tool_definitions=self.model_tool_definitions(),
+                    tool_executor=execute_tool,
+                )
+            finally:
+                if used_side_effect_tool and self.checkpoint_revision is not None:
+                    self.restore_workspace(state)
 
         return RepairServices(
             reproduce=reproduce,
@@ -935,8 +994,16 @@ class RepairToolbox:
             restore_checkpoint=self.restore_workspace,
         )
 
-    def call_model_tool(self, name: str, arguments: Mapping[str, object]) -> object:
-        """按模型返回的工具名调用只读工具；拒绝调用固定副作用节点。"""
+    def call_model_tool(
+        self,
+        name: str,
+        arguments: Mapping[str, object],
+        *,
+        remaining_seconds: float | None = None,
+    ) -> object:
+        """校验模型工具参数并调用白名单内的读取、检索、补丁或测试工具。"""
+        if remaining_seconds is not None and remaining_seconds <= 0:
+            raise RepairToolError("自动运行时间预算已耗尽，无法执行模型请求的工具")
         argument_models: dict[str, type[_ToolArguments]] = {
             tool_name: model for tool_name, _, model in TOOL_ARGUMENT_MODELS
         }
@@ -957,4 +1024,8 @@ class RepairToolbox:
             return self.search_code(validated.query, validated.path, validated.max_results)
         if isinstance(validated, RetrieveRepairExperienceArguments):
             return self.retrieve_repair_experience(validated.query, validated.limit)
+        if isinstance(validated, ApplyPatchArguments):
+            return self.apply_model_patch(validated.patch_diff)
+        if isinstance(validated, RunTestsArguments):
+            return self.run_tests(remaining_seconds=remaining_seconds)
         raise RepairToolError(f"模型不能直接调用工具：{name}")

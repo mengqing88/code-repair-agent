@@ -44,9 +44,9 @@
 ## 当前实现边界
 
 - LangGraph 固定编排基线复现、上下文收集、补丁生成、应用、测试和审核节点。
-- 补丁生成阶段使用 ReAct 工具循环。模型可以选择只读的 `read_code`、`search_code` 和 `retrieve_repair_experience` 工具；程序把结果回传给模型，直到模型给出最终诊断和补丁。每轮补丁生成最多调用 30 次工具。
+- 补丁生成阶段使用 ReAct 工具循环。模型可以调用 `read_code`、`search_code`、`retrieve_repair_experience`、`apply_patch` 和 `run_tests`，并根据结果继续分析；每轮补丁生成最多调用 30 次工具。补丁工具会先恢复 checkpoint 并检查允许修改路径，测试工具只能运行任务预设目标。
 - 工具参数由 Pydantic v2 在分派前校验；严格类型、非空白字符串、整数范围和禁止额外字段等约束，也直接生成模型看到的 JSON Schema，避免说明与实际执行规则分离。
-- 模型不能直接应用补丁、运行测试或保存经验；这些有副作用的动作由固定工作流节点执行。
+- 模型可以在 ReAct 阶段试用补丁并运行固定测试；试验改动会在模型给出最终补丁后清理。LangGraph 随后重新应用最终补丁、独立运行测试并进入人工审核；模型仍不能直接保存修复经验。
 - Git 仓库按用户指定的 commit 创建独立副本；文件和粘贴代码任务也创建任务副本。验证失败或用户拒绝时恢复该副本的 checkpoint，不修改原始源码。
 - 测试通过只会进入人工审核状态，不等于用户已接受或任务已完成。
 - CLI 会从项目 `.env` 或环境变量读取 `KNOWLEDGE_DB_URL`（兼容 `DATABASE_URL`），并将 PostgreSQL/pgvector 知识库接入任务。检索使用 `EMBEDDING_BASE_URL`、`EMBEDDING_API_KEY` 和 `EMBEDDING_MODEL`；只有通过测试且人工接受的修复才会写入并向量化，拒绝理由单独保存，不参与经验检索。

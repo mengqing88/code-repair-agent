@@ -159,8 +159,8 @@ class RepairToolsTests(unittest.TestCase):
         self.assertFalse(result["timed_out"])
         self.assertNotIn("secret-for-test", result["stdout"] + result["stderr"])
 
-    def test_toolbox_exposes_read_only_model_tools_and_routes_fixed_actions(self) -> None:
-        """模型只能调用读取、搜索、检索工具，保存入口仍由固定代码调用。"""
+    def test_toolbox_exposes_model_tools_but_keeps_memory_writes_fixed(self) -> None:
+        """模型可用代码与测试工具，但修复经验写入仍由审核后的固定节点执行。"""
         class FakeKnowledgeBase:
             """记录知识库工具调用的假实现。"""
 
@@ -195,9 +195,9 @@ class RepairToolsTests(unittest.TestCase):
             toolbox.call_model_tool("retrieve_repair_experience", {"query": "赋值"})[0]["applicable_conditions"],
             ["相同异常类型"],
         )
-        self.assertEqual(len(toolbox.model_tool_definitions()), 3)
+        self.assertEqual(len(toolbox.model_tool_definitions()), 5)
         with self.assertRaisesRegex(RepairToolError, "不能直接调用"):
-            toolbox.call_model_tool("apply_patch", {"patch_diff": "..."})
+            toolbox.call_model_tool("save_repair_experience", {})
 
         state = create_initial_state(
             "task-1", {"type": "python_file", "path": "target.py"}, "错误",
@@ -220,11 +220,16 @@ class RepairToolsTests(unittest.TestCase):
 
         self.assertEqual(len(toolbox.call_model_tool("search_code", {"query": "value"})["matches"]), 1)
         schemas = {definition["name"]: definition["parameters"] for definition in TOOL_DEFINITIONS}
-        self.assertEqual(set(schemas), {"read_code", "search_code", "retrieve_repair_experience"})
+        self.assertEqual(set(schemas), {
+            "read_code", "search_code", "retrieve_repair_experience", "apply_patch", "run_tests",
+        })
         for schema in schemas.values():
             self.assertFalse(schema["additionalProperties"])
         self.assertEqual(schemas["search_code"]["properties"]["max_results"]["minimum"], 1)
         self.assertEqual(schemas["search_code"]["properties"]["max_results"]["default"], 50)
+        self.assertEqual(schemas["apply_patch"]["required"], ["patch_diff"])
+        self.assertEqual(schemas["apply_patch"]["properties"]["patch_diff"]["minLength"], 1)
+        self.assertEqual(schemas["run_tests"]["properties"], {})
 
         invalid_arguments = (
             ("read_code", {}),
@@ -234,6 +239,9 @@ class RepairToolsTests(unittest.TestCase):
             ("search_code", {"query": "value", "max_results": 0}),
             ("search_code", {"query": "value", "max_results": True}),
             ("retrieve_repair_experience", {"query": "\t"}),
+            ("apply_patch", {"patch_diff": "  "}),
+            ("apply_patch", {"patch_diff": "diff", "extra": "sensitive-value"}),
+            ("run_tests", {"test_targets": ["unapproved.py"]}),
         )
         for name, arguments in invalid_arguments:
             with self.subTest(name=name, arguments=arguments):
@@ -241,6 +249,85 @@ class RepairToolsTests(unittest.TestCase):
                     toolbox.call_model_tool(name, arguments)
                 self.assertIn("参数无效", str(raised.exception))
                 self.assertNotIn("sensitive-value", str(raised.exception))
+
+    def test_react_can_apply_and_test_patches_then_fixed_nodes_revalidate_final_patch(self) -> None:
+        """模型可迭代试补丁和运行固定测试，结束后工作流从 checkpoint 验证最终补丁。"""
+        import subprocess
+
+        source = self.root / "source"
+        source.mkdir()
+        subprocess.run(["git", "init", "-q", str(source)], check=True)
+        (source / "target.py").write_text("value = 1\n", encoding="utf-8")
+        (source / "test_target.py").write_text(
+            "from target import value\n\n\ndef test_value_is_fixed():\n    assert value == 2\n",
+            encoding="utf-8",
+        )
+        subprocess.run(["git", "-C", str(source), "add", "target.py", "test_target.py"], check=True)
+        subprocess.run(
+            ["git", "-C", str(source), "-c", "user.name=Test", "-c", "user.email=test@localhost", "commit", "-qm", "baseline"],
+            check=True,
+        )
+        checkpoint = subprocess.run(
+            ["git", "-C", str(source), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        workspace = self.root / "task" / "workspace"
+        create_checkpoint_workspace(source, workspace, revision=checkpoint)
+        toolbox = RepairToolbox(
+            workspace_root=workspace,
+            allowed_paths=("target.py",),
+            test_targets=("test_target.py",),
+            test_timeout_seconds=10,
+            checkpoint_revision=checkpoint,
+        )
+        patch_two = "--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-value = 1\n+value = 2\n"
+        patch_three = patch_two.replace("value = 2", "value = 3")
+
+        def tool_turn(call_id: str, name: str, arguments: str) -> ModelCallResult:
+            """构造一次模型请求工具的 Responses API 测试结果。"""
+            return ModelCallResult(
+                text="", input_tokens=10, output_tokens=5, total_tokens=15, cost_yuan=0.001,
+                tool_calls=(ModelToolCall(call_id, name, arguments),),
+                output_items=({
+                    "type": "function_call", "call_id": call_id,
+                    "name": name, "arguments": arguments,
+                },),
+            )
+
+        tool_turns = [
+            tool_turn("apply-2", "apply_patch", json.dumps({"patch_diff": patch_two})),
+            tool_turn("test-2", "run_tests", "{}"),
+            tool_turn("apply-3", "apply_patch", json.dumps({"patch_diff": patch_three})),
+            tool_turn("test-3", "run_tests", "{}"),
+            tool_turn("apply-final", "apply_patch", json.dumps({"patch_diff": patch_two})),
+            ModelCallResult(
+                text=json.dumps({"diagnosis": "折扣结果计算错误", "patch_diff": patch_two}),
+                input_tokens=20, output_tokens=10, total_tokens=30, cost_yuan=0.002,
+            ),
+        ]
+        state = create_initial_state(
+            "task-model-tools", {"type": "git_repository", "path": str(source), "revision": checkpoint},
+            "value 应为 2", remaining_seconds=60, remaining_tokens=1000,
+            remaining_attempts=1,
+        )
+        services = toolbox.as_repair_services(lambda current: {"matched": True, "record": {}})
+
+        with patch("repair_workflow.ask_model_with_tools", side_effect=tool_turns) as model:
+            proposal = services.propose_patch(state)
+
+        self.assertEqual(model.call_count, 6)
+        self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "value = 1\n")
+        successful_test_result = json.loads(model.call_args_list[2].args[0][-1]["output"])
+        failed_test_result = json.loads(model.call_args_list[4].args[0][-1]["output"])
+        self.assertTrue(successful_test_result["passed"])
+        self.assertFalse(failed_test_result["passed"])
+
+        state["patch_diff"] = proposal["patch_diff"]
+        state["patch_hash"] = proposal["patch_hash"]
+        toolbox.apply_patch_for_state(state)
+        validation = toolbox.validate_patch_for_state(state)
+        self.assertTrue(validation["passed"])
+        self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "value = 2\n")
 
     def test_postgres_knowledge_base_reads_project_configuration_without_connecting(self) -> None:
         """从指定 .env 或环境变量选择知识库 URL，不连接数据库也不打印凭据。"""
@@ -264,7 +351,7 @@ class RepairToolsTests(unittest.TestCase):
             self.assertIsNone(PostgresKnowledgeBase.from_environment(self.root / "missing.env"))
 
     def test_toolbox_can_build_workflow_service_adapters(self) -> None:
-        """默认提议节点把只读工具交给模型，并执行模型选中的工具。"""
+        """默认提议节点把工具交给模型，并执行模型选中的读取工具。"""
         toolbox = RepairToolbox(workspace_root=self.root, test_targets=("test_sample.py",))
         (self.root / "target.py").write_text("value = 1\n", encoding="utf-8")
 
@@ -298,7 +385,7 @@ class RepairToolsTests(unittest.TestCase):
 
         definitions = model.call_args_list[0].args[1]
         self.assertEqual({item["name"] for item in definitions}, {
-            "read_code", "search_code", "retrieve_repair_experience",
+            "read_code", "search_code", "retrieve_repair_experience", "apply_patch", "run_tests",
         })
         self.assertEqual(model.call_count, 2)
         self.assertIn("value = 1", model.call_args_list[1].args[0][-1]["output"])
