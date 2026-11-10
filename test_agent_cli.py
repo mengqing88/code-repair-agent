@@ -121,6 +121,12 @@ class AgentCliTests(unittest.TestCase):
         # directory：TemporaryDirectory() 提供的临时目录路径字符串，退出 with 后自动清理。
         # CLI 会在该目录内创建 work/reproduction.md，避免将测试记录写到当前项目中。
         with tempfile.TemporaryDirectory() as directory:
+            # test_file：在本次独立副本里运行的验收测试；断言候选补丁生效。
+            test_file = Path(directory) / "test_sample.py"
+            test_file.write_text(
+                "from target import x\n\n\ndef test_patch_changes_target():\n    assert x == 2\n",
+                encoding="utf-8",
+            )
             # script：与测试文件同目录的 CLI 路径；__file__ 是当前测试文件路径。
             # Path() 包装当前文件路径；with_name() 返回只替换文件名后的路径，不改动实际文件。
             script = Path(__file__).with_name("agent_cli.py")
@@ -139,7 +145,7 @@ class AgentCliTests(unittest.TestCase):
                 "evidence": "1",
                 "question": "",
             }, ensure_ascii=False)
-            # patch：模拟修复模型返回的诊断和 unified diff；临时工作区没有 .git，后续会验证失败状态。
+            # patch：模拟修复模型返回的诊断和 unified diff，交给真实 Git 工具应用到任务副本。
             patch = json.dumps({
                 "diagnosis": "x 的初始值与错误报告不一致。",
                 "patch_diff": "diff --git a/target.py b/target.py\n--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-x = 1\n+x = 2\n",
@@ -147,7 +153,7 @@ class AgentCliTests(unittest.TestCase):
             # bootstrap：子进程启动代码；将项目路径加入导入路径，用固定回复替代网络调用。
             # str(script.parent) 将脚本父目录转成字符串；f 字符串的 !r 相当于 repr()，保留引号和转义。
             # 生成代码中的 sys.path.insert(0, 路径) 在模块搜索列表开头插入项目目录，返回 None。
-            # responses：iter((plan, comparison, patch)) 创建依次提供三条回复的迭代器。
+            # responses：依次提供复现计划、核对结论和补丁。
             # next(responses) 每次取出一条回复，耗尽时抛出 StopIteration；lambda 定义接收 prompt 的匿名函数。
             # prompt 是模拟函数收到但不使用的提示词；agent_cli.main(sys.argv[1:]) 读取传入的 CLI 参数。
             # sys.argv[1:] 跳过启动代码名；SystemExit() 将 main() 返回的整数作为子进程退出码。
@@ -170,9 +176,11 @@ class AgentCliTests(unittest.TestCase):
                     "-c",
                     bootstrap,
                     "--code-text",
-                    "x = 1",
+                    "x = 1\n",
                     "--error-text",
                     "x 应为 2，实际为 1",
+                    "--test-target",
+                    "test_sample.py",
                 ],
                 check=True,
                 capture_output=True,
@@ -195,12 +203,14 @@ class AgentCliTests(unittest.TestCase):
             # assertIn() 检查工作文档保留了原始错误报告。
             self.assertIn("x 应为 2，实际为 1", document)
 
-        # assertEqual() 检查 CLI 状态表示完整工作流已经运行到补丁应用阶段。
-        # 临时目录不是 Git 仓库，因此补丁应用按预期失败并保留失败状态。
-        self.assertEqual(result["status"], "修复失败")
-        self.assertEqual(result["workflow"]["status"], "failed")
-        self.assertIn(".git", result["workflow"]["last_error"])
-        self.assertIn("diff --git", result["outputs"]["patch"])
+            # pytest 在任务副本中通过后，CLI 应停在人工审核阶段，而非把补丁写回原目录。
+            self.assertEqual(result["status"], "补丁已通过自动测试；等待人工确认")
+            self.assertEqual(result["workflow"]["status"], "reviewable")
+            workspace = Path(result["workflow"]["workspace_path"])
+            self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "x = 2\n")
+            self.assertFalse((Path(directory) / "target.py").exists())
+            self.assertEqual(len(result["workflow"]["checkpoint"]), 40)
+            self.assertIn("diff --git", result["outputs"]["patch"])
 
     def test_error_report_is_required(self) -> None:
         """检查只提供代码而没有错误报告时，参数解析会拒绝任务。"""

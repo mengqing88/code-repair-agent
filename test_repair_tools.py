@@ -8,7 +8,16 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from repair_tools import RepairToolError, RepairToolbox, apply_patch, read_code, run_tests, search_code
+from repair_tools import (
+    RepairToolError,
+    RepairToolbox,
+    apply_patch,
+    create_checkpoint_workspace,
+    read_code,
+    restore_checkpoint_workspace,
+    run_tests,
+    search_code,
+)
 from repair_state import create_initial_state
 
 
@@ -62,6 +71,78 @@ class RepairToolsTests(unittest.TestCase):
         outside_patch = patch.replace("target.py", "other.py")
         with self.assertRaisesRegex(RepairToolError, "超出允许修改范围"):
             apply_patch(outside_patch, workspace_root=self.root, allowed_paths=("target.py",))
+
+    def test_checkpoint_workspace_uses_fixed_commit_and_restores_without_touching_source(self) -> None:
+        """Git 副本从固定 commit 开始，恢复 checkpoint 不改变原仓库当前文件。"""
+        import subprocess
+
+        source = self.root / "source"
+        source.mkdir()
+        subprocess.run(["git", "init", "-q", str(source)], check=True)
+        original = source / "target.py"
+        original.write_text("value = 1\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(source), "add", "target.py"], check=True)
+        subprocess.run(
+            ["git", "-C", str(source), "-c", "user.name=Test", "-c", "user.email=test@localhost", "commit", "-qm", "baseline"],
+            check=True,
+        )
+        revision = subprocess.run(
+            ["git", "-C", str(source), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        original.write_text("value = 9\n", encoding="utf-8")
+        workspace = self.root / "task" / "workspace"
+
+        checkpoint = create_checkpoint_workspace(source, workspace, revision=revision)
+        self.assertEqual(checkpoint, revision)
+        self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "value = 1\n")
+
+        patch_text = "--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-value = 1\n+value = 2\n"
+        apply_patch(patch_text, workspace_root=workspace, allowed_paths=("target.py",))
+        restore_checkpoint_workspace(workspace, checkpoint)
+
+        self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "value = 1\n")
+        self.assertEqual(original.read_text(encoding="utf-8"), "value = 9\n")
+        self.assertEqual(
+            subprocess.run(
+                ["git", "-C", str(source), "worktree", "list", "--porcelain"],
+                check=True, capture_output=True, text=True,
+            ).stdout.count("worktree "),
+            1,
+        )
+
+    def test_checkpoint_workspace_snapshots_python_file_and_removes_generated_files(self) -> None:
+        """单文件任务把原文件复制进隔离目录，恢复时移除补丁和未跟踪产物。"""
+        source_file = self.root / "example.txt"
+        source_file.write_text("value = 1\n", encoding="utf-8")
+        (self.root / ".gitignore").write_text("*.dat\n", encoding="utf-8")
+        baseline_data = self.root / "input.dat"
+        baseline_data.write_bytes(b"baseline\r\n")
+        workspace = self.root / "task" / "workspace"
+        checkpoint = create_checkpoint_workspace(
+            self.root,
+            workspace,
+            source_file=source_file,
+        )
+        copied_file = workspace / "example.txt"
+        copied_file.write_text("value = 2\n", encoding="utf-8")
+        (workspace / "test-output.tmp").write_text("temporary", encoding="utf-8")
+        (workspace / "input.dat").write_bytes(b"changed\n")
+
+        restore_checkpoint_workspace(workspace, checkpoint)
+
+        self.assertEqual(copied_file.read_text(encoding="utf-8"), "value = 1\n")
+        self.assertFalse((workspace / "test-output.tmp").exists())
+        self.assertEqual((workspace / "input.dat").read_bytes(), b"baseline\r\n")
+        self.assertEqual(source_file.read_text(encoding="utf-8"), "value = 1\n")
+
+    def test_restore_refuses_unmarked_source_directory(self) -> None:
+        """没有任务标记的原目录不能执行 reset 和 clean。"""
+        original = self.root / "target.py"
+        original.write_text("value = 9\n", encoding="utf-8")
+        with self.assertRaisesRegex(RepairToolError, "仅允许"):
+            restore_checkpoint_workspace(self.root, "a" * 40)
+        self.assertEqual(original.read_text(encoding="utf-8"), "value = 9\n")
 
     def test_run_tests_returns_real_exit_code_and_hides_model_credentials(self) -> None:
         """测试工具返回 pytest 的真实退出码，并不向子进程传递模型密钥。"""

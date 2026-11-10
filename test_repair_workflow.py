@@ -3,6 +3,9 @@
 # hashlib：计算测试中预期的补丁哈希；json：构造模拟模型的 JSON 回复。
 import hashlib
 import json
+import tempfile
+from pathlib import Path
+from dataclasses import replace
 # unittest：组织测试。
 import unittest
 
@@ -12,6 +15,8 @@ from llm_client import ModelCallResult
 from repair_workflow import RepairServices, build_repair_workflow, llm_propose_patch
 # create_initial_state：创建图的完整初始输入。
 from repair_state import create_initial_state
+from repair_tools import RepairToolbox, create_checkpoint_workspace
+from repair_workflow import validate_patch_node
 
 
 class RepairWorkflowTests(unittest.TestCase):
@@ -117,6 +122,11 @@ class RepairWorkflowTests(unittest.TestCase):
             services.save_case,
             record_rejection,
         )
+        restored: list[str] = []
+        services = replace(
+            services,
+            restore_checkpoint=lambda state: restored.append(state["task_id"]),
+        )
         graph = build_repair_workflow(services)
 
         reviewable = graph.invoke(self.initial_state())
@@ -132,6 +142,7 @@ class RepairWorkflowTests(unittest.TestCase):
 
         self.assertEqual(rejected["status"], "failed")
         self.assertEqual(rejection_reasons, ["补丁修改了不允许变更的行为。"])
+        self.assertEqual(restored, ["task-1", "task-1"])
         self.assertEqual(events[-1], "record_rejection")
         self.assertIn("补丁修改了不允许变更的行为", rejected["last_error"])
 
@@ -193,7 +204,11 @@ class RepairWorkflowTests(unittest.TestCase):
     def test_failed_validation_retries_until_a_later_pass(self) -> None:
         """验证失败且仍有次数时回到模型提议节点，后续通过才进入人工审核。"""
         events: list[str] = []
-        graph = build_repair_workflow(self.make_services(events, [False, True]))
+        services = replace(
+            self.make_services(events, [False, True]),
+            restore_checkpoint=lambda state: events.append("restore_checkpoint"),
+        )
+        graph = build_repair_workflow(services)
 
         result = graph.invoke(self.initial_state(attempts=1))
         self.assertEqual(result["status"], "reviewable")
@@ -201,6 +216,9 @@ class RepairWorkflowTests(unittest.TestCase):
         self.assertEqual(result["remaining_budget"]["attempts"], 0)
         self.assertEqual(events.count("propose_patch"), 2)
         self.assertEqual(events.count("validate_patch"), 2)
+        first_proposal = events.index("propose_patch")
+        second_proposal = events.index("propose_patch", first_proposal + 1)
+        self.assertLess(events.index("restore_checkpoint"), second_proposal)
 
     def test_exhausted_validation_ends_as_failed(self) -> None:
         """没有剩余尝试次数时，验证失败直接结束，不能进入审核。"""
@@ -282,6 +300,126 @@ class RepairWorkflowTests(unittest.TestCase):
         self.assertEqual(result["status"], "needs_input")
         self.assertIsNotNone(result["question"])
         self.assertEqual(events, ["reproduce"])
+
+
+
+class CheckpointWorkflowTests(unittest.TestCase):
+    """用真实 Git 补丁和 pytest 检查副本、恢复及重试的配合。"""
+
+    def setUp(self) -> None:
+        """建立包含源码和验收测试的独立临时项目。"""
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        self.source = self.root / "source"
+        self.source.mkdir()
+        self.original = self.source / "target.py"
+        self.original.write_bytes(b"value = 0\n")
+        (self.source / "test_target.py").write_text(
+            "from pathlib import Path\nfrom target import value\n\n"
+            "def test_value():\n"
+            "    Path('generated.tmp').write_text('test artifact')\n"
+            "    assert value == 2\n",
+            encoding="utf-8",
+        )
+        self.workspace = self.root / "task" / "workspace"
+        checkpoint = create_checkpoint_workspace(self.source, self.workspace, source_file=self.original)
+        self.toolbox = RepairToolbox(
+            workspace_root=self.workspace,
+            source_root=self.source,
+            checkpoint_revision=checkpoint,
+            allowed_paths=("target.py",),
+            test_targets=("test_target.py",),
+            validation_report_path=self.root / "task" / "validation.md",
+        )
+
+    def make_services(self, values: tuple[int, ...]) -> RepairServices:
+        """模型回调生成固定候选补丁，其他修改和验证动作调用真实工具。"""
+        def propose(state):
+            """每次提出补丁前检查副本已经恢复，确保补丁基于同一份源码。"""
+            self.assertEqual((self.workspace / "target.py").read_text(encoding="utf-8"), "value = 0\n")
+            self.assertFalse((self.workspace / "generated.tmp").exists())
+            value = values[state["attempt_count"]]
+            diff = f"--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-value = 0\n+value = {value}\n"
+            return {"diagnosis": "修正默认值", "patch_diff": diff,
+                    "patch_hash": hashlib.sha256(diff.encode("utf-8")).hexdigest()}
+
+        return self.toolbox.as_repair_services(
+            lambda state: {"matched": True, "record": {"result": "baseline"}},
+            propose_patch=propose,
+        )
+
+    def initial_state(self, attempts: int = 0):
+        """生成指向原始文件的状态，工具只在其副本中执行。"""
+        return create_initial_state(
+            "checkpoint-task", {"type": "python_file", "path": str(self.original)}, "value 应为 2",
+            remaining_seconds=60, remaining_tokens=2000, remaining_attempts=attempts,
+        )
+
+    def test_failed_candidate_is_reset_before_next_candidate(self) -> None:
+        """第一轮真实测试失败后，恢复基线并成功应用第二轮完整补丁。"""
+        result = build_repair_workflow(self.make_services((1, 2))).invoke(self.initial_state(attempts=1))
+        self.assertEqual(result["status"], "reviewable")
+        self.assertEqual((self.workspace / "target.py").read_text(encoding="utf-8"), "value = 2\n")
+        self.assertEqual(self.original.read_bytes(), b"value = 0\n")
+        self.assertFalse((self.source / "generated.tmp").exists())
+
+    def test_last_failed_candidate_is_reset_and_report_survives(self) -> None:
+        """次数用完后恢复文件，保存在副本外的真实失败日志仍能读取。"""
+        result = build_repair_workflow(self.make_services((1,))).invoke(self.initial_state())
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual((self.workspace / "target.py").read_bytes(), b"value = 0\n")
+        self.assertFalse((self.workspace / "generated.tmp").exists())
+        self.assertIn("assert 1 == 2", Path(result["validation"]["report_path"]).read_text(encoding="utf-8"))
+
+    def test_rejection_restores_even_when_database_recording_fails(self) -> None:
+        """模拟数据库写入失败，确认副本已恢复且验收记录保留。"""
+        def fail_record(state):
+            """用异常模拟数据库不可用，不连接真实数据库。"""
+            raise RuntimeError("database unavailable")
+
+        services = replace(self.make_services((2,)), record_rejection=fail_record)
+        graph = build_repair_workflow(services)
+        reviewable = graph.invoke(self.initial_state())
+        self.assertEqual(reviewable["status"], "reviewable")
+        reviewable.update(review_decision="rejected", review_reason="修复不符合预期")
+        result = graph.invoke(reviewable)
+        self.assertIn("database unavailable", result["last_error"])
+        self.assertEqual((self.workspace / "target.py").read_bytes(), b"value = 0\n")
+        self.assertTrue(Path(result["validation"]["report_path"]).is_file())
+        self.assertEqual(self.original.read_bytes(), b"value = 0\n")
+
+    def test_rejection_restores_after_time_budget_expires(self) -> None:
+        """拒绝时已无剩余时间，仍然撤销候选补丁。"""
+        graph = build_repair_workflow(self.make_services((2,)))
+        reviewable = graph.invoke(self.initial_state())
+        reviewable.update(review_decision="rejected", review_reason="不接受")
+        reviewable["remaining_budget"]["seconds"] = 0
+        result = graph.invoke(reviewable)
+        self.assertEqual(result["status"], "budget_exceeded")
+        self.assertEqual((self.workspace / "target.py").read_bytes(), b"value = 0\n")
+
+    def test_apply_error_and_validation_budget_exit_restore_workspace(self) -> None:
+        """应用后异常以及验证入口超时，都不能留下候选修改。"""
+        services = self.make_services((2,))
+
+        def apply_then_fail(state):
+            """先执行真实补丁应用，再模拟后续操作异常。"""
+            services.apply_patch(state)
+            raise RuntimeError("apply interrupted")
+
+        failing = replace(services, apply_patch=apply_then_fail)
+        result = build_repair_workflow(failing).invoke(self.initial_state())
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual((self.workspace / "target.py").read_bytes(), b"value = 0\n")
+
+        state = self.initial_state()
+        state.update(services.propose_patch(state))
+        services.apply_patch(state)
+        state["remaining_budget"]["seconds"] = 0
+        result = validate_patch_node(state, services)
+        self.assertEqual(result["status"], "budget_exceeded")
+        self.assertEqual((self.workspace / "target.py").read_bytes(), b"value = 0\n")
 
 
 if __name__ == "__main__":

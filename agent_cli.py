@@ -20,7 +20,7 @@ from reproduction import reproduce
 # create_initial_state：创建 LangGraph 的共享修复状态；RepairState：标注节点回调的状态类型。
 from repair_state import RepairState, create_initial_state
 # RepairToolbox：绑定工作区读取、补丁应用和测试工具。
-from repair_tools import RepairToolbox
+from repair_tools import RepairToolbox, create_checkpoint_workspace
 # build_repair_workflow：构建并执行完整的 LangGraph 修复流程。
 from repair_workflow import build_repair_workflow
 
@@ -205,18 +205,37 @@ def build_result(args: argparse.Namespace) -> dict[str, object]:
 
 
 def _workflow_workspace(
-    args: argparse.Namespace, source: dict[str, object], project_root: Path,
-) -> tuple[Path, tuple[str, ...]]:
-    """确定工具箱工作区和补丁允许修改的路径范围。"""
-    # 仓库模式允许仓库内任意路径；固定 revision 仍由 reproduce() 用于生成复现源码快照。
+    args: argparse.Namespace, source: dict[str, object], project_root: Path, task_id: str,
+) -> tuple[Path, tuple[str, ...], str]:
+    """为任务创建独立 checkpoint 工作区，并返回补丁允许修改的路径范围。"""
+    # task_directory：保存本任务工作区和验证报告；work/ 已加入 Git 忽略规则。
+    task_directory = project_root / "work" / "tasks" / task_id
+    workspace_root = task_directory / "workspace"
+    # 固定仓库版本直接克隆到任务目录；原仓库 HEAD 和工作区文件不会改变。
     if source["type"] == "git_repository":
-        return project_root, (".",)
-    # 单文件模式只允许补丁修改用户指定的文件，避免模型改动同目录的其他文件。
+        checkpoint = create_checkpoint_workspace(
+            project_root,
+            workspace_root,
+            revision=str(source["revision"]),
+        )
+        return workspace_root, (".",), checkpoint
+    # 单文件模式复制目录快照，但只允许补丁修改目标文件的相对路径。
     if source["type"] == "python_file":
         path = Path(str(source["path"])).resolve()
-        return project_root, (path.name,)
-    # 粘贴代码模式统一使用 target.py；补丁工具仍会检查工作区和 Git 范围。
-    return project_root, ("target.py",)
+        relative_path = path.relative_to(project_root).as_posix()
+        checkpoint = create_checkpoint_workspace(
+            project_root,
+            workspace_root,
+            source_file=path,
+        )
+        return workspace_root, (relative_path,), checkpoint
+    # 粘贴代码模式在副本中写入 target.py，并对其建立基线 checkpoint。
+    checkpoint = create_checkpoint_workspace(
+        project_root,
+        workspace_root,
+        pasted_code=args.code_text,
+    )
+    return workspace_root, ("target.py",), checkpoint
 
 
 def _run_repair_workflow(
@@ -224,10 +243,12 @@ def _run_repair_workflow(
     source: dict[str, object],
     error_report: str,
     project_root: Path,
-) -> RepairState:
-    """把 CLI 输入交给 LangGraph，并返回流程结束时的完整状态。"""
+) -> tuple[RepairState, Path, str]:
+    """把 CLI 输入交给 LangGraph，并返回状态、隔离工作区和基线 checkpoint。"""
+    # task_id：同一标识关联 LangGraph 状态与这次任务的修改工作区。
+    task_id = uuid4().hex
     # workspace_root：工具实际读取、应用补丁和运行测试的目录；allowed_paths：补丁允许触及的范围。
-    workspace_root, allowed_paths = _workflow_workspace(args, source, project_root)
+    workspace_root, allowed_paths, checkpoint = _workflow_workspace(args, source, project_root, task_id)
     # test_targets：固定测试节点执行的 pytest 目标；没有显式参数时使用工作区根目录。
     test_targets = tuple(args.test_targets or (".",))
     # toolbox：把当前工作区和测试配置绑定到固定工具节点；未配置知识库时仍可完成普通修复。
@@ -235,14 +256,23 @@ def _run_repair_workflow(
         workspace_root=workspace_root,
         allowed_paths=allowed_paths,
         test_targets=test_targets,
+        checkpoint_revision=checkpoint,
+        source_root=project_root,
+        validation_report_path=project_root / "work" / "tasks" / task_id / "validation.md",
     )
 
     def reproduce_for_state(state: RepairState) -> dict[str, object]:
         """按共享状态执行一次基线复现，并转换成工作流要求的回调结果。"""
+        # 从已冻结的基线读取，避免原文件变化导致复现和修复版本不一致。
+        baseline_source = dict(state["source"])
+        if baseline_source["type"] == "git_repository":
+            baseline_source.update(path=str(workspace_root), revision=checkpoint)
+        elif baseline_source["type"] == "python_file":
+            baseline_source["path"] = str(workspace_root / allowed_paths[0])
         # seconds：将本轮剩余时间传给复现子进程；至少保留一个正数，避免 timeout=0 被拒绝。
         seconds = max(0.1, float(state["remaining_budget"]["seconds"]))
         record = reproduce(
-            source=state["source"],
+            source=baseline_source,
             error_report=state["original_report"],
             code_text=state["code_text"],
             work_root=project_root / "work",
@@ -257,7 +287,7 @@ def _run_repair_workflow(
 
     # create_initial_state() 使用项目约定的默认预算：10 次、120 秒、20000 Token、0.10 元。
     initial_state = create_initial_state(
-        task_id=uuid4().hex,
+        task_id=task_id,
         source=source,
         error_report=error_report,
         code_text=args.code_text,
@@ -265,7 +295,8 @@ def _run_repair_workflow(
     # as_repair_services() 将复现、上下文收集、模型提议、补丁应用、测试和经验保存绑定到固定节点。
     services = toolbox.as_repair_services(reproduce_for_state)
     # invoke() 执行编译后的 LangGraph；返回值包含每个节点写回的最终状态快照。
-    return build_repair_workflow(services).invoke(initial_state)
+    state = build_repair_workflow(services).invoke(initial_state)
+    return state, workspace_root, checkpoint
 
 
 def _update_workflow_result(result: dict[str, object], state: RepairState) -> None:
@@ -345,7 +376,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             # Path.cwd() 返回当前进程工作目录的绝对 Path 对象；它是 Path 类提供的方法。
             project_root = Path.cwd()
         # _run_repair_workflow() 执行完整 LangGraph 流程；工作流状态保留每个固定节点的结果。
-        workflow_state = _run_repair_workflow(
+        workflow_state, workspace_path, checkpoint = _run_repair_workflow(
             args,
             result["input"]["source"],
             error_report_text,
@@ -363,6 +394,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         }
         # _update_workflow_result() 把节点状态和补丁、验证结果映射到 CLI 的稳定输出结构。
         _update_workflow_result(result, workflow_state)
+        # workspace_path 与 checkpoint 让用户定位待审补丁，并确认恢复使用的基线。
+        result["workflow"]["workspace_path"] = str(workspace_path)
+        result["workflow"]["checkpoint"] = checkpoint
     # error：校验过程中抛出的内置 ValueError 异常，保存用户可理解的错误消息。
     except ValueError as error:
         # 内置 str() 提取错误文字；parser.error() 打印使用说明并以退出码 2 退出。

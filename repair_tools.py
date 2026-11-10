@@ -35,6 +35,166 @@ EmbeddingFunction = Callable[[str], Sequence[float]]
 ConnectionFactory = Callable[[str], Any]
 
 
+def _task_copy_ignored(directory: str, names: list[str]) -> set[str]:
+    """复制非 Git 输入时排除工作目录、缓存和本地凭据文件。"""
+    ignored = {
+        ".git", ".venv", "venv", "__pycache__", ".idea", "work",
+        "node_modules", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+        ".ssh", ".aws", ".azure", ".gnupg", ".kube",
+    }
+    return {
+        name for name in names
+        if name in ignored or name == ".env" or (name.startswith(".env.") and name != ".env.example")
+    }
+
+
+def create_checkpoint_workspace(
+    source_root: Path,
+    workspace_root: Path,
+    *,
+    revision: str | None = None,
+    source_file: Path | None = None,
+    pasted_code: str | None = None,
+) -> str:
+    """从固定 Git commit 或当前文件快照创建隔离工作区，并返回基线 checkpoint。
+
+    参数：
+        source_root：原仓库或代码目录；只读取其中的输入，不在其中应用补丁。
+        workspace_root：新建的任务工作区路径，必须尚不存在。
+        revision：Git 仓库模式使用的完整 commit；省略时复制当前目录快照。
+        source_file：单文件模式下需要复制到工作区的源码路径。
+        pasted_code：粘贴代码模式下写入工作区 target.py 的源码。
+
+    返回：
+        Git commit 哈希；后续可用它恢复该工作区的文件状态。
+    """
+    source = source_root.expanduser().resolve()
+    workspace = workspace_root.expanduser().resolve()
+    if not source.is_dir():
+        raise ValueError(f"代码目录不存在：{source}")
+    if workspace.exists():
+        raise ValueError(f"任务工作区已经存在：{workspace}")
+    if source.is_relative_to(workspace):
+        raise ValueError("任务工作区不能包含原始代码目录")
+
+    workspace.parent.mkdir(parents=True, exist_ok=True)
+    if revision is not None:
+        try:
+            completed = subprocess.run(
+                ["git", "clone", "--no-hardlinks", "--no-checkout", os.fspath(source), os.fspath(workspace)],
+                capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=120,
+            )
+            if completed.returncode != 0:
+                raise ValueError(f"无法创建独立 Git 修复副本：{(completed.stderr or completed.stdout).strip()}")
+            checkout = subprocess.run(
+                ["git", "-C", os.fspath(workspace), "checkout", "--detach", revision],
+                capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30,
+            )
+            if checkout.returncode != 0:
+                raise ValueError(f"无法切换到指定 commit：{(checkout.stderr or checkout.stdout).strip()}")
+        except Exception:
+            if workspace.exists():
+                shutil.rmtree(workspace)
+            raise
+    else:
+        def ignore_copy_directory(directory: str, names: list[str]) -> set[str]:
+            """跳过项目临时目录及当前目标路径，避免把工作区复制进自身。"""
+            ignored_names = _task_copy_ignored(directory, names)
+            # 不把指向原目录的链接带进副本，避免测试沿链接写回原文件。
+            for name in set(names) - ignored_names:
+                candidate = Path(directory) / name
+                if candidate.is_symlink() or getattr(candidate.lstat(), "st_file_attributes", 0) & 0x400:
+                    raise ValueError(f"代码目录含符号链接或目录联接，无法创建独立快照：{candidate}")
+            current_directory = Path(directory).resolve()
+            try:
+                nested_workspace = workspace.relative_to(current_directory)
+            except ValueError:
+                return ignored_names
+            if nested_workspace.parts:
+                ignored_names.add(nested_workspace.parts[0])
+            return ignored_names
+
+        try:
+            shutil.copytree(source, workspace, ignore=ignore_copy_directory, symlinks=True)
+            if source_file is not None:
+                original_file = source_file.expanduser().resolve()
+                relative_file = original_file.relative_to(source)
+                copied_file = workspace / relative_file
+                if not copied_file.is_file():
+                    raise ValueError(f"代码文件没有复制到任务工作区：{relative_file}")
+            if pasted_code is not None:
+                (workspace / "target.py").write_text(pasted_code, encoding="utf-8")
+            subprocess.run(
+                ["git", "init", "--quiet", os.fspath(workspace)],
+                capture_output=True, check=True, timeout=30,
+            )
+            # --force 将快照里原有的忽略文件也纳入基线，恢复时才能保留它们。
+            # 关闭自动换行转换，确保 checkpoint 保存复制时的原始字节。
+            subprocess.run(
+                ["git", "-C", os.fspath(workspace), "config", "core.autocrlf", "false"],
+                capture_output=True, check=True, timeout=30,
+            )
+            subprocess.run(
+                ["git", "-C", os.fspath(workspace), "add", "--all", "--force"],
+                capture_output=True, check=True, timeout=30,
+            )
+            subprocess.run(
+                [
+                    "git", "-C", os.fspath(workspace), "-c", "user.name=Repair Agent",
+                    "-c", "user.email=repair-agent@localhost", "commit", "--quiet",
+                    "--allow-empty", "-m", "Create task checkpoint",
+                ],
+                capture_output=True, check=True, timeout=30,
+            )
+        except Exception:
+            if workspace.exists():
+                shutil.rmtree(workspace)
+            raise
+
+    try:
+        completed = subprocess.run(
+            ["git", "-C", os.fspath(workspace), "rev-parse", "HEAD"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=30,
+        )
+        # marker_path：只允许对带有任务标记的副本执行恢复，避免误用原仓库。
+        checkpoint = completed.stdout.strip()
+        marker_path = workspace / ".git" / "repair-checkpoint.json"
+        marker_path.write_text(
+            json.dumps({"workspace": str(workspace), "checkpoint": checkpoint}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        return checkpoint
+    except Exception:
+        if workspace.exists():
+            shutil.rmtree(workspace)
+        raise
+
+
+def restore_checkpoint_workspace(workspace_root: Path, checkpoint_revision: str) -> None:
+    """丢弃任务副本中的修改和生成文件，恢复到固定的基线 commit。"""
+    workspace = workspace_root.expanduser().resolve()
+    if not workspace.is_dir() or not checkpoint_revision:
+        raise RepairToolError("任务工作区或基线 checkpoint 不存在")
+    try:
+        marker = json.loads((workspace / ".git" / "repair-checkpoint.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise RepairToolError("恢复 checkpoint 仅允许用于程序创建的任务副本") from error
+    if marker != {"workspace": str(workspace), "checkpoint": checkpoint_revision}:
+        raise RepairToolError("任务工作区与 checkpoint 标记不一致，已拒绝恢复")
+    reset = subprocess.run(
+        ["git", "-C", os.fspath(workspace), "reset", "--hard", checkpoint_revision],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30,
+    )
+    if reset.returncode != 0:
+        raise RepairToolError(f"恢复 checkpoint 失败：{(reset.stderr or reset.stdout).strip()}")
+    clean = subprocess.run(
+        ["git", "-C", os.fspath(workspace), "clean", "-fdx"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30,
+    )
+    if clean.returncode != 0:
+        raise RepairToolError(f"清理 checkpoint 外的文件失败：{(clean.stderr or clean.stdout).strip()}")
+
+
 def _limited_text(value: str, limit: int) -> tuple[str, bool]:
     """把外部程序输出限制在指定字符数内，并返回是否发生截断。"""
     if limit <= 0:
@@ -448,22 +608,22 @@ def apply_patch(
     root = workspace_root.resolve()
     if not (root / ".git").exists():
         raise RepairToolError("应用补丁需要工作区包含 .git")
-    command = ["git", "apply", "--whitespace=error"]
+    # 字节输入避免 Windows 把补丁的 LF 换成 CRLF；Git 同时兼容两种源码换行。
+    patch_bytes = patch_diff.replace("\r\n", "\n").encode("utf-8")
+    command = ["git", "-c", "core.autocrlf=input", "apply", "--whitespace=error"]
     check = subprocess.run(
-        [*command, "--check", "-"], cwd=root, input=patch_diff, capture_output=True,
-        text=True, encoding="utf-8", errors="replace", check=False,
+        [*command, "--check", "-"], cwd=root, input=patch_bytes, capture_output=True, check=False,
     )
     if check.returncode != 0:
-        detail, _ = _limited_text(check.stderr or check.stdout, max_output_chars)
+        detail, _ = _limited_text((check.stderr or check.stdout).decode("utf-8", errors="replace"), max_output_chars)
         raise RepairToolError(f"补丁检查失败：{detail.strip()}")
     applied = subprocess.run(
-        [*command, "-"], cwd=root, input=patch_diff, capture_output=True,
-        text=True, encoding="utf-8", errors="replace", check=False,
+        [*command, "-"], cwd=root, input=patch_bytes, capture_output=True, check=False,
     )
     if applied.returncode != 0:
-        detail, _ = _limited_text(applied.stderr or applied.stdout, max_output_chars)
+        detail, _ = _limited_text((applied.stderr or applied.stdout).decode("utf-8", errors="replace"), max_output_chars)
         raise RepairToolError(f"补丁应用失败：{detail.strip()}")
-    output, truncated = _limited_text(applied.stdout, max_output_chars)
+    output, truncated = _limited_text(applied.stdout.decode("utf-8", errors="replace"), max_output_chars)
     return {"paths": sorted(touched), "return_code": applied.returncode, "output": output, "truncated": truncated}
 
 
@@ -561,6 +721,9 @@ class RepairToolbox:
     allowed_paths: tuple[str, ...] = ()
     test_targets: tuple[str, ...] = ()
     test_timeout_seconds: float = 300.0
+    checkpoint_revision: str | None = None
+    source_root: Path | None = None
+    validation_report_path: Path | None = None
     _definitions: tuple[dict[str, object], ...] = field(default=TOOL_DEFINITIONS, init=False, repr=False)
 
     def model_tool_definitions(self) -> list[dict[str, object]]:
@@ -606,6 +769,12 @@ class RepairToolbox:
             raise RepairToolError("当前知识库不支持记录拒绝理由")
         recorder(state)
 
+    def restore_workspace(self, state: RepairState) -> None:
+        """恢复本任务的隔离工作区，不触碰用户提供的原始目录。"""
+        if self.checkpoint_revision is None:
+            raise RepairToolError("当前任务没有基线 checkpoint")
+        restore_checkpoint_workspace(self.workspace_root, self.checkpoint_revision)
+
     def collect_context_for_state(self, state: RepairState) -> dict[str, object]:
         """为工作流收集源码证据并检索原始报告相关的历史案例。"""
         evidence: list[dict[str, object]] = []
@@ -622,7 +791,8 @@ class RepairToolbox:
         elif source_type == "python_file" and isinstance(source.get("path"), str):
             source_path = Path(str(source["path"])).resolve()
             try:
-                relative = _relative_path(self.workspace_root, source_path)
+                relative_root = (self.source_root or self.workspace_root).expanduser().resolve()
+                relative = source_path.relative_to(relative_root).as_posix()
                 file_data = self.read_code(relative)
                 evidence.append({
                     "path": file_data["path"],
@@ -649,7 +819,7 @@ class RepairToolbox:
     def validate_patch_for_state(self, state: RepairState) -> dict[str, object]:
         """运行固定测试并把退出码、输出和当前补丁哈希绑定到验证摘要。"""
         result = self.run_tests()
-        report_path = self.workspace_root / "work" / "validation.md"
+        report_path = self.validation_report_path or self.workspace_root / "work" / "validation.md"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(
             "# 验证报告\n\n"
@@ -693,6 +863,7 @@ class RepairToolbox:
             validate_patch=self.validate_patch_for_state,
             save_case=self.save_repair_experience,
             record_rejection=self.record_rejection,
+            restore_checkpoint=self.restore_workspace,
         )
 
     def call_model_tool(self, name: str, arguments: Mapping[str, object]) -> object:
