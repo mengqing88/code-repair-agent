@@ -8,12 +8,22 @@ import sys
 from dataclasses import dataclass
 # Path：表示文件路径；urlsplit：拆分地址，检查 API 地址的协议和主机部分。
 from pathlib import Path
+from typing import Mapping, Sequence
 from urllib.parse import urlsplit
 
 # dotenv_values：读取 .env 的键值对，返回字典，不修改当前进程的环境变量。
 from dotenv import dotenv_values
 # OpenAI：兼容接口客户端；其他三个类分别表示连接失败、HTTP 错误和请求超时。
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
+
+
+@dataclass(frozen=True)
+class ModelToolCall:
+    """Responses API 返回的一次函数工具调用。"""
+
+    call_id: str
+    name: str
+    arguments: str
 
 
 @dataclass(frozen=True)
@@ -27,6 +37,9 @@ class ModelCallResult:
     total_tokens: int
     # cost_yuan：按 .env 中的价格配置估算的人民币费用，没有价格配置时为 None。
     cost_yuan: float | None
+    # tool_calls、output_items：工具请求及原始响应项，用于继续同一轮模型对话。
+    tool_calls: tuple[ModelToolCall, ...] = ()
+    output_items: tuple[dict[str, object], ...] = ()
 
 
 def _read_setting(settings: dict[str, str | None], primary: str, fallback: str | None = None) -> str:
@@ -83,6 +96,109 @@ def _estimate_cost_yuan(
     return input_tokens / 1000 * (input_rate or 0.0) + output_tokens / 1000 * (output_rate or 0.0)
 
 
+def _chat_configuration(env_path: Path | None) -> tuple[dict[str, str | None], str, str, str]:
+    """读取并校验聊天模型配置；env_path 是可选的 .env 文件路径。"""
+    # config_path：默认读取当前模块旁的 .env；传入路径时只读取指定文件。
+    config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
+    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
+    api_key = _read_setting(settings, "CHAT_API_KEY", "API_KEY")
+    base_url = _read_setting(settings, "CHAT_BASE_URL", "BASE_URL").rstrip("/")
+    model = (os.getenv("MODEL") or settings.get("MODEL") or "").strip()
+    if not api_key:
+        raise ValueError("请在 .env 或环境变量中填写 CHAT_API_KEY")
+    if not base_url:
+        raise ValueError("请在 .env 或环境变量中填写 CHAT_BASE_URL")
+    if not model:
+        raise ValueError("请在 .env 或环境变量中填写 MODEL")
+    address = urlsplit(base_url)
+    if address.scheme not in ("http", "https") or not address.netloc:
+        raise ValueError("CHAT_BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
+    return settings, api_key, base_url, model
+
+
+def _response_item_dict(item: object) -> dict[str, object]:
+    """把 SDK 响应项转换成可再次提交给 Responses API 的字典。"""
+    if isinstance(item, Mapping):
+        return dict(item)
+    dump = getattr(item, "model_dump", None)
+    if callable(dump):
+        return dump(mode="json", exclude_none=True)
+    raise RuntimeError("模型返回了无法继续对话的响应项")
+
+
+def ask_model_with_tools(
+    model_input: str | Sequence[Mapping[str, object]],
+    tools: Sequence[Mapping[str, object]],
+    env_path: Path | None = None,
+) -> ModelCallResult:
+    """调用 Responses API 一轮并解析文字、函数调用和用量。
+
+    参数：
+        model_input：第一轮提示词，或包含此前模型输出及工具结果的对话项。
+        tools：允许模型选择的函数工具定义。
+        env_path：可选 .env 文件路径；省略时读取当前模块旁的 .env。
+    """
+    if isinstance(model_input, str):
+        if not model_input.strip():
+            raise ValueError("发送给模型的内容不能为空")
+    elif not model_input:
+        raise ValueError("模型对话内容不能为空")
+    if not tools:
+        raise ValueError("至少需要提供一个模型工具")
+
+    settings, api_key, base_url, model = _chat_configuration(env_path)
+    try:
+        with OpenAI(api_key=api_key, base_url=base_url, timeout=60.0, max_retries=0) as client:
+            response = client.responses.create(
+                model=model,
+                input=model_input,
+                tools=list(tools),
+                max_output_tokens=4096,
+                store=False,
+            )
+    except APITimeoutError:
+        raise RuntimeError("模型工具调用请求超时，请稍后重试") from None
+    except APIConnectionError:
+        raise RuntimeError("无法连接模型服务，请检查 CHAT_BASE_URL 和网络连接") from None
+    except APIStatusError as error:
+        if error.status_code in (400, 404, 422):
+            raise RuntimeError(
+                f"模型服务返回 HTTP {error.status_code}，请确认接口支持 Responses API 函数工具调用"
+            ) from None
+        raise RuntimeError(f"模型服务返回 HTTP {error.status_code}，请检查密钥、模型权限或服务状态") from None
+
+    if response.status != "completed":
+        raise RuntimeError("模型未完成本轮回复，请检查服务状态或输出长度限制")
+    output_items = tuple(_response_item_dict(item) for item in getattr(response, "output", ()))
+    tool_calls: list[ModelToolCall] = []
+    for item in output_items:
+        if item.get("type") != "function_call":
+            continue
+        call_id = item.get("call_id")
+        name = item.get("name")
+        arguments = item.get("arguments")
+        if not all(isinstance(value, str) and value for value in (call_id, name, arguments)):
+            raise RuntimeError("模型返回的函数调用缺少 call_id、name 或 arguments")
+        tool_calls.append(ModelToolCall(call_id, name, arguments))
+
+    text = getattr(response, "output_text", "") or ""
+    if not text.strip() and not tool_calls:
+        raise RuntimeError("模型没有返回文字或工具调用")
+    usage = getattr(response, "usage", None)
+    input_tokens = _usage_value(usage, "input_tokens")
+    output_tokens = _usage_value(usage, "output_tokens")
+    total_tokens = _usage_value(usage, "total_tokens") or input_tokens + output_tokens
+    return ModelCallResult(
+        text=text,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        cost_yuan=_estimate_cost_yuan(settings, input_tokens, output_tokens),
+        tool_calls=tuple(tool_calls),
+        output_items=output_items,
+    )
+
+
 def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCallResult:
     """发送文字并返回模型回复及用量；prompt 是发送内容，env_path 可指定配置文件。"""
     # str.strip() 返回去掉两端空格、换行等空白的新字符串，不修改原 prompt；空字符串视为 False。
@@ -90,34 +206,7 @@ def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCall
         # 内置 ValueError 表示调用者传入的内容不符合要求。
         raise ValueError("发送给模型的内容不能为空")
 
-    # config_path：本次读取的配置文件路径；__file__ 是当前模块文件的路径。
-    # Path() 创建路径对象，resolve() 取得绝对路径，with_name() 将文件名替换为 .env。
-    config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
-    # settings：.env 的配置字典；utf-8-sig 兼容带 BOM 的 UTF-8 文件。
-    # dotenv_values(路径, ...) 读取配置，返回“配置名 -> 值”的字典，不修改进程环境变量。
-    # encoding 指定文本解码方式；interpolate=False 保留原始值，不展开值中的变量引用。
-    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
-    # api_key：聊天模型服务的密钥；新配置名是 CHAT_API_KEY，API_KEY 只作为旧配置回退。
-    api_key = _read_setting(settings, "CHAT_API_KEY", "API_KEY")
-    # base_url：聊天模型 API 根地址；CHAT_BASE_URL 优先，BASE_URL 只作为旧配置回退。
-    # rstrip("/") 去掉地址末尾斜杠，避免 SDK 拼接路径时产生双斜杠。
-    base_url = _read_setting(settings, "CHAT_BASE_URL", "BASE_URL").rstrip("/")
-    # model：服务商提供的准确模型 ID，与界面显示名称可能不同。
-    # getenv()/get() 读取 MODEL；strip() 返回去掉模型名两端空白的字符串。
-    model = (os.getenv("MODEL") or settings.get("MODEL") or "").strip()
-
-    # ValueError 报告配置缺失，提示配置项名称，不显示密钥内容。
-    if not api_key:
-        raise ValueError("请在 .env 或环境变量中填写 CHAT_API_KEY")
-    if not base_url:
-        raise ValueError("请在 .env 或环境变量中填写 CHAT_BASE_URL")
-    if not model:
-        raise ValueError("请在 .env 或环境变量中填写 MODEL")
-    # address：urlsplit(base_url) 返回 SplitResult 对象，仅拆分 URL，不发送网络请求。
-    # .scheme 是协议属性，.netloc 是主机和可选端口属性；它们是数据属性，不是方法。
-    address = urlsplit(base_url)
-    if address.scheme not in ("http", "https") or not address.netloc:
-        raise ValueError("CHAT_BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
+    settings, api_key, base_url, model = _chat_configuration(env_path)
 
     try:
         # client：OpenAI(...) 返回的接口客户端；api_key 用于认证，base_url 指向用户指定的兼容服务。

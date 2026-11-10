@@ -855,10 +855,18 @@ class RepairToolbox:
         # 局部导入避免 repair_workflow 导入 llm_client 时形成模块循环依赖。
         from repair_workflow import RepairServices, llm_propose_patch
 
+        def propose_with_tools(state: RepairState) -> Mapping[str, object]:
+            """默认模型诊断启用只读工具循环；测试或调用方可注入自定义提议函数。"""
+            return llm_propose_patch(
+                state,
+                tool_definitions=self.model_tool_definitions(),
+                tool_executor=self.call_model_tool,
+            )
+
         return RepairServices(
             reproduce=reproduce,
             collect_context=self.collect_context_for_state,
-            propose_patch=propose_patch or llm_propose_patch,
+            propose_patch=propose_patch or propose_with_tools,
             apply_patch=self.apply_patch_for_state,
             validate_patch=self.validate_patch_for_state,
             save_case=self.save_repair_experience,

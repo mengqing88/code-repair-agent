@@ -8,9 +8,10 @@ from pathlib import Path
 from dataclasses import replace
 # unittest：组织测试。
 import unittest
+from unittest.mock import patch
 
 # ModelCallResult：模拟带 Token 和费用统计的模型回复。
-from llm_client import ModelCallResult
+from llm_client import ModelCallResult, ModelToolCall
 # RepairServices、build_repair_workflow：创建并运行 LangGraph 工作流。
 from repair_workflow import RepairServices, build_repair_workflow, llm_propose_patch
 # create_initial_state：创建图的完整初始输入。
@@ -181,6 +182,95 @@ class RepairWorkflowTests(unittest.TestCase):
 
         self.assertEqual(result["token_usage"]["total_tokens"], 100)
         self.assertEqual(result["estimated_cost"], 0.02)
+
+    def test_llm_propose_patch_uses_tool_results_until_final_answer(self) -> None:
+        """模型先搜索代码，收到工具结果后再生成最终诊断和补丁。"""
+        state = self.initial_state()
+        tool = {
+            "type": "function", "name": "search_code",
+            "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
+        }
+        call = ModelToolCall("call-search", "search_code", '{"query":"calculate"}')
+        first_turn = ModelCallResult(
+            text="", input_tokens=100, output_tokens=20, total_tokens=120, cost_yuan=0.01,
+            tool_calls=(call,),
+            output_items=({
+                "type": "function_call", "call_id": "call-search", "name": "search_code",
+                "arguments": '{"query":"calculate"}',
+            },),
+        )
+        final_turn = ModelCallResult(
+            text=json.dumps({"diagnosis": "函数返回值错误", "patch_diff": "完整 diff"}),
+            input_tokens=140, output_tokens=30, total_tokens=170, cost_yuan=0.02,
+        )
+        tool_results: list[tuple[str, dict[str, object]]] = []
+
+        def execute_tool(name: str, arguments: dict[str, object]) -> object:
+            """记录工具调用并返回模拟搜索到的源码位置。"""
+            tool_results.append((name, arguments))
+            return {"matches": [{"path": "src/calc.py", "line": 12, "text": "return total"}]}
+
+        with patch("repair_workflow.ask_model_with_tools", side_effect=[first_turn, final_turn]) as model:
+            result = llm_propose_patch(
+                state,
+                tool_definitions=(tool,),
+                tool_executor=execute_tool,
+            )
+
+        self.assertEqual(tool_results, [("search_code", {"query": "calculate"})])
+        self.assertEqual(model.call_count, 2)
+        second_input = model.call_args_list[1].args[0]
+        self.assertTrue(any(item.get("type") == "function_call_output" for item in second_input))
+        self.assertIn("src/calc.py", second_input[-1]["output"])
+        self.assertEqual(result["diagnosis"], "函数返回值错误")
+        self.assertEqual(result["token_usage"]["total_tokens"], 290)
+        self.assertEqual(result["estimated_cost"], 0.03)
+
+    def test_llm_propose_patch_stops_tool_loop_when_token_budget_is_spent(self) -> None:
+        """工具回合耗尽 Token 预算时不执行工具，并把已用量交给工作流。"""
+        state = self.initial_state()
+        state["remaining_budget"]["tokens"] = 120
+        turn = ModelCallResult(
+            text="", input_tokens=100, output_tokens=20, total_tokens=120, cost_yuan=0.01,
+            tool_calls=(ModelToolCall("call-search", "search_code", '{"query":"calculate"}'),),
+            output_items=({
+                "type": "function_call", "call_id": "call-search", "name": "search_code",
+                "arguments": '{"query":"calculate"}',
+            },),
+        )
+        executed: list[str] = []
+        with patch("repair_workflow.ask_model_with_tools", return_value=turn) as model:
+            result = llm_propose_patch(
+                state,
+                tool_definitions=({"type": "function", "name": "search_code"},),
+                tool_executor=lambda name, arguments: executed.append(name),
+            )
+
+        self.assertTrue(result["budget_exceeded"])
+        self.assertEqual(result["token_usage"]["total_tokens"], 120)
+        self.assertEqual(executed, [])
+        self.assertEqual(model.call_count, 1)
+
+    def test_llm_propose_patch_stops_when_tool_call_limit_is_reached(self) -> None:
+        """模型持续要求工具时，到达单次修复上限后明确失败而不无限调用。"""
+        state = self.initial_state()
+        call_turn = ModelCallResult(
+            text="", input_tokens=10, output_tokens=5, total_tokens=15, cost_yuan=0.001,
+            tool_calls=(ModelToolCall("call-search", "search_code", '{"query":"x"}'),),
+            output_items=({
+                "type": "function_call", "call_id": "call-search", "name": "search_code",
+                "arguments": '{"query":"x"}',
+            },),
+        )
+        with patch("repair_workflow.MAX_REACT_TOOL_CALLS", 1), patch(
+            "repair_workflow.ask_model_with_tools", side_effect=[call_turn, call_turn],
+        ):
+            with self.assertRaisesRegex(RuntimeError, "超过上限 1"):
+                llm_propose_patch(
+                    state,
+                    tool_definitions=({"type": "function", "name": "search_code"},),
+                    tool_executor=lambda name, arguments: {"matches": []},
+                )
 
     def test_llm_failure_becomes_workflow_failure_state(self) -> None:
         """模型调用失败时，提议节点返回失败状态而不是让异常冒出图外。"""

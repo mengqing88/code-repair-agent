@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from llm_client import ModelCallResult, ModelToolCall
 from repair_tools import (
     RepairToolError,
     RepairToolbox,
@@ -211,12 +212,12 @@ class RepairToolsTests(unittest.TestCase):
         self.assertEqual(knowledge_base.rejections, [("task-1", "拒绝原因")])
 
     def test_toolbox_can_build_workflow_service_adapters(self) -> None:
-        """工具箱可直接提供当前 LangGraph 工作流所需的固定节点回调。"""
+        """默认提议节点把只读工具交给模型，并执行模型选中的工具。"""
         toolbox = RepairToolbox(workspace_root=self.root, test_targets=("test_sample.py",))
+        (self.root / "target.py").write_text("value = 1\n", encoding="utf-8")
 
         services = toolbox.as_repair_services(
             lambda state: {"matched": True, "record": {"result": "baseline"}},
-            propose_patch=lambda state: {"diagnosis": "原因", "patch_diff": "diff", "patch_hash": "hash"},
         )
 
         self.assertIsNotNone(services.collect_context)
@@ -224,6 +225,33 @@ class RepairToolsTests(unittest.TestCase):
         self.assertIsNotNone(services.apply_patch)
         self.assertIsNotNone(services.validate_patch)
         self.assertIsNotNone(services.record_rejection)
+        state = create_initial_state(
+            "task-tools", {"type": "python_file", "path": str(self.root / "target.py")}, "返回值错误",
+            remaining_seconds=60, remaining_tokens=1000, remaining_attempts=1,
+        )
+        tool_turn = ModelCallResult(
+            text="", input_tokens=40, output_tokens=10, total_tokens=50, cost_yuan=0.005,
+            tool_calls=(ModelToolCall("call-read", "read_code", '{"path":"target.py"}'),),
+            output_items=({
+                "type": "function_call", "call_id": "call-read", "name": "read_code",
+                "arguments": '{"path":"target.py"}',
+            },),
+        )
+        final_turn = ModelCallResult(
+            text=json.dumps({"diagnosis": "源码初始值错误", "patch_diff": "完整 diff"}),
+            input_tokens=80, output_tokens=20, total_tokens=100, cost_yuan=0.01,
+        )
+        with patch("repair_workflow.ask_model_with_tools", side_effect=[tool_turn, final_turn]) as model:
+            proposal = services.propose_patch(state)
+
+        definitions = model.call_args_list[0].args[1]
+        self.assertEqual({item["name"] for item in definitions}, {
+            "read_code", "search_code", "retrieve_repair_experience",
+        })
+        self.assertEqual(model.call_count, 2)
+        self.assertIn("value = 1", model.call_args_list[1].args[0][-1]["output"])
+        self.assertEqual(proposal["diagnosis"], "源码初始值错误")
+        self.assertEqual(proposal["token_usage"]["total_tokens"], 150)
 
 
 if __name__ == "__main__":

@@ -162,7 +162,10 @@ class AgentCliTests(unittest.TestCase):
                 f"sys.path.insert(0, {str(script.parent)!r}); "
                 f"responses = iter(({plan!r}, {comparison!r}, {patch!r})); "
                 "import reproduction; reproduction.ask_model = lambda prompt: next(responses); "
-                "import repair_workflow; repair_workflow.ask_model_with_usage = lambda prompt: next(responses); "
+                "import llm_client; "
+                "import repair_workflow; "
+                "repair_workflow.ask_model_with_tools = lambda model_input, tools: "
+                "llm_client.ModelCallResult(next(responses), 20, 10, 30, 0.001); "
                 "import agent_cli; raise SystemExit(agent_cli.main(sys.argv[1:]))"
             )
             # completed：子进程执行结果，保存退出码、标准输出和标准错误。
