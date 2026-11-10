@@ -12,6 +12,7 @@ from llm_client import ModelCallResult, ModelToolCall
 from repair_tools import (
     RepairToolError,
     RepairToolbox,
+    TOOL_DEFINITIONS,
     apply_patch,
     create_checkpoint_workspace,
     read_code,
@@ -210,6 +211,35 @@ class RepairToolsTests(unittest.TestCase):
         state["review_reason"] = "拒绝原因"
         toolbox.record_rejection(state)
         self.assertEqual(knowledge_base.rejections, [("task-1", "拒绝原因")])
+
+    def test_model_tool_arguments_are_validated_by_their_generated_schemas(self) -> None:
+        """运行时参数校验与交给模型的 JSON Schema 来自同一组 Pydantic 模型。"""
+        toolbox = RepairToolbox(workspace_root=self.root)
+        (self.root / "target.py").write_text("value = 1\n", encoding="utf-8")
+
+        self.assertEqual(len(toolbox.call_model_tool("search_code", {"query": "value"})["matches"]), 1)
+        schemas = {definition["name"]: definition["parameters"] for definition in TOOL_DEFINITIONS}
+        self.assertEqual(set(schemas), {"read_code", "search_code", "retrieve_repair_experience"})
+        for schema in schemas.values():
+            self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(schemas["search_code"]["properties"]["max_results"]["minimum"], 1)
+        self.assertEqual(schemas["search_code"]["properties"]["max_results"]["default"], 50)
+
+        invalid_arguments = (
+            ("read_code", {}),
+            ("read_code", {"path": 42}),
+            ("read_code", {"path": "  "}),
+            ("read_code", {"path": "target.py", "extra": "sensitive-value"}),
+            ("search_code", {"query": "value", "max_results": 0}),
+            ("search_code", {"query": "value", "max_results": True}),
+            ("retrieve_repair_experience", {"query": "\t"}),
+        )
+        for name, arguments in invalid_arguments:
+            with self.subTest(name=name, arguments=arguments):
+                with self.assertRaises(RepairToolError) as raised:
+                    toolbox.call_model_tool(name, arguments)
+                self.assertIn("参数无效", str(raised.exception))
+                self.assertNotIn("sensitive-value", str(raised.exception))
 
     def test_toolbox_can_build_workflow_service_adapters(self) -> None:
         """默认提议节点把只读工具交给模型，并执行模型选中的工具。"""

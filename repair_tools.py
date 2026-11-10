@@ -21,6 +21,8 @@ from pathlib import Path, PurePosixPath
 import re
 from typing import Any, Callable, Mapping, Sequence
 
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+
 from knowledge_base import KnowledgeBaseError, build_case_document, build_rejection_document
 from llm_client import embed_text
 from reproduction import fenced
@@ -685,30 +687,71 @@ def run_tests(
     }
 
 
-TOOL_DEFINITIONS: tuple[dict[str, object], ...] = (
+class _ToolArguments(BaseModel):
+    """所有模型可调用工具参数的严格校验配置。"""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+
+class ReadCodeArguments(_ToolArguments):
+    """读取代码工具的参数。"""
+
+    path: str = Field(min_length=1, description="工作区内要读取的相对文件路径。")
+
+    @field_validator("path")
+    @classmethod
+    def path_must_not_be_blank(cls, value: str) -> str:
+        """拒绝只包含空白字符的文件路径。"""
+        if not value.strip():
+            raise ValueError("不能为空白字符串")
+        return value
+
+
+class SearchCodeArguments(_ToolArguments):
+    """代码搜索工具的参数。"""
+
+    query: str = Field(min_length=1, description="要搜索的文本。")
+    path: str = Field(default=".", min_length=1, description="搜索的工作区相对路径，默认为整个工作区。")
+    max_results: int = Field(default=50, ge=1, description="最多返回的匹配数量，必须大于零。")
+
+    @field_validator("query", "path")
+    @classmethod
+    def strings_must_not_be_blank(cls, value: str) -> str:
+        """拒绝只包含空白字符的搜索词或路径。"""
+        if not value.strip():
+            raise ValueError("不能为空白字符串")
+        return value
+
+
+class RetrieveRepairExperienceArguments(_ToolArguments):
+    """修复经验检索工具的参数。"""
+
+    query: str = Field(min_length=1, description="用于查找相似修复经验的问题描述。")
+    limit: int = Field(default=5, ge=1, description="最多返回的经验数量，必须大于零。")
+
+    @field_validator("query")
+    @classmethod
+    def query_must_not_be_blank(cls, value: str) -> str:
+        """拒绝只包含空白字符的检索内容。"""
+        if not value.strip():
+            raise ValueError("不能为空白字符串")
+        return value
+
+
+TOOL_ARGUMENT_MODELS: tuple[tuple[str, str, type[_ToolArguments]], ...] = (
+    ("read_code", "读取工作区内指定的 UTF-8 代码文件。", ReadCodeArguments),
+    ("search_code", "在工作区中搜索文本并返回文件、行号、列号和匹配行。", SearchCodeArguments),
+    ("retrieve_repair_experience", "检索已验收的历史修复案例及其相似度。", RetrieveRepairExperienceArguments),
+)
+
+TOOL_DEFINITIONS: tuple[dict[str, object], ...] = tuple(
     {
-        "type": "function", "name": "read_code",
-        "description": "读取工作区内指定的 UTF-8 代码文件。",
-        "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"], "additionalProperties": False},
-    },
-    {
-        "type": "function", "name": "search_code",
-        "description": "在工作区中搜索文本并返回文件、行号、列号和匹配行。",
-        "parameters": {
-            "type": "object", "properties": {
-                "query": {"type": "string"}, "path": {"type": "string"}, "max_results": {"type": "integer", "minimum": 1},
-            }, "required": ["query"], "additionalProperties": False,
-        },
-    },
-    {
-        "type": "function", "name": "retrieve_repair_experience",
-        "description": "检索已验收的历史修复案例及其相似度。",
-        "parameters": {
-            "type": "object", "properties": {
-                "query": {"type": "string"}, "limit": {"type": "integer", "minimum": 1},
-            }, "required": ["query"], "additionalProperties": False,
-        },
-    },
+        "type": "function",
+        "name": name,
+        "description": description,
+        "parameters": arguments_model.model_json_schema(),
+    }
+    for name, description, arguments_model in TOOL_ARGUMENT_MODELS
 )
 
 
@@ -876,14 +919,24 @@ class RepairToolbox:
 
     def call_model_tool(self, name: str, arguments: Mapping[str, object]) -> object:
         """按模型返回的工具名调用只读工具；拒绝调用固定副作用节点。"""
-        if name == "read_code":
-            return self.read_code(arguments["path"])  # type: ignore[arg-type]
-        if name == "search_code":
-            return self.search_code(
-                arguments["query"], arguments.get("path", "."), arguments.get("max_results", 50),  # type: ignore[arg-type]
+        argument_models: dict[str, type[_ToolArguments]] = {
+            tool_name: model for tool_name, _, model in TOOL_ARGUMENT_MODELS
+        }
+        if name not in argument_models:
+            raise RepairToolError(f"模型不能直接调用工具：{name}")
+        try:
+            validated = argument_models[name].model_validate(arguments)
+        except ValidationError as error:
+            issues = "; ".join(
+                f"{'.'.join(str(part) for part in issue['loc'])}: {issue['msg']}"
+                for issue in error.errors(include_input=False, include_url=False)
             )
-        if name == "retrieve_repair_experience":
-            return self.retrieve_repair_experience(
-                arguments["query"], arguments.get("limit", 5),  # type: ignore[arg-type]
-            )
+            raise RepairToolError(f"工具 {name} 的参数无效：{issues}") from None
+
+        if isinstance(validated, ReadCodeArguments):
+            return self.read_code(validated.path)
+        if isinstance(validated, SearchCodeArguments):
+            return self.search_code(validated.query, validated.path, validated.max_results)
+        if isinstance(validated, RetrieveRepairExperienceArguments):
+            return self.retrieve_repair_experience(validated.query, validated.limit)
         raise RepairToolError(f"模型不能直接调用工具：{name}")

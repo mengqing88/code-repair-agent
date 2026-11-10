@@ -16,11 +16,13 @@ description = "Command-line input validation for Python code repair tasks."
 # dependencies：运行依赖；openai 提供兼容接口客户端，python-dotenv 读取本地 .env 配置，
 # psycopg 提供 PostgreSQL/pgvector 知识库连接。
 # langgraph 提供 StateGraph；typing-extensions 提供兼容图状态解析的 TypedDict 类型声明。
+# pydantic 用于校验模型返回的工具参数，并从同一模型生成 JSON Schema。
 dependencies = [
     "openai>=2.0,<3.0",
     "psycopg[binary]>=3.1,<4.0",
     "python-dotenv>=1.0,<2.0",
     "langgraph>=1.0,<2.0",
+    "pydantic>=2.0,<3.0",
     "typing-extensions>=4.8,<5.0",
 ]
 
