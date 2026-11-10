@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from llm_client import ModelCallResult, ModelToolCall
 from repair_tools import (
+    PostgresKnowledgeBase,
     RepairToolError,
     RepairToolbox,
     TOOL_DEFINITIONS,
@@ -240,6 +241,27 @@ class RepairToolsTests(unittest.TestCase):
                     toolbox.call_model_tool(name, arguments)
                 self.assertIn("参数无效", str(raised.exception))
                 self.assertNotIn("sensitive-value", str(raised.exception))
+
+    def test_postgres_knowledge_base_reads_project_configuration_without_connecting(self) -> None:
+        """从指定 .env 或环境变量选择知识库 URL，不连接数据库也不打印凭据。"""
+        env_file = self.root / "knowledge.env"
+        env_file.write_text(
+            "KNOWLEDGE_DB_URL=postgresql://specific.example/db\n"
+            "DATABASE_URL=postgresql://fallback.example/db\n",
+            encoding="utf-8",
+        )
+
+        with patch.dict("os.environ", {"DATABASE_URL": "postgresql://environment.example/db"}, clear=True):
+            knowledge_base = PostgresKnowledgeBase.from_environment(env_file)
+        self.assertIsNotNone(knowledge_base)
+        self.assertEqual(knowledge_base.dsn, "postgresql://specific.example/db")
+
+        with patch.dict("os.environ", {"KNOWLEDGE_DB_URL": "postgresql://environment.example/db"}, clear=True):
+            knowledge_base = PostgresKnowledgeBase.from_environment(env_file)
+        self.assertEqual(knowledge_base.dsn, "postgresql://environment.example/db")
+
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertIsNone(PostgresKnowledgeBase.from_environment(self.root / "missing.env"))
 
     def test_toolbox_can_build_workflow_service_adapters(self) -> None:
         """默认提议节点把只读工具交给模型，并执行模型选中的工具。"""

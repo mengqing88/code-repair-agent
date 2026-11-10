@@ -35,7 +35,7 @@
 - `reproduction.py`：借助模型补全复现步骤和脚本，在源码副本中执行并保存原始报告、复现过程及实际结果。
 - `repair_state.py`：定义 LangGraph 各节点共享的任务状态和默认预算。
 - `repair_workflow.py`：定义 LangGraph 节点、条件路由、补丁重试、预算扣减和人工审核流程。
-- `repair_tools.py`：提供工作区读写边界、代码读取和搜索、修复经验检索、补丁应用、pytest 执行及 PostgreSQL/pgvector 适配。
+- `repair_tools.py`：提供工作区读写边界、代码读取和搜索、修复经验检索、补丁应用、pytest 执行及 PostgreSQL/pgvector 知识库。
 - `llm_client.py`：封装兼容 OpenAI Responses API 的聊天、函数工具调用和 embeddings 请求。
 - `knowledge_base.py`：定义修复经验文档以及本地知识库实现。
 - `test_*.py`：覆盖 CLI、复现、状态、工作流、工具、模型客户端和知识库的离线测试。
@@ -49,6 +49,8 @@
 - 模型不能直接应用补丁、运行测试或保存经验；这些有副作用的动作由固定工作流节点执行。
 - Git 仓库按用户指定的 commit 创建独立副本；文件和粘贴代码任务也创建任务副本。验证失败或用户拒绝时恢复该副本的 checkpoint，不修改原始源码。
 - 测试通过只会进入人工审核状态，不等于用户已接受或任务已完成。
+- CLI 会从项目 `.env` 或环境变量读取 `KNOWLEDGE_DB_URL`（兼容 `DATABASE_URL`），并将 PostgreSQL/pgvector 知识库接入任务。检索使用 `EMBEDDING_BASE_URL`、`EMBEDDING_API_KEY` 和 `EMBEDDING_MODEL`；只有通过测试且人工接受的修复才会写入并向量化，拒绝理由单独保存，不参与经验检索。
+- 配置知识库时，数据库用户需要有权限创建 `vector` 扩展和项目表；首次检索或保存时会初始化 schema。没有配置数据库时任务可以继续诊断，但接受补丁时无法完成经验保存，任务不会报告为保存成功。
 - 前端目前是页面交互预览，尚未接入 Python/LangGraph 工作流或数据库；不要把预览数据描述为真实修复结果。
 - 模型服务需支持 Responses API 函数工具调用。真实服务和 PostgreSQL 是否可用，需在对应环境中单独验证；离线单元测试不证明外部服务已连通。
 

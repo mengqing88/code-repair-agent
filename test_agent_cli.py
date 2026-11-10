@@ -8,8 +8,9 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from agent_cli import build_result, make_parser
+from agent_cli import _run_repair_workflow, build_result, make_parser
 
 
 # unittest.TestCase 是标准库提供的测试基类；继承它就能使用下面的 assert... 断言方法。
@@ -115,6 +116,24 @@ class AgentCliTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "完整的 40 或 64 位"):
                 # build_result() 重新校验刚改成分支名的版本参数，预期在这里抛出 ValueError。
                 build_result(args)
+
+    def test_workflow_injects_configured_postgres_knowledge_base(self) -> None:
+        """CLI 将配置好的 PostgreSQL 知识库传给本次任务的工具箱。"""
+        args = make_parser().parse_args(["--code-text", "value = 1", "--error-text", "结果错误"])
+        source = {"type": "pasted_code", "character_count": 9}
+        knowledge_base = object()
+        workspace = Path("task-workspace")
+
+        with (
+            patch("agent_cli._workflow_workspace", return_value=(workspace, ("target.py",), "a" * 40)),
+            patch("agent_cli.PostgresKnowledgeBase.from_environment", return_value=knowledge_base),
+            patch("agent_cli.RepairToolbox") as toolbox_factory,
+            patch("agent_cli.build_repair_workflow") as workflow_factory,
+        ):
+            workflow_factory.return_value.invoke.return_value = {"status": "queued"}
+            _run_repair_workflow(args, source, "结果错误", Path("project"))
+
+        self.assertIs(toolbox_factory.call_args.kwargs["knowledge_base"], knowledge_base)
 
     def test_command_line_prints_json(self) -> None:
         """通过子进程和模拟模型回复运行 CLI，检查工作文档和 JSON 输出。"""

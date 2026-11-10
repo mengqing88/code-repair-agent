@@ -40,3 +40,5 @@ py-modules = ["agent_cli", "llm_client", "reproduction", "repair_state", "repair
 [tool.pytest.ini_options]
 # testpaths：从项目根目录开始收集符合 pytest 命名规则的测试。
 testpaths = ["."]
+# norecursedirs：跳过运行产物和独立样例仓库，避免把 work/ 中的测试纳入主项目套件。
+norecursedirs = ["work"]

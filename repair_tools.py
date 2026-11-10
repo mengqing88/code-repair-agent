@@ -21,6 +21,7 @@ from pathlib import Path, PurePosixPath
 import re
 from typing import Any, Callable, Mapping, Sequence
 
+from dotenv import dotenv_values
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from knowledge_base import KnowledgeBaseError, build_case_document, build_rejection_document
@@ -370,6 +371,17 @@ def _vector_literal(vector: Sequence[float]) -> str:
     return "[" + ",".join(format(float(value), ".17g") for value in vector) + "]"
 
 
+def _knowledge_database_dsn(env_path: Path | None = None) -> str | None:
+    """从环境变量或项目 .env 读取知识库连接串，不输出连接信息。"""
+    config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
+    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
+    for name in ("KNOWLEDGE_DB_URL", "DATABASE_URL"):
+        for value in (os.getenv(name), settings.get(name)):
+            if value and value.strip():
+                return value.strip()
+    return None
+
+
 @dataclass(frozen=True)
 class PostgresKnowledgeBase:
     """使用 PostgreSQL pgvector 保存和检索已验收的修复案例。"""
@@ -378,9 +390,15 @@ class PostgresKnowledgeBase:
     embedder: EmbeddingFunction = embed_text
     connection_factory: ConnectionFactory | None = None
 
+    @classmethod
+    def from_environment(cls, env_path: Path | None = None) -> PostgresKnowledgeBase | None:
+        """按项目配置创建知识库；没有连接串时返回 None，允许离线任务继续运行。"""
+        dsn = _knowledge_database_dsn(env_path)
+        return cls(dsn=dsn) if dsn is not None else None
+
     def _connect(self) -> Any:
         """打开数据库连接；默认从 KNOWLEDGE_DB_URL 或 DATABASE_URL 读取连接串。"""
-        dsn = self.dsn or os.getenv("KNOWLEDGE_DB_URL") or os.getenv("DATABASE_URL")
+        dsn = self.dsn or _knowledge_database_dsn()
         if not dsn:
             raise KnowledgeBaseError("请设置 KNOWLEDGE_DB_URL 或 DATABASE_URL")
         if self.connection_factory is not None:

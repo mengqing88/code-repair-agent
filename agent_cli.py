@@ -20,7 +20,7 @@ from reproduction import reproduce
 # create_initial_state：创建 LangGraph 的共享修复状态；RepairState：标注节点回调的状态类型。
 from repair_state import RepairState, create_initial_state
 # RepairToolbox：绑定工作区读取、补丁应用和测试工具。
-from repair_tools import RepairToolbox, create_checkpoint_workspace
+from repair_tools import PostgresKnowledgeBase, RepairToolbox, create_checkpoint_workspace
 # build_repair_workflow：构建并执行完整的 LangGraph 修复流程。
 from repair_workflow import build_repair_workflow
 
@@ -254,6 +254,7 @@ def _run_repair_workflow(
     # toolbox：把当前工作区和测试配置绑定到固定工具节点；未配置知识库时仍可完成普通修复。
     toolbox = RepairToolbox(
         workspace_root=workspace_root,
+        knowledge_base=PostgresKnowledgeBase.from_environment(),
         allowed_paths=allowed_paths,
         test_targets=test_targets,
         checkpoint_revision=checkpoint,
