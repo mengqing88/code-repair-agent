@@ -71,6 +71,22 @@ def test_patch_cannot_change_test_files(tmp_path):
     assert (tmp_path / "test_existing.py").read_text() == "assert False\n"
 
 
+def test_windows_checkout_line_endings_do_not_break_reference_patch(tmp_path, monkeypatch):
+    record = first_record()
+    for relative, names in ((record["repository"], ("target.py", "test_existing.py")),
+                            (record["oracle"], ("test_acceptance.py", "reference.patch"))):
+        destination = tmp_path / relative
+        destination.mkdir(parents=True)
+        for name in names:
+            text = (evaluator.ROOT / relative / name).read_text(encoding="utf-8")
+            (destination / name).write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    monkeypatch.setattr(evaluator, "ROOT", tmp_path)
+    copied = tmp_path / "execution"
+    evaluator.copy_task(record, copied)
+    patch = (tmp_path / record["oracle"] / "reference.patch").read_text(encoding="utf-8")
+    assert evaluator.apply_candidate(copied, patch)["applied"]
+
+
 def test_collection_failure_is_not_a_reproduced_defect(tmp_path):
     evaluator.write_text(tmp_path / "test_bad.py", "from missing_benchmark_module import value\n")
     report = evaluator.run_pytest(tmp_path, ["test_bad.py"])

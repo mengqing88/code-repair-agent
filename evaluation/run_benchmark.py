@@ -7,7 +7,6 @@ import json
 import math
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -113,8 +112,9 @@ def copy_task(record: dict, destination: Path) -> None:
     source = dataset_path(record["repository"])
     destination.mkdir()
     for filename in ("target.py", "test_existing.py"):
-        shutil.copyfile(source / filename, destination / filename)
-    shutil.copyfile(dataset_path(record["oracle"]) / "test_acceptance.py", destination / "test_acceptance.py")
+        write_text(destination / filename, (source / filename).read_text(encoding="utf-8"))
+    write_text(destination / "test_acceptance.py",
+               (dataset_path(record["oracle"]) / "test_acceptance.py").read_text(encoding="utf-8"))
     for name, key in (("target.py", "buggy_source_sha256"),
                       ("test_existing.py", "existing_tests_sha256"),
                       ("test_acceptance.py", "acceptance_tests_sha256")):
