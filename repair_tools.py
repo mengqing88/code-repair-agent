@@ -28,7 +28,9 @@ from typing import Any, Callable, Mapping, Sequence
 from dotenv import dotenv_values
 from pydantic import ValidationError
 
-from knowledge_base import KnowledgeBaseError, build_case_document, build_rejection_document
+from knowledge_base import (
+    KnowledgeBaseError, _normalize_retrieval_filters, build_case_document, build_rejection_document,
+)
 from defect_regression import generate_regression_test, reproduction_exit_matches_test
 from docker_executor import BindMount, get_execution_backend, run_execution
 from llm_client import embed_text
@@ -476,7 +478,7 @@ def _knowledge_database_dsn(env_path: Path | None = None) -> str | None:
 
 @dataclass(frozen=True)
 class PostgresKnowledgeBase:
-    """使用 PostgreSQL pgvector 保存和检索已验收的修复案例。"""
+    """使用 PostgreSQL pgvector 保存成功案例和标记为 rejected 的失败经验。"""
 
     dsn: str | None = None
     embedder: EmbeddingFunction = embed_text
@@ -531,6 +533,19 @@ class PostgresKnowledgeBase:
                     )
                     """
                 )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS repair_failures (
+                        case_id TEXT PRIMARY KEY,
+                        document JSONB NOT NULL,
+                        embedding vector NOT NULL,
+                        dimension INTEGER NOT NULL,
+                        revision INTEGER NOT NULL,
+                        created_at TIMESTAMPTZ NOT NULL,
+                        updated_at TIMESTAMPTZ NOT NULL
+                    )
+                    """
+                )
             connection.commit()
         except Exception as error:
             connection.rollback()
@@ -538,25 +553,47 @@ class PostgresKnowledgeBase:
         finally:
             connection.close()
 
-    def search(self, query: str, limit: int = 5) -> list[dict[str, object]]:
-        """向量化查询并按 pgvector 余弦相似度返回案例。"""
+    def search(
+        self,
+        query: str,
+        limit: int = 5,
+        outcome: Literal["accepted", "rejected"] = "accepted",
+        filters: Mapping[str, object] | None = None,
+    ) -> list[dict[str, object]]:
+        """按结果类型及 JSONB 元数据过滤，用 pgvector 余弦相似度检索案例。"""
         if not isinstance(query, str) or not query.strip():
             raise ValueError("知识库查询文本不能为空")
         if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:
             raise ValueError("知识库查询数量必须是正整数")
+        if outcome not in ("accepted", "rejected"):
+            raise ValueError("outcome 必须是 accepted 或 rejected")
+        normalized_filters = _normalize_retrieval_filters(filters)
         vector = _validated_vector(self.embedder(query), "查询向量")
         self.ensure_schema()
         connection = self._connect()
         literal = _vector_literal(vector)
+        table = "repair_cases" if outcome == "accepted" else "repair_failures"
+        where = ["dimension = %s"]
+        parameters: list[object] = [literal, len(vector)]
+        if "repository_id" in normalized_filters:
+            where.append("document->'retrieval_scope'->>'repository_id' = %s")
+            parameters.append(normalized_filters["repository_id"])
+        if "file_paths" in normalized_filters:
+            where.append("document->'retrieval_scope'->'file_paths' ?| %s::text[]")
+            parameters.append(normalized_filters["file_paths"])
+        if "dependency_versions" in normalized_filters:
+            where.append("document->'retrieval_scope'->'dependency_versions' @> %s::jsonb")
+            parameters.append(json.dumps(normalized_filters["dependency_versions"], ensure_ascii=False))
+        parameters.append(limit)
         try:
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
                     SELECT case_id, revision, document,
-                           1 - (embedding <=> %s::vector) AS score
-                    FROM repair_cases
-                    WHERE dimension = %s
-                    ORDER BY embedding <=> %s::vector
+                           1 - (embedding <=> %s::vector) AS score, '{outcome}' AS outcome
+                    FROM {table}
+                    WHERE {' AND '.join(where)}
+                    ORDER BY score DESC
                     LIMIT %s
                     """,
                     (literal, len(vector), literal, limit),
@@ -572,6 +609,7 @@ class PostgresKnowledgeBase:
                 "revision": int(row[1]),
                 "document": row[2] if isinstance(row[2], str) else json.dumps(row[2], ensure_ascii=False),
                 "score": float(row[3]),
+                "outcome": row[4],
             }
             for row in rows
         ]
@@ -610,6 +648,8 @@ class PostgresKnowledgeBase:
         """记录用户拒绝补丁的理由；拒绝审核不写入已验收案例表。"""
         document = build_rejection_document(state)
         reason = str(state["review_reason"]).strip()
+        vector = _validated_vector(self.embedder(document), "失败经验向量")
+        literal = _vector_literal(vector)
         self.ensure_schema()
         connection = self._connect()
         try:
@@ -626,6 +666,20 @@ class PostgresKnowledgeBase:
                     """,
                     (state["task_id"], "rejected", reason, document),
                 )
+                cursor.execute(
+                    """
+                    INSERT INTO repair_failures
+                        (case_id, document, embedding, dimension, revision, created_at, updated_at)
+                    VALUES (%s, %s::jsonb, %s::vector, %s, 1, NOW(), NOW())
+                    ON CONFLICT (case_id) DO UPDATE SET
+                        document = EXCLUDED.document,
+                        embedding = EXCLUDED.embedding,
+                        dimension = EXCLUDED.dimension,
+                        revision = repair_failures.revision + 1,
+                        updated_at = NOW()
+                    """,
+                    (state["task_id"], document, literal, len(vector)),
+                )
             connection.commit()
         except Exception as error:
             connection.rollback()
@@ -639,11 +693,13 @@ def retrieve_repair_experience(
     *,
     knowledge_base: Any,
     limit: int = 5,
+    outcome: Literal["accepted", "rejected"] = "accepted",
+    filters: Mapping[str, object] | None = None,
 ) -> list[dict[str, object]]:
     """查询知识库并补充案例正文中记录的适用条件。"""
     if knowledge_base is None:
         raise RepairToolError("尚未配置修复经验知识库")
-    results = knowledge_base.search(query, limit=limit)
+    results = knowledge_base.search(query, limit=limit, outcome=outcome, filters=filters)
     normalized: list[dict[str, object]] = []
     for result in results:
         if not isinstance(result, Mapping):
@@ -662,12 +718,15 @@ def retrieve_repair_experience(
             item["document"] = {
                 key: document.get(key) for key in (
                     "original_report", "diagnosis", "patch_diff", "source", "applicable_conditions",
+                    "review_reason",
                 )
             }
             for key, maximum in (("original_report", 2000), ("diagnosis", 3000), ("patch_diff", 6000)):
                 if isinstance(item["document"].get(key), str):
                     item["document"][key] = item["document"][key][:maximum]
-        item.update(decision="pending", matched_conditions=[], conflicts=[], unknowns=[])
+        item["outcome"] = outcome
+        if outcome == "accepted":
+            item.update(decision="pending", matched_conditions=[], conflicts=[], unknowns=[])
         normalized.append(item)
     return normalized
 
@@ -978,7 +1037,7 @@ def run_tests(
 TOOL_DESCRIPTIONS = {
     "read_code": "读取工作区内指定的 UTF-8 代码文件。",
     "search_code": "在工作区中搜索文本并返回文件、行号、列号和匹配行。",
-    "retrieve_repair_experience": "检索已验收的历史修复案例及其相似度。",
+    "retrieve_repair_experience": "按 outcome 分开检索已验收案例或被拒绝的失败经验，并可按已读取文件路径缩小范围。",
     "apply_patch": "从任务 checkpoint 开始应用完整补丁；程序会检查修改路径并禁止改动测试。",
     "run_tests": "运行任务预设的 pytest 目标；模型不能更改测试命令或范围。",
 }
@@ -1000,6 +1059,7 @@ class RepairToolbox:
 
     workspace_root: Path
     knowledge_base: PostgresKnowledgeBase | Any | None = None
+    retrieval_scope: Mapping[str, object] = field(default_factory=dict)
     allowed_paths: tuple[str, ...] = ()
     test_targets: tuple[str, ...] = ()
     test_timeout_seconds: float = 300.0
@@ -1034,9 +1094,29 @@ class RepairToolbox:
         """调用工作区文本搜索工具。"""
         return search_code(query, workspace_root=self.workspace_root, path=path, max_results=max_results)
 
-    def retrieve_repair_experience(self, query: str, limit: int = 5) -> list[dict[str, object]]:
-        """调用注入的知识库检索工具。"""
-        return retrieve_repair_experience(query, knowledge_base=self.knowledge_base, limit=limit)
+    def retrieve_repair_experience(
+        self,
+        query: str,
+        limit: int = 5,
+        outcome: Literal["accepted", "rejected"] = "accepted",
+        file_paths: Sequence[str] = (),
+        *,
+        filters: Mapping[str, object] | None = None,
+    ) -> list[dict[str, object]]:
+        """使用任务来源过滤条件检索指定类型的经验，可再按已读取文件收窄。"""
+        effective_filters = dict(filters if filters is not None else self.retrieval_scope)
+        if file_paths:
+            requested = set()
+            for path in file_paths:
+                target = _workspace_path(self.workspace_root, path)
+                if not target.is_file():
+                    raise RepairToolError("检索过滤路径必须指向工作区内的现有文件")
+                requested.add(_relative_path(self.workspace_root, target).casefold())
+            current_paths = set(effective_filters.get("file_paths", []))
+            effective_filters["file_paths"] = sorted(requested & current_paths) if current_paths else sorted(requested)
+        return retrieve_repair_experience(
+            query, knowledge_base=self.knowledge_base, limit=limit, outcome=outcome, filters=effective_filters,
+        )
 
     def _ensure_test_protection(self, remaining_seconds: float | None = None) -> None:
         """在基线上收集 pytest 用例，并固定每个测试文件的内容哈希。"""
@@ -1189,8 +1269,12 @@ class RepairToolbox:
             execution = reproduction.get("execution")
             if isinstance(execution, Mapping):
                 query.extend(str(execution.get(key) or "")[:2000] for key in ("stdout", "stderr"))
-            matches = self.retrieve_repair_experience("\n".join(query)[:10_000])
-        return {"code_evidence": evidence, "case_matches": matches}
+            source_scope = source.get("retrieval_scope", {})
+            filters = source_scope if isinstance(source_scope, Mapping) else {}
+            query_text = "\n".join(query)[:10_000]
+            matches = self.retrieve_repair_experience(query_text, outcome="accepted", filters=filters)
+            failures = self.retrieve_repair_experience(query_text, outcome="rejected", filters=filters)
+        return {"code_evidence": evidence, "case_matches": matches, "failure_matches": failures}
 
     def apply_patch_for_state(self, state: RepairState) -> None:
         """把状态中的候选补丁交给范围检查和 Git 应用工具。"""
@@ -1464,7 +1548,8 @@ class RepairToolbox:
             )
         if name == "retrieve_repair_experience":
             return self.retrieve_repair_experience(
-                arguments["query"], arguments.get("limit", 5),  # type: ignore[arg-type]
+                arguments["query"], arguments.get("limit", 5), arguments.get("outcome", "accepted"),
+                arguments.get("file_paths", ()),  # type: ignore[arg-type]
             )
         if name == "apply_patch":
             return self.apply_model_patch(arguments["patch_diff"], remaining_seconds=remaining_seconds)

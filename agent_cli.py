@@ -26,7 +26,7 @@ from diagnostics import diagnostic_scope, redact
 from repair_tools import PostgresKnowledgeBase, RepairToolbox, create_checkpoint_workspace
 # build_repair_workflow：构建并执行完整的 LangGraph 修复流程。
 from repair_workflow import build_repair_workflow
-from knowledge_base import KnowledgeBase, default_knowledge_path
+from knowledge_base import KnowledgeBase, default_knowledge_path, retrieval_scope_for_path
 from docker_executor import get_execution_backend
 
 # 类型注解中的 str 表示字符串，int 表示整数，dict 表示字典；
@@ -118,7 +118,10 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
             # ValueError 表示在单文件模式下错误地使用了仓库版本参数。
             raise ValueError("--revision 只能与 --repository 一起使用")
         # resolve() 取得绝对路径；内置 str() 将 Path 转成可放入 JSON 的字符串。
-        return {"type": "python_file", "path": str(path.resolve())}
+        return {
+            "type": "python_file", "path": str(path.resolve()),
+            "retrieval_scope": retrieval_scope_for_path(path, file_path=path),
+        }
 
     if args.repository is not None:
         # path：用户提供的 Git 仓库目录路径。
@@ -149,6 +152,7 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
             # str.lower() 返回字母全部转为小写的新字符串，让输入中的 A～F 统一变成 a～f；不修改原值。
             "revision": args.revision.lower(),
             "revision_check": "仅检查了 ID 格式；尚未检查该 commit 是否存在",
+            "retrieval_scope": retrieval_scope_for_path(path),
         }
 
     if args.revision is not None:
@@ -289,6 +293,7 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
     toolbox = RepairToolbox(
         workspace_root=workspace_root,
         knowledge_base=knowledge_base,
+        retrieval_scope=source.get("retrieval_scope", {}),
         allowed_paths=allowed_paths,
         test_targets=test_targets,
         checkpoint_revision=checkpoint,

@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from llm_client import ModelCallResult, ModelToolCall
+from mcp_tool_client import MCPToolClient
 from repair_tools import (
     PostgresKnowledgeBase,
     RepairToolError,
@@ -33,6 +34,8 @@ class RepairToolsTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
+        self.empty_mcp_config = self.root / "empty-mcp.json"
+        self.empty_mcp_config.write_text('{"servers": []}', encoding="utf-8")
 
     def test_read_code_and_search_code_return_locations(self) -> None:
         """读取工具返回原文，搜索工具返回相对路径和行列位置。"""
@@ -213,12 +216,18 @@ class RepairToolsTests(unittest.TestCase):
             def __init__(self) -> None:
                 self.saved = []
                 self.rejections = []
+                self.search_calls = []
 
-            def search(self, query: str, limit: int = 5):
+            def search(self, query: str, limit: int = 5, outcome: str = "accepted", filters=None):
+                self.search_calls.append((outcome, dict(filters or {})))
+                document = {"applicable_conditions": ["相同异常类型"]}
+                if outcome == "rejected":
+                    document["review_reason"] = "该补丁未覆盖错误边界"
                 return [{
                     "query": query,
                     "limit": limit,
-                    "document": json.dumps({"applicable_conditions": ["相同异常类型"]}),
+                    "outcome": outcome,
+                    "document": json.dumps(document),
                 }]
 
             def save_case(self, state):
@@ -232,6 +241,7 @@ class RepairToolsTests(unittest.TestCase):
             workspace_root=self.root,
             knowledge_base=knowledge_base,
             allowed_paths=("target.py",),
+            mcp_client=MCPToolClient(config_path=self.empty_mcp_config),
         )
         (self.root / "target.py").write_text("value = 1\n", encoding="utf-8")
 
@@ -241,6 +251,12 @@ class RepairToolsTests(unittest.TestCase):
             toolbox.call_model_tool("retrieve_repair_experience", {"query": "赋值"})[0]["applicable_conditions"],
             ["相同异常类型"],
         )
+        rejected = toolbox.call_model_tool(
+            "retrieve_repair_experience", {"query": "赋值", "outcome": "rejected", "file_paths": ["target.py"]},
+        )
+        self.assertEqual(rejected[0]["outcome"], "rejected")
+        self.assertNotIn("decision", rejected[0])
+        self.assertEqual(knowledge_base.search_calls[-1], ("rejected", {"file_paths": ["target.py"]}))
         self.assertEqual(len(toolbox.model_tool_definitions()), 5)
         with self.assertRaisesRegex(RepairToolError, "不能直接调用"):
             toolbox.call_model_tool("save_repair_experience", {})
@@ -273,6 +289,9 @@ class RepairToolsTests(unittest.TestCase):
             self.assertFalse(schema["additionalProperties"])
         self.assertEqual(schemas["search_code"]["properties"]["max_results"]["minimum"], 1)
         self.assertEqual(schemas["search_code"]["properties"]["max_results"]["default"], 50)
+        self.assertEqual(schemas["retrieve_repair_experience"]["properties"]["outcome"]["enum"],
+                         ["accepted", "rejected"])
+        self.assertEqual(schemas["retrieve_repair_experience"]["properties"]["file_paths"]["maxItems"], 10)
         self.assertEqual(schemas["apply_patch"]["required"], ["patch_diff"])
         self.assertEqual(schemas["apply_patch"]["properties"]["patch_diff"]["minLength"], 1)
         self.assertEqual(schemas["run_tests"]["properties"], {})
@@ -285,6 +304,8 @@ class RepairToolsTests(unittest.TestCase):
             ("search_code", {"query": "value", "max_results": 0}),
             ("search_code", {"query": "value", "max_results": True}),
             ("retrieve_repair_experience", {"query": "\t"}),
+            ("retrieve_repair_experience", {"query": "valid", "outcome": "all"}),
+            ("retrieve_repair_experience", {"query": "valid", "file_paths": ["../outside.py"]}),
             ("apply_patch", {"patch_diff": "  "}),
             ("apply_patch", {"patch_diff": "diff", "extra": "sensitive-value"}),
             ("run_tests", {"test_targets": ["unapproved.py"]}),
@@ -430,9 +451,81 @@ class RepairToolsTests(unittest.TestCase):
         with patch.dict("os.environ", {}, clear=True):
             self.assertIsNone(PostgresKnowledgeBase.from_environment(self.root / "missing.env"))
 
+    def test_postgres_search_separates_outcomes_and_applies_strict_metadata_filters(self) -> None:
+        """PostgreSQL 检索分开选择结果表，并将全部范围条件交给数据库过滤。"""
+        class FakeCursor:
+            """记录 SQL 和参数，并模拟返回一条命中记录。"""
+
+            def __init__(self) -> None:
+                self.statement = ""
+                self.parameters = ()
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def execute(self, statement, parameters):
+                self.statement = statement
+                self.parameters = parameters
+
+            def fetchall(self):
+                return [("case-1", 1, {"retrieval_scope": {"repository_id": "repo-a"}}, 0.9,
+                         "accepted" if "FROM repair_cases" in self.statement else "rejected")]
+
+        class FakeConnection:
+            """为 PostgreSQL 适配器提供游标和空操作连接生命周期。"""
+
+            def __init__(self) -> None:
+                self.fake_cursor = FakeCursor()
+
+            def cursor(self):
+                return self.fake_cursor
+
+            def close(self):
+                return None
+
+        for outcome, expected_table in (
+            ("accepted", "repair_cases"),
+            ("rejected", "repair_failures"),
+        ):
+            with self.subTest(outcome=outcome):
+                connection = FakeConnection()
+                knowledge_base = PostgresKnowledgeBase(
+                    dsn="postgresql://unused",
+                    embedder=lambda _text: [0.1, 0.2],
+                    connection_factory=lambda _dsn: connection,
+                )
+                filters = {
+                    "repository_id": "repo-a",
+                    "file_paths": ["src/target.py"],
+                    "dependency_versions": {"numpy": "1.26.0"},
+                }
+
+                with patch.object(PostgresKnowledgeBase, "ensure_schema"):
+                    results = knowledge_base.search("查询内容", outcome=outcome, filters=filters)
+
+                statement = connection.fake_cursor.statement
+                parameters = connection.fake_cursor.parameters
+                self.assertIn(f"FROM {expected_table}", statement)
+                self.assertIn("document->'retrieval_scope'->>'repository_id' = %s", statement)
+                self.assertIn("document->'retrieval_scope'->'file_paths' ?| %s::text[]", statement)
+                self.assertIn("document->'retrieval_scope'->'dependency_versions' @> %s::jsonb", statement)
+                self.assertEqual(parameters, (
+                    "[0.10000000000000001,0.20000000000000001]", 2, "repo-a", ["src/target.py"],
+                    '{"numpy": "1.26.0"}', 5,
+                ))
+                self.assertEqual(results[0]["outcome"], outcome)
+
     def test_toolbox_can_build_workflow_service_adapters(self) -> None:
         """工具箱可直接提供当前 LangGraph 工作流所需的固定节点回调。"""
-        toolbox = RepairToolbox(workspace_root=self.root, test_targets=("test_sample.py",), execution_backend="host")
+        toolbox = RepairToolbox(
+            workspace_root=self.root,
+            test_targets=("test_sample.py",),
+            execution_backend="host",
+            mcp_client=MCPToolClient(config_path=self.empty_mcp_config),
+        )
         (self.root / "target.py").write_text("value = 1\n", encoding="utf-8")
 
         services = toolbox.as_repair_services(

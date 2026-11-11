@@ -84,8 +84,8 @@ class KnowledgeBaseTests(unittest.TestCase):
                 knowledge_base.save_case(state)
             self.assertEqual(knowledge_base.count(), 0)
 
-    def test_rejection_is_saved_to_review_table_without_vectorizing(self) -> None:
-        """拒绝理由写入审核表，但不写入已验收案例或调用嵌入模型。"""
+    def test_rejection_is_saved_as_negative_experience(self) -> None:
+        """拒绝理由写入审核表，并作为标记为 rejected 的失败经验参与检索。"""
         embed_calls: list[str] = []
 
         def tracking_embed(text: str) -> list[float]:
@@ -103,7 +103,12 @@ class KnowledgeBaseTests(unittest.TestCase):
             knowledge_base.record_rejection(state)
 
             self.assertEqual(knowledge_base.count(), 0)
-            self.assertEqual(embed_calls, [])
+            self.assertEqual(len(embed_calls), 1)
+            self.assertEqual(knowledge_base.failure_count(), 1)
+            self.assertEqual(knowledge_base.search("数据库查询补丁被拒绝", limit=1), [])
+            matches = knowledge_base.search("数据库查询补丁被拒绝", limit=1, outcome="rejected")
+            self.assertEqual(matches[0]["outcome"], "rejected")
+            self.assertIn("补丁没有修复原始问题", matches[0]["document"])
             connection = sqlite3.connect(database_path)
             try:
                 row = connection.execute(
@@ -116,6 +121,68 @@ class KnowledgeBaseTests(unittest.TestCase):
             self.assertEqual(row[0], "rejected")
             self.assertEqual(row[1], "补丁没有修复原始问题。")
             self.assertIn("补丁没有修复原始问题", row[2])
+
+    def test_success_and_rejected_experiences_are_retrieved_separately(self) -> None:
+        """成功经验和拒绝经验使用独立结果集，不互相占用召回名额。"""
+        with tempfile.TemporaryDirectory() as directory:
+            knowledge_base = KnowledgeBase(Path(directory) / "knowledge.sqlite", self.fake_embed)
+            accepted = self.make_state()
+            knowledge_base.save_case(accepted)
+
+            rejected = self.make_state()
+            rejected["task_id"] = "task-kb-rejected"
+            rejected["review_decision"] = "rejected"
+            rejected["review_reason"] = "拒绝：没有处理数据库查询边界。"
+            knowledge_base.record_rejection(rejected)
+
+            successful = knowledge_base.search("数据库查询", limit=1, outcome="accepted")
+            failures = knowledge_base.search("数据库查询", limit=1, outcome="rejected")
+            self.assertEqual([item["case_id"] for item in successful], ["task-kb"])
+            self.assertEqual([item["outcome"] for item in successful], ["accepted"])
+            self.assertEqual([item["case_id"] for item in failures], ["task-kb-rejected"])
+            self.assertEqual([item["outcome"] for item in failures], ["rejected"])
+
+    def test_strict_filters_require_matching_repository_path_and_dependency_versions(self) -> None:
+        """指定仓库、路径或依赖版本后，只返回完整匹配所有过滤条件的案例。"""
+        with tempfile.TemporaryDirectory() as directory:
+            knowledge_base = KnowledgeBase(Path(directory) / "knowledge.sqlite", self.fake_embed)
+            cases = (
+                ("same-scope", "repo-a", ["src/target.py"], {"numpy": "1.26.0"}),
+                ("other-path", "repo-a", ["src/other.py"], {"numpy": "1.26.0"}),
+                ("other-repo", "repo-b", ["src/target.py"], {"numpy": "1.26.0"}),
+                ("other-version", "repo-a", ["src/target.py"], {"numpy": "2.0.0"}),
+                ("missing-scope", None, [], {}),
+            )
+            for task_id, repository_id, file_paths, dependencies in cases:
+                state = self.make_state()
+                state["task_id"] = task_id
+                state["source"]["retrieval_scope"] = {
+                    **({"repository_id": repository_id} if repository_id else {}),
+                    "file_paths": file_paths,
+                    "dependency_versions": dependencies,
+                }
+                state["patch_diff"] = (
+                    "--- a/src/target.py\n+++ b/src/target.py\n" if "target.py" in str(file_paths) else
+                    "--- a/src/other.py\n+++ b/src/other.py\n"
+                )
+                knowledge_base.save_case(state)
+
+            matches = knowledge_base.search(
+                "数据库查询错误",
+                filters={
+                    "repository_id": "repo-a",
+                    "file_paths": ["src/target.py"],
+                    "dependency_versions": {"NumPy": "1.26.0"},
+                },
+            )
+            self.assertEqual([item["case_id"] for item in matches], ["same-scope"])
+
+    def test_invalid_retrieval_outcome_is_rejected(self) -> None:
+        """拒绝未知经验类型，避免调用方无意恢复混合召回。"""
+        with tempfile.TemporaryDirectory() as directory:
+            knowledge_base = KnowledgeBase(Path(directory) / "knowledge.sqlite", self.fake_embed)
+            with self.assertRaisesRegex(ValueError, "outcome"):
+                knowledge_base.search("数据库", outcome="all")  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":

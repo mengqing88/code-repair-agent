@@ -11,13 +11,19 @@ import math
 import os
 import re
 import sqlite3
+import subprocess
+try:
+    import tomllib
+except ImportError:  # Python < 3.11 can still use exact pins from requirements files.
+    tomllib = None
 from collections import Counter
 # dataclass：组织不可变的知识库配置；datetime：记录案例写入时间。
 from dataclasses import dataclass
 from datetime import datetime, timezone
 # Path：表示 SQLite 文件路径；Callable、Sequence：描述嵌入函数的输入和向量输出。
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Callable, Literal, Mapping, Sequence
+from urllib.parse import urlsplit
 
 # embed_text：调用配置中的 EMBEDDING_MODEL 生成向量。
 from llm_client import embed_text
@@ -38,6 +44,229 @@ def default_knowledge_path() -> Path:
     """命令行与 Web 默认共用同一份修复知识库。"""
     root = Path(os.environ.get("REPAIR_DATA_DIR", Path(__file__).parent / "work" / "web"))
     return root / "knowledge.sqlite3"
+
+
+def _normalize_dependency_name(name: str) -> str:
+    """按 Python 包名比较规则规范依赖名称。"""
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def _dependency_versions(root: Path) -> dict[str, str]:
+    """读取锁文件或精确版本声明中的依赖版本；范围版本不作为精确过滤条件。"""
+    versions: dict[str, str] = {}
+    requirement = re.compile(r"^\s*([A-Za-z0-9_.-]+)(?:\[[^]]+\])?\s*==\s*([^\s;,]+)")
+    for path in sorted(root.glob("requirements*.txt")):
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                match = requirement.match(line.split("#", 1)[0])
+                if match:
+                    versions[_normalize_dependency_name(match.group(1))] = match.group(2)
+        except OSError:
+            continue
+
+    pyproject = root / "pyproject.toml"
+    if pyproject.is_file() and tomllib is not None:
+        try:
+            project = tomllib.loads(pyproject.read_text(encoding="utf-8")).get("project", {})
+            declarations = list(project.get("dependencies", []))
+            declarations.extend(item for group in project.get("optional-dependencies", {}).values() for item in group)
+            for declaration in declarations:
+                match = requirement.match(str(declaration))
+                if match:
+                    versions[_normalize_dependency_name(match.group(1))] = match.group(2)
+        except (OSError, ValueError, AttributeError, TypeError):
+            pass
+
+    for name in ("uv.lock", "poetry.lock"):
+        lockfile = root / name
+        if not lockfile.is_file() or tomllib is None:
+            continue
+        try:
+            packages = tomllib.loads(lockfile.read_text(encoding="utf-8")).get("package", [])
+            for package in packages:
+                if isinstance(package, dict) and package.get("name") and package.get("version"):
+                    versions[_normalize_dependency_name(package["name"])] = str(package["version"])
+        except (OSError, ValueError, TypeError):
+            continue
+
+    pipfile_lock = root / "Pipfile.lock"
+    if pipfile_lock.is_file():
+        try:
+            payload = json.loads(pipfile_lock.read_text(encoding="utf-8"))
+            for group in ("default", "develop"):
+                for name, value in payload.get(group, {}).items():
+                    version = value.get("version") if isinstance(value, dict) else None
+                    if isinstance(version, str) and version.startswith("=="):
+                        versions[_normalize_dependency_name(name)] = version[2:]
+        except (OSError, json.JSONDecodeError, AttributeError, TypeError):
+            pass
+    return versions
+
+
+def _git_root(path: Path) -> Path | None:
+    """返回路径所属 Git 仓库根目录；不是仓库或 Git 不可用时返回 None。"""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return Path(result.stdout.strip()).resolve() if result.returncode == 0 and result.stdout.strip() else None
+
+
+def _repository_id(root: Path) -> str:
+    """用 Git origin URL 或本地根目录生成不暴露原始路径和凭据的稳定标识。"""
+    remote = ""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "remote", "get-url", "origin"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3, check=False,
+        )
+        if result.returncode == 0:
+            remote = result.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    if remote:
+        if re.match(r"^(?:[^@]+@)?[^:/]+:.+", remote) and "://" not in remote:
+            host, repository = remote.rsplit(":", 1)
+            host = host.rsplit("@", 1)[-1]
+        else:
+            parsed = urlsplit(remote)
+            host, repository = parsed.hostname or "", parsed.path
+        identity = f"remote:{host.lower()}/{repository.strip('/').removesuffix('.git').lower()}"
+    else:
+        identity = f"local:{root.resolve().as_posix().casefold()}"
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
+
+def retrieval_scope_for_path(path: Path, *, file_path: Path | None = None) -> dict[str, object]:
+    """从任务来源提取可用于检索过滤的仓库、相对文件路径和精确依赖版本。"""
+    location = path.expanduser().resolve()
+    scan_root = location if location.is_dir() else location.parent
+    repository_root = _git_root(scan_root)
+    scope_root = repository_root or scan_root
+    scope: dict[str, object] = {}
+    if repository_root is not None:
+        scope["repository_id"] = _repository_id(repository_root)
+    if file_path is not None:
+        target = file_path.expanduser().resolve()
+        paths = {target.name.casefold()}
+        try:
+            relative = target.relative_to(scope_root).as_posix()
+            paths.add(relative.casefold())
+        except ValueError:
+            pass
+        scope["file_paths"] = sorted(paths)
+    dependencies = _dependency_versions(scope_root)
+    if dependencies:
+        scope["dependency_versions"] = dependencies
+    return scope
+
+
+def _patch_file_paths(patch_diff: object) -> set[str]:
+    """从 unified diff 提取案例涉及的相对文件路径。"""
+    if not isinstance(patch_diff, str):
+        return set()
+    paths: set[str] = set()
+    for line in patch_diff.splitlines():
+        if not line.startswith(("--- ", "+++ ")):
+            continue
+        value = line[4:].split("\t", 1)[0]
+        if value == "/dev/null":
+            continue
+        if value.startswith(("a/", "b/")):
+            value = value[2:]
+        if value and not Path(value).is_absolute() and ".." not in Path(value).parts:
+            paths.add(value.replace("\\", "/").casefold())
+    return paths
+
+
+def _case_retrieval_scope(document: Mapping[str, object]) -> dict[str, object]:
+    """读取案例过滤元数据，并兼容从旧正文中的 source 和补丁路径恢复字段。"""
+    raw = document.get("retrieval_scope")
+    source = document.get("source")
+    if not isinstance(raw, Mapping):
+        raw = source.get("retrieval_scope", {}) if isinstance(source, Mapping) else {}
+    scope = dict(raw) if isinstance(raw, Mapping) else {}
+    if isinstance(source, Mapping):
+        for key in ("repository_id", "file_paths", "dependency_versions"):
+            if key not in scope and key in source:
+                scope[key] = source[key]
+    patch_paths = _patch_file_paths(document.get("patch_diff"))
+    declared_paths = scope.get("file_paths", [])
+    if isinstance(declared_paths, list):
+        patch_paths.update(
+            item.replace("\\", "/").casefold()
+            for item in declared_paths if isinstance(item, str) and item.strip()
+        )
+    scope["file_paths"] = sorted(patch_paths)
+    dependencies = scope.get("dependency_versions")
+    if isinstance(dependencies, Mapping):
+        scope["dependency_versions"] = {
+            _normalize_dependency_name(str(name)): str(version)
+            for name, version in dependencies.items()
+            if isinstance(name, str) and isinstance(version, str) and version.strip()
+        }
+    return scope
+
+
+def _normalize_retrieval_filters(filters: Mapping[str, object] | None) -> dict[str, object]:
+    """校验并规范可选过滤条件；缺少案例元数据时由匹配函数严格排除。"""
+    if filters is None:
+        return {}
+    if not isinstance(filters, Mapping):
+        raise ValueError("检索过滤条件必须是对象")
+    normalized: dict[str, object] = {}
+    repository_id = filters.get("repository_id")
+    if repository_id is not None:
+        if not isinstance(repository_id, str) or not repository_id.strip():
+            raise ValueError("repository_id 必须是非空字符串")
+        normalized["repository_id"] = repository_id.strip()
+    file_paths = filters.get("file_paths", [])
+    if not isinstance(file_paths, (list, tuple)) or any(not isinstance(item, str) or not item.strip() for item in file_paths):
+        raise ValueError("file_paths 必须是非空字符串组成的列表")
+    paths = set()
+    for item in file_paths:
+        path = item.replace("\\", "/")
+        if path.startswith("/") or re.match(r"^[A-Za-z]:", path) or ".." in Path(path).parts:
+            raise ValueError("file_paths 必须是工作区内的相对路径")
+        paths.add(path.casefold())
+    if paths:
+        normalized["file_paths"] = sorted(paths)
+    dependency_versions = filters.get("dependency_versions", {})
+    if not isinstance(dependency_versions, Mapping) or any(
+        not isinstance(name, str) or not name.strip() or not isinstance(version, str) or not version.strip()
+        for name, version in dependency_versions.items()
+    ):
+        raise ValueError("dependency_versions 必须是依赖名称到精确版本的映射")
+    if dependency_versions:
+        normalized["dependency_versions"] = {
+            _normalize_dependency_name(name): version.strip()
+            for name, version in dependency_versions.items()
+        }
+    return normalized
+
+
+def _matches_retrieval_filters(document: Mapping[str, object], filters: Mapping[str, object]) -> bool:
+    """仅保留所有已指定过滤条件都匹配且案例具有对应元数据的记录。"""
+    scope = _case_retrieval_scope(document)
+    repository_id = filters.get("repository_id")
+    if repository_id is not None and scope.get("repository_id") != repository_id:
+        return False
+    requested_paths = filters.get("file_paths")
+    if requested_paths:
+        case_paths = set(scope.get("file_paths", []))
+        if not case_paths.intersection(requested_paths):
+            return False
+    requested_dependencies = filters.get("dependency_versions")
+    if requested_dependencies:
+        case_dependencies = scope.get("dependency_versions")
+        if not isinstance(case_dependencies, Mapping) or any(
+            case_dependencies.get(name) != version for name, version in requested_dependencies.items()
+        ):
+            return False
+    return True
 
 
 def _case_search_text(document: dict[str, object]) -> str:
@@ -148,6 +377,9 @@ def build_case_document(state: RepairState) -> str:
     document = {
         "task_id": state["task_id"],
         "source": state["source"],
+        "retrieval_scope": _case_retrieval_scope({
+            "source": state["source"], "patch_diff": state["patch_diff"],
+        }),
         "original_report": state["original_report"],
         "reproduction": state["reproduction"],
         "diagnosis": state["diagnosis"],
@@ -168,7 +400,7 @@ def build_rejection_document(state: RepairState) -> str:
         state：修复工作流状态；必须是 rejected 且包含非空 review_reason。
 
     返回：
-        保存到审核记录表的 UTF-8 文本；拒绝记录不作为已验收案例向量化。
+        保存到审核记录表和失败经验表的 UTF-8 文本；拒绝记录不会进入已验收案例表。
     """
     if state["review_decision"] != "rejected":
         raise KnowledgeBaseError("只有拒绝的审核结果才能记录拒绝理由")
@@ -180,8 +412,12 @@ def build_rejection_document(state: RepairState) -> str:
     document = {
         "task_id": state["task_id"],
         "review_decision": "rejected",
+        "outcome": "rejected",
         "review_reason": reason.strip(),
         "source": state["source"],
+        "retrieval_scope": _case_retrieval_scope({
+            "source": state["source"], "patch_diff": state.get("patch_diff"),
+        }),
         "original_report": state["original_report"],
         "reproduction": state["reproduction"],
         "diagnosis": state["diagnosis"],
@@ -258,6 +494,21 @@ class KnowledgeBase:
                 reason TEXT NOT NULL,
                 document TEXT NOT NULL,
                 created_at TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS repair_failures (
+                case_id TEXT PRIMARY KEY,
+                document TEXT NOT NULL,
+                embedding TEXT NOT NULL,
+                dimension INTEGER NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                search_text TEXT NOT NULL,
+                content_hash TEXT NOT NULL
             )
             """
         )
@@ -344,9 +595,16 @@ class KnowledgeBase:
             connection.close()
 
     def record_rejection(self, state: RepairState) -> None:
-        """记录用户拒绝补丁的理由；拒绝记录不会进入已验收案例表。"""
+        """记录拒绝理由，并把它保存为可检索但明确标记为失败的负向经验。"""
         document = build_rejection_document(state)
         reason = str(state["review_reason"]).strip()
+        content_hash = hashlib.sha256(document.encode("utf-8")).hexdigest()
+        search_text = _case_search_text(json.loads(document)) + "\n拒绝原因：" + reason
+        try:
+            vector = _validated_vector(self.embedder(search_text), "失败经验向量")
+        except Exception as error:  # noqa: BLE001 - 失败经验允许降级为关键词检索。
+            vector = []
+            trace("knowledge.failure_memory", "degraded", fault=error, decision="keyword_only")
         timestamp = datetime.now(timezone.utc).isoformat()
         connection = self._connect()
         try:
@@ -364,6 +622,24 @@ class KnowledgeBase:
                     created_at = excluded.created_at
                 """,
                 (state["task_id"], "rejected", reason, document, timestamp),
+            )
+            connection.execute(
+                """
+                INSERT INTO repair_failures
+                    (case_id, document, embedding, dimension, revision, created_at, updated_at, search_text, content_hash)
+                VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)
+                ON CONFLICT(case_id) DO UPDATE SET
+                    document = excluded.document,
+                    embedding = excluded.embedding,
+                    dimension = excluded.dimension,
+                    revision = repair_failures.revision + 1,
+                    updated_at = excluded.updated_at,
+                    search_text = excluded.search_text,
+                    content_hash = excluded.content_hash
+                WHERE repair_failures.content_hash != excluded.content_hash
+                """,
+                (state["task_id"], document, json.dumps(vector), len(vector), timestamp, timestamp,
+                 search_text, content_hash),
             )
             self._receipt(connection, document, write=True)
             connection.commit()
@@ -443,18 +719,30 @@ class KnowledgeBase:
         report["total"] = self.count()
         return report
 
-    def search(self, query: str, limit: int = 5, min_similarity: float = 0.35) -> list[dict[str, object]]:
-        """联合 BM25 和向量召回；向量服务不可用时使用关键词，不返回无关案例。"""
+    def search(
+        self,
+        query: str,
+        limit: int = 5,
+        min_similarity: float = 0.35,
+        outcome: Literal["accepted", "rejected"] = "accepted",
+        filters: Mapping[str, object] | None = None,
+    ) -> list[dict[str, object]]:
+        """按结果类型和严格元数据过滤分别执行 BM25/向量召回。"""
         if not isinstance(query, str) or not query.strip():
             raise ValueError("知识库查询文本不能为空")
         if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:
             raise ValueError("知识库查询数量必须是正整数")
         if isinstance(min_similarity, bool) or not isinstance(min_similarity, (int, float)) or not 0 <= min_similarity <= 1:
             raise ValueError("min_similarity 必须在 0 到 1 之间")
+        if outcome not in ("accepted", "rejected"):
+            raise ValueError("outcome 必须是 accepted 或 rejected")
+        normalized_filters = _normalize_retrieval_filters(filters)
+        table = "repair_cases" if outcome == "accepted" else "repair_failures"
         connection = self._connect()
         try:
             rows = connection.execute(
-                "SELECT case_id, document, embedding, dimension, revision, search_text FROM repair_cases ORDER BY case_id"
+                f"SELECT case_id, document, embedding, dimension, revision, search_text, "
+                f"'{outcome}' AS outcome FROM {table} ORDER BY case_id"
             ).fetchall()
         except sqlite3.Error as error:
             raise KnowledgeBaseError(f"读取知识库失败：{error}") from error
@@ -469,6 +757,8 @@ class KnowledgeBase:
                 document = json.loads(row["document"])
                 if not isinstance(document, dict):
                     raise ValueError("案例正文必须为对象")
+                if not _matches_retrieval_filters(document, normalized_filters):
+                    continue
                 candidates.append((row, row["search_text"] or _case_search_text(document)))
             except (ValueError, TypeError) as error:
                 error_info(error, operation="knowledge.document.decode")
@@ -508,6 +798,7 @@ class KnowledgeBase:
                 "vector_score": semantic,
                 "keyword_score": keyword_score,
                 "retrieval_mode": "hybrid" if semantic is not None else "keyword",
+                "outcome": row["outcome"],
             })
         results.sort(key=lambda item: float(item["score"]), reverse=True)
         return results[:limit]
@@ -520,5 +811,16 @@ class KnowledgeBase:
             return int(row["total"])
         except sqlite3.Error as error:
             raise KnowledgeBaseError(f"统计知识库失败：{error}") from error
+        finally:
+            connection.close()
+
+    def failure_count(self) -> int:
+        """返回已保存的负向失败经验数量；不混入已验收案例总数。"""
+        connection = self._connect()
+        try:
+            row = connection.execute("SELECT COUNT(*) AS total FROM repair_failures").fetchone()
+            return int(row["total"])
+        except sqlite3.Error as error:
+            raise KnowledgeBaseError(f"统计失败经验失败：{error}") from error
         finally:
             connection.close()

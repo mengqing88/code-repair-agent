@@ -77,12 +77,24 @@ class SearchArguments(Contract):
 class RetrieveArguments(Contract):
     query: str = Field(min_length=1, max_length=10_000)
     limit: int = Field(default=5, ge=1, le=20)
+    outcome: Literal["accepted", "rejected"] = "accepted"
+    file_paths: list[str] = Field(default_factory=list, max_length=10)
 
     @field_validator("query")
     @classmethod
     def query_must_not_be_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("query 不能为空白字符串")
+        return value
+
+    @field_validator("file_paths")
+    @classmethod
+    def file_paths_must_be_relative(cls, value: list[str]) -> list[str]:
+        for path in value:
+            normalized = path.replace("\\", "/")
+            if (not path.strip() or normalized.startswith("/") or re.match(r"^[A-Za-z]:", normalized)
+                    or ".." in normalized.split("/")):
+                raise ValueError("file_paths 必须是工作区内的相对路径")
         return value
 
 

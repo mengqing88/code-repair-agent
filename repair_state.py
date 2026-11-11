@@ -120,6 +120,8 @@ class RepairState(TypedDict):
     elapsed_seconds: float
     # remaining_budget：剩余预算快照，不包含或修改服务端的原始预算上限。
     remaining_budget: RemainingBudget
+    # failure_matches：单独召回的用户拒绝经验，只作警示，不参与成功案例适用性判断。
+    failure_matches: NotRequired[list[dict[str, object]]]
     # question：需要向用户确认的具体问题；last_error：流程异常的说明，没有时为 None。
     question: str | None
     last_error: str | None
@@ -216,3 +218,4 @@ def create_initial_state(
         "review_reason": None,
         "memory_saved": False,
     }
+        "failure_matches": [],
