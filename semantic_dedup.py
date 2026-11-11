@@ -1,9 +1,13 @@
-"""在检索结果中折叠同范围的近重复修复案例，同时保留各自来源与条件。"""
+"""合并同范围的近重复修复案例，并保留各自来源与条件。"""
 
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Mapping, Sequence
+
+
+DEFAULT_DUPLICATE_THRESHOLD = 0.97
 
 
 def _cosine(left: Sequence[float], right: Sequence[float]) -> float:
@@ -17,14 +21,15 @@ def _cosine(left: Sequence[float], right: Sequence[float]) -> float:
     return sum(a * b for a, b in zip(left, right)) / (left_norm * right_norm)
 
 
-def _scope_key(document_text: object) -> tuple[object, ...] | None:
-    """只允许具有仓库和文件范围且完整范围一致的案例参与自动折叠。"""
-    if not isinstance(document_text, str):
-        return None
-    try:
-        document = json.loads(document_text)
-    except (json.JSONDecodeError, TypeError):
-        return None
+def scope_key(document_text: object) -> tuple[object, ...] | None:
+    """返回自动合并要求的完整仓库、文件和依赖范围。"""
+    if isinstance(document_text, str):
+        try:
+            document = json.loads(document_text)
+        except (json.JSONDecodeError, TypeError):
+            return None
+    else:
+        document = document_text
     if not isinstance(document, dict):
         return None
     scope = document.get("retrieval_scope")
@@ -46,21 +51,75 @@ def _scope_key(document_text: object) -> tuple[object, ...] | None:
     return repository, tuple(sorted(set(paths))), normalized_dependencies
 
 
-def _provenance(result: Mapping[str, object]) -> dict[str, object]:
-    """保留重复案例 ID、来源、适用条件和报告，不复制补丁正文。"""
+def scope_fingerprint(scope: tuple[object, ...]) -> str:
+    """为规范化范围生成稳定哈希，供数据库合并表分组使用。"""
+    encoded = json.dumps(scope, ensure_ascii=False, separators=(",", ":"), default=str)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def case_provenance(case_id: object, document_text: object, similarity: float | None = None) -> dict[str, object]:
+    """返回可追溯来源字段，不复制补丁或执行日志。"""
     try:
-        document = json.loads(str(result.get("document", "{}")))
-    except json.JSONDecodeError:
+        document = json.loads(document_text) if isinstance(document_text, str) else document_text
+    except (json.JSONDecodeError, TypeError):
         document = {}
     if not isinstance(document, dict):
         document = {}
-    return {
-        "case_id": result.get("case_id"),
+    provenance = {
+        "case_id": case_id,
         "source": document.get("source"),
         "applicable_conditions": document.get("applicable_conditions", []),
         "original_report": document.get("original_report"),
         "diagnosis": document.get("diagnosis"),
     }
+    if similarity is not None:
+        provenance["similarity"] = similarity
+    return provenance
+
+
+def merge_similar_cases(
+    records: Sequence[Mapping[str, object]],
+    *,
+    threshold: float = DEFAULT_DUPLICATE_THRESHOLD,
+) -> list[dict[str, object]]:
+    """按保存顺序将同结果类型、同范围的高相似案例链接到主案例。"""
+    if not 0 < threshold <= 1:
+        raise ValueError("threshold 必须大于 0 且不超过 1")
+    ordered = sorted(records, key=lambda item: (str(item.get("created_at", "")), str(item.get("case_id", ""))))
+    canonical: list[tuple[str, str, tuple[object, ...], Sequence[float]]] = []
+    merged: list[dict[str, object]] = []
+    for record in ordered:
+        case_id = record.get("case_id")
+        outcome = record.get("outcome")
+        vector = record.get("vector")
+        scope = scope_key(record.get("document"))
+        if not isinstance(case_id, str) or not case_id or not isinstance(outcome, str) or scope is None:
+            continue
+        if not isinstance(vector, Sequence) or isinstance(vector, (str, bytes)) or not vector:
+            continue
+        match_id = None
+        match_similarity = threshold
+        for canonical_id, canonical_outcome, canonical_scope, canonical_vector in canonical:
+            if outcome != canonical_outcome or scope != canonical_scope:
+                continue
+            try:
+                similarity = _cosine(vector, canonical_vector)
+            except (TypeError, ValueError, OverflowError):
+                continue
+            if similarity >= match_similarity:
+                match_id = canonical_id
+                match_similarity = similarity
+        if match_id is None:
+            canonical.append((case_id, outcome, scope, vector))
+            continue
+        merged.append({
+            "outcome": outcome,
+            "duplicate_case_id": case_id,
+            "canonical_case_id": match_id,
+            "scope_hash": scope_fingerprint(scope),
+            "similarity": match_similarity,
+        })
+    return merged
 
 
 def collapse_semantic_duplicates(
@@ -77,15 +136,15 @@ def collapse_semantic_duplicates(
     for candidate in ranked:
         case_id = str(candidate.get("case_id", ""))
         vector = vectors.get(case_id)
-        scope_key = _scope_key(candidate.get("document"))
+        candidate_scope = scope_key(candidate.get("document"))
         match = None
-        if vector is not None and scope_key is not None:
+        if vector is not None and candidate_scope is not None:
             for kept in collapsed:
                 kept_id = str(kept.get("case_id", ""))
                 kept_vector = vectors.get(kept_id)
                 if (
                     kept.get("outcome") == candidate.get("outcome")
-                    and _scope_key(kept.get("document")) == scope_key
+                    and scope_key(kept.get("document")) == candidate_scope
                     and kept_vector is not None
                     and _cosine(vector, kept_vector) >= threshold
                 ):
@@ -95,5 +154,8 @@ def collapse_semantic_duplicates(
             candidate.setdefault("duplicate_cases", [])
             collapsed.append(candidate)
             continue
-        match.setdefault("duplicate_cases", []).append(_provenance(candidate))
+        match.setdefault("duplicate_cases", []).append(
+            case_provenance(candidate.get("case_id"), candidate.get("document"))
+        )
+        match["duplicate_cases"].extend(candidate.get("duplicate_cases", []))
     return collapsed

@@ -2,7 +2,7 @@
 
 import json
 
-from semantic_dedup import collapse_semantic_duplicates
+from semantic_dedup import collapse_semantic_duplicates, merge_similar_cases
 
 
 def make_result(case_id: str, *, path: str = "src/worker.py", version: str = "2.1"):
@@ -43,3 +43,26 @@ def test_similar_cases_in_different_file_or_dependency_scope_stay_separate():
     )
 
     assert {item["case_id"] for item in collapsed} == {"base", "other-file", "other-version"}
+
+
+def test_persistent_merge_uses_similarity_threshold_and_outcome():
+    same_scope = json.loads(make_result("first")["document"])
+    second_scope = json.loads(make_result("second")["document"])
+    below_threshold = json.loads(make_result("below")["document"])
+    records = [
+        {"case_id": "first", "outcome": "accepted", "document": same_scope,
+         "vector": [1.0, 0.0], "created_at": "1"},
+        {"case_id": "second", "outcome": "accepted", "document": second_scope,
+         "vector": [0.98, (1 - 0.98**2) ** 0.5], "created_at": "2"},
+        {"case_id": "below", "outcome": "accepted", "document": below_threshold,
+         "vector": [0.96, (1 - 0.96**2) ** 0.5], "created_at": "3"},
+        {"case_id": "rejected", "outcome": "rejected", "document": same_scope,
+         "vector": [1.0, 0.0], "created_at": "4"},
+    ]
+
+    merged = merge_similar_cases(records, threshold=0.97)
+
+    assert [(item["duplicate_case_id"], item["canonical_case_id"]) for item in merged] == [
+        ("second", "first"),
+    ]
+    assert merged[0]["similarity"] >= 0.97

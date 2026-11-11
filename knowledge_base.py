@@ -29,7 +29,14 @@ from diagnostics import redact
 from repair_state import RepairState
 from qdrant_store import QdrantIndexError, QdrantVectorIndex, configured_qdrant_index
 from retrieval_reranker import configured_reranker
-from semantic_dedup import collapse_semantic_duplicates
+from semantic_dedup import (
+    DEFAULT_DUPLICATE_THRESHOLD,
+    case_provenance,
+    collapse_semantic_duplicates,
+    merge_similar_cases,
+    scope_fingerprint,
+    scope_key,
+)
 
 
 EmbeddingFunction = Callable[[str], Sequence[float]]
@@ -481,6 +488,8 @@ class KnowledgeBase:
     qdrant_index: QdrantVectorIndex | None = field(default_factory=configured_qdrant_index)
     # reranker：按需对初召回的候选案例重排；可以使用离线假模型测试。
     reranker: object | None = field(default_factory=configured_reranker)
+    # duplicate_similarity_threshold：同范围案例自动合并的余弦相似度阈值。
+    duplicate_similarity_threshold: float = DEFAULT_DUPLICATE_THRESHOLD
 
     @property
     def qdrant_namespace(self) -> str:
@@ -506,6 +515,158 @@ class KnowledgeBase:
             trace("knowledge.qdrant", "degraded", fault=error, decision="sqlite_remains_authoritative")
             if current() and "Qdrant 索引不可用，本次经验仍已保存在本地知识库" not in current().warnings:
                 current().warnings.append("Qdrant 索引不可用，本次经验仍已保存在本地知识库")
+
+    def _delete_qdrant_case(self, case_id: str, outcome: str) -> None:
+        """从 Qdrant 删除已并入主案例的向量点；SQLite 仍保留原始案例。"""
+        if self.qdrant_index is None:
+            return
+        try:
+            self.qdrant_index.delete_case(
+                namespace=self.qdrant_namespace, case_id=case_id, outcome=outcome,
+            )
+        except QdrantIndexError as error:
+            trace("knowledge.qdrant", "degraded", fault=error, decision="sqlite_merge_remains_authoritative")
+
+    @staticmethod
+    def _table_for_outcome(outcome: str) -> str:
+        """返回固定结果类型对应的 SQLite 案例表名。"""
+        return "repair_cases" if outcome == "accepted" else "repair_failures"
+
+    def _rebuild_scope_merges(self, connection, outcome: str, scope: tuple[object, ...]):
+        """重算单一结果类型和适用范围内的主案例关系。"""
+        table = self._table_for_outcome(outcome)
+        scope_hash = scope_fingerprint(scope)
+        before = {
+            row[0] for row in connection.execute(
+                "SELECT duplicate_case_id FROM repair_case_merges WHERE outcome = ? AND scope_hash = ?",
+                (outcome, scope_hash),
+            ).fetchall()
+        }
+        rows = connection.execute(
+            f"SELECT case_id, document, embedding, created_at FROM {table} ORDER BY created_at, case_id"
+        ).fetchall()
+        records = []
+        for row in rows:
+            try:
+                document = json.loads(row["document"])
+                if scope_key(document) != scope:
+                    continue
+                vector = json.loads(row["embedding"])
+            except (json.JSONDecodeError, TypeError):
+                continue
+            records.append({
+                "case_id": row["case_id"], "outcome": outcome, "document": document,
+                "vector": vector, "created_at": row["created_at"],
+            })
+        connection.execute(
+            "DELETE FROM repair_case_merges WHERE outcome = ? AND scope_hash = ?",
+            (outcome, scope_hash),
+        )
+        links = merge_similar_cases(records, threshold=self.duplicate_similarity_threshold)
+        timestamp = datetime.now(timezone.utc).isoformat()
+        connection.executemany(
+            """INSERT INTO repair_case_merges
+               (outcome, duplicate_case_id, canonical_case_id, scope_hash, similarity, merged_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            [(
+                link["outcome"], link["duplicate_case_id"], link["canonical_case_id"],
+                link["scope_hash"], link["similarity"], timestamp,
+            ) for link in links],
+        )
+        return before, {link["duplicate_case_id"] for link in links}
+
+    def _ensure_semantic_merges(self) -> None:
+        """首次访问时将旧案例并入同范围主案例，且保留原记录。"""
+        if not 0 < self.duplicate_similarity_threshold <= 1:
+            raise ValueError("duplicate_similarity_threshold 必须大于 0 且不超过 1")
+        version = f"same-scope-v1:{self.duplicate_similarity_threshold:.6f}"
+        connection = self._connect()
+        aliases_to_delete: list[tuple[str, str]] = []
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            marker = connection.execute(
+                "SELECT value FROM knowledge_base_meta WHERE key = 'semantic_merge_version'"
+            ).fetchone()
+            if marker is not None and marker[0] == version:
+                connection.commit()
+                return
+            old_aliases = {
+                (row["outcome"], row["duplicate_case_id"])
+                for row in connection.execute(
+                    "SELECT outcome, duplicate_case_id FROM repair_case_merges"
+                ).fetchall()
+            }
+            connection.execute("DELETE FROM repair_case_merges")
+            for outcome in ("accepted", "rejected"):
+                table = self._table_for_outcome(outcome)
+                rows = connection.execute(
+                    f"SELECT case_id, document, embedding, created_at FROM {table} ORDER BY created_at, case_id"
+                ).fetchall()
+                records = []
+                for row in rows:
+                    try:
+                        records.append({
+                            "case_id": row["case_id"], "outcome": outcome,
+                            "document": json.loads(row["document"]),
+                            "vector": json.loads(row["embedding"]), "created_at": row["created_at"],
+                        })
+                    except (json.JSONDecodeError, TypeError):
+                        continue
+                links = merge_similar_cases(records, threshold=self.duplicate_similarity_threshold)
+                timestamp = datetime.now(timezone.utc).isoformat()
+                connection.executemany(
+                    """INSERT INTO repair_case_merges
+                       (outcome, duplicate_case_id, canonical_case_id, scope_hash, similarity, merged_at)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
+                    [(
+                        link["outcome"], link["duplicate_case_id"], link["canonical_case_id"],
+                        link["scope_hash"], link["similarity"], timestamp,
+                    ) for link in links],
+                )
+            connection.execute(
+                """INSERT INTO knowledge_base_meta (key, value) VALUES ('semantic_merge_version', ?)
+                   ON CONFLICT(key) DO UPDATE SET value = excluded.value""",
+                (version,),
+            )
+            new_aliases = {
+                (row["outcome"], row["duplicate_case_id"])
+                for row in connection.execute(
+                    "SELECT outcome, duplicate_case_id FROM repair_case_merges"
+                ).fetchall()
+            }
+            aliases_to_delete = sorted(new_aliases - old_aliases)
+            connection.commit()
+        except sqlite3.Error as error:
+            connection.rollback()
+            raise KnowledgeBaseError(f"迁移语义合并关系失败：{error}") from error
+        finally:
+            connection.close()
+        for outcome, case_id in aliases_to_delete:
+            self._delete_qdrant_case(case_id, outcome)
+
+    def _sync_merge_index(
+        self, outcome: str, old_aliases: set[str], new_aliases: set[str], current_case_id: str,
+    ) -> None:
+        """删除新并入主案例的 Qdrant 点，并恢复不再重复的旧案例点。"""
+        for case_id in new_aliases - old_aliases - {current_case_id}:
+            self._delete_qdrant_case(case_id, outcome)
+        table = self._table_for_outcome(outcome)
+        connection = self._connect()
+        try:
+            for case_id in old_aliases - new_aliases - {current_case_id}:
+                row = connection.execute(
+                    f"SELECT document, embedding, revision FROM {table} WHERE case_id = ?", (case_id,),
+                ).fetchone()
+                if row is None:
+                    continue
+                try:
+                    vector = _validated_vector(json.loads(row["embedding"]), "案例向量")
+                    document = json.loads(row["document"])
+                except (json.JSONDecodeError, KnowledgeBaseError, TypeError):
+                    continue
+                self._index_qdrant(case_id, outcome, int(row["revision"]), vector, document)
+        finally:
+            connection.close()
 
     def _connect(self) -> sqlite3.Connection:
         """打开数据库并确保案例表存在；调用方负责关闭返回的连接。"""
@@ -555,6 +716,24 @@ class KnowledgeBase:
             )
             """
         )
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS repair_case_merges (
+                outcome TEXT NOT NULL CHECK (outcome IN ('accepted', 'rejected')),
+                duplicate_case_id TEXT NOT NULL,
+                canonical_case_id TEXT NOT NULL,
+                scope_hash TEXT NOT NULL,
+                similarity REAL NOT NULL,
+                merged_at TEXT NOT NULL,
+                PRIMARY KEY (outcome, duplicate_case_id),
+                CHECK (duplicate_case_id != canonical_case_id)
+            )"""
+        )
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS repair_case_merges_scope ON repair_case_merges(outcome, scope_hash)"
+        )
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS knowledge_base_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+        )
         connection.commit()
         connection.execute("""CREATE TABLE IF NOT EXISTS effect_receipts (
             key TEXT PRIMARY KEY, task_id TEXT NOT NULL, name TEXT NOT NULL,
@@ -591,6 +770,7 @@ class KnowledgeBase:
         """相同任务与正文直接复用；正文变化才嵌入并增加版本。"""
         document = build_case_document(state)
         content_hash = hashlib.sha256(document.encode("utf-8")).hexdigest()
+        self._ensure_semantic_merges()
         connection = self._connect()
         try:
             connection.execute("BEGIN IMMEDIATE")
@@ -607,10 +787,21 @@ class KnowledgeBase:
         vector = _validated_vector(self.embedder(search_text), "案例向量")
         timestamp = datetime.now(timezone.utc).isoformat()
         connection = self._connect()
+        old_aliases: set[str] = set()
+        new_aliases: set[str] = set()
         try:
             connection.execute("BEGIN IMMEDIATE")
             self._check_business_row(connection, "repair_cases", "case_id", state, document)
             self._receipt(connection, document)
+            previous = connection.execute(
+                "SELECT document FROM repair_cases WHERE case_id = ?", (state["task_id"],),
+            ).fetchone()
+            previous_scope = None
+            if previous is not None:
+                try:
+                    previous_scope = scope_key(json.loads(previous["document"]))
+                except (json.JSONDecodeError, TypeError):
+                    pass
             connection.execute(
                 """
                 INSERT INTO repair_cases
@@ -634,17 +825,34 @@ class KnowledgeBase:
                 "SELECT revision FROM repair_cases WHERE case_id = ?", (state["task_id"],),
             ).fetchone()
             revision = int(row["revision"])
+            current_scope = scope_key(json.loads(document))
+            scopes = [scope for scope in (previous_scope, current_scope) if scope is not None]
+            if len(scopes) == 2 and scopes[0] == scopes[1]:
+                scopes.pop()
+            for scope in scopes:
+                before, after = self._rebuild_scope_merges(connection, "accepted", scope)
+                old_aliases.update(before)
+                new_aliases.update(after)
+            current_merged = connection.execute(
+                "SELECT 1 FROM repair_case_merges WHERE outcome = 'accepted' AND duplicate_case_id = ?",
+                (state["task_id"],),
+            ).fetchone() is not None
             connection.commit()
         except sqlite3.Error as error:
             connection.rollback()
             raise KnowledgeBaseError(f"保存修复案例失败：{error}") from error
         finally:
             connection.close()
-        self._index_qdrant(state["task_id"], "accepted", revision, vector, json.loads(document))
+        self._sync_merge_index("accepted", old_aliases, new_aliases, state["task_id"])
+        if current_merged:
+            self._delete_qdrant_case(state["task_id"], "accepted")
+        else:
+            self._index_qdrant(state["task_id"], "accepted", revision, vector, json.loads(document))
 
     def record_rejection(self, state: RepairState) -> None:
         """记录拒绝理由，并把它保存为可检索但明确标记为失败的负向经验。"""
         document = build_rejection_document(state)
+        self._ensure_semantic_merges()
         reason = str(state["review_reason"]).strip()
         content_hash = hashlib.sha256(document.encode("utf-8")).hexdigest()
         search_text = _case_search_text(json.loads(document))
@@ -655,10 +863,21 @@ class KnowledgeBase:
             trace("knowledge.failure_memory", "degraded", fault=error, decision="keyword_only")
         timestamp = datetime.now(timezone.utc).isoformat()
         connection = self._connect()
+        old_aliases: set[str] = set()
+        new_aliases: set[str] = set()
         try:
             connection.execute("BEGIN IMMEDIATE")
             self._check_business_row(connection, "repair_reviews", "task_id", state, document)
             self._receipt(connection, document)
+            previous = connection.execute(
+                "SELECT document FROM repair_failures WHERE case_id = ?", (state["task_id"],),
+            ).fetchone()
+            previous_scope = None
+            if previous is not None:
+                try:
+                    previous_scope = scope_key(json.loads(previous["document"]))
+                except (json.JSONDecodeError, TypeError):
+                    pass
             connection.execute(
                 """
                 INSERT INTO repair_reviews (task_id, decision, reason, document, created_at)
@@ -694,13 +913,29 @@ class KnowledgeBase:
                 "SELECT revision FROM repair_failures WHERE case_id = ?", (state["task_id"],),
             ).fetchone()
             revision = int(row["revision"])
+            current_scope = scope_key(json.loads(document))
+            scopes = [scope for scope in (previous_scope, current_scope) if scope is not None]
+            if len(scopes) == 2 and scopes[0] == scopes[1]:
+                scopes.pop()
+            for scope in scopes:
+                before, after = self._rebuild_scope_merges(connection, "rejected", scope)
+                old_aliases.update(before)
+                new_aliases.update(after)
+            current_merged = connection.execute(
+                "SELECT 1 FROM repair_case_merges WHERE outcome = 'rejected' AND duplicate_case_id = ?",
+                (state["task_id"],),
+            ).fetchone() is not None
             connection.commit()
         except sqlite3.Error as error:
             connection.rollback()
             raise KnowledgeBaseError(f"保存拒绝审核记录失败：{error}") from error
         finally:
             connection.close()
-        self._index_qdrant(state["task_id"], "rejected", revision, vector, json.loads(document))
+        self._sync_merge_index("rejected", old_aliases, new_aliases, state["task_id"])
+        if current_merged:
+            self._delete_qdrant_case(state["task_id"], "rejected")
+        elif vector:
+            self._index_qdrant(state["task_id"], "rejected", revision, vector, json.loads(document))
 
     def import_cases(self, records: Sequence[object], source: str = "") -> dict[str, object]:
         """逐条校验并导入历史案例；相同正文重复导入不增加版本或重复嵌入。"""
@@ -796,18 +1031,36 @@ class KnowledgeBase:
         if not isinstance(rerank, bool):
             raise ValueError("rerank 必须是布尔值")
         normalized_filters = _normalize_retrieval_filters(filters)
+        self._ensure_semantic_merges()
         table = "repair_cases" if outcome == "accepted" else "repair_failures"
         connection = self._connect()
         try:
             rows = connection.execute(
                 f"SELECT case_id, document, embedding, dimension, revision, search_text, "
-                f"'{outcome}' AS outcome FROM {table} ORDER BY case_id"
+                f"'{outcome}' AS outcome FROM {table} AS cases "
+                "WHERE NOT EXISTS (SELECT 1 FROM repair_case_merges AS merges "
+                "WHERE merges.outcome = ? AND merges.duplicate_case_id = cases.case_id) "
+                "ORDER BY case_id",
+                (outcome,),
+            ).fetchall()
+            merged_rows = connection.execute(
+                f"""SELECT merges.canonical_case_id, merges.duplicate_case_id,
+                           merges.similarity, duplicates.document
+                    FROM repair_case_merges AS merges
+                    JOIN {table} AS duplicates ON duplicates.case_id = merges.duplicate_case_id
+                    WHERE merges.outcome = ? ORDER BY merges.canonical_case_id, merges.duplicate_case_id""",
+                (outcome,),
             ).fetchall()
         except sqlite3.Error as error:
             raise KnowledgeBaseError(f"读取知识库失败：{error}") from error
         finally:
             connection.close()
 
+        duplicate_provenance: dict[str, list[dict[str, object]]] = {}
+        for row in merged_rows:
+            duplicate_provenance.setdefault(row["canonical_case_id"], []).append(
+                case_provenance(row["duplicate_case_id"], row["document"], float(row["similarity"]))
+            )
         if not rows:
             return []
         candidates = []
@@ -871,7 +1124,10 @@ class KnowledgeBase:
                     outcome=outcome,
                     filters=normalized_filters,
                 )
-                qdrant_scores = {item["case_id"]: item["score"] for item in matches}
+                active_ids = {row["case_id"] for row, _ in candidates}
+                qdrant_scores = {
+                    item["case_id"]: item["score"] for item in matches if item["case_id"] in active_ids
+                }
                 if qdrant_scores:
                     candidate_ids = set(qdrant_scores)
                     if strategy == "hybrid":
@@ -912,7 +1168,7 @@ class KnowledgeBase:
                 if not keyword_score and (semantic is None or semantic <= 0 or semantic < min_similarity):
                     continue
                 score = 0.7 * max(0.0, semantic or 0.0) + 0.3 * keyword_score if semantic is not None else keyword_score
-            results.append({
+            result = {
                 "case_id": row["case_id"],
                 "revision": row["revision"],
                 "score": score,
@@ -925,7 +1181,10 @@ class KnowledgeBase:
                 ),
                 "outcome": row["outcome"],
                 "_rerank_text": candidates[index][1],
-            })
+            }
+            if row["case_id"] in duplicate_provenance:
+                result["duplicate_cases"] = duplicate_provenance[row["case_id"]]
+            results.append(result)
         results.sort(key=lambda item: float(item["score"]), reverse=True)
         results = collapse_semantic_duplicates(results, stored_vectors)
         if rerank and self.reranker is not None and results:
@@ -952,10 +1211,16 @@ class KnowledgeBase:
         return results[:limit]
 
     def count(self) -> int:
-        """返回知识库中当前保存的案例数量。"""
+        """返回合并后可独立检索的成功案例数量。"""
+        self._ensure_semantic_merges()
         connection = self._connect()
         try:
-            row = connection.execute("SELECT COUNT(*) AS total FROM repair_cases").fetchone()
+            row = connection.execute(
+                """SELECT COUNT(*) AS total FROM repair_cases AS cases
+                   WHERE NOT EXISTS (SELECT 1 FROM repair_case_merges AS merges
+                                     WHERE merges.outcome = 'accepted'
+                                       AND merges.duplicate_case_id = cases.case_id)"""
+            ).fetchone()
             return int(row["total"])
         except sqlite3.Error as error:
             raise KnowledgeBaseError(f"统计知识库失败：{error}") from error
@@ -963,10 +1228,16 @@ class KnowledgeBase:
             connection.close()
 
     def failure_count(self) -> int:
-        """返回已保存的负向失败经验数量；不混入已验收案例总数。"""
+        """返回合并后可独立检索的负向经验数量。"""
+        self._ensure_semantic_merges()
         connection = self._connect()
         try:
-            row = connection.execute("SELECT COUNT(*) AS total FROM repair_failures").fetchone()
+            row = connection.execute(
+                """SELECT COUNT(*) AS total FROM repair_failures AS cases
+                   WHERE NOT EXISTS (SELECT 1 FROM repair_case_merges AS merges
+                                     WHERE merges.outcome = 'rejected'
+                                       AND merges.duplicate_case_id = cases.case_id)"""
+            ).fetchone()
             return int(row["total"])
         except sqlite3.Error as error:
             raise KnowledgeBaseError(f"统计失败经验失败：{error}") from error

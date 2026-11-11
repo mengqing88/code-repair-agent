@@ -107,6 +107,23 @@ class QdrantVectorIndex:
                 raise
             raise QdrantIndexError("写入 Qdrant 向量失败") from error
 
+    def delete_case(self, *, namespace: str, case_id: str, outcome: str) -> None:
+        """删除已并入主案例的向量点。"""
+        from qdrant_client import models
+
+        try:
+            if not self.client.collection_exists(self.collection_name):
+                return
+            self.client.delete(
+                collection_name=self.collection_name,
+                points_selector=models.PointIdsList(
+                    points=[QdrantVectorIndex.point_id(namespace, outcome, case_id)],
+                ),
+                wait=True,
+            )
+        except Exception as error:
+            raise QdrantIndexError("删除已合并案例向量失败") from error
+
     @staticmethod
     def _point(models, namespace, case_id, outcome, revision, vector, retrieval_scope):
         """构造不包含案例正文的 Qdrant 点。"""
