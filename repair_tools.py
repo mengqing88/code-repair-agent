@@ -601,15 +601,34 @@ def _diff_paths(patch_diff: str) -> set[str]:
     return paths
 
 
-def _check_patch_scope(patch_diff: str, workspace_root: Path, allowed_paths: Sequence[str]) -> set[str]:
+def _check_patch_scope(
+    patch_diff: str,
+    workspace_root: Path,
+    allowed_paths: Sequence[str],
+    protected_test_targets: Sequence[str] = (),
+) -> set[str]:
     """确保补丁涉及的每个文件都在调用方明确允许的范围内。"""
     if not allowed_paths:
         raise RepairToolError("应用补丁前必须提供允许修改的路径范围")
     root = workspace_root.resolve()
     allowed = [_workspace_path(root, item, must_exist=False) for item in allowed_paths]
+    protected_tests = []
+    for test_target in protected_test_targets:
+        file_part = test_target.split("::", 1)[0].strip()
+        if PurePosixPath(file_part.replace("\\", "/")) == PurePosixPath("."):
+            continue
+        protected_tests.append(_workspace_path(root, file_part, must_exist=False))
     touched = _diff_paths(patch_diff)
     for relative in touched:
+        parts = PurePosixPath(relative.replace("\\", "/")).parts
+        name = parts[-1].lower()
+        if (any(part.lower() in (".git", "tests", "test") for part in parts)
+                or name.startswith("test_") or name.endswith("_test.py")
+                or name in ("conftest.py", "pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini")):
+            raise RepairToolError("补丁不能修改测试文件、测试配置或 Git 元数据")
         target = _workspace_path(root, relative, must_exist=False)
+        if any(target == protected or protected in target.parents for protected in protected_tests):
+            raise RepairToolError("补丁不能修改任务配置的测试目标")
         if not any(target == permitted or permitted in target.parents for permitted in allowed):
             raise RepairToolError(f"补丁超出允许修改范围：{relative}")
     return touched
@@ -620,12 +639,13 @@ def apply_patch(
     *,
     workspace_root: Path,
     allowed_paths: Sequence[str],
+    protected_test_targets: Sequence[str] = (),
     max_output_chars: int = 20_000,
 ) -> dict[str, object]:
     """检查范围后用 git apply --check 和 git apply 应用 unified diff。"""
     if not isinstance(patch_diff, str) or not patch_diff.strip():
         raise ValueError("补丁内容不能为空")
-    touched = _check_patch_scope(patch_diff, workspace_root, allowed_paths)
+    touched = _check_patch_scope(patch_diff, workspace_root, allowed_paths, protected_test_targets)
     root = workspace_root.resolve()
     if not (root / ".git").exists():
         raise RepairToolError("应用补丁需要工作区包含 .git")
@@ -835,7 +855,10 @@ class RepairToolbox:
     def apply_patch(self, patch_diff: str) -> dict[str, object]:
         """在任务工作区应用补丁，并检查调用方允许修改的路径。"""
         return apply_patch(
-            patch_diff, workspace_root=self.workspace_root, allowed_paths=self.allowed_paths,
+            patch_diff,
+            workspace_root=self.workspace_root,
+            allowed_paths=self.allowed_paths,
+            protected_test_targets=self.test_targets,
         )
 
     def run_tests(self, remaining_seconds: float | None = None) -> dict[str, object]:
