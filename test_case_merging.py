@@ -9,6 +9,7 @@ from qdrant_client import QdrantClient
 from knowledge_base import KnowledgeBase, build_case_document
 from qdrant_store import QdrantVectorIndex
 from repair_state import create_initial_state
+from semantic_dedup import merge_similar_cases
 
 
 def make_case(case_id, *, report="same IndexError", path="src/target.py", version="1.0", decision="accepted"):
@@ -39,6 +40,10 @@ def make_case(case_id, *, report="same IndexError", path="src/target.py", versio
 
 def embedding(text):
     """模拟相同语义向量和低相似向量。"""
+    if "near-vector-a" in text:
+        return [0.98, (1 - 0.98**2) ** 0.5]
+    if "near-vector-b" in text:
+        return [1.0, 0.0]
     return [0.0, 1.0] if "unrelated-vector" in text else [1.0, 0.0]
 
 
@@ -140,3 +145,58 @@ def test_qdrant_removes_the_merged_duplicate_point(tmp_path):
 
     assert [item["case_id"] for item in matches] == ["case-a"]
     index.close()
+
+
+def test_threshold_change_restores_newly_distinct_qdrant_case(tmp_path):
+    client = QdrantClient(":memory:")
+    index = QdrantVectorIndex(client)
+    knowledge = KnowledgeBase(
+        tmp_path / "knowledge.sqlite3", embedding, qdrant_index=index,
+        duplicate_similarity_threshold=0.97,
+    )
+    knowledge.save_case(make_case("near-a", report="near-vector-a failure"))
+    knowledge.save_case(make_case("near-b", report="near-vector-b failure"))
+    assert knowledge.count() == 1
+
+    stricter = KnowledgeBase(
+        knowledge.path, embedding, qdrant_index=index, duplicate_similarity_threshold=0.99,
+    )
+    stricter._ensure_semantic_merges()
+    matches = index.search(
+        namespace=stricter.qdrant_namespace,
+        vector=[1.0, 0.0],
+        limit=10,
+        outcome="accepted",
+        filters={},
+    )
+
+    assert {item["case_id"] for item in matches} == {"near-a", "near-b"}
+    assert stricter.count() == 2
+    index.close()
+
+
+def test_synthetic_batch_of_one_thousand_cases_merges_into_expected_groups():
+    records = []
+    for number in range(1000):
+        group = number % 64
+        vector = [0.0] * 64
+        vector[group] = 1.0
+        document = {
+            "retrieval_scope": {
+                "repository_id": "repo-a",
+                "file_paths": ["src/target.py"],
+                "dependency_versions": {"library": "1.0"},
+            },
+        }
+        records.append({
+            "case_id": f"case-{number:04}",
+            "outcome": "accepted",
+            "document": document,
+            "vector": vector,
+            "created_at": f"{number:04}",
+        })
+
+    merged = merge_similar_cases(records, threshold=0.97)
+
+    assert len(merged) == 1000 - 64
+    assert len({item["canonical_case_id"] for item in merged}) == 64

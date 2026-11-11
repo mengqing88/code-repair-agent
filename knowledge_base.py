@@ -582,6 +582,7 @@ class KnowledgeBase:
         version = f"same-scope-v1:{self.duplicate_similarity_threshold:.6f}"
         connection = self._connect()
         aliases_to_delete: list[tuple[str, str]] = []
+        aliases_to_restore: list[tuple[str, str]] = []
         try:
             connection.execute("BEGIN IMMEDIATE")
             marker = connection.execute(
@@ -635,6 +636,7 @@ class KnowledgeBase:
                 ).fetchall()
             }
             aliases_to_delete = sorted(new_aliases - old_aliases)
+            aliases_to_restore = sorted(old_aliases - new_aliases)
             connection.commit()
         except sqlite3.Error as error:
             connection.rollback()
@@ -643,6 +645,11 @@ class KnowledgeBase:
             connection.close()
         for outcome, case_id in aliases_to_delete:
             self._delete_qdrant_case(case_id, outcome)
+        for outcome in ("accepted", "rejected"):
+            old_ids = {case_id for kind, case_id in aliases_to_restore if kind == outcome}
+            new_ids = {case_id for kind, case_id in aliases_to_delete if kind == outcome}
+            if old_ids or new_ids:
+                self._sync_merge_index(outcome, old_ids, new_ids, "")
 
     def _sync_merge_index(
         self, outcome: str, old_aliases: set[str], new_aliases: set[str], current_case_id: str,
