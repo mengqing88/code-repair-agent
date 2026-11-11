@@ -1,0 +1,32 @@
+{
+  "contracts": [{
+    "name": "lookup_sandbox_order",
+    "request_schema": {
+      "type": "object", "required": ["order_id"],
+      "properties": {"order_id": {"type": "string"}}, "additionalProperties": false
+    },
+    "response_schema": {
+      "type": "object", "required": ["order_id", "status"],
+      "properties": {"order_id": {"type": "string"}, "status": {"enum": ["pending", "completed"]}}
+    },
+    "error_schema": {"type": "object", "required": ["code"], "properties": {"code": {"type": "string"}}},
+    "cases": [
+      {
+        "id": "completed", "request": {"order_id": "sandbox-order-001"},
+        "upstream": {"status": 200, "body": {"order_id": "sandbox-order-001", "status": "completed"}},
+        "expected": {"kind": "success", "value": {"order_id": "sandbox-order-001", "status": "completed"}},
+        "max_adapter_ms": 1000
+      },
+      {
+        "id": "permission_denied", "request": {"order_id": "sandbox-order-001"},
+        "upstream": {"status": 403, "error": {"code": "permission_denied"}},
+        "expected": {"kind": "error", "code": "permission_denied"}
+      },
+      {
+        "id": "timeout", "request": {"order_id": "sandbox-order-001"},
+        "upstream": {"timeout_ms": 1000, "error_code": "upstream_timeout"},
+        "expected": {"kind": "timeout", "code": "upstream_timeout"}
+      }
+    ]
+  }]
+}

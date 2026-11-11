@@ -1,5 +1,7 @@
 # 30 缺陷 RAG 评测集
 
+模型或工具升级的预注册、重复配对及行为退化门禁见 [UPGRADE_EVALUATION.md](UPGRADE_EVALUATION.md)，入口为 `python -m evaluation.upgrade_gate`。它与本页的相同模型 RAG 对照独立。
+
 这是一套自行编写的 Python 合成样例，用于检查检索、补丁应用和验收流程。它不是公开基准或真实生产缺陷集，也不能据此宣称实际 Agent 达到了 Top-5 82%、16/30→22/30、回归通过率 96%。
 
 ## 数据组成
