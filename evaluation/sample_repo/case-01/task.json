@@ -1,0 +1,10 @@
+{
+  "case_id": "case-01",
+  "title": "加法误写为减法",
+  "report": "add 返回结果错误，两个整数相加",
+  "contract": "add(a,b) 返回数值之和。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-13",
+  "title": "空平均值除零",
+  "report": "average empty list should return zero",
+  "contract": "average 对数值序列求平均；空序列返回 0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def can_update(role):
+-    return role == 'admin'
++    return role in {'admin', 'editor'}

@@ -18,11 +18,16 @@ from typing import Sequence
 # reproduce() 管理独立源码副本、模型辅助的错误复现和工作文档。
 from reproduction import reproduce
 # create_initial_state：创建 LangGraph 的共享修复状态；RepairState：标注节点回调的状态类型。
-from repair_state import RepairState, create_initial_state
+from repair_state import (RepairState, create_initial_state, DEFAULT_MAX_RUNTIME_SECONDS,
+                          DEFAULT_MAX_MODEL_TOKENS, DEFAULT_MAX_COST_YUAN)
+from resilience import execution_scope, current, error_info
+from diagnostics import diagnostic_scope, redact
 # RepairToolbox：绑定工作区读取、补丁应用和测试工具。
 from repair_tools import PostgresKnowledgeBase, RepairToolbox, create_checkpoint_workspace
 # build_repair_workflow：构建并执行完整的 LangGraph 修复流程。
 from repair_workflow import build_repair_workflow
+from knowledge_base import KnowledgeBase, default_knowledge_path
+from docker_executor import get_execution_backend
 
 # 类型注解中的 str 表示字符串，int 表示整数，dict 表示字典；
 # object 允许字典的值具有不同类型，None 表示没有提供可选值。
@@ -75,6 +80,11 @@ def make_parser() -> argparse.ArgumentParser:
         default=None,
         help="pytest 测试目标，可重复提供；默认使用工作区目录 .",
     )
+    parser.add_argument(
+        "--execution-mode", choices=("docker", "host"), default=None,
+        help="代码执行方式（默认 Docker；host 仅适用于可信本地代码）",
+    )
+    parser.add_argument("--knowledge-base", type=Path, default=default_knowledge_path(), help="修复经验 SQLite 知识库路径")
     return parser
 
 
@@ -244,40 +254,66 @@ def _run_repair_workflow(
     error_report: str,
     project_root: Path,
 ) -> tuple[RepairState, Path, str]:
+    with execution_scope(DEFAULT_MAX_RUNTIME_SECONDS, max_tokens=DEFAULT_MAX_MODEL_TOKENS,
+                         max_cost=DEFAULT_MAX_COST_YUAN) as context:
+        with diagnostic_scope(path=project_root / "work" / "errors.jsonl", operation="cli.workflow"):
+            try:
+                state, workspace, checkpoint = _run_repair_workflow_scoped(args, source, error_report, project_root)
+            except Exception as error:
+                from resilience import failure_update, trace_workflow_end
+                info = failure_update(error, operation="cli.workflow")
+                if context.trace_path and not context.workflow_ended:
+                    trace_workflow_end({"task_id": context.task_id, **info})
+                raise
+        state["remaining_budget"]["seconds"] = context.remaining()
+        state["elapsed_seconds"] = context.seconds - context.remaining()
+        return state, workspace, checkpoint
+
+
+def _run_repair_workflow_scoped(args, source, error_report, project_root):
     """把 CLI 输入交给 LangGraph，并返回状态、隔离工作区和基线 checkpoint。"""
     # task_id：同一标识关联 LangGraph 状态与这次任务的修改工作区。
     task_id = uuid4().hex
+    context = current()
+    context.task_id = task_id
+    context.trace_path = project_root / "work" / "tasks" / task_id / "trace.jsonl"
+    context.circuit_path = project_root / "work" / "circuits.sqlite3"
     # workspace_root：工具实际读取、应用补丁和运行测试的目录；allowed_paths：补丁允许触及的范围。
     workspace_root, allowed_paths, checkpoint = _workflow_workspace(args, source, project_root, task_id)
     # test_targets：固定测试节点执行的 pytest 目标；没有显式参数时使用工作区根目录。
     test_targets = tuple(args.test_targets or (".",))
+    # 优先使用项目配置的 PostgreSQL/pgvector；未配置时使用本地 SQLite 知识库。
+    postgres_knowledge_base = PostgresKnowledgeBase.from_environment(project_root / ".env")
+    knowledge_base = postgres_knowledge_base or KnowledgeBase(args.knowledge_base)
     # toolbox：把当前工作区和测试配置绑定到固定工具节点；未配置知识库时仍可完成普通修复。
     toolbox = RepairToolbox(
         workspace_root=workspace_root,
-        knowledge_base=PostgresKnowledgeBase.from_environment(),
+        knowledge_base=knowledge_base,
         allowed_paths=allowed_paths,
         test_targets=test_targets,
         checkpoint_revision=checkpoint,
         source_root=project_root,
         validation_report_path=project_root / "work" / "tasks" / task_id / "validation.md",
+        execution_backend=get_execution_backend(args.execution_mode),
+        task_id=task_id,
     )
 
     def reproduce_for_state(state: RepairState) -> dict[str, object]:
         """按共享状态执行一次基线复现，并转换成工作流要求的回调结果。"""
-        # 从已冻结的基线读取，避免原文件变化导致复现和修复版本不一致。
-        baseline_source = dict(state["source"])
-        if baseline_source["type"] == "git_repository":
-            baseline_source.update(path=str(workspace_root), revision=checkpoint)
-        elif baseline_source["type"] == "python_file":
-            baseline_source["path"] = str(workspace_root / allowed_paths[0])
+        # 从已冻结的基线读取，避免原文件在任务开始后变化导致复现和修复版本不一致。
+        # 全部输入模式均导出同一 checkpoint，保留单文件原名、依赖及测试的相对路径。
+        baseline_source = {"type": "git_repository", "path": str(workspace_root), "revision": checkpoint}
+        if state["source"]["type"] == "python_file":
+            baseline_source["analysis_paths"] = list(allowed_paths)
         # seconds：将本轮剩余时间传给复现子进程；至少保留一个正数，避免 timeout=0 被拒绝。
         seconds = max(0.1, float(state["remaining_budget"]["seconds"]))
         record = reproduce(
             source=baseline_source,
             error_report=state["original_report"],
-            code_text=state["code_text"],
             work_root=project_root / "work",
             timeout=min(10.0, seconds),
+            execution_backend=toolbox.execution_backend,
+            task_id=task_id,
         )
         # matched：只有复现模块已经用真实输出确认报告一致时，才允许进入修复阶段。
         matched = record.get("status") == "已复现，与报告一致"
@@ -293,10 +329,16 @@ def _run_repair_workflow(
         error_report=error_report,
         code_text=args.code_text,
     )
+    initial_state["remaining_budget"]["seconds"] = context.remaining()
     # as_repair_services() 将复现、上下文收集、模型提议、补丁应用、测试和经验保存绑定到固定节点。
     services = toolbox.as_repair_services(reproduce_for_state)
     # invoke() 执行编译后的 LangGraph；返回值包含每个节点写回的最终状态快照。
-    state = build_repair_workflow(services).invoke(initial_state)
+    try:
+        state = build_repair_workflow(services).invoke(initial_state)
+    except Exception as error:
+        from resilience import failure_update, trace_workflow_end
+        trace_workflow_end({**initial_state, **failure_update(error, operation="cli.workflow")})
+        raise
     return state, workspace_root, checkpoint
 
 
@@ -314,6 +356,7 @@ def _update_workflow_result(result: dict[str, object], state: RepairState) -> No
         "validation": validation,
         "question": state["question"],
         "last_error": state["last_error"],
+        "error_info": state.get("error_info"),
         "review_decision": state["review_decision"],
         "review_reason": state["review_reason"],
         "memory_saved": state["memory_saved"],
@@ -400,8 +443,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         result["workflow"]["checkpoint"] = checkpoint
     # error：校验过程中抛出的内置 ValueError 异常，保存用户可理解的错误消息。
     except ValueError as error:
+        error_info(error, operation="cli.input")
         # 内置 str() 提取错误文字；parser.error() 打印使用说明并以退出码 2 退出。
-        parser.error(str(error))
+        parser.error(redact(str(error)))
+    except Exception as error:
+        info = error_info(error, operation="cli.main")
+        print(json.dumps({"error": info}, ensure_ascii=False), file=sys.stderr)
+        return 1
 
     # json.dumps() 将结果字典转换成 JSON 字符串；ensure_ascii=False 让中文保持原样，
     # indent=2 让每层缩进两个空格；内置 print() 将字符串写入标准输出并追加换行。

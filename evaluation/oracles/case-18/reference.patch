@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def page(items, offset, limit):
+-    return items[offset:offset + limit], offset + limit + 1
++    return items[offset:offset + limit], offset + limit

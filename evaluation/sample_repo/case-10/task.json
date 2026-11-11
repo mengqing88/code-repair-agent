@@ -1,0 +1,10 @@
+{
+  "case_id": "case-10",
+  "title": "名称规范化缺少 strip",
+  "report": "normalize name keeps leading and trailing spaces",
+  "contract": "normalize_name 去除两端空白后转小写，保留内部空格。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

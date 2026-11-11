@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def dedupe(items):
+-    return list(set(items))
++    return list(dict.fromkeys(items))

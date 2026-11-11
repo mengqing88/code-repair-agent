@@ -1,0 +1,10 @@
+{
+  "case_id": "case-25",
+  "title": "CSV 表头未跳过",
+  "report": "CSV rows should skip the header row",
+  "contract": "names 从 CSV 文本提取首列，首行为表头，支持引号中的逗号和空文件。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

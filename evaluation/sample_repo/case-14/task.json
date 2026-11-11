@@ -1,0 +1,10 @@
+{
+  "case_id": "case-14",
+  "title": "偶数中位数取错",
+  "report": "median of an even list should average the middle pair",
+  "contract": "median 支持非空数值序列；偶数长度取中间两数平均，奇数取中间值。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

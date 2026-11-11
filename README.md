@@ -39,19 +39,19 @@
 - `llm_client.py`：封装兼容 OpenAI Responses API 的聊天、函数工具调用和 embeddings 请求。
 - `knowledge_base.py`：定义修复经验文档以及本地知识库实现。
 - `test_*.py`：覆盖 CLI、复现、状态、工作流、工具、模型客户端和知识库的离线测试。
-- `frontend/`：Vue 3、TypeScript 和 Vite 前端预览；具体范围见 `frontend/README.md`。
+- `frontend/`：已连接本地 API 的 Vue 3、TypeScript 和 Vite 工作台；具体范围见 `frontend/README.md`。
 
 ## 当前实现边界
 
 - LangGraph 固定编排基线复现、上下文收集、补丁生成、应用、测试和审核节点。
-- 补丁生成阶段使用 ReAct 工具循环。模型可以调用 `read_code`、`search_code`、`retrieve_repair_experience`、`apply_patch` 和 `run_tests`，并根据结果继续分析；每轮补丁生成最多调用 30 次工具。补丁工具会先恢复 checkpoint 并检查允许修改路径，测试工具只能运行任务预设目标。
+- 补丁生成阶段使用 ReAct 工具循环。模型可调用 `read_code`、`search_code`、`retrieve_repair_experience`、`apply_patch` 和 `run_tests`，每轮补丁生成最多调用 30 次工具；服务端校验参数、固定测试目标并保护 pytest 实际收集到的测试文件。
 - 工具参数由 Pydantic v2 在分派前校验；严格类型、非空白字符串、整数范围和禁止额外字段等约束，也直接生成模型看到的 JSON Schema，避免说明与实际执行规则分离。
-- 模型可以在 ReAct 阶段试用补丁并运行固定测试；试验改动会在模型给出最终补丁后清理。LangGraph 随后重新应用最终补丁、独立运行测试并进入人工审核；模型仍不能直接保存修复经验。
+- 模型可通过 Function Calling 在隔离工作区试用补丁并运行预设测试；每次补丁都从 checkpoint 开始，固定工作流会重新应用最终补丁、保护验收测试并独立验证，之后进入人工审核。模型不能直接保存修复经验。
 - Git 仓库按用户指定的 commit 创建独立副本；文件和粘贴代码任务也创建任务副本。验证失败或用户拒绝时恢复该副本的 checkpoint，不修改原始源码。
 - 测试通过只会进入人工审核状态，不等于用户已接受或任务已完成。
-- CLI 会从项目 `.env` 或环境变量读取 `KNOWLEDGE_DB_URL`（兼容 `DATABASE_URL`），并将 PostgreSQL/pgvector 知识库接入任务。检索使用 `EMBEDDING_BASE_URL`、`EMBEDDING_API_KEY` 和 `EMBEDDING_MODEL`；只有通过测试且人工接受的修复才会写入并向量化，拒绝理由单独保存，不参与经验检索。
-- 配置知识库时，数据库用户需要有权限创建 `vector` 扩展和项目表；首次检索或保存时会初始化 schema。没有配置数据库时任务可以继续诊断，但接受补丁时无法完成经验保存，任务不会报告为保存成功。
-- 前端目前是页面交互预览，尚未接入 Python/LangGraph 工作流或数据库；不要把预览数据描述为真实修复结果。
+- CLI 优先从项目 `.env` 或环境变量读取 `KNOWLEDGE_DB_URL`（兼容 `DATABASE_URL`）并使用 PostgreSQL/pgvector；未配置时使用 `--knowledge-base` 指定的本地 SQLite 知识库。向量检索使用 `EMBEDDING_BASE_URL`、`EMBEDDING_API_KEY` 和 `EMBEDDING_MODEL`；只有通过测试且人工接受的修复才会写入，拒绝理由单独保存，不参与经验检索。
+- 使用 PostgreSQL 时，数据库用户需要有权限创建 `vector` 扩展和项目表；首次检索或保存时会初始化 schema。SQLite 模式无需配置数据库服务，但仍需配置 embeddings 服务才能向量化案例。
+- 前端调用 Python/LangGraph API 创建、查询和审核任务；任务与审核结果由 SQLite 持久保存。在线运行仍依赖后端、模型和执行环境可用。
 - 模型服务需支持 Responses API 函数工具调用。真实服务和 PostgreSQL 是否可用，需在对应环境中单独验证；离线单元测试不证明外部服务已连通。
 
 ## 本地检查

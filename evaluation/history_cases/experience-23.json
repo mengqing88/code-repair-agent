@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-23",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "leaderboard shows the lowest point total first; descending order is required.",
+  "diagnosis": "Reverse the sort direction, preserving stability for equal scores.",
+  "before_source": "def leaders(players):\n    return sorted(players, key=lambda player: player['points'])\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def leaders(players):\n-    return sorted(players, key=lambda player: player['points'])\n+    return sorted(players, key=lambda player: player['points'], reverse=True)\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert [p['points'] for p in leaders([{'points': 1}, {'points': 9}])] == [9, 1]\n\ndef test_experience_2(tmp_path):\n    assert leaders([]) == []\n\ndef test_experience_3(tmp_path):\n    assert leaders([{'points': 2}]) == [{'points': 2}]\n",
+  "applicable_conditions": [
+    "排序",
+    "score",
+    "降序"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-29",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "recursive countdown never terminates for negative input.",
+  "diagnosis": "Recursion needs a base condition covering all nonpositive inputs.",
+  "before_source": "def countdown(n):\n    if n == 0:\n        return []\n    return [n] + countdown(n - 1)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def countdown(n):\n-    if n == 0:\n+    if n <= 0:\n         return []\n     return [n] + countdown(n - 1)\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert countdown(-2) == []\n\ndef test_experience_2(tmp_path):\n    assert countdown(3) == [3, 2, 1]\n\ndef test_experience_3(tmp_path):\n    assert countdown(0) == []\n",
+  "applicable_conditions": [
+    "递归",
+    "负数",
+    "基线条件"
+  ]
+}

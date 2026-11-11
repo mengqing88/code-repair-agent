@@ -1,0 +1,10 @@
+{
+  "case_id": "case-23",
+  "title": "排序方向相反",
+  "report": "records should be sorted by score descending",
+  "contract": "rank 按 score 降序稳定排序，允许空列表。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

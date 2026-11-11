@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-22",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "API 地址拼接在路径交界处出现重复斜杠。",
+  "diagnosis": "只清理主地址尾部和端点头部斜杠，保留协议分隔符。",
+  "before_source": "def endpoint(host, route):\n    return '/'.join([host, route])\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def endpoint(host, route):\n-    return '/'.join([host, route])\n+    return '/'.join([host.rstrip('/'), route.lstrip('/')])\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert endpoint('https://s.test/', '/v2') == 'https://s.test/v2'\n\ndef test_experience_2(tmp_path):\n    assert endpoint('https://s.test', 'v1') == 'https://s.test/v1'\n\ndef test_experience_3(tmp_path):\n    assert endpoint('https://s.test//', '') == 'https://s.test/'\n",
+  "applicable_conditions": [
+    "URL 拼接",
+    "斜杠",
+    "路径"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-26",
+  "title": "金额返回浮点数",
+  "report": "money formatting should return two decimal places as text",
+  "contract": "money 返回固定两位小数的字符串，遵循 Python 浮点格式化规则。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

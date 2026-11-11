@@ -16,6 +16,7 @@ from repair_tools import (
     TOOL_DEFINITIONS,
     apply_patch,
     create_checkpoint_workspace,
+    remove_checkpoint_workspace,
     read_code,
     restore_checkpoint_workspace,
     run_tests,
@@ -75,6 +76,45 @@ class RepairToolsTests(unittest.TestCase):
         with self.assertRaisesRegex(RepairToolError, "超出允许修改范围"):
             apply_patch(outside_patch, workspace_root=self.root, allowed_paths=("target.py",))
 
+    def test_baseline_collected_test_file_is_protected_even_with_a_custom_name(self) -> None:
+        """pytest 基线收集出的非惯例命名测试文件也不能被模型补丁修改。"""
+        import subprocess
+
+        source = self.root / "source"
+        (source / "checks").mkdir(parents=True)
+        test_path = source / "checks" / "acceptance_rules.py"
+        test_path.write_text("def test_rule():\n    assert 1 == 1\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q", str(source)], check=True)
+        subprocess.run(["git", "-C", str(source), "add", "checks/acceptance_rules.py"], check=True)
+        subprocess.run(
+            ["git", "-C", str(source), "-c", "user.name=Test", "-c", "user.email=test@localhost", "commit", "-qm", "baseline"],
+            check=True,
+        )
+        checkpoint = subprocess.run(
+            ["git", "-C", str(source), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        workspace = self.root / "task" / "workspace"
+        create_checkpoint_workspace(source, workspace, revision=checkpoint)
+        toolbox = RepairToolbox(
+            workspace_root=workspace,
+            allowed_paths=(".",),
+            test_targets=("checks/acceptance_rules.py::test_rule",),
+            checkpoint_revision=checkpoint,
+            execution_backend="host",
+        )
+        patch = (
+            "--- a/checks/acceptance_rules.py\n+++ b/checks/acceptance_rules.py\n"
+            "@@ -1,2 +1,2 @@\n def test_rule():\n-    assert 1 == 1\n+    assert 1 == 2\n"
+        )
+
+        with self.assertRaisesRegex(RepairToolError, "测试"):
+            toolbox.apply_model_patch(patch, remaining_seconds=30)
+
+        self.assertEqual(set(toolbox.protected_test_hashes), {"checks/acceptance_rules.py"})
+        self.assertEqual((workspace / "checks" / "acceptance_rules.py").read_text(encoding="utf-8"),
+                         "def test_rule():\n    assert 1 == 1\n")
+
     def test_checkpoint_workspace_uses_fixed_commit_and_restores_without_touching_source(self) -> None:
         """Git 副本从固定 commit 开始，恢复 checkpoint 不改变原仓库当前文件。"""
         import subprocess
@@ -98,6 +138,8 @@ class RepairToolsTests(unittest.TestCase):
 
         checkpoint = create_checkpoint_workspace(source, workspace, revision=revision)
         self.assertEqual(checkpoint, revision)
+        self.assertTrue((workspace / ".git").is_file())
+        self.assertTrue((workspace.parent / ".workspace-repository.git").is_dir())
         self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "value = 1\n")
 
         patch_text = "--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-value = 1\n+value = 2\n"
@@ -113,6 +155,10 @@ class RepairToolsTests(unittest.TestCase):
             ).stdout.count("worktree "),
             1,
         )
+        remove_checkpoint_workspace(workspace, checkpoint)
+        self.assertFalse(workspace.exists())
+        self.assertFalse((workspace.parent / ".workspace-repository.git").exists())
+        self.assertTrue(source.is_dir())
 
     def test_checkpoint_workspace_snapshots_python_file_and_removes_generated_files(self) -> None:
         """单文件任务把原文件复制进隔离目录，恢复时移除补丁和未跟踪产物。"""
@@ -152,15 +198,15 @@ class RepairToolsTests(unittest.TestCase):
         test_file = self.root / "test_sample.py"
         test_file.write_text("def test_ok():\n    assert 1 + 1 == 2\n", encoding="utf-8")
         with patch.dict("os.environ", {"CHAT_API_KEY": "secret-for-test"}, clear=False):
-            result = run_tests(workspace_root=self.root, test_targets=("test_sample.py",))
+            result = run_tests(workspace_root=self.root, test_targets=("test_sample.py",), execution_backend="host")
 
         self.assertEqual(result["return_code"], 0)
         self.assertTrue(result["passed"])
         self.assertFalse(result["timed_out"])
         self.assertNotIn("secret-for-test", result["stdout"] + result["stderr"])
 
-    def test_toolbox_exposes_model_tools_but_keeps_memory_writes_fixed(self) -> None:
-        """模型可用代码与测试工具，但修复经验写入仍由审核后的固定节点执行。"""
+    def test_toolbox_exposes_repair_tools_and_keeps_memory_writes_fixed(self) -> None:
+        """模型可调用代码和测试工具，修复经验写入仍由审核后的固定节点执行。"""
         class FakeKnowledgeBase:
             """记录知识库工具调用的假实现。"""
 
@@ -250,8 +296,8 @@ class RepairToolsTests(unittest.TestCase):
                 self.assertIn("参数无效", str(raised.exception))
                 self.assertNotIn("sensitive-value", str(raised.exception))
 
-    def test_react_can_apply_and_test_patches_then_fixed_nodes_revalidate_final_patch(self) -> None:
-        """模型可迭代试补丁和运行固定测试，结束后工作流从 checkpoint 验证最终补丁。"""
+    def test_react_can_apply_and_test_then_fixed_nodes_revalidate_final_patch(self) -> None:
+        """模型可试用补丁和运行固定测试，结束后固定节点重新应用并验收最终补丁。"""
         import subprocess
 
         source = self.root / "source"
@@ -279,9 +325,9 @@ class RepairToolsTests(unittest.TestCase):
             test_targets=("test_target.py",),
             test_timeout_seconds=10,
             checkpoint_revision=checkpoint,
+            execution_backend="host",
         )
         patch_two = "--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-value = 1\n+value = 2\n"
-        patch_three = patch_two.replace("value = 2", "value = 3")
 
         def tool_turn(call_id: str, name: str, arguments: str) -> ModelCallResult:
             """构造一次模型请求工具的 Responses API 测试结果。"""
@@ -295,11 +341,9 @@ class RepairToolsTests(unittest.TestCase):
             )
 
         tool_turns = [
+            tool_turn("read", "read_code", '{"path":"target.py"}'),
             tool_turn("apply-2", "apply_patch", json.dumps({"patch_diff": patch_two})),
             tool_turn("test-2", "run_tests", "{}"),
-            tool_turn("apply-3", "apply_patch", json.dumps({"patch_diff": patch_three})),
-            tool_turn("test-3", "run_tests", "{}"),
-            tool_turn("apply-final", "apply_patch", json.dumps({"patch_diff": patch_two})),
             ModelCallResult(
                 text=json.dumps({"diagnosis": "折扣结果计算错误", "patch_diff": patch_two}),
                 input_tokens=20, output_tokens=10, total_tokens=30, cost_yuan=0.002,
@@ -310,17 +354,27 @@ class RepairToolsTests(unittest.TestCase):
             "value 应为 2", remaining_seconds=60, remaining_tokens=1000,
             remaining_attempts=1,
         )
+        regression_code = (
+            "from target import value\n\n"
+            "def test_reported_value_is_fixed():\n"
+            "    assert value == 2\n"
+        )
+        with patch(
+            "repair_tools.generate_regression_test",
+            return_value={"question": "", "test_code": regression_code},
+        ):
+            toolbox.prepare_regression_for_state(
+                state, {"reproduction_code": "from target import value\nassert value == 2"},
+            )
         services = toolbox.as_repair_services(lambda current: {"matched": True, "record": {}})
 
         with patch("repair_workflow.ask_model_with_tools", side_effect=tool_turns) as model:
             proposal = services.propose_patch(state)
 
-        self.assertEqual(model.call_count, 6)
+        self.assertEqual(model.call_count, 4)
         self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "value = 1\n")
-        successful_test_result = json.loads(model.call_args_list[2].args[0][-1]["output"])
-        failed_test_result = json.loads(model.call_args_list[4].args[0][-1]["output"])
-        self.assertTrue(successful_test_result["passed"])
-        self.assertFalse(failed_test_result["passed"])
+        trial_result = json.loads(model.call_args_list[3].args[0][-1]["output"])
+        self.assertTrue(trial_result["passed"])
 
         state["patch_diff"] = proposal["patch_diff"]
         state["patch_hash"] = proposal["patch_hash"]
@@ -351,8 +405,8 @@ class RepairToolsTests(unittest.TestCase):
             self.assertIsNone(PostgresKnowledgeBase.from_environment(self.root / "missing.env"))
 
     def test_toolbox_can_build_workflow_service_adapters(self) -> None:
-        """默认提议节点把工具交给模型，并执行模型选中的读取工具。"""
-        toolbox = RepairToolbox(workspace_root=self.root, test_targets=("test_sample.py",))
+        """工具箱可直接提供当前 LangGraph 工作流所需的固定节点回调。"""
+        toolbox = RepairToolbox(workspace_root=self.root, test_targets=("test_sample.py",), execution_backend="host")
         (self.root / "target.py").write_text("value = 1\n", encoding="utf-8")
 
         services = toolbox.as_repair_services(

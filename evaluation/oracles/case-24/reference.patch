@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -4,5 +4,6 @@
+     for item in items:
+         if item['id'] in seen:
+             continue
++        seen.add(item['id'])
+         result.append(item)
+     return result

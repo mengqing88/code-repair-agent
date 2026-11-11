@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-14",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "偶数批次的延迟中位数偏高，只取了中间靠右样本。",
+  "diagnosis": "排序后按奇偶长度分支，偶数平均中间两项。",
+  "before_source": "def middle_latency(samples):\n    samples = sorted(samples)\n    return samples[len(samples) // 2]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,6 @@\n def middle_latency(samples):\n     samples = sorted(samples)\n-    return samples[len(samples) // 2]\n+    index = len(samples) // 2\n+    if len(samples) % 2:\n+        return samples[index]\n+    return (samples[index - 1] + samples[index]) / 2\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert middle_latency([2, 8]) == 5\n\ndef test_experience_2(tmp_path):\n    assert middle_latency([1, 7, 3]) == 3\n\ndef test_experience_3(tmp_path):\n    assert middle_latency([0, 2, 4, 6]) == 3\n",
+  "applicable_conditions": [
+    "偶数长度",
+    "中位数",
+    "中间两项"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-20",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "邮政编码正则校验接受合法前缀后的垃圾字符。",
+  "diagnosis": "使用完整匹配 fullmatch，避免 match 只检查前缀。",
+  "before_source": "import re\n\ndef postal_code(text):\n    return re.match(r'[0-9]{5}', text) is not None\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n import re\n \n def postal_code(text):\n-    return re.match(r'[0-9]{5}', text) is not None\n+    return re.fullmatch(r'[0-9]{5}', text) is not None\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert postal_code('12345-x') is False\n\ndef test_experience_2(tmp_path):\n    assert postal_code('12345') is True\n\ndef test_experience_3(tmp_path):\n    assert postal_code('123456') is False\n",
+  "applicable_conditions": [
+    "正则校验",
+    "完整匹配",
+    "尾随字符"
+  ]
+}

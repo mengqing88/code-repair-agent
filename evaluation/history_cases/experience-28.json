@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-28",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "内容发布权限漏掉作者角色，只允许 owner。",
+  "diagnosis": "授权集合应包含两种明确允许的角色，拒绝其他角色。",
+  "before_source": "def may_publish(role):\n    return role == 'owner'\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def may_publish(role):\n-    return role == 'owner'\n+    return role in ('owner', 'author')\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert may_publish('author') is True\n\ndef test_experience_2(tmp_path):\n    assert may_publish('owner') is True\n\ndef test_experience_3(tmp_path):\n    assert may_publish('reader') is False\n",
+  "applicable_conditions": [
+    "权限",
+    "角色",
+    "editor"
+  ]
+}

@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def within_timeout(elapsed, timeout):
+-    return elapsed < timeout
++    return elapsed <= timeout

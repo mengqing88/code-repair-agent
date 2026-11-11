@@ -1,0 +1,10 @@
+{
+  "case_id": "case-08",
+  "title": "字典缺失键异常",
+  "report": "lookup missing dictionary key should use a default",
+  "contract": "lookup 对缺失字典键返回 None。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

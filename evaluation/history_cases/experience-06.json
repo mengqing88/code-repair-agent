@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-06",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "音量上限为 100 时仍然允许 101。",
+  "diagnosis": "钳制数值时应使用闭区间上界本身。",
+  "before_source": "def volume(level, maximum=100):\n    if level < 0:\n        return 0\n    return min(level, maximum + 1)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def volume(level, maximum=100):\n     if level < 0:\n         return 0\n-    return min(level, maximum + 1)\n+    return min(level, maximum)\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert volume(101) == 100\n\ndef test_experience_2(tmp_path):\n    assert volume(-1) == 0\n\ndef test_experience_3(tmp_path):\n    assert volume(50) == 50\n",
+  "applicable_conditions": [
+    "边界值",
+    "最大值"
+  ]
+}

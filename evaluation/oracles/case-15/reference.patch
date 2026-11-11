@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def percentage(value, total):
+-    return value / total * 100
++    return 0 if total == 0 else value / total * 100

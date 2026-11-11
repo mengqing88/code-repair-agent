@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-11",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "subscriber deduplication rearranges recipients instead of retaining first-seen order.",
+  "diagnosis": "Use an insertion-ordered accumulator for unique hashable values.",
+  "before_source": "def subscribers(addresses):\n    return sorted(set(addresses))\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,6 @@\n def subscribers(addresses):\n-    return sorted(set(addresses))\n+    output = []\n+    for address in addresses:\n+        if address not in output:\n+            output.append(address)\n+    return output\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert subscribers(['z', 'a', 'z']) == ['z', 'a']\n\ndef test_experience_2(tmp_path):\n    assert subscribers([]) == []\n\ndef test_experience_3(tmp_path):\n    assert subscribers([3, 1, 3]) == [3, 1]\n",
+  "applicable_conditions": [
+    "去重",
+    "保持顺序"
+  ]
+}

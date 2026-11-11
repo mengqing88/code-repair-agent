@@ -1,0 +1,10 @@
+{
+  "case_id": "case-30",
+  "title": "无换行文件计数为零",
+  "report": "line count should count a final line without a newline",
+  "contract": "line_count 按 splitlines 语义统计文本行数；末行没有换行也计数，空文件为 0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

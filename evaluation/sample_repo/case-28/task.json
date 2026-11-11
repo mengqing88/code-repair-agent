@@ -1,0 +1,10 @@
+{
+  "case_id": "case-28",
+  "title": "编辑者权限被拒绝",
+  "report": "editor role should be allowed to update a document",
+  "contract": "can_update 仅允许 admin 与 editor 两种角色。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

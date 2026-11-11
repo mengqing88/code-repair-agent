@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-24",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "同一交易编号被反复输出，去重的 seen 集合一直为空。",
+  "diagnosis": "首次处理后更新已见标识集合，后续重复项跳过。",
+  "before_source": "def transaction_ids(rows):\n    seen = set()\n    result = []\n    for row in rows:\n        key = row['transaction']\n        if key not in seen:\n            result.append(key)\n    return result\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,5 +4,6 @@\n     for row in rows:\n         key = row['transaction']\n         if key not in seen:\n+            seen.add(key)\n             result.append(key)\n     return result\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert transaction_ids([{'transaction': 4}, {'transaction': 4}]) == [4]\n\ndef test_experience_2(tmp_path):\n    assert transaction_ids([]) == []\n\ndef test_experience_3(tmp_path):\n    assert transaction_ids([{'transaction': 2}, {'transaction': 1}, {'transaction': 2}]) == [2, 1]\n",
+  "applicable_conditions": [
+    "集合去重",
+    "seen",
+    "重复 ID"
+  ]
+}

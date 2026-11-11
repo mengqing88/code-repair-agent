@@ -1,49 +1,28 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { PreviewReview } from "../types";
+import type { RepairTask, ReviewRecord } from "../types";
 import AppIcon from "./AppIcon.vue";
-
-// review：父组件保存的当前预览审核结果，切换页面时仍可查看。
-const props = defineProps<{ review: PreviewReview | null }>();
-const emit = defineEmits<{
-  reviewed: [decision: PreviewReview["decision"], reason: string];
-  reset: [];
-}>();
+const props = defineProps<{ task: RepairTask; busy: boolean }>();
+const emit = defineEmits<{ reviewed: [decision: ReviewRecord["decision"], reason: string] }>();
 const activeTab = ref<"patch" | "evidence" | "tests">("patch");
 const rejecting = ref(false);
 const reason = ref("");
 const error = ref("");
-const lineCount = computed(() => reason.value.trim().length);
-
-// patchLines：专门用于展示审阅布局的示例；并非真实模型或测试输出。
-const patchLines = [
-  { number: "1", kind: "context", text: "def average(values):" },
-  {
-    number: "",
-    kind: "removed",
-    text: "-    return sum(values) / len(values)",
-  },
-  { number: "2", kind: "added", text: "+    if not values:" },
-  { number: "3", kind: "added", text: "+        return 0.0" },
-  { number: "4", kind: "added", text: "+    return sum(values) / len(values)" },
-];
-
-/** 保存本页预览的拒绝理由；空白理由必须补充，不能当作有效审核。 */
+const canReview = computed(() => !props.busy && !props.task.review && props.task.state.status === "reviewable"
+  && props.task.state.validation?.passed === true && props.task.state.validation.patch_hash === props.task.state.patch_hash);
+const patchLines = computed(() => (props.task.state.patch_diff ?? "").split("\n").map((text, index) => ({
+  number: index + 1, text, kind: text.startsWith("+") ? "added" : text.startsWith("-") ? "removed" : "context",
+})));
 function reject() {
-  if (!lineCount.value) {
-    error.value = "请说明拒绝原因，例如遗漏的场景、行为变化或修改范围问题。";
-    return;
-  }
+  if (!reason.value.trim()) { error.value = "请说明拒绝原因。"; return; }
   error.value = "";
   emit("reviewed", "rejected", reason.value.trim());
 }
-
-/** 重置审核示例，方便分别体验接受和拒绝两种操作。 */
-function resetReview() {
-  rejecting.value = false;
-  reason.value = "";
-  error.value = "";
-  emit("reset");
+function downloadPatch() {
+  const url = URL.createObjectURL(new Blob([props.task.state.patch_diff ?? ""], { type: "text/plain;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url; link.download = `${props.task.state.task_id}.patch`; link.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 
@@ -51,143 +30,97 @@ function resetReview() {
   <section class="review-panel">
     <div class="review-intro">
       <div class="review-symbol"><AppIcon name="branch" /></div>
-      <div>
-        <span class="eyebrow">人工审核</span>
-        <h2>每一处修改，由你确认。</h2>
-        <p>核对修复依据与验收结果，再决定是否接受补丁。</p>
-      </div>
-      <span class="badge amber">示例数据</span>
+      <div><span class="eyebrow">人工审核</span><h2>每一处修改，由你确认。</h2><p>核对修复依据与验收结果，再决定是否接受补丁。</p></div>
+      <span class="badge" :class="task.state.validation?.passed ? 'neutral' : 'amber'">{{ task.state.validation?.passed ? '验证已通过' : '尚未通过验证' }}</span>
     </div>
     <div class="review-tabs" role="group" aria-label="审核内容">
-      <button
-        :class="{ active: activeTab === 'patch' }"
-        :aria-pressed="activeTab === 'patch'"
-        @click="activeTab = 'patch'"
-      >
-        补丁差异 <span class="mono">1</span>
-      </button>
-      <button
-        :class="{ active: activeTab === 'evidence' }"
-        :aria-pressed="activeTab === 'evidence'"
-        @click="activeTab = 'evidence'"
-      >
-        根因与复现
-      </button>
-      <button
-        :class="{ active: activeTab === 'tests' }"
-        :aria-pressed="activeTab === 'tests'"
-        @click="activeTab = 'tests'"
-      >
-        验证结果
-      </button>
+      <button :class="{ active: activeTab === 'patch' }" :aria-pressed="activeTab === 'patch'" @click="activeTab = 'patch'">补丁差异</button>
+      <button :class="{ active: activeTab === 'evidence' }" :aria-pressed="activeTab === 'evidence'" @click="activeTab = 'evidence'">根因与复现</button>
+      <button :class="{ active: activeTab === 'tests' }" :aria-pressed="activeTab === 'tests'" @click="activeTab = 'tests'">验证结果</button>
     </div>
     <div v-if="activeTab === 'patch'" class="diff-view">
-      <div class="diff-heading">
-        <span><AppIcon name="file" /><span class="mono">example.py</span></span
-        ><span class="diff-count"><b>+3</b> <i>−1</i></span>
+      <div class="diff-heading"><span><AppIcon name="file" /><span class="mono">候选 unified diff</span></span><button v-if="task.state.patch_diff" class="text-button" @click="downloadPatch">下载补丁</button></div>
+      <div v-if="task.state.patch_diff" class="diff-lines" aria-label="实际补丁差异">
+        <div v-for="line in patchLines" :key="line.number" class="diff-line" :class="line.kind"><span>{{ line.number }}</span><code>{{ line.text }}</code></div>
       </div>
-      <div class="diff-lines" aria-label="示例补丁差异">
-        <div class="diff-hunk">@@ -1,2 +1,4 @@</div>
-        <div
-          v-for="(line, index) in patchLines"
-          :key="index"
-          class="diff-line"
-          :class="line.kind"
-        >
-          <span>{{ line.number }}</span
-          ><code>{{ line.text }}</code>
-        </div>
-      </div>
-      <div class="diff-footnote">
-        示例约定空输入返回 0.0；真实任务需按错误报告确认预期行为。
-      </div>
+      <p v-else class="diff-footnote">尚未生成补丁。执行状态和停止原因显示在上方。</p>
+      <div class="diff-footnote mono">SHA-256：{{ task.state.patch_hash || '未生成' }}<br />工作区：{{ task.config.workspace }}</div>
+      <div class="diff-footnote">接受补丁会记录审核并保存案例；原始代码需自行检查并应用下载的补丁。</div>
     </div>
     <div v-else-if="activeTab === 'evidence'" class="evidence-view">
-      <span class="eyebrow">示例复现记录</span>
-      <h3>空列表触发除零异常</h3>
-      <p>
-        调用 <code>average([])</code> 时，分母 <code>len(values)</code> 为
-        0。候选补丁在计算前增加空列表分支。
-      </p>
-      <div class="log-box mono">
-        输入：average([])<br />实际：ZeroDivisionError<br />预期：返回
-        0.0（示例约定）
+      <span class="eyebrow">根因诊断</span><p class="preserve-text">{{ task.state.diagnosis || '尚未生成诊断。' }}</p>
+      <section v-if="task.state.case_matches?.length" class="case-match-list" aria-label="历史修复案例适用性判断">
+        <span class="eyebrow">历史修复经验</span>
+        <article v-for="item in task.state.case_matches" :key="`${item.case_id}@${item.revision}`" class="case-match">
+          <div class="case-match-heading">
+            <strong class="mono">{{ item.case_id }}@{{ item.revision }}</strong>
+            <span class="badge" :class="item.decision === 'applicable' ? 'green' : item.decision === 'rejected' ? 'red' : 'amber'">
+              {{ item.decision === 'applicable' ? '适用' : item.decision === 'rejected' ? '不适用' : item.decision === 'inconclusive' ? '无法判断' : '待判断' }}
+            </span>
+            <span class="mono case-score">{{ Math.round(item.score * 100) }}%</span>
+          </div>
+          <p class="preserve-text">{{ item.document.original_report }}</p>
+          <p class="preserve-text">{{ item.document.diagnosis }}</p>
+          <dl v-if="item.decision !== 'pending'" class="case-assessment">
+            <template v-if="item.matched_conditions.length"><dt>匹配条件</dt><dd>{{ item.matched_conditions.join('；') }}</dd></template>
+            <template v-if="item.conflicts.length"><dt>冲突</dt><dd>{{ item.conflicts.join('；') }}</dd></template>
+            <template v-if="item.unknowns.length"><dt>未知项</dt><dd>{{ item.unknowns.join('；') }}</dd></template>
+          </dl>
+        </article>
+      </section>
+      <div v-for="(item, index) in task.state.code_evidence" :key="index" class="code-evidence">
+        <h3 class="mono">{{ item.path }}:{{ item.start_line }}–{{ item.end_line }}</h3><p>{{ item.reason }}</p><pre class="log-box mono">{{ item.quote }}</pre>
       </div>
+      <h3>{{ task.state.reproduction?.status || '尚未复现' }}</h3>
+      <p class="preserve-text">{{ task.state.reproduction?.conclusion }}</p>
+      <p class="preserve-text">{{ task.state.reproduction?.steps }}</p>
+      <pre v-if="task.state.reproduction?.execution" class="log-box mono">{{ task.state.reproduction.execution.stdout }}{{ task.state.reproduction.execution.stderr }}</pre>
     </div>
     <div v-else class="evidence-view">
-      <span class="eyebrow">验证结果布局</span>
-      <h3>真实测试结果将在这里展示</h3>
-      <p>
-        包含退出码、测试输出、耗时，以及对应补丁的哈希。当前示例未执行 pytest。
-      </p>
-      <div class="test-placeholder">
-        <span class="status-dot" />尚无实际测试结果
-      </div>
+      <span class="eyebrow">真实 pytest 结果</span>
+      <template v-if="task.state.validation">
+        <h3>{{ task.state.validation.summary }}</h3>
+        <p>退出码：{{ task.state.validation.return_code ?? '无' }} · 超时：{{ task.state.validation.timed_out ? '是' : '否' }}</p>
+        <p class="mono preserve-text">受测补丁：{{ task.state.validation.patch_hash }}</p>
+        <p class="mono preserve-text">报告：{{ task.state.validation.report_path }}</p>
+        <pre class="log-box mono">{{ task.state.validation.stdout || '（无标准输出）' }}</pre>
+        <pre v-if="task.state.validation.stderr" class="log-box mono">{{ task.state.validation.stderr }}</pre>
+        <template v-if="task.state.validation.regression">
+          <h3>缺陷回归用例</h3>
+          <p class="mono preserve-text">用例哈希：{{ task.state.validation.regression.test_hash }}</p>
+          <pre class="log-box mono">{{ task.state.validation.regression.test_code }}</pre>
+          <h3>同一用例在基线上的结果</h3>
+          <pre class="log-box mono">{{ task.state.validation.regression.baseline.stdout }}{{ task.state.validation.regression.baseline.stderr }}</pre>
+          <template v-if="task.state.validation.regression.patched">
+            <h3>同一用例在补丁上的结果</h3>
+            <pre class="log-box mono">{{ task.state.validation.regression.patched.stdout }}{{ task.state.validation.regression.patched.stderr }}</pre>
+          </template>
+        </template>
+        <template v-if="task.state.validation.reproduction">
+          <h3>补丁后的原复现脚本</h3>
+          <pre class="log-box mono">{{ task.state.validation.reproduction.stdout }}{{ task.state.validation.reproduction.stderr }}</pre>
+        </template>
+      </template>
+      <p v-else class="test-placeholder"><span class="status-dot" />尚无实际测试结果</p>
     </div>
-
-    <div
-      v-if="props.review"
-      class="review-outcome"
-      :class="props.review.decision"
-      role="status"
-    >
-      <AppIcon
-        :name="props.review.decision === 'accepted' ? 'check' : 'close'"
-      />
-      <div>
-        <strong>{{
-          props.review.decision === "accepted"
-            ? "已预览接受补丁"
-            : "已预览拒绝补丁"
-        }}</strong>
-        <p>{{ props.review.reason || "接受操作已在本页记录。" }}</p>
-        <small>仅本次预览保留，尚未写入数据库。</small
-        ><button class="text-button reset-review" @click="resetReview">
-          重新体验审核<AppIcon name="arrow" />
-        </button>
+    <div v-if="task.review" class="review-outcome" :class="task.review.decision" role="status">
+      <AppIcon :name="task.review.decision === 'accepted' ? 'check' : 'close'" />
+      <div><strong>{{ task.review.decision === 'accepted' ? '已接受补丁' : '已拒绝补丁' }}</strong>
+        <p>{{ task.review.reason || '人工审核决定已保存。' }}</p>
+        <small>已写入数据库 · {{ new Date(task.review.created_at).toLocaleString('zh-CN') }}</small>
+        <p v-if="task.review.decision === 'accepted'">{{ task.state.memory_saved ? '修复案例已保存到知识库。' : '案例保存状态请查看上方流程结果。' }}</p>
       </div>
     </div>
     <form v-else-if="rejecting" class="rejection-form" @submit.prevent="reject">
-      <div class="section-heading">
-        <div><h3>为什么拒绝这个补丁？</h3></div>
-        <span class="field-note">必填</span>
-      </div>
-      <label for="review-reason" class="visually-hidden">拒绝理由</label>
-      <textarea
-        id="review-reason"
-        v-model="reason"
-        rows="3"
-        maxlength="2000"
-        placeholder="例如：应该抛出明确异常，而不是返回默认值。"
-        autofocus
-      />
-      <div class="reason-note">
-        <span>理由将与补丁、诊断和验证结果一起记录。</span
-        ><span class="mono">{{ lineCount }} / 2000</span>
-      </div>
+      <label for="review-reason">拒绝理由（必填）</label>
+      <textarea id="review-reason" v-model="reason" rows="3" maxlength="2000" placeholder="说明遗漏场景、行为变化或修改范围问题。" />
       <p v-if="error" class="error-message" role="alert">{{ error }}</p>
-      <div class="review-actions">
-        <button
-          type="button"
-          class="button subtle"
-          @click="
-            rejecting = false;
-            error = '';
-          "
-        >
-          取消</button
-        ><button class="button danger" type="submit">
-          预览拒绝记录<AppIcon name="arrow" />
-        </button>
-      </div>
+      <div class="review-actions"><button type="button" class="button subtle" :disabled="busy" @click="rejecting = false">取消</button><button class="button danger" type="submit" :disabled="!canReview">{{ busy ? '提交中…' : '确认拒绝' }}</button></div>
     </form>
     <div v-else class="review-actions review-action-bar">
-      <span class="muted">当前为审阅交互示例</span
-      ><button class="button subtle" @click="rejecting = true">
-        <AppIcon name="close" />拒绝补丁</button
-      ><button class="button primary" @click="emit('reviewed', 'accepted', '')">
-        <AppIcon name="check" />接受补丁
-      </button>
+      <span class="muted">{{ canReview ? '通过验证后，由你决定。' : '通过独立测试并结束执行后才可审核。' }}</span>
+      <button class="button subtle" :disabled="!canReview" @click="rejecting = true"><AppIcon name="close" />拒绝补丁</button>
+      <button class="button primary" :disabled="!canReview" @click="emit('reviewed', 'accepted', '')"><AppIcon name="check" />接受补丁</button>
     </div>
   </section>
 </template>

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-07",
+  "title": "range 不包含终点",
+  "report": "inclusive range misses the end value",
+  "contract": "inclusive_range 为整数闭区间 [start,end]；start>end 时为空。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

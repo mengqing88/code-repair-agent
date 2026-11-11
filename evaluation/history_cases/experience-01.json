@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-01",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "购物车总额扣掉了附加费，subtotal 与 surcharge 合计错误。",
+  "diagnosis": "组合两笔费用应使用加法而非减法。",
+  "before_source": "def checkout(subtotal, surcharge):\n    amount = subtotal\n    amount -= surcharge\n    return amount\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def checkout(subtotal, surcharge):\n     amount = subtotal\n-    amount -= surcharge\n+    amount += surcharge\n     return amount\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert checkout(20, 4) == 24\n\ndef test_experience_2(tmp_path):\n    assert checkout(0, 8) == 8\n\ndef test_experience_3(tmp_path):\n    assert checkout(3, 0) == 3\n",
+  "applicable_conditions": [
+    "整数加法",
+    "返回值符号"
+  ]
+}

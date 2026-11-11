@@ -1,0 +1,10 @@
+{
+  "case_id": "case-09",
+  "title": "布尔解析未清理空白",
+  "report": "parse_bool rejects whitespace around true",
+  "contract": "parse_bool 去除两端空白，忽略大小写，仅 true 表示真。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

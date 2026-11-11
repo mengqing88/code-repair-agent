@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-05",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "latest event selects the penultimate record; single event also crashes.",
+  "diagnosis": "The final element uses negative index -1.",
+  "before_source": "def latest(events):\n    return events[len(events) - 2]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def latest(events):\n-    return events[len(events) - 2]\n+    return events[len(events) - 1]\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert latest(['old', 'new']) == 'new'\n\ndef test_experience_2(tmp_path):\n    assert latest([8]) == 8\n\ndef test_experience_3(tmp_path):\n    assert latest([1, 2, 3]) == 3\n",
+  "applicable_conditions": [
+    "列表末项",
+    "负下标"
+  ]
+}

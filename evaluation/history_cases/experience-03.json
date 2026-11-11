@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-03",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "unit price crashes with ZeroDivisionError for an empty order.",
+  "diagnosis": "Guard a zero quantity before division; the contract supplies zero as fallback.",
+  "before_source": "def unit_price(cost, quantity):\n    return cost / quantity\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,4 @@\n def unit_price(cost, quantity):\n+    if quantity == 0:\n+        return 0\n     return cost / quantity\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert unit_price(12, 0) == 0\n\ndef test_experience_2(tmp_path):\n    assert unit_price(12, 3) == 4\n\ndef test_experience_3(tmp_path):\n    assert unit_price(0, 0) == 0\n",
+  "applicable_conditions": [
+    "除数为零",
+    "默认值"
+  ]
+}

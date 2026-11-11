@@ -1,0 +1,10 @@
+{
+  "case_id": "case-29",
+  "title": "阶乘递归负数未停止",
+  "report": "factorial negative input should use the base case",
+  "contract": "本样例特定约定：factorial 对 n<=1 的整数返回 1，包括负数；对正整数计算阶乘。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

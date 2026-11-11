@@ -50,7 +50,9 @@ class KnowledgeBaseTests(unittest.TestCase):
             matches = knowledge_base.search("数据库错误", limit=1)
             self.assertEqual(len(matches), 1)
             self.assertEqual(matches[0]["case_id"], "task-kb")
-            self.assertAlmostEqual(matches[0]["score"], 1.0)
+            self.assertAlmostEqual(matches[0]["vector_score"], 1.0)
+            self.assertGreater(matches[0]["keyword_score"], 0)
+            self.assertEqual(matches[0]["retrieval_mode"], "hybrid")
             self.assertIn("查询条件缺少租户过滤", matches[0]["document"])
 
     def test_resaving_same_task_updates_revision(self) -> None:

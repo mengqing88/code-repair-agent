@@ -1,0 +1,10 @@
+{
+  "case_id": "case-18",
+  "title": "分页下一页偏移错误",
+  "report": "pagination next offset must advance by the page limit",
+  "contract": "page 返回当前切片及 offset+limit 的下一页偏移；offset>=0,limit>0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

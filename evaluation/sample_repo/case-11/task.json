@@ -1,0 +1,10 @@
+{
+  "case_id": "case-11",
+  "title": "去重破坏顺序",
+  "report": "dedupe should preserve the input order",
+  "contract": "dedupe 对可哈希元素去重，保留首次出现顺序。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

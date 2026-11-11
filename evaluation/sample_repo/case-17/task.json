@@ -1,0 +1,10 @@
+{
+  "case_id": "case-17",
+  "title": "超时边界被拒绝",
+  "report": "timeout at the exact deadline should still be accepted",
+  "contract": "within_timeout 在 elapsed<=timeout 时返回 True。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-12",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "批量投递切块时每个批次之间少了一条消息。",
+  "diagnosis": "切片后的下一起点应递增 batch_size，避免步长多一。",
+  "before_source": "def batches(messages, batch_size):\n    output = []\n    for start in range(0, len(messages), batch_size + 1):\n        output.append(messages[start:start + batch_size])\n    return output\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,5 @@\n def batches(messages, batch_size):\n     output = []\n-    for start in range(0, len(messages), batch_size + 1):\n+    for start in range(0, len(messages), batch_size):\n         output.append(messages[start:start + batch_size])\n     return output\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert batches([1, 2, 3, 4], 2) == [[1, 2], [3, 4]]\n\ndef test_experience_2(tmp_path):\n    assert batches([], 2) == []\n\ndef test_experience_3(tmp_path):\n    assert batches([1, 2], 1) == [[1], [2]]\n",
+  "applicable_conditions": [
+    "列表分块",
+    "步长"
+  ]
+}

@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def normalize_name(text):
+-    return text.lower()
++    return text.strip().lower()

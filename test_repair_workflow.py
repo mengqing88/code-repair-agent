@@ -421,7 +421,14 @@ class CheckpointWorkflowTests(unittest.TestCase):
             allowed_paths=("target.py",),
             test_targets=("test_target.py",),
             validation_report_path=self.root / "task" / "validation.md",
+            execution_backend="host",
         )
+        # 保留真实生成和基线失败校验，仅替换模型 I/O。
+        model = patch("defect_regression.ask_model_with_usage", return_value=json.dumps({
+            "test_body": "from target import value\nassert value == 2", "question": "",
+        }))
+        model.start()
+        self.addCleanup(model.stop)
 
     def make_services(self, values: tuple[int, ...]) -> RepairServices:
         """模型回调生成固定候选补丁，其他修改和验证动作调用真实工具。"""
@@ -435,7 +442,10 @@ class CheckpointWorkflowTests(unittest.TestCase):
                     "patch_hash": hashlib.sha256(diff.encode("utf-8")).hexdigest()}
 
         return self.toolbox.as_repair_services(
-            lambda state: {"matched": True, "record": {"result": "baseline"}},
+            lambda state: {"matched": True, "record": {
+                "reproduction_code": "from target import value\nprint(value)\n",
+                "execution": {"stdout": "0\n", "stderr": "", "returncode": 0, "timed_out": False},
+            }},
             propose_patch=propose,
         )
 

@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,4 @@
+ from pathlib import Path
+ 
+ def extension(name):
+-    return Path(name).suffix[1:]
++    return Path(name).suffix.lower().lstrip('.')

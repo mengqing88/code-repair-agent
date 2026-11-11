@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import type { SourceType, TaskDraft } from "../types";
 import AppIcon from "./AppIcon.vue";
 
-// draft：父组件提供的表单草稿；emit：通知父组件预览已校验的输入。
+// draft：父组件提供的表单草稿；emit：通知父组件确认已校验的输入。
 const draft = defineModel<TaskDraft>({ required: true });
 const emit = defineEmits<{ submit: [] }>();
 const error = ref("");
@@ -53,7 +53,7 @@ async function readSelectedFile(event: Event) {
   }
 }
 
-/** 检查必需输入，只预览任务；真实复现和修复将在接入后端后执行。 */
+/** 检查必需输入，确认后由父组件提交给本地 Python 服务。 */
 function submit() {
   if (
     draft.value.sourceType === "pasted_code" &&
@@ -213,9 +213,9 @@ function submit() {
     </details>
     <p v-if="error" class="error-message" role="alert">{{ error }}</p>
     <div class="composer-footer">
-      <span class="muted">预览输入，准备进入修复流程</span>
+      <span class="muted">确认输入后开始执行修复流程</span>
       <button class="button primary" type="submit" :disabled="reading">
-        预览修复任务<AppIcon name="arrow" />
+        确认修复任务<AppIcon name="arrow" />
       </button>
     </div>
   </form>

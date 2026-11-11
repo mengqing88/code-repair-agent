@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-17",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "deadline gate rejects a response arriving exactly at the timeout limit.",
+  "diagnosis": "The timing contract includes equality at the boundary.",
+  "before_source": "def on_time(arrival, deadline):\n    if arrival < deadline:\n        return True\n    return False\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def on_time(arrival, deadline):\n-    if arrival < deadline:\n+    if arrival <= deadline:\n         return True\n     return False\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert on_time(3, 3) is True\n\ndef test_experience_2(tmp_path):\n    assert on_time(2, 3) is True\n\ndef test_experience_3(tmp_path):\n    assert on_time(4, 3) is False\n",
+  "applicable_conditions": [
+    "超时边界",
+    "小于等于"
+  ]
+}

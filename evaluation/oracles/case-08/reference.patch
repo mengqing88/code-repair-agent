@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def lookup(data, key):
+-    return data[key]
++    return data.get(key)

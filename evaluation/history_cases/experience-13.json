@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-13",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "mean sensor reading divides by zero when no samples are present.",
+  "diagnosis": "An empty sequence must return the documented zero mean.",
+  "before_source": "def mean_reading(samples):\n    count = len(samples)\n    return sum(samples) / count\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,5 @@\n def mean_reading(samples):\n     count = len(samples)\n+    if count == 0:\n+        return 0\n     return sum(samples) / count\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert mean_reading([]) == 0\n\ndef test_experience_2(tmp_path):\n    assert mean_reading([2, 6]) == 4\n\ndef test_experience_3(tmp_path):\n    assert mean_reading(()) == 0\n",
+  "applicable_conditions": [
+    "空集合",
+    "平均值",
+    "除零"
+  ]
+}

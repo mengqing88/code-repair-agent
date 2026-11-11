@@ -130,7 +130,9 @@ class AgentCliTests(unittest.TestCase):
             patch("agent_cli.RepairToolbox") as toolbox_factory,
             patch("agent_cli.build_repair_workflow") as workflow_factory,
         ):
-            workflow_factory.return_value.invoke.return_value = {"status": "queued"}
+            workflow_factory.return_value.invoke.return_value = {
+                "status": "queued", "remaining_budget": {"seconds": 60.0},
+            }
             _run_repair_workflow(args, source, "结果错误", Path("project"))
 
         self.assertIs(toolbox_factory.call_args.kwargs["knowledge_base"], knowledge_base)
@@ -169,22 +171,24 @@ class AgentCliTests(unittest.TestCase):
                 "diagnosis": "x 的初始值与错误报告不一致。",
                 "patch_diff": "diff --git a/target.py b/target.py\n--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-x = 1\n+x = 2\n",
             }, ensure_ascii=False)
+            regression = json.dumps({"test_body": "from target import x\nassert x == 2", "question": ""})
             # bootstrap：子进程启动代码；将项目路径加入导入路径，用固定回复替代网络调用。
             # str(script.parent) 将脚本父目录转成字符串；f 字符串的 !r 相当于 repr()，保留引号和转义。
             # 生成代码中的 sys.path.insert(0, 路径) 在模块搜索列表开头插入项目目录，返回 None。
-            # responses：依次提供复现计划、核对结论和补丁。
+            # responses：依次提供复现计划、核对结论、专用回归用例和补丁。
             # next(responses) 每次取出一条回复，耗尽时抛出 StopIteration；lambda 定义接收 prompt 的匿名函数。
             # prompt 是模拟函数收到但不使用的提示词；agent_cli.main(sys.argv[1:]) 读取传入的 CLI 参数。
             # sys.argv[1:] 跳过启动代码名；SystemExit() 将 main() 返回的整数作为子进程退出码。
             bootstrap = (
                 "import json, sys; "
                 f"sys.path.insert(0, {str(script.parent)!r}); "
-                f"responses = iter(({plan!r}, {comparison!r}, {patch!r})); "
+                f"responses = iter(({plan!r}, {comparison!r}, {regression!r}, {patch!r})); "
                 "import reproduction; reproduction.ask_model = lambda prompt: next(responses); "
-                "import llm_client; "
+                "import defect_regression; defect_regression.ask_model_with_usage = lambda prompt: next(responses); "
                 "import repair_workflow; "
-                "repair_workflow.ask_model_with_tools = lambda model_input, tools: "
-                "llm_client.ModelCallResult(next(responses), 20, 10, 30, 0.001); "
+                "from types import SimpleNamespace; "
+                "repair_workflow._model_tool_rounds = lambda prompt, state, definitions, execute: "
+                "SimpleNamespace(text=next(responses), input_tokens=0, output_tokens=0, total_tokens=0, cost_yuan=0.0); "
                 "import agent_cli; raise SystemExit(agent_cli.main(sys.argv[1:]))"
             )
             # completed：子进程执行结果，保存退出码、标准输出和标准错误。
@@ -203,6 +207,10 @@ class AgentCliTests(unittest.TestCase):
                     "x 应为 2，实际为 1",
                     "--test-target",
                     "test_sample.py",
+                    "--execution-mode",
+                    "host",
+                    "--knowledge-base",
+                    str(Path(directory) / "knowledge.sqlite3"),
                 ],
                 check=True,
                 capture_output=True,
@@ -228,6 +236,10 @@ class AgentCliTests(unittest.TestCase):
             # pytest 在任务副本中通过后，CLI 应停在人工审核阶段，而非把补丁写回原目录。
             self.assertEqual(result["status"], "补丁已通过自动测试；等待人工确认")
             self.assertEqual(result["workflow"]["status"], "reviewable")
+            validation = result["workflow"]["validation"]
+            self.assertEqual(validation["regression"]["baseline"]["return_code"], 1)
+            self.assertEqual(validation["regression"]["patched"]["return_code"], 0)
+            self.assertEqual(validation["reproduction"]["stdout"].splitlines(), ["2"])
             workspace = Path(result["workflow"]["workspace_path"])
             self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "x = 2\n")
             self.assertFalse((Path(directory) / "target.py").exists())

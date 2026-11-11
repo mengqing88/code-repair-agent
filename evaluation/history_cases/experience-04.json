@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-04",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "空任务队列读取队首时 IndexError，应该给出 None。",
+  "diagnosis": "访问第零项之前检查序列是否为空。",
+  "before_source": "def peek(queue):\n    entry = queue[0]\n    return entry\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,5 @@\n def peek(queue):\n+    if not queue:\n+        return None\n     entry = queue[0]\n     return entry\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert peek([]) is None\n\ndef test_experience_2(tmp_path):\n    assert peek([4]) == 4\n\ndef test_experience_3(tmp_path):\n    assert peek(()) is None\n",
+  "applicable_conditions": [
+    "空列表",
+    "首元素"
+  ]
+}

@@ -13,7 +13,7 @@ import math
 # Literal：限定字段可使用的具体值，例如任务状态只能使用下面列出的字符串。
 from typing import Literal
 # TypedDict：声明字典各字段的名字及类型；使用 typing_extensions 兼容 LangGraph 的类型解析。
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 
 # 默认预算：新任务没有显式传入预算时，使用项目约定的限制。
@@ -56,6 +56,12 @@ class CaseMatch(TypedDict):
     matched_conditions: list[str]
     conflicts: list[str]
     unknowns: list[str]
+    score: NotRequired[float]
+    vector_score: NotRequired[float | None]
+    keyword_score: NotRequired[float]
+    retrieval_mode: NotRequired[str]
+    document: NotRequired[dict[str, object]]
+    applicable_conditions: NotRequired[list[str]]
 
 
 class ValidationSummary(TypedDict):
@@ -123,6 +129,9 @@ class RepairState(TypedDict):
     review_reason: str | None
     # memory_saved：用户接受后是否已经保存修复经验，初始为 False。
     memory_saved: bool
+    error_info: NotRequired[dict[str, object] | None]
+    accounting: NotRequired[dict[str, object]]
+    warnings: NotRequired[list[str]]
 
 
 def create_initial_state(

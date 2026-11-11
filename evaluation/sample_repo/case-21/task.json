@@ -1,0 +1,10 @@
+{
+  "case_id": "case-21",
+  "title": "扩展名大小写不统一",
+  "report": "file extension should be normalized to lowercase",
+  "contract": "extension 返回最后一个扩展名的小写形式，不含点；无扩展名时为空。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

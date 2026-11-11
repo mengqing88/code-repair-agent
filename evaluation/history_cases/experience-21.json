@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-21",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "upload suffix comparison fails for uppercase JPEG filenames.",
+  "diagnosis": "Normalize the Path suffix to lowercase before dropping its dot.",
+  "before_source": "from pathlib import Path\n\ndef upload_type(filename):\n    suffix = Path(filename).suffix\n    return suffix[1:]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,5 @@\n from pathlib import Path\n \n def upload_type(filename):\n-    suffix = Path(filename).suffix\n+    suffix = Path(filename).suffix.lower()\n     return suffix[1:]\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert upload_type('PIC.JPEG') == 'jpeg'\n\ndef test_experience_2(tmp_path):\n    assert upload_type('x.txt') == 'txt'\n\ndef test_experience_3(tmp_path):\n    assert upload_type('x') == ''\n",
+  "applicable_conditions": [
+    "文件扩展名",
+    "大小写",
+    "Path suffix"
+  ]
+}

@@ -5,6 +5,10 @@ import "@fontsource/geist/600.css";
 import "@fontsource/geist-mono/400.css";
 import App from "./App.vue";
 import "./style.css";
+import { captureClientError, installClientDiagnostics } from "./diagnostics";
 
 // createApp() 创建 Vue 应用；mount() 将应用挂载到 index.html 的 #app 容器。
-createApp(App).mount("#app");
+installClientDiagnostics();
+const app = createApp(App);
+app.config.errorHandler = () => { captureClientError("component_error"); };
+app.mount("#app");

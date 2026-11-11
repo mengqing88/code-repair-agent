@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def parse_bool(value):
+-    return value == 'true'
++    return value.strip().lower() == 'true'

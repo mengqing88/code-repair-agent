@@ -1,0 +1,10 @@
+{
+  "case_id": "case-20",
+  "title": "正则只匹配前缀",
+  "report": "regex validation must reject trailing characters",
+  "contract": "valid_code 要求整个字符串恰好为三个 ASCII 大写字母。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

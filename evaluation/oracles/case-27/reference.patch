@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def cache_key(value, locale):
+-    return str(value)
++    return f'{locale}:{value}'

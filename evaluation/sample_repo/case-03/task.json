@@ -1,0 +1,10 @@
+{
+  "case_id": "case-03",
+  "title": "除零未处理",
+  "report": "divide 空除数触发 ZeroDivisionError",
+  "contract": "divide(a,b) 在 b==0 时返回 0，其余执行普通除法。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

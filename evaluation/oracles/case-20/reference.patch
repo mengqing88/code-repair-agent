@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,4 @@
+ import re
+ 
+ def valid_code(value):
+-    return bool(re.match(r'[A-Z]{3}', value))
++    return bool(re.fullmatch(r'[A-Z]{3}', value))

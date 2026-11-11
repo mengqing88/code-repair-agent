@@ -1,0 +1,10 @@
+{
+  "case_id": "case-19",
+  "title": "JSON 缺失字段异常",
+  "report": "json field lookup should provide a missing name default",
+  "contract": "display_name 仅在 name 键不存在时返回 unknown，保留已有空字符串和 None。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

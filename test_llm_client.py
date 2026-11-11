@@ -16,6 +16,7 @@ from openai import APIStatusError, APITimeoutError
 
 # ask_model：被测试的模型调用函数；ask_model_with_usage：带用量统计的调用函数；embed_text：向量调用函数。
 from llm_client import ask_model, ask_model_with_tools, ask_model_with_usage, embed_text
+from resilience import execution_scope, Fault
 
 
 # patch.dict(目标字典路径, 替换内容, clear=True) 创建临时替换上下文；clear=True 先清空字典。
@@ -123,6 +124,33 @@ class ModelClientTests(unittest.TestCase):
             self.assertEqual(result.tool_calls[0].arguments, '{"path":"src/target.py"}')
             self.assertEqual(result.total_tokens, 120)
             self.assertEqual(result.cost_yuan, 0.06)
+
+    def test_rejected_tool_responses_still_charge_usage_and_clear_pending_call(self) -> None:
+        self.env_path.write_text(
+            "CHAT_API_KEY=test-key\nCHAT_BASE_URL=https://chat.example.invalid/v1\n"
+            "MODEL=test-model\nCHAT_PRICE_PER_1K_TOKENS=0.5\n", encoding="utf-8",
+        )
+        tool = {"type": "function", "name": "read_code"}
+        for status, output, text, code in (
+            ("incomplete", [], "partial", "model_incomplete"),
+            ("completed", [], "", "model_empty"),
+            ("completed", [{"type": "function_call", "name": "read_code"}], "", "model_tool_invalid"),
+        ):
+            with self.subTest(code=code), patch("llm_client.OpenAI") as factory:
+                factory.return_value.__enter__.return_value.responses.create.return_value = SimpleNamespace(
+                    status=status, output=output, output_text=text,
+                    usage=SimpleNamespace(input_tokens=100, output_tokens=20, total_tokens=120),
+                )
+                events = []
+                with execution_scope(10) as context:
+                    context.on_request = lambda event, *args: events.append(event)
+                    with self.assertRaises(Fault) as caught:
+                        ask_model_with_tools("read", [tool], self.env_path)
+                    self.assertEqual(caught.exception.code, code)
+                    self.assertEqual(context.tokens, 120)
+                    self.assertAlmostEqual(context.cost, 0.06)
+                    self.assertEqual(events, ["started", "charged"])
+                    self.assertIsNone(context.active_request)
 
     def test_embed_text_reads_embedding_model_and_returns_vector(self) -> None:
         """检查 embeddings 接口使用 EMBEDDING_MODEL 并返回浮点向量。"""

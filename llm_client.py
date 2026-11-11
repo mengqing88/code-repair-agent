@@ -15,6 +15,8 @@ from urllib.parse import urlsplit
 from dotenv import dotenv_values
 # OpenAI：兼容接口客户端；其他三个类分别表示连接失败、HTTP 错误和请求超时。
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
+from resilience import (Fault, bounded_timeout, call_with_retry, charge_usage,
+                        retry_after_seconds, schema_context, error_info, traced_call)
 
 
 @dataclass(frozen=True)
@@ -93,6 +95,8 @@ def _estimate_cost_yuan(
         return None
     if total_rate is not None:
         return (input_tokens + output_tokens) / 1000 * total_rate
+    if (input_tokens and input_rate is None) or (output_tokens and output_rate is None):
+        return None
     return input_tokens / 1000 * (input_rate or 0.0) + output_tokens / 1000 * (output_rate or 0.0)
 
 
@@ -131,6 +135,18 @@ def ask_model_with_tools(
     tools: Sequence[Mapping[str, object]],
     env_path: Path | None = None,
 ) -> ModelCallResult:
+    """调用一轮函数工具模型，并持久记录解析结果与实际用量。"""
+    with traced_call("model.tools", parameters={"input": model_input, "tools": tools}) as call:
+        result = _ask_model_with_tools(model_input, tools, env_path)
+        call["result"] = {"text": result.text, "input_tokens": result.input_tokens,
+                          "output_tokens": result.output_tokens, "total_tokens": result.total_tokens,
+                          "cost_yuan": result.cost_yuan,
+                          "tool_calls": [{"call_id": item.call_id, "name": item.name, "arguments": item.arguments}
+                                         for item in result.tool_calls]}
+        return result
+
+
+def _ask_model_with_tools(model_input, tools, env_path=None):
     """调用 Responses API 一轮并解析文字、函数调用和用量。
 
     参数：
@@ -147,28 +163,50 @@ def ask_model_with_tools(
         raise ValueError("至少需要提供一个模型工具")
 
     settings, api_key, base_url, model = _chat_configuration(env_path)
-    try:
-        with OpenAI(api_key=api_key, base_url=base_url, timeout=60.0, max_retries=0) as client:
-            response = client.responses.create(
+    _estimate_cost_yuan(settings, 0, 0)
+
+    def send(timeout: float):
+        """发送一轮工具调用请求，并沿用普通模型调用的结构化输出设置。"""
+        with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
+            options: dict[str, object] = {}
+            schema = schema_context()
+            structured = (os.getenv("CHAT_STRUCTURED_OUTPUT") or settings.get("CHAT_STRUCTURED_OUTPUT") or "true").lower()
+            if schema and structured != "false":
+                options["text"] = {
+                    "format": {
+                        "type": "json_schema",
+                        "name": schema["name"],
+                        "schema": schema["schema"],
+                        "strict": True,
+                    }
+                }
+            return client.responses.create(
                 model=model,
                 input=model_input,
                 tools=list(tools),
                 max_output_tokens=4096,
                 store=False,
+                **options,
             )
-    except APITimeoutError:
-        raise RuntimeError("模型工具调用请求超时，请稍后重试") from None
-    except APIConnectionError:
-        raise RuntimeError("无法连接模型服务，请检查 CHAT_BASE_URL 和网络连接") from None
-    except APIStatusError as error:
-        if error.status_code in (400, 404, 422):
-            raise RuntimeError(
-                f"模型服务返回 HTTP {error.status_code}，请确认接口支持 Responses API 函数工具调用"
-            ) from None
-        raise RuntimeError(f"模型服务返回 HTTP {error.status_code}，请检查密钥、模型权限或服务状态") from None
 
+    response = call_with_retry(
+        "model.responses.tools",
+        send,
+        classify=lambda error: _service_fault(error, "模型工具调用"),
+        replay_safe=True,
+        parameters={"model": model, "input": model_input, "tools": [tool.get("name") for tool in tools]},
+        endpoint=base_url,
+    )
+
+    # A rejected/incomplete response can still be billable. Persist observed usage before parsing it.
+    usage = getattr(response, "usage", None)
+    input_tokens = _usage_value(usage, "input_tokens")
+    output_tokens = _usage_value(usage, "output_tokens")
+    total_tokens = _usage_value(usage, "total_tokens") or input_tokens + output_tokens
+    cost = _estimate_cost_yuan(settings, input_tokens, output_tokens)
+    charge_usage(total_tokens, cost)
     if response.status != "completed":
-        raise RuntimeError("模型未完成本轮回复，请检查服务状态或输出长度限制")
+        raise Fault("model_incomplete", "模型未完成本轮回复，请检查服务状态或输出长度限制", category="protocol")
     output_items = tuple(_response_item_dict(item) for item in getattr(response, "output", ()))
     tool_calls: list[ModelToolCall] = []
     for item in output_items:
@@ -178,28 +216,48 @@ def ask_model_with_tools(
         name = item.get("name")
         arguments = item.get("arguments")
         if not all(isinstance(value, str) and value for value in (call_id, name, arguments)):
-            raise RuntimeError("模型返回的函数调用缺少 call_id、name 或 arguments")
+            raise Fault("model_tool_invalid", "模型返回的函数调用缺少 call_id、name 或 arguments", category="protocol")
         tool_calls.append(ModelToolCall(call_id, name, arguments))
 
     text = getattr(response, "output_text", "") or ""
-    if not text.strip() and not tool_calls:
-        raise RuntimeError("模型没有返回文字或工具调用")
-    usage = getattr(response, "usage", None)
-    input_tokens = _usage_value(usage, "input_tokens")
-    output_tokens = _usage_value(usage, "output_tokens")
-    total_tokens = _usage_value(usage, "total_tokens") or input_tokens + output_tokens
+    if not isinstance(text, str) or (not text.strip() and not tool_calls):
+        raise Fault("model_empty", "模型没有返回文字或工具调用", category="protocol")
     return ModelCallResult(
         text=text,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         total_tokens=total_tokens,
-        cost_yuan=_estimate_cost_yuan(settings, input_tokens, output_tokens),
+        cost_yuan=cost,
         tool_calls=tuple(tool_calls),
         output_items=output_items,
     )
+def _service_fault(error, label):
+    if isinstance(error, APITimeoutError):
+        return Fault("upstream_timeout", f"{label}请求超时", category="transient", retryable=True,
+                     next_action="检查服务状态后重试")
+    if isinstance(error, APIConnectionError):
+        return Fault("connection_failed", f"无法连接{label}服务", category="transient", retryable=True)
+    if isinstance(error, APIStatusError):
+        status = error.status_code
+        retryable = status in (429, 500, 502, 503, 504)
+        category = "transient" if retryable else "permission" if status in (401, 403) else "validation" if status in (400, 422) else "business"
+        return Fault(f"upstream_http_{status}", f"{label}服务返回 HTTP {status}", category=category,
+                     retryable=retryable, retry_after=retry_after_seconds(error.response.headers),
+                     next_action="等待服务恢复后重试" if retryable else "检查配置、权限或请求参数")
+    return Fault("upstream_protocol", f"{label}服务调用失败", category="protocol")
 
 
 def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCallResult:
+    """调用文字模型，记录回复、用量及协议错误。"""
+    with traced_call("model.generate", parameters={"prompt": prompt}) as call:
+        result = _ask_model_with_usage(prompt, env_path)
+        call["result"] = {"text": result.text, "input_tokens": result.input_tokens,
+                          "output_tokens": result.output_tokens, "total_tokens": result.total_tokens,
+                          "cost_yuan": result.cost_yuan}
+        return result
+
+
+def _ask_model_with_usage(prompt, env_path=None):
     """发送文字并返回模型回复及用量；prompt 是发送内容，env_path 可指定配置文件。"""
     # str.strip() 返回去掉两端空格、换行等空白的新字符串，不修改原 prompt；空字符串视为 False。
     if not prompt.strip():
@@ -208,51 +266,38 @@ def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCall
 
     settings, api_key, base_url, model = _chat_configuration(env_path)
 
-    try:
-        # client：OpenAI(...) 返回的接口客户端；api_key 用于认证，base_url 指向用户指定的兼容服务。
-        # timeout=60.0 为请求设置 60 秒超时；max_retries=0 关闭自动重试，便于控制调用次数。
-        # with 管理客户端生命周期：进入时调用 __enter__() 取得客户端，退出时调用 __exit__() 关闭连接。
-        with OpenAI(api_key=api_key, base_url=base_url, timeout=60.0, max_retries=0) as client:
-            # response：服务商返回的结构化响应对象。
-            # client.responses.create(...) 向 BASE_URL 下的 /responses 接口发送请求，返回 Response 响应对象。
-            # model 选择模型，input 是发送的文字；max_output_tokens 限制最多生成 4096 个 token。
-            # store=False 请求服务端不要保存供后续 API 查询的响应；实际数据政策由服务商决定。
-            response = client.responses.create(
-                model=model,
-                input=prompt,
-                max_output_tokens=4096,
-                store=False,
-            )
-    # APITimeoutError 是 APIConnectionError 的子类，先捕获它才能单独提示超时。
-    except APITimeoutError:
-        # RuntimeError 表示运行时调用失败；from None 隐藏底层异常链，避免输出认证细节。
-        raise RuntimeError("模型请求超时，请稍后重试") from None
-    except APIConnectionError:
-        raise RuntimeError("无法连接模型服务，请检查 CHAT_BASE_URL 和网络连接") from None
-    # error：HTTP 错误对象；status_code 属性是 HTTP 状态码，例如 401 或 429。
-    except APIStatusError as error:
-        # 不直接显示服务商的原始响应体，以免其中包含敏感内容。
-        raise RuntimeError(f"模型服务返回 HTTP {error.status_code}，请检查密钥、模型权限或服务状态") from None
+    _estimate_cost_yuan(settings, 0, 0)  # Reject invalid pricing before sending a billable request.
+    def send(timeout):
+        with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
+            options = {}
+            schema = schema_context()
+            structured = (os.getenv("CHAT_STRUCTURED_OUTPUT") or settings.get("CHAT_STRUCTURED_OUTPUT") or "true").lower()
+            if schema and structured != "false":
+                options["text"] = {"format": {"type": "json_schema", "name": schema["name"],
+                    "schema": schema["schema"], "strict": True}}
+            return client.responses.create(model=model, input=prompt, max_output_tokens=4096,
+                                           store=False, **options)
 
-    # response.status：此次生成的状态；仅 completed 表示模型已完整生成回复。
-    if response.status != "completed":
-        raise RuntimeError("模型未完成回复，请检查服务状态或输出长度限制")
-    # text：SDK 的 output_text 属性汇总后的模型文字；这里不会执行或应用模型生成的代码。
-    text = response.output_text
-    # strip() 仅用于检测回复是否为空白，不改动 text；通过检查后仍返回原始回复全文。
-    if not text.strip():
-        raise RuntimeError("模型没有返回文字内容")
+    response = call_with_retry("model.responses", send, classify=lambda e: _service_fault(e, "模型"),
+                               replay_safe=True, parameters={"model": model, "prompt": prompt}, endpoint=base_url)
     # usage：Responses API 返回的 Token 统计对象；旧服务或测试响应没有该字段时使用空对象。
     usage = getattr(response, "usage", None)
     input_tokens = _usage_value(usage, "input_tokens")
     output_tokens = _usage_value(usage, "output_tokens")
     total_tokens = _usage_value(usage, "total_tokens") or input_tokens + output_tokens
+    cost = _estimate_cost_yuan(settings, input_tokens, output_tokens)
+    charge_usage(total_tokens, cost)
+    if response.status != "completed":
+        raise Fault("model_incomplete", "模型未完成回复，请检查服务状态或输出长度限制", category="protocol")
+    text = response.output_text
+    if not isinstance(text, str) or not text.strip():
+        raise Fault("model_empty", "模型没有返回文字内容", category="protocol")
     return ModelCallResult(
         text=text,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         total_tokens=total_tokens,
-        cost_yuan=_estimate_cost_yuan(settings, input_tokens, output_tokens),
+        cost_yuan=cost,
     )
 
 
@@ -296,29 +341,26 @@ def embed_text(text: str, env_path: Path | None = None) -> list[float]:
     if address.scheme not in ("http", "https") or not address.netloc:
         raise ValueError("EMBEDDING_BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
 
-    try:
-        # embeddings.create() 将输入文本发送到向量接口；返回对象的 data[0].embedding 是向量正文。
-        with OpenAI(api_key=api_key, base_url=base_url, timeout=60.0, max_retries=0) as client:
-            response = client.embeddings.create(model=model, input=text)
-    except APITimeoutError:
-        raise RuntimeError("向量请求超时，请稍后重试") from None
-    except APIConnectionError:
-        raise RuntimeError("无法连接向量服务，请检查 EMBEDDING_BASE_URL 和网络连接") from None
-    except APIStatusError as error:
-        raise RuntimeError(f"向量服务返回 HTTP {error.status_code}，请检查密钥、嵌入模型权限或服务状态") from None
-
+    rate = _read_optional_rate(settings, "EMBEDDING_PRICE_PER_1K_TOKENS")
+    def send(timeout):
+        with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
+            return client.embeddings.create(model=model, input=text)
+    response = call_with_retry("model.embeddings", send, classify=lambda e: _service_fault(e, "向量"),
+                               replay_safe=True, parameters={"model": model, "text": text}, endpoint=base_url)
+    tokens = _usage_value(getattr(response, "usage", None), "total_tokens")
+    charge_usage(tokens, tokens / 1000 * rate if rate is not None else None)
     data = getattr(response, "data", None)
     if not isinstance(data, list) or not data:
-        raise RuntimeError("向量服务没有返回 data 数组")
+        raise Fault("embedding_protocol", "向量服务没有返回 data 数组", category="protocol")
     embedding = getattr(data[0], "embedding", None)
     if not isinstance(embedding, list) or not embedding:
-        raise RuntimeError("向量服务没有返回有效 embedding")
+        raise Fault("embedding_protocol", "向量服务没有返回有效 embedding", category="protocol")
     try:
         vector = [float(value) for value in embedding]
     except (TypeError, ValueError):
-        raise RuntimeError("向量服务返回了非数字 embedding") from None
+        raise Fault("embedding_protocol", "向量服务返回了非数字 embedding", category="protocol") from None
     if any(not math.isfinite(value) for value in vector):
-        raise RuntimeError("向量服务返回了无效数字")
+        raise Fault("embedding_protocol", "向量服务返回了无效数字", category="protocol")
     return vector
 
 
@@ -335,9 +377,10 @@ def main() -> int:
         # reply：ask_model(提示词) 读取配置、调用模型并返回回复字符串；此处只发送固定短句。
         reply = ask_model("请只回复：连接成功")
     # error：配置或请求失败时的异常对象，用于输出已经处理过的错误提示。
-    except (ValueError, RuntimeError) as error:
+    except Exception as error:
+        info = error_info(error, operation="model.cli")
         # 内置 print() 将提示写入 file 指定的标准错误流并追加换行，返回 None。
-        print(f"模型连接失败：{error}", file=sys.stderr)
+        print(f"模型连接失败：{info['message']}（错误编号 {info['error_id']}）", file=sys.stderr)
         return 1
     # print(reply) 将模型回复写入默认的标准输出流，并追加换行；返回 None。
     print(reply)

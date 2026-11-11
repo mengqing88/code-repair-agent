@@ -139,7 +139,7 @@ class ReproductionTests(unittest.TestCase):
             # record：reproduce() 运行源码副本中的复现流程，返回状态、结论、日志和文档路径的字典。
             # model_call 指定模拟模型函数，timeout=5 限制复现脚本最多运行 5 秒，work_root 指定记录目录。
             record = reproduce(source, "value 应为 updated，实际为 unchanged", work_root=root / "work",
-                               model_call=model_call, timeout=5)
+                               model_call=model_call, timeout=5, execution_backend="host")
 
             # assertEqual(实际值, 期望值) 检查两者相等，否则测试失败；这里验证状态为已复现。
             self.assertEqual(record["status"], "已复现，与报告一致")
@@ -191,7 +191,7 @@ class ReproductionTests(unittest.TestCase):
             # record：reproduce() 返回的复现记录；str() 提供来源路径字符串，Path() 构造工作目录路径。
             record = reproduce({"type": "python_file", "path": str(source_file)},
                                "运行代码时会抛出 ValueError", work_root=Path(directory) / "work",
-                               model_call=model_call, timeout=5)
+                               model_call=model_call, timeout=5, execution_backend="host")
 
             # assertEqual() 核对暂停状态；assertIn() 核对具体问题；assertNotEqual() 确保没有误标为已复现。
             self.assertEqual(record["status"], "需要用户确认")

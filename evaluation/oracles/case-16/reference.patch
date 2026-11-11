@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def attempts(retries):
+-    return list(range(retries))
++    return list(range(retries + 1))

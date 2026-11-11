@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-25",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "CSV import treats the first header row as a customer record.",
+  "diagnosis": "Consume the header once, with an empty-file fallback, before reading records.",
+  "before_source": "import csv\nimport io\n\ndef customer_ids(text):\n    rows = csv.reader(io.StringIO(text))\n    return [row[0] for row in rows]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,4 +3,5 @@\n \n def customer_ids(text):\n     rows = csv.reader(io.StringIO(text))\n+    next(rows, None)\n     return [row[0] for row in rows]\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert customer_ids('id\\n42\\n') == ['42']\n\ndef test_experience_2(tmp_path):\n    assert customer_ids('id\\n') == []\n\ndef test_experience_3(tmp_path):\n    assert customer_ids('') == []\n",
+  "applicable_conditions": [
+    "CSV",
+    "表头",
+    "第一行"
+  ]
+}

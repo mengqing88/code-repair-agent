@@ -1,0 +1,10 @@
+{
+  "case_id": "case-05",
+  "title": "取末项下标错误",
+  "report": "last item returns the wrong list element",
+  "contract": "last 返回非空列表的末项。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

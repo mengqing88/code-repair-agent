@@ -1,0 +1,10 @@
+{
+  "case_id": "case-04",
+  "title": "空列表取首项",
+  "report": "empty list first item IndexError",
+  "contract": "first 支持可索引序列；空序列返回 None。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

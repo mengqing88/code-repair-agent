@@ -1,0 +1,10 @@
+{
+  "case_id": "case-16",
+  "title": "重试次数少一次",
+  "report": "retry loop should include the configured final attempt",
+  "contract": "attempts(retries) 返回从 0 开始的尝试编号，包含初始尝试，共 retries+1 项；retries>=0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

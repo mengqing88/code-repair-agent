@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-16",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "网络重试配置为零时没有发起首次请求，重试预算少一次。",
+  "diagnosis": "总尝试次数为初次加重试次数，循环上限增加一。",
+  "before_source": "def request_numbers(retry_budget):\n    result = []\n    for attempt in range(retry_budget):\n        result.append(attempt)\n    return result\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,5 @@\n def request_numbers(retry_budget):\n     result = []\n-    for attempt in range(retry_budget):\n+    for attempt in range(retry_budget + 1):\n         result.append(attempt)\n     return result\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert request_numbers(0) == [0]\n\ndef test_experience_2(tmp_path):\n    assert request_numbers(3) == [0, 1, 2, 3]\n\ndef test_experience_3(tmp_path):\n    assert request_numbers(1) == [0, 1]\n",
+  "applicable_conditions": [
+    "重试次数",
+    "循环边界"
+  ]
+}

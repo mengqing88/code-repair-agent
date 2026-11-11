@@ -1,0 +1,10 @@
+{
+  "case_id": "case-12",
+  "title": "分块步长错误",
+  "report": "chunk list skips items when size is greater than one",
+  "contract": "chunks 按正整数 size 连续切块，保留不足 size 的尾块，不遗漏元素。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

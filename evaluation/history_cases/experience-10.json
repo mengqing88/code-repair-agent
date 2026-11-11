@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-10",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "账号名称转换小写后仍包含两端空白，导致重复账号。",
+  "diagnosis": "字符串规范化需要先清理两端空白并保留内部空格。",
+  "before_source": "def account_label(raw):\n    label = raw.lower()\n    return label\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n def account_label(raw):\n-    label = raw.lower()\n+    label = raw.strip().lower()\n     return label\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert account_label('  ZOE ') == 'zoe'\n\ndef test_experience_2(tmp_path):\n    assert account_label('X Y') == 'x y'\n\ndef test_experience_3(tmp_path):\n    assert account_label(' ') == ''\n",
+  "applicable_conditions": [
+    "字符串空白",
+    "名称规范化"
+  ]
+}

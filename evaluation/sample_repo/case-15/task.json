@@ -1,0 +1,10 @@
+{
+  "case_id": "case-15",
+  "title": "百分比总数为零",
+  "report": "percentage with a zero total should not divide by zero",
+  "contract": "percentage 返回 value/total*100；total==0 时返回 0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

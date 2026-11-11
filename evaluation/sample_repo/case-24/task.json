@@ -1,0 +1,10 @@
+{
+  "case_id": "case-24",
+  "title": "去重集合未更新",
+  "report": "unique ids should add every accepted id to the seen set",
+  "contract": "unique_ids 按 id 去重，保留每个 id 的第一条记录和输入顺序。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

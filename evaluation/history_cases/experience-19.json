@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-19",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "profile JSON without a nickname crashes instead of displaying a fallback.",
+  "diagnosis": "Use a default only when an optional mapping field is missing.",
+  "before_source": "def nickname(profile):\n    return profile['nickname']\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def nickname(profile):\n-    return profile['nickname']\n+    return profile.get('nickname', 'guest')\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert nickname({}) == 'guest'\n\ndef test_experience_2(tmp_path):\n    assert nickname({'nickname': ''}) == ''\n\ndef test_experience_3(tmp_path):\n    assert nickname({'nickname': 'Bo'}) == 'Bo'\n",
+  "applicable_conditions": [
+    "JSON 字段",
+    "缺失键",
+    "默认文本"
+  ]
+}

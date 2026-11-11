@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-30",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "日志计数忽略无终止换行的末条记录。",
+  "diagnosis": "使用 splitlines 按文本行分割，不直接统计换行符。",
+  "before_source": "def log_records(text):\n    return text.count('\\n')\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def log_records(text):\n-    return text.count('\\n')\n+    return len(text.splitlines())\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert log_records('a\\nb') == 2\n\ndef test_experience_2(tmp_path):\n    assert log_records('') == 0\n\ndef test_experience_3(tmp_path):\n    assert log_records('a\\n') == 1\n",
+  "applicable_conditions": [
+    "文件行数",
+    "无末尾换行",
+    "splitlines"
+  ]
+}

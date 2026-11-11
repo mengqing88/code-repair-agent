@@ -1,20 +1,23 @@
 """为代码修复工作流提供受限工具。
 
-工具只操作指定工作区。读取、搜索、经验检索、补丁应用和固定 pytest 目标可以由模型调用；
-补丁仍受路径范围和 checkpoint 限制，最终补丁验证与经验保存仍由固定工作流节点负责。
+工具只操作指定工作区。模型可读取、搜索、检索经验，也可在范围检查和测试保护下试用补丁、运行固定测试；
+最终补丁验证与经验保存仍由固定工作流节点负责。
 """
 
 from __future__ import annotations
 
 # json：编码知识库文档和工具参数；math：检查向量中的有限数字。
 import json
+import hashlib
 import math
 # os、shutil、subprocess：读取运行环境、查找 rg、执行受限的 git/pytest 子进程。
 import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
+import xml.etree.ElementTree as ET
 # dataclass：保存工具箱配置；PurePosixPath：按 Git 的斜杠路径解析补丁文件名。
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -23,16 +26,22 @@ import re
 from typing import Any, Callable, Mapping, Sequence
 
 from dotenv import dotenv_values
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import ValidationError
 
 from knowledge_base import KnowledgeBaseError, build_case_document, build_rejection_document
+from defect_regression import generate_regression_test, reproduction_exit_matches_test
+from docker_executor import BindMount, get_execution_backend, run_execution
 from llm_client import embed_text
-from reproduction import fenced
+from model_contracts import TOOL_ARGUMENTS, MODEL_TOOL_ALLOWLIST
+from resilience import Fault, cleanup_scope, trace, run_process, error_info, traced_call
+from reproduction import execute_reproduction, fenced
 from repair_state import RepairState
 
 
-class RepairToolError(RuntimeError):
+class RepairToolError(Fault):
     """工具输入、权限范围或外部程序执行失败时抛出的错误。"""
+    def __init__(self, message):
+        super().__init__("tool_rejected", message, category="business", next_action="检查路径、权限及业务条件，修正后重新规划")
 
 
 EmbeddingFunction = Callable[[str], Sequence[float]]
@@ -82,23 +91,42 @@ def create_checkpoint_workspace(
         raise ValueError("任务工作区不能包含原始代码目录")
 
     workspace.parent.mkdir(parents=True, exist_ok=True)
+    repository = workspace.parent / f".{workspace.name}-repository.git"
     if revision is not None:
+        if repository.exists():
+            raise ValueError(f"任务 worktree 的私有仓库已经存在：{repository}")
         try:
-            completed = subprocess.run(
-                ["git", "clone", "--no-hardlinks", "--no-checkout", os.fspath(source), os.fspath(workspace)],
+            completed = run_process(
+                ["git", "clone", "--bare", "--no-hardlinks", os.fspath(source), os.fspath(repository)],
                 capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=120,
             )
             if completed.returncode != 0:
-                raise ValueError(f"无法创建独立 Git 修复副本：{(completed.stderr or completed.stdout).strip()}")
-            checkout = subprocess.run(
-                ["git", "-C", os.fspath(workspace), "checkout", "--detach", revision],
+                raise ValueError(f"无法创建任务私有 Git 仓库：{(completed.stderr or completed.stdout).strip()}")
+            run_process(
+                ["git", "-C", os.fspath(repository), "remote", "remove", "origin"],
+                capture_output=True, check=True, timeout=30,
+            )
+            run_process(
+                ["git", "-C", os.fspath(repository), "config", "core.autocrlf", "false"],
+                capture_output=True, check=True, timeout=30,
+            )
+            checkout = run_process(
+                ["git", "-C", os.fspath(repository), "worktree", "add", "--detach",
+                 os.fspath(workspace), revision],
                 capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30,
             )
             if checkout.returncode != 0:
-                raise ValueError(f"无法切换到指定 commit：{(checkout.stderr or checkout.stdout).strip()}")
+                raise ValueError(f"无法从固定 commit 创建任务 worktree：{(checkout.stderr or checkout.stdout).strip()}")
         except Exception:
             if workspace.exists():
-                shutil.rmtree(workspace)
+                run_process(
+                    ["git", "-C", os.fspath(repository), "worktree", "remove", "--force", os.fspath(workspace)],
+                    capture_output=True, check=False, timeout=30,
+                )
+                if workspace.exists():
+                    shutil.rmtree(workspace)
+            if repository.exists():
+                shutil.rmtree(repository)
             raise
     else:
         def ignore_copy_directory(directory: str, names: list[str]) -> set[str]:
@@ -128,21 +156,21 @@ def create_checkpoint_workspace(
                     raise ValueError(f"代码文件没有复制到任务工作区：{relative_file}")
             if pasted_code is not None:
                 (workspace / "target.py").write_text(pasted_code, encoding="utf-8")
-            subprocess.run(
+            run_process(
                 ["git", "init", "--quiet", os.fspath(workspace)],
                 capture_output=True, check=True, timeout=30,
             )
             # --force 将快照里原有的忽略文件也纳入基线，恢复时才能保留它们。
             # 关闭自动换行转换，确保 checkpoint 保存复制时的原始字节。
-            subprocess.run(
+            run_process(
                 ["git", "-C", os.fspath(workspace), "config", "core.autocrlf", "false"],
                 capture_output=True, check=True, timeout=30,
             )
-            subprocess.run(
+            run_process(
                 ["git", "-C", os.fspath(workspace), "add", "--all", "--force"],
                 capture_output=True, check=True, timeout=30,
             )
-            subprocess.run(
+            run_process(
                 [
                     "git", "-C", os.fspath(workspace), "-c", "user.name=Repair Agent",
                     "-c", "user.email=repair-agent@localhost", "commit", "--quiet",
@@ -156,13 +184,13 @@ def create_checkpoint_workspace(
             raise
 
     try:
-        completed = subprocess.run(
+        completed = run_process(
             ["git", "-C", os.fspath(workspace), "rev-parse", "HEAD"],
             capture_output=True, text=True, encoding="utf-8", errors="replace", check=True, timeout=30,
         )
         # marker_path：只允许对带有任务标记的副本执行恢复，避免误用原仓库。
         checkpoint = completed.stdout.strip()
-        marker_path = workspace / ".git" / "repair-checkpoint.json"
+        marker_path = workspace.parent / f".{workspace.name}-repair-checkpoint.json"
         marker_path.write_text(
             json.dumps({"workspace": str(workspace), "checkpoint": checkpoint}, ensure_ascii=False),
             encoding="utf-8",
@@ -170,8 +198,32 @@ def create_checkpoint_workspace(
         return checkpoint
     except Exception:
         if workspace.exists():
-            shutil.rmtree(workspace)
+            if revision is not None and repository.exists():
+                run_process(
+                    ["git", "-C", os.fspath(repository), "worktree", "remove", "--force", os.fspath(workspace)],
+                    capture_output=True, check=False, timeout=30,
+                )
+            if workspace.exists():
+                shutil.rmtree(workspace)
+        if revision is not None and repository.exists():
+            shutil.rmtree(repository)
         raise
+
+
+def _checkpoint_marker_path(workspace: Path) -> Path:
+    marker = workspace.parent / f".{workspace.name}-repair-checkpoint.json"
+    if marker.is_file():
+        return marker
+    git_path = workspace / ".git"
+    if git_path.is_dir():
+        return git_path / "repair-checkpoint.json"
+    if git_path.is_file():
+        text = git_path.read_text(encoding="utf-8", errors="replace").strip()
+        if text.startswith("gitdir:"):
+            raw_admin = Path(text.partition(":")[2].strip())
+            admin = (raw_admin if raw_admin.is_absolute() else workspace / raw_admin).resolve()
+            return admin / "repair-checkpoint.json"
+    return marker
 
 
 def restore_checkpoint_workspace(workspace_root: Path, checkpoint_revision: str) -> None:
@@ -180,23 +232,59 @@ def restore_checkpoint_workspace(workspace_root: Path, checkpoint_revision: str)
     if not workspace.is_dir() or not checkpoint_revision:
         raise RepairToolError("任务工作区或基线 checkpoint 不存在")
     try:
-        marker = json.loads((workspace / ".git" / "repair-checkpoint.json").read_text(encoding="utf-8"))
+        marker = json.loads(_checkpoint_marker_path(workspace).read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise RepairToolError("恢复 checkpoint 仅允许用于程序创建的任务副本") from error
     if marker != {"workspace": str(workspace), "checkpoint": checkpoint_revision}:
         raise RepairToolError("任务工作区与 checkpoint 标记不一致，已拒绝恢复")
-    reset = subprocess.run(
+    reset = run_process(
         ["git", "-C", os.fspath(workspace), "reset", "--hard", checkpoint_revision],
         capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30,
     )
     if reset.returncode != 0:
         raise RepairToolError(f"恢复 checkpoint 失败：{(reset.stderr or reset.stdout).strip()}")
-    clean = subprocess.run(
+    clean = run_process(
         ["git", "-C", os.fspath(workspace), "clean", "-fdx"],
         capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30,
     )
     if clean.returncode != 0:
         raise RepairToolError(f"清理 checkpoint 外的文件失败：{(clean.stderr or clean.stdout).strip()}")
+
+
+def remove_checkpoint_workspace(workspace_root: Path, checkpoint_revision: str) -> None:
+    """Remove only a verified task worktree and its task-owned private Git repository."""
+    workspace = workspace_root.expanduser().resolve()
+    marker_path = _checkpoint_marker_path(workspace)
+    try:
+        marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise RepairToolError("删除任务工作区仅允许用于程序创建的副本") from error
+    if marker != {"workspace": str(workspace), "checkpoint": checkpoint_revision}:
+        raise RepairToolError("任务工作区与 checkpoint 标记不一致，已拒绝删除")
+    git_path = workspace / ".git"
+    if git_path.is_file():
+        text = git_path.read_text(encoding="utf-8", errors="replace").strip()
+        if not text.startswith("gitdir:"):
+            raise RepairToolError("任务 worktree 的 Git 元数据无效")
+        raw_admin = Path(text.partition(":")[2].strip())
+        admin = (raw_admin if raw_admin.is_absolute() else workspace / raw_admin).resolve()
+        common_file = admin / "commondir"
+        if not admin.is_dir() or not common_file.is_file():
+            raise RepairToolError("任务 worktree 缺少私有 Git 仓库")
+        common = (admin / common_file.read_text(encoding="utf-8").strip()).resolve()
+        expected_repository = workspace.parent / f".{workspace.name}-repository.git"
+        if common != expected_repository.resolve():
+            raise RepairToolError("任务 worktree 不属于任务私有 Git 仓库，已拒绝删除")
+        removed = run_process(
+            ["git", "-C", os.fspath(common), "worktree", "remove", "--force", os.fspath(workspace)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=30,
+        )
+        if removed.returncode != 0:
+            raise RepairToolError(f"移除任务 worktree 失败：{(removed.stderr or removed.stdout).strip()}")
+        shutil.rmtree(common)
+    else:
+        shutil.rmtree(workspace)
+    marker_path.unlink(missing_ok=True)
 
 
 def _limited_text(value: str, limit: int) -> tuple[str, bool]:
@@ -300,7 +388,8 @@ def _fallback_search(
     for file_path in files:
         try:
             lines = file_path.read_text(encoding="utf-8-sig").splitlines()
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError) as error:
+            error_info(error, operation="code.search.skip_file")
             continue
         for line_number, line in enumerate(lines, start=1):
             column = line.find(query)
@@ -336,7 +425,7 @@ def search_code(
         return {"query": query, "matches": matches, "truncated": truncated, "engine": "python"}
 
     search_argument = "." if search_path == workspace_root.resolve() else _relative_path(workspace_root, search_path)
-    completed = subprocess.run(
+    completed = run_process(
         [rg_path, "--fixed-strings", "--line-number", "--column", "--no-heading", "--color", "never", "--", query, search_argument],
         cwd=workspace_root,
         capture_output=True,
@@ -344,6 +433,7 @@ def search_code(
         encoding="utf-8",
         errors="replace",
         check=False,
+        timeout=10,
     )
     if completed.returncode not in (0, 1):
         detail = completed.stderr.strip() or "rg 搜索失败"
@@ -566,6 +656,17 @@ def retrieve_repair_experience(
                 document = {}
         conditions = document.get("applicable_conditions", []) if isinstance(document, Mapping) else []
         item["applicable_conditions"] = conditions if isinstance(conditions, list) else []
+        # 向补丁模型提供修复要点及引用来源，限制历史日志占用上下文。
+        if isinstance(document, Mapping):
+            item["document"] = {
+                key: document.get(key) for key in (
+                    "original_report", "diagnosis", "patch_diff", "source", "applicable_conditions",
+                )
+            }
+            for key, maximum in (("original_report", 2000), ("diagnosis", 3000), ("patch_diff", 6000)):
+                if isinstance(item["document"].get(key), str):
+                    item["document"][key] = item["document"][key][:maximum]
+        item.update(decision="pending", matched_conditions=[], conflicts=[], unknowns=[])
         normalized.append(item)
     return normalized
 
@@ -606,6 +707,7 @@ def _check_patch_scope(
     workspace_root: Path,
     allowed_paths: Sequence[str],
     protected_test_targets: Sequence[str] = (),
+    protected_test_files: Sequence[str] = (),
 ) -> set[str]:
     """确保补丁涉及的每个文件都在调用方明确允许的范围内。"""
     if not allowed_paths:
@@ -618,6 +720,9 @@ def _check_patch_scope(
         if PurePosixPath(file_part.replace("\\", "/")) == PurePosixPath("."):
             continue
         protected_tests.append(_workspace_path(root, file_part, must_exist=False))
+    protected_tests.extend(
+        _workspace_path(root, file_part, must_exist=False) for file_part in protected_test_files
+    )
     touched = _diff_paths(patch_diff)
     for relative in touched:
         parts = PurePosixPath(relative.replace("\\", "/")).parts
@@ -634,32 +739,68 @@ def _check_patch_scope(
     return touched
 
 
+def _patch_input_bytes(patch_diff: str, root: Path) -> bytes:
+    """用二进制输入传递补丁，并保留每个原文件的 LF 或 CRLF 换行。"""
+    lines = []
+    newline = "\n"
+    for line in patch_diff.splitlines(keepends=True):
+        content = line.rstrip("\r\n")
+        header = _DIFF_HEADER.match(content)
+        if header is not None and header.group(1) == "---":
+            relative = header.group(2)
+            if relative.startswith(("a/", "b/")):
+                relative = relative[2:]
+            newline = "\n"
+            if relative != "/dev/null":
+                source = _workspace_path(root, relative, must_exist=False)
+                if source.is_file():
+                    with source.open("rb") as stream:
+                        first_line = stream.readline()
+                    if first_line.endswith(b"\r\n"):
+                        newline = "\r\n"
+        lines.append(content + newline if line.endswith("\n") else content)
+    return "".join(lines).encode("utf-8")
+
+
 def apply_patch(
     patch_diff: str,
     *,
     workspace_root: Path,
     allowed_paths: Sequence[str],
     protected_test_targets: Sequence[str] = (),
+    protected_test_files: Sequence[str] = (),
     max_output_chars: int = 20_000,
 ) -> dict[str, object]:
     """检查范围后用 git apply --check 和 git apply 应用 unified diff。"""
     if not isinstance(patch_diff, str) or not patch_diff.strip():
         raise ValueError("补丁内容不能为空")
-    touched = _check_patch_scope(patch_diff, workspace_root, allowed_paths, protected_test_targets)
+    touched = _check_patch_scope(
+        patch_diff, workspace_root, allowed_paths, protected_test_targets, protected_test_files,
+    )
     root = workspace_root.resolve()
     if not (root / ".git").exists():
         raise RepairToolError("应用补丁需要工作区包含 .git")
-    # 字节输入避免 Windows 把补丁的 LF 换成 CRLF；Git 同时兼容两种源码换行。
-    patch_bytes = patch_diff.replace("\r\n", "\n").encode("utf-8")
-    command = ["git", "-c", "core.autocrlf=input", "apply", "--whitespace=error"]
-    check = subprocess.run(
-        [*command, "--check", "-"], cwd=root, input=patch_bytes, capture_output=True, check=False,
+    command = ["git", "apply", "--whitespace=error"]
+    patch_bytes = _patch_input_bytes(patch_diff, root)
+    parsed = run_process(["git", "apply", "--numstat", "-z", "-"], cwd=root, input=patch_bytes,
+                         capture_output=True, check=False, timeout=10)
+    actual_paths = set()
+    for record in parsed.stdout.decode("utf-8", errors="replace").split("\0"):
+        if record:
+            fields = record.split("\t", 2)
+            if len(fields) != 3 or not fields[2]:
+                raise RepairToolError("不支持重命名、复制或无法解析路径的补丁")
+            actual_paths.add(fields[2])
+    if parsed.returncode or actual_paths != touched:
+        raise RepairToolError("Git 解析的补丁路径与声明不一致，拒绝应用")
+    check = run_process(
+        [*command, "--check", "-"], cwd=root, input=patch_bytes, capture_output=True, check=False, timeout=30,
     )
     if check.returncode != 0:
         detail, _ = _limited_text((check.stderr or check.stdout).decode("utf-8", errors="replace"), max_output_chars)
         raise RepairToolError(f"补丁检查失败：{detail.strip()}")
-    applied = subprocess.run(
-        [*command, "-"], cwd=root, input=patch_bytes, capture_output=True, check=False,
+    applied = run_process(
+        [*command, "-"], cwd=root, input=patch_bytes, capture_output=True, check=False, timeout=30,
     )
     if applied.returncode != 0:
         detail, _ = _limited_text((applied.stderr or applied.stdout).decode("utf-8", errors="replace"), max_output_chars)
@@ -668,14 +809,93 @@ def apply_patch(
     return {"paths": sorted(touched), "return_code": applied.returncode, "output": output, "truncated": truncated}
 
 
+def collect_test_files(
+    *,
+    workspace_root: Path,
+    test_targets: Sequence[str],
+    timeout_seconds: float = 300.0,
+    execution_backend: str | None = None,
+    task_id: str | None = None,
+) -> tuple[str, ...]:
+    """在基线 checkpoint 收集 pytest 用例，并返回包含测试的工作区相对路径。"""
+    if not test_targets:
+        raise RepairToolError("必须提供固定 pytest 目标，才能保护验收测试")
+    if not isinstance(timeout_seconds, (int, float)) or isinstance(timeout_seconds, bool) or timeout_seconds <= 0:
+        raise ValueError("timeout_seconds 必须是正数")
+    root = workspace_root.resolve()
+    for target in test_targets:
+        if not isinstance(target, str) or not target.strip():
+            raise ValueError("测试目标必须是非空字符串")
+        _workspace_path(root, target.split("::", 1)[0])
+    backend = get_execution_backend(execution_backend)
+    command = (
+        ["python", "-I", "-B", "-X", "utf8", "-m", "pytest", "-p", "no:cacheprovider",
+         "--rootdir=/workspace", "--collect-only", "-q", "--color=no", *test_targets]
+        if backend == "docker" else
+        [os.fspath(sys.executable), "-B", "-m", "pytest", "-p", "no:cacheprovider",
+         "--collect-only", "-q", "--color=no", *test_targets]
+    )
+    test_env = os.environ.copy()
+    for name in (
+        "API_KEY", "CHAT_API_KEY", "EMBEDDING_API_KEY", "BASE_URL",
+        "CHAT_BASE_URL", "EMBEDDING_BASE_URL", "OPENAI_API_KEY", "OPENAI_BASE_URL",
+    ):
+        test_env.pop(name, None)
+    max_output_bytes = 5_000_000
+    with tempfile.TemporaryFile(mode="w+b") as stdout_stream, tempfile.TemporaryFile(mode="w+b") as stderr_stream:
+        try:
+            completed = run_execution(
+                command, workspace=root, backend=backend, host_env=test_env,
+                timeout=float(timeout_seconds), task_id=task_id,
+                stdout=stdout_stream, stderr=stderr_stream,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise RepairToolError("pytest 基线收集超时，无法安全锁定验收测试") from error
+        stdout_stream.seek(0)
+        output_bytes = stdout_stream.read(max_output_bytes + 1)
+    if len(output_bytes) > max_output_bytes:
+        raise RepairToolError("pytest 基线收集输出过大，无法安全锁定验收测试")
+    output = output_bytes.decode("utf-8", errors="replace")
+    if completed.returncode != 0:
+        raise RepairToolError(
+            f"pytest 基线收集失败（退出码 {completed.returncode}），拒绝开放补丁和测试工具"
+        )
+
+    collected: set[str] = set()
+    for line in output.splitlines():
+        item = line.strip()
+        if "::" not in item:
+            continue
+        raw_path = item.split("::", 1)[0].strip()
+        candidate = Path(raw_path)
+        try:
+            if candidate.is_absolute():
+                relative = candidate.resolve().relative_to(root).as_posix()
+            else:
+                relative = candidate.as_posix()
+            resolved = _workspace_path(root, relative)
+        except (OSError, ValueError, RepairToolError):
+            raise RepairToolError("pytest 返回了无法验证的测试路径，拒绝开放补丁和测试工具") from None
+        if not resolved.is_file():
+            raise RepairToolError("pytest 收集的测试文件不存在，拒绝开放补丁和测试工具")
+        collected.add(resolved.relative_to(root).as_posix())
+    if not collected:
+        raise RepairToolError("pytest 没有返回可锁定的测试文件，拒绝开放补丁和测试工具")
+    return tuple(sorted(collected))
+
+
 def run_tests(
     *,
     workspace_root: Path,
     test_targets: Sequence[str],
     timeout_seconds: float = 300.0,
     max_output_chars: int = 30_000,
+    junit_report: str | None = None,
+    execution_backend: str | None = None,
+    task_id: str | None = None,
+    protected_test_files: Sequence[str] = (),
 ) -> dict[str, object]:
-    """在工作区中固定调用当前 Python 的 pytest，返回真实退出码和输出。"""
+    """在隔离工作区中运行 pytest；默认使用 Docker，返回真实退出码和输出。"""
     if not test_targets:
         raise ValueError("必须提供至少一个 pytest 测试目标")
     if not isinstance(timeout_seconds, (int, float)) or isinstance(timeout_seconds, bool) or timeout_seconds <= 0:
@@ -687,35 +907,55 @@ def run_tests(
         # 文件目标必须在工作区内；pytest node id 中的 :: 之后保留给 pytest 解析。
         file_part = target.split("::", 1)[0]
         _workspace_path(root, file_part)
-    command = [os.fspath(sys.executable), "-m", "pytest", *test_targets]
+    backend = get_execution_backend(execution_backend)
+    command = (["python", "-I", "-B", "-X", "utf8", "-m", "pytest", "-p", "no:cacheprovider",
+                "--rootdir=/workspace", *test_targets] if backend == "docker" else
+               [os.fspath(sys.executable), "-B", "-m", "pytest", *test_targets])
+    if junit_report is not None:
+        report = _workspace_path(root, junit_report, must_exist=False)
+        report_target = f"/workspace/{report.relative_to(root).as_posix()}" if backend == "docker" else str(report)
+        command.append(f"--junitxml={report_target}")
     test_env = os.environ.copy()
     for name in (
         "API_KEY", "CHAT_API_KEY", "EMBEDDING_API_KEY", "BASE_URL",
         "CHAT_BASE_URL", "EMBEDDING_BASE_URL", "OPENAI_API_KEY", "OPENAI_BASE_URL",
     ):
         test_env.pop(name, None)
-    try:
-        completed = subprocess.run(
-            command, cwd=root, env=test_env, capture_output=True, text=True,
-            encoding="utf-8", errors="replace", timeout=float(timeout_seconds), check=False,
-        )
-    except subprocess.TimeoutExpired as error:
-        stdout = error.stdout if isinstance(error.stdout, str) else ""
-        stderr = error.stderr if isinstance(error.stderr, str) else ""
-        stdout, stdout_truncated = _limited_text(stdout, max_output_chars)
-        stderr, stderr_truncated = _limited_text(stderr, max_output_chars)
-        return {
-            "command": command,
-            "return_code": None,
-            "passed": False,
-            "timed_out": True,
-            "stdout": stdout,
-            "stderr": stderr,
-            "truncated": stdout_truncated or stderr_truncated,
-        }
-    stdout, stdout_truncated = _limited_text(completed.stdout, max_output_chars)
-    stderr, stderr_truncated = _limited_text(completed.stderr, max_output_chars)
-    return {
+    extra_mounts: list[BindMount] = []
+    if backend == "docker":
+        for test_file in protected_test_files:
+            protected = _workspace_path(root, test_file)
+            extra_mounts.append(BindMount(protected, f"/workspace/{protected.relative_to(root).as_posix()}", True))
+    def read_output(stream) -> tuple[str, bool]:
+        stream.seek(0)
+        content = stream.read(max_output_chars + 1)
+        text = content.decode("utf-8", errors="replace")
+        return _limited_text(text, max_output_chars)
+
+    with tempfile.TemporaryFile(mode="w+b") as stdout_stream, tempfile.TemporaryFile(mode="w+b") as stderr_stream:
+        try:
+            completed = run_execution(
+                command, workspace=root, backend=backend, host_env=test_env,
+                timeout=float(timeout_seconds), task_id=task_id,
+                extra_mounts=tuple(extra_mounts),
+                stdout=stdout_stream, stderr=stderr_stream,
+            )
+        except subprocess.TimeoutExpired as error:
+            stdout, stdout_truncated = read_output(stdout_stream)
+            stderr, stderr_truncated = read_output(stderr_stream)
+            return {
+                "command": command,
+                "return_code": None,
+                "passed": False,
+                "timed_out": True,
+                "stdout": stdout,
+                "stderr": stderr,
+                "truncated": stdout_truncated or stderr_truncated,
+                "error_info": error_info(error, operation="tests.run"),
+            }
+        stdout, stdout_truncated = read_output(stdout_stream)
+        stderr, stderr_truncated = read_output(stderr_stream)
+    result = {
         "command": command,
         "return_code": completed.returncode,
         "passed": completed.returncode == 0,
@@ -724,101 +964,32 @@ def run_tests(
         "stderr": stderr,
         "truncated": stdout_truncated or stderr_truncated,
     }
+    if completed.returncode != 0:
+        code, message = {1: ("tests_failed", "测试断言未通过"), 2: ("test_collection_failed", "测试收集失败或被中断"),
+                         3: ("test_runner_failed", "pytest 内部错误"), 4: ("test_configuration_invalid", "pytest 参数或配置错误"),
+                         5: ("tests_not_collected", "没有收集到测试")}.get(completed.returncode, ("test_process_crashed", "测试进程异常退出"))
+        result["error_info"] = error_info(Fault(code, message, category="business" if completed.returncode == 1 else "execution",
+            next_action="查看测试日志并修复失败用例" if completed.returncode == 1 else "检查测试目标、依赖、配置和运行环境"),
+            operation="tests.run", details={"return_code": completed.returncode})
+    return result
 
 
-class _ToolArguments(BaseModel):
-    """所有模型可调用工具参数的严格校验配置。"""
-
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-
-class ReadCodeArguments(_ToolArguments):
-    """读取代码工具的参数。"""
-
-    path: str = Field(min_length=1, description="工作区内要读取的相对文件路径。")
-
-    @field_validator("path")
-    @classmethod
-    def path_must_not_be_blank(cls, value: str) -> str:
-        """拒绝只包含空白字符的文件路径。"""
-        if not value.strip():
-            raise ValueError("不能为空白字符串")
-        return value
-
-
-class SearchCodeArguments(_ToolArguments):
-    """代码搜索工具的参数。"""
-
-    query: str = Field(min_length=1, description="要搜索的文本。")
-    path: str = Field(default=".", min_length=1, description="搜索的工作区相对路径，默认为整个工作区。")
-    max_results: int = Field(default=50, ge=1, description="最多返回的匹配数量，必须大于零。")
-
-    @field_validator("query", "path")
-    @classmethod
-    def strings_must_not_be_blank(cls, value: str) -> str:
-        """拒绝只包含空白字符的搜索词或路径。"""
-        if not value.strip():
-            raise ValueError("不能为空白字符串")
-        return value
-
-
-class RetrieveRepairExperienceArguments(_ToolArguments):
-    """修复经验检索工具的参数。"""
-
-    query: str = Field(min_length=1, description="用于查找相似修复经验的问题描述。")
-    limit: int = Field(default=5, ge=1, description="最多返回的经验数量，必须大于零。")
-
-    @field_validator("query")
-    @classmethod
-    def query_must_not_be_blank(cls, value: str) -> str:
-        """拒绝只包含空白字符的检索内容。"""
-        if not value.strip():
-            raise ValueError("不能为空白字符串")
-        return value
-
-
-class ApplyPatchArguments(_ToolArguments):
-    """模型应用补丁工具的参数。"""
-
-    patch_diff: str = Field(min_length=1, description="相对于任务 checkpoint 的完整 unified diff。")
-
-    @field_validator("patch_diff")
-    @classmethod
-    def patch_must_not_be_blank(cls, value: str) -> str:
-        """拒绝只有空白字符的补丁文本。"""
-        if not value.strip():
-            raise ValueError("不能为空白字符串")
-        return value
-
-
-class RunTestsArguments(_ToolArguments):
-    """运行任务预先配置的 pytest 目标；模型不能更改测试范围。"""
-
-
-TOOL_ARGUMENT_MODELS: tuple[tuple[str, str, type[_ToolArguments]], ...] = (
-    ("read_code", "读取工作区内指定的 UTF-8 代码文件。", ReadCodeArguments),
-    ("search_code", "在工作区中搜索文本并返回文件、行号、列号和匹配行。", SearchCodeArguments),
-    ("retrieve_repair_experience", "检索已验收的历史修复案例及其相似度。", RetrieveRepairExperienceArguments),
-    (
-        "apply_patch",
-        "在任务隔离工作区应用相对于 checkpoint 的完整 unified diff；每次调用会先恢复 checkpoint 并检查允许修改路径。",
-        ApplyPatchArguments,
-    ),
-    (
-        "run_tests",
-        "运行任务预先配置的 pytest 目标并返回真实退出码和输出；模型不能指定测试命令或目标。",
-        RunTestsArguments,
-    ),
-)
+TOOL_DESCRIPTIONS = {
+    "read_code": "读取工作区内指定的 UTF-8 代码文件。",
+    "search_code": "在工作区中搜索文本并返回文件、行号、列号和匹配行。",
+    "retrieve_repair_experience": "检索已验收的历史修复案例及其相似度。",
+    "apply_patch": "从任务 checkpoint 开始应用完整补丁；程序会检查修改路径并禁止改动测试。",
+    "run_tests": "运行任务预设的 pytest 目标；模型不能更改测试命令或范围。",
+}
 
 TOOL_DEFINITIONS: tuple[dict[str, object], ...] = tuple(
     {
         "type": "function",
         "name": name,
-        "description": description,
+        "description": TOOL_DESCRIPTIONS[name],
         "parameters": arguments_model.model_json_schema(),
     }
-    for name, description, arguments_model in TOOL_ARGUMENT_MODELS
+    for name, arguments_model in TOOL_ARGUMENTS.items()
 )
 
 
@@ -834,11 +1005,19 @@ class RepairToolbox:
     checkpoint_revision: str | None = None
     source_root: Path | None = None
     validation_report_path: Path | None = None
+    execution_backend: str = field(default_factory=get_execution_backend)
+    task_id: str | None = None
+    permitted_model_tools: tuple[str, ...] = (
+        "read_code", "search_code", "retrieve_repair_experience", "apply_patch", "run_tests",
+    )
+    protected_test_hashes: dict[str, str] = field(default_factory=dict, init=False, repr=False)
+    _regression_case: dict[str, object] | None = field(default=None, init=False, repr=False)
     _definitions: tuple[dict[str, object], ...] = field(default=TOOL_DEFINITIONS, init=False, repr=False)
 
     def model_tool_definitions(self) -> list[dict[str, object]]:
         """返回可交给模型的工具定义。"""
-        return [dict(definition) for definition in self._definitions]
+        return [dict(definition) for definition in self._definitions
+                if definition["name"] in self.permitted_model_tools and definition["name"] in MODEL_TOOL_ALLOWLIST]
 
     def read_code(self, path: str, max_bytes: int = 1_000_000) -> dict[str, object]:
         """调用工作区文件读取工具。"""
@@ -852,34 +1031,95 @@ class RepairToolbox:
         """调用注入的知识库检索工具。"""
         return retrieve_repair_experience(query, knowledge_base=self.knowledge_base, limit=limit)
 
-    def apply_patch(self, patch_diff: str) -> dict[str, object]:
+    def _ensure_test_protection(self, remaining_seconds: float | None = None) -> None:
+        """在基线上收集 pytest 用例，并固定每个测试文件的内容哈希。"""
+        if self.checkpoint_revision is None:
+            return
+        if self.protected_test_hashes:
+            self._verify_test_protection()
+            return
+        timeout = self.test_timeout_seconds
+        if remaining_seconds is not None:
+            if remaining_seconds <= 0:
+                raise RepairToolError("自动运行时间预算已耗尽，无法锁定验收测试")
+            timeout = min(timeout, remaining_seconds)
+        files = collect_test_files(
+            workspace_root=self.workspace_root,
+            test_targets=self.test_targets,
+            timeout_seconds=timeout,
+            execution_backend=self.execution_backend,
+            task_id=self.task_id,
+        )
+        root = self.workspace_root.resolve()
+        self.protected_test_hashes = {
+            relative: hashlib.sha256((root / relative).read_bytes()).hexdigest()
+            for relative in files
+        }
+        trace("tests.protection", "locked", details={"file_count": len(files)})
+
+    def _verify_test_protection(self) -> None:
+        """发现基线测试文件被执行代码修改时拒绝继续，并恢复任务副本。"""
+        root = self.workspace_root.resolve()
+        changed = []
+        for relative, expected in self.protected_test_hashes.items():
+            path = root / relative
+            try:
+                actual = hashlib.sha256(path.read_bytes()).hexdigest()
+            except OSError:
+                actual = None
+            if actual != expected:
+                changed.append(relative)
+        if changed:
+            if self.checkpoint_revision is not None:
+                with cleanup_scope():
+                    restore_checkpoint_workspace(self.workspace_root, self.checkpoint_revision)
+            raise RepairToolError("固定验收测试文件发生变化，任务副本已恢复到 checkpoint")
+
+    def apply_patch(self, patch_diff: str, remaining_seconds: float | None = None) -> dict[str, object]:
         """在任务工作区应用补丁，并检查调用方允许修改的路径。"""
+        started = time.monotonic()
+        self._ensure_test_protection(remaining_seconds)
+        if remaining_seconds is not None and remaining_seconds - (time.monotonic() - started) <= 0:
+            raise RepairToolError("自动运行时间预算已耗尽，不能应用补丁")
         return apply_patch(
             patch_diff,
             workspace_root=self.workspace_root,
             allowed_paths=self.allowed_paths,
             protected_test_targets=self.test_targets,
+            protected_test_files=tuple(self.protected_test_hashes),
         )
 
     def run_tests(self, remaining_seconds: float | None = None) -> dict[str, object]:
-        """运行固定 pytest 目标，并把超时限制在任务剩余时间内。"""
+        """运行固定测试目标，并把超时限制在当前预算内。"""
+        started = time.monotonic()
+        self._ensure_test_protection(remaining_seconds)
         timeout_seconds = self.test_timeout_seconds
         if remaining_seconds is not None:
-            if remaining_seconds <= 0:
-                raise RepairToolError("自动运行时间预算已耗尽，无法运行模型请求的测试")
-            timeout_seconds = min(timeout_seconds, remaining_seconds)
-        return run_tests(
-            workspace_root=self.workspace_root,
-            test_targets=self.test_targets,
-            timeout_seconds=timeout_seconds,
-        )
+            timeout_seconds = min(timeout_seconds, remaining_seconds - (time.monotonic() - started))
+            if timeout_seconds <= 0:
+                raise RepairToolError("自动运行时间预算已耗尽，无法运行测试")
+        try:
+            result = run_tests(
+                workspace_root=self.workspace_root,
+                test_targets=self.test_targets,
+                timeout_seconds=timeout_seconds,
+                execution_backend=self.execution_backend,
+                task_id=self.task_id,
+                protected_test_files=tuple(self.protected_test_hashes),
+            )
+        finally:
+            self._verify_test_protection()
+        return result
 
-    def apply_model_patch(self, patch_diff: str) -> dict[str, object]:
+    def apply_model_patch(self, patch_diff: str, remaining_seconds: float | None = None) -> dict[str, object]:
         """从任务 checkpoint 开始应用模型的完整补丁，避免叠加上一版试验。"""
         if self.checkpoint_revision is None:
             raise RepairToolError("模型应用补丁需要任务基线 checkpoint")
-        restore_checkpoint_workspace(self.workspace_root, self.checkpoint_revision)
-        return self.apply_patch(patch_diff)
+        started = time.monotonic()
+        with cleanup_scope():
+            restore_checkpoint_workspace(self.workspace_root, self.checkpoint_revision)
+        remaining = None if remaining_seconds is None else remaining_seconds - (time.monotonic() - started)
+        return self.apply_patch(patch_diff, remaining_seconds=remaining)
 
     def save_repair_experience(self, state: RepairState) -> None:
         """由固定工作流在人工接受后保存修复经验。"""
@@ -898,7 +1138,9 @@ class RepairToolbox:
         """恢复本任务的隔离工作区，不触碰用户提供的原始目录。"""
         if self.checkpoint_revision is None:
             raise RepairToolError("当前任务没有基线 checkpoint")
-        restore_checkpoint_workspace(self.workspace_root, self.checkpoint_revision)
+        with traced_call("checkpoint.restore", parameters={"checkpoint": self.checkpoint_revision}):
+            with cleanup_scope():
+                restore_checkpoint_workspace(self.workspace_root, self.checkpoint_revision)
 
     def collect_context_for_state(self, state: RepairState) -> dict[str, object]:
         """为工作流收集源码证据并检索原始报告相关的历史案例。"""
@@ -926,12 +1168,21 @@ class RepairToolbox:
                     "quote": file_data["content"],
                     "reason": "任务指定的 Python 源码",
                 })
-            except (ValueError, RepairToolError):
+            except (ValueError, RepairToolError) as error:
+                error_info(error, operation="context.read_code")
                 # 外部路径不属于工具工作区时不读取，交给调用方明确配置工作区。
                 pass
         matches: list[dict[str, object]] = []
         if self.knowledge_base is not None:
-            matches = self.retrieve_repair_experience(state["original_report"])
+            query = [state["original_report"]]
+            reproduction = state.get("reproduction") or {}
+            for key in ("revised_report", "steps"):
+                if isinstance(reproduction.get(key), str):
+                    query.append(reproduction[key][:2000])
+            execution = reproduction.get("execution")
+            if isinstance(execution, Mapping):
+                query.extend(str(execution.get(key) or "")[:2000] for key in ("stdout", "stderr"))
+            matches = self.retrieve_repair_experience("\n".join(query)[:10_000])
         return {"code_evidence": evidence, "case_matches": matches}
 
     def apply_patch_for_state(self, state: RepairState) -> None:
@@ -939,36 +1190,168 @@ class RepairToolbox:
         patch_diff = state["patch_diff"]
         if not isinstance(patch_diff, str):
             raise RepairToolError("状态中没有可应用的补丁")
-        self.apply_patch(patch_diff)
+        self.apply_patch(patch_diff, remaining_seconds=float(state["remaining_budget"]["seconds"]))
+
+    def _validation_directory(self) -> Path:
+        """把固定用例和运行日志保存在补丁工作区之外，重试恢复不会删除它们。"""
+        if self.validation_report_path is not None:
+            directory = self.validation_report_path.resolve().parent
+            if directory.is_relative_to(self.workspace_root.resolve()):
+                raise RepairToolError("验证报告和固定回归用例必须保存在补丁工作区之外")
+            return directory
+        root = self.workspace_root.resolve()
+        return root.parent / f"{root.name}-validation"
+
+    def _run_regression_test(self, code: str, timeout_seconds: float | None = None) -> dict[str, object]:
+        """显式执行固定用例，并核对 JUnit 结果以排除跳过、收集错误及空运行。"""
+        root = self.workspace_root.resolve()
+        with tempfile.TemporaryDirectory(prefix=".repair-regression-", dir=root) as directory:
+            test_dir = Path(directory)
+            test_file = test_dir / "test_reported_defect.py"
+            test_file.write_text(code, encoding="utf-8")
+            junit_file = test_dir / "result.xml"
+            result = run_tests(
+                workspace_root=root,
+                test_targets=(test_file.relative_to(root).as_posix(),),
+                timeout_seconds=self.test_timeout_seconds if timeout_seconds is None else timeout_seconds,
+                junit_report=junit_file.relative_to(root).as_posix(),
+                execution_backend=self.execution_backend,
+                task_id=self.task_id,
+            )
+            try:
+                cases = ET.parse(junit_file).getroot().findall(".//testcase")
+                failures = [node for case in cases for node in case.findall("failure")]
+                errors = sum(len(case.findall("error")) for case in cases)
+                skipped = sum(len(case.findall("skipped")) for case in cases)
+                dependency_error = any(
+                    node.get("message", "").startswith(("ImportError:", "ModuleNotFoundError:", "SyntaxError:"))
+                    for node in failures
+                )
+                valid = len(cases) == 1 and not errors and not skipped and not dependency_error
+                valid = valid and (
+                    (result["return_code"] == 0 and not failures)
+                    or (result["return_code"] == 1 and len(failures) == 1)
+                )
+                result.update(collected=len(cases), failures=len(failures), errors=errors, skipped=skipped)
+            except (OSError, ET.ParseError) as error:
+                valid = False
+                result["report_error"] = error_info(error, operation="tests.junit.read")
+            result["valid"] = valid
+            result["passed"] = bool(valid and result["passed"])
+            if not valid and not result.get("report_error"):
+                result["report_error"] = error_info(Fault("regression_result_invalid", "缺陷用例运行结果不满足验收条件", category="validation"), operation="tests.junit.validate")
+            return result
+
+    def prepare_regression_for_state(
+        self, state: RepairState, record: Mapping[str, object],
+    ) -> dict[str, object]:
+        """补丁生成前固定专用用例，只有它在原实现上真实失败才允许继续。"""
+        self._regression_case = None
+        started = time.monotonic()
+        reproduction_code = record.get("reproduction_code")
+        if not isinstance(reproduction_code, str) or not reproduction_code.strip():
+            raise RepairToolError("缺少已确认的原复现脚本，不能生成缺陷回归用例")
+        generated = generate_regression_test(state["original_report"], record, state["code_text"])
+        if generated.get("question"):
+            return generated
+        code = str(generated["test_code"])
+        directory = self._validation_directory() / "regression"
+        directory.mkdir(parents=True, exist_ok=True)
+        test_path = directory / "test_reported_defect.py"
+        test_path.write_text(code, encoding="utf-8")
+        timeout = max(0.001, min(
+            self.test_timeout_seconds,
+            float(state["remaining_budget"]["seconds"]) - (time.monotonic() - started),
+        ))
+        baseline = self._observe_validation("regression.baseline", state,
+            lambda: self._run_regression_test(code, timeout), expected_return_code=1)
+        regression: dict[str, object] = {
+            "test_code": code,
+            "test_path": str(test_path),
+            "test_hash": hashlib.sha256(code.encode("utf-8")).hexdigest(),
+            "baseline": baseline,
+        }
+        generated["regression"] = regression
+        if not baseline["valid"] or baseline["return_code"] != 1:
+            generated["question"] = "生成的缺陷回归用例未在基线上产生有效失败，请确认触发条件和预期行为。"
+        else:
+            self._regression_case = {**regression, "reproduction_code": reproduction_code}
+        return generated
+
+    def _observe_validation(self, name, state, action, *, expected_return_code=0, matches=None):
+        with traced_call("validation.check") as call:
+            call["details"] = {"check": name, "patch_hash": state.get("patch_hash"),
+                               "expected_return_code": expected_return_code}
+            result = action()
+            call["result"] = result
+            code = result.get("return_code", result.get("returncode"))
+            call["details"]["matched"] = (matches(result) if matches else
+                code == expected_return_code and not result.get("timed_out") and result.get("valid", True))
+            return result
 
     def validate_patch_for_state(self, state: RepairState) -> dict[str, object]:
-        """运行固定测试并把退出码、输出和当前补丁哈希绑定到验证摘要。"""
-        result = self.run_tests()
-        report_path = self.validation_report_path or self.workspace_root / "work" / "validation.md"
+        """同时验证现有测试、基线失败的固定用例以及原复现脚本。"""
+        deadline = time.monotonic() + float(state["remaining_budget"]["seconds"])
+
+        def remaining_timeout() -> float:
+            return max(0.001, min(self.test_timeout_seconds, deadline - time.monotonic()))
+
+        result = self._observe_validation("existing_tests", state, lambda: self.run_tests(remaining_timeout()))
+        checks = {"现有测试": result}
+        regression = self._regression_case
+        patched = None
+        reproduction = None
+        if regression is None:
+            passed = None
+            summary = "缺少已在基线上失败的缺陷回归用例，无法确认原缺陷已修复"
+            trace("validation.check", "skipped", details={"check": "regression.patched", "reason": "missing_baseline_regression"})
+            trace("validation.check", "skipped", details={"check": "reproduction.patched", "reason": "missing_baseline_regression"})
+        else:
+            patched = self._observe_validation("regression.patched", state,
+                lambda: self._run_regression_test(str(regression["test_code"]), remaining_timeout()))
+            checks["缺陷回归用例：基线"] = regression["baseline"]
+            checks["缺陷回归用例：补丁后"] = patched
+            reproduction_dir = self._validation_directory() / "post-reproduction"
+            reproduction_dir.mkdir(parents=True, exist_ok=True)
+            reproduction = self._observe_validation("reproduction.patched", state, lambda: execute_reproduction(
+                str(regression["reproduction_code"]), self.workspace_root.resolve(), reproduction_dir,
+                remaining_timeout(), execution_backend=self.execution_backend, task_id=self.task_id,
+            ), matches=lambda execution: reproduction_exit_matches_test(str(regression["test_code"]), execution))
+            reproduced_ok = reproduction_exit_matches_test(str(regression["test_code"]), reproduction)
+            checks["原复现脚本：补丁后"] = {**reproduction, "passed": reproduced_ok}
+            passed = bool(result["passed"] and patched["passed"] and reproduced_ok)
+            failed_checks = [name for name, check in checks.items() if name != "缺陷回归用例：基线" and not check["passed"]]
+            summary = "；".join(f"{name}未通过" for name in failed_checks) if failed_checks else "现有测试、缺陷回归用例及原复现脚本均通过"
+        timed_out = any(check.get("timed_out") for check in checks.values())
+        if timed_out:
+            summary = "补丁验证超时"
+        report_path = self.validation_report_path or self._validation_directory() / "validation.md"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(
             "# 验证报告\n\n"
-            f"- 退出码：{result['return_code']}\n"
-            f"- 是否通过：{result['passed']}\n"
-            f"- 是否超时：{result['timed_out']}\n\n"
-            "## 标准输出\n\n"
-            f"{fenced(str(result['stdout']), 'text')}\n\n"
-            "## 标准错误\n\n"
-            f"{fenced(str(result['stderr']), 'text')}\n",
+            f"- 补丁哈希：{state['patch_hash']}\n"
+            f"- 是否通过：{passed}\n- 摘要：{summary}\n"
+            + (f"- 缺陷回归用例：{regression['test_path']}\n"
+               f"- 用例哈希：{regression['test_hash']}\n" if regression else "")
+            + "\n".join(
+                f"\n## {name}\n\n{fenced(json.dumps(check, ensure_ascii=False, indent=2), 'json')}\n"
+                for name, check in checks.items()
+            ),
             encoding="utf-8",
         )
-        summary = "测试通过" if result["passed"] else "测试未通过"
-        if result["timed_out"]:
-            summary = "测试超时"
         return {
             "patch_hash": state["patch_hash"] or "",
-            "passed": result["passed"],
+            "passed": passed,
             "summary": summary,
             "report_path": str(report_path),
             "return_code": result["return_code"],
             "stdout": result["stdout"],
             "stderr": result["stderr"],
-            "timed_out": result["timed_out"],
+            "timed_out": timed_out,
+            "regression": {**regression, "patched": patched} if regression else None,
+            "reproduction": reproduction,
+            "failure_errors": [check["error_info"] for name, check in checks.items()
+                               if name != "缺陷回归用例：基线" and check.get("error_info") and not check["passed"]],
         }
 
     def as_repair_services(
@@ -980,34 +1363,42 @@ class RepairToolbox:
         # 局部导入避免 repair_workflow 导入 llm_client 时形成模块循环依赖。
         from repair_workflow import RepairServices, llm_propose_patch
 
+        def reproduce_with_regression(state: RepairState) -> Mapping[str, object]:
+            result = dict(reproduce(state))
+            if result.get("matched") is True and not result.get("question"):
+                record = dict(result["record"])
+                generated = self.prepare_regression_for_state(state, record)
+                if "regression" in generated:
+                    record["regression"] = generated["regression"]
+                result["record"] = record
+                for key in ("question", "token_usage", "estimated_cost"):
+                    if key in generated:
+                        result[key] = generated[key]
+            return result
+
         def propose_with_tools(state: RepairState) -> Mapping[str, object]:
-            """模型可迭代调用工具；清理试验性修改后再交给固定验证节点。"""
+            """模型可试用补丁并运行固定测试；试验结束后恢复工作区供固定节点验收。"""
             started = time.monotonic()
             used_side_effect_tool = False
 
             def execute_tool(name: str, arguments: Mapping[str, object]) -> object:
-                """执行模型请求，并为测试工具传入本任务剩余时间。"""
+                """执行已授权工具，并把本次 ReAct 剩余时间预算传给补丁和测试工具。"""
                 nonlocal used_side_effect_tool
                 if name in ("apply_patch", "run_tests"):
                     used_side_effect_tool = True
-                remaining_seconds = (
-                    float(state["remaining_budget"].get("seconds", 0.0))
-                    - (time.monotonic() - started)
-                )
-                return self.call_model_tool(name, arguments, remaining_seconds=remaining_seconds)
+                remaining = float(state["remaining_budget"]["seconds"]) - (time.monotonic() - started)
+                return self.call_model_tool(name, arguments, remaining_seconds=remaining)
 
             try:
                 return llm_propose_patch(
-                    state,
-                    tool_definitions=self.model_tool_definitions(),
-                    tool_executor=execute_tool,
+                    state, tool_definitions=self.model_tool_definitions(), tool_executor=execute_tool,
                 )
             finally:
                 if used_side_effect_tool and self.checkpoint_revision is not None:
                     self.restore_workspace(state)
 
         return RepairServices(
-            reproduce=reproduce,
+            reproduce=reproduce_with_regression,
             collect_context=self.collect_context_for_state,
             propose_patch=propose_patch or propose_with_tools,
             apply_patch=self.apply_patch_for_state,
@@ -1024,31 +1415,35 @@ class RepairToolbox:
         *,
         remaining_seconds: float | None = None,
     ) -> object:
-        """校验模型工具参数并调用白名单内的读取、检索、补丁或测试工具。"""
+        """校验并执行模型工具，成对记录参数、观察结果或失败。"""
+        with traced_call(name, parameters=arguments, input_data=arguments, tool_name=name) as call:
+            result = self._call_model_tool(name, arguments, remaining_seconds=remaining_seconds)
+            call["result"] = result
+            return result
+
+    def _call_model_tool(self, name, arguments, *, remaining_seconds=None):
+        """先执行服务端权限校验，再校验参数并分派到固定工具实现。"""
         if remaining_seconds is not None and remaining_seconds <= 0:
             raise RepairToolError("自动运行时间预算已耗尽，无法执行模型请求的工具")
-        argument_models: dict[str, type[_ToolArguments]] = {
-            tool_name: model for tool_name, _, model in TOOL_ARGUMENT_MODELS
-        }
-        if name not in argument_models:
+        if name not in MODEL_TOOL_ALLOWLIST or name not in self.permitted_model_tools:
             raise RepairToolError(f"模型不能直接调用工具：{name}")
         try:
-            validated = argument_models[name].model_validate(arguments)
-        except ValidationError as error:
-            issues = "; ".join(
-                f"{'.'.join(str(part) for part in issue['loc'])}: {issue['msg']}"
-                for issue in error.errors(include_input=False, include_url=False)
+            arguments = TOOL_ARGUMENTS[name].model_validate(dict(arguments)).model_dump()
+        except (ValidationError, TypeError, ValueError):
+            raise RepairToolError("工具参数无效（Schema 校验失败）：请修正字段名称、类型和取值范围") from None
+        trace(name, "authorized", parameters=arguments, decision="server_allowlist")
+        if name == "read_code":
+            return self.read_code(arguments["path"])  # type: ignore[arg-type]
+        if name == "search_code":
+            return self.search_code(
+                arguments["query"], arguments.get("path", "."), arguments.get("max_results", 50),  # type: ignore[arg-type]
             )
-            raise RepairToolError(f"工具 {name} 的参数无效：{issues}") from None
-
-        if isinstance(validated, ReadCodeArguments):
-            return self.read_code(validated.path)
-        if isinstance(validated, SearchCodeArguments):
-            return self.search_code(validated.query, validated.path, validated.max_results)
-        if isinstance(validated, RetrieveRepairExperienceArguments):
-            return self.retrieve_repair_experience(validated.query, validated.limit)
-        if isinstance(validated, ApplyPatchArguments):
-            return self.apply_model_patch(validated.patch_diff)
-        if isinstance(validated, RunTestsArguments):
+        if name == "retrieve_repair_experience":
+            return self.retrieve_repair_experience(
+                arguments["query"], arguments.get("limit", 5),  # type: ignore[arg-type]
+            )
+        if name == "apply_patch":
+            return self.apply_model_patch(arguments["patch_diff"], remaining_seconds=remaining_seconds)
+        if name == "run_tests":
             return self.run_tests(remaining_seconds=remaining_seconds)
         raise RepairToolError(f"模型不能直接调用工具：{name}")

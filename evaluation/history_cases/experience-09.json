@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-09",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "feature flag parser ignores TRUE with mixed case and surrounding whitespace.",
+  "diagnosis": "Normalize boolean text with strip and case folding before comparison.",
+  "before_source": "def enabled(raw):\n    expected = 'true'\n    return raw == expected\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n def enabled(raw):\n     expected = 'true'\n-    return raw == expected\n+    return raw.strip().casefold() == expected\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert enabled('True') is True\n\ndef test_experience_2(tmp_path):\n    assert enabled(' true ') is True\n\ndef test_experience_3(tmp_path):\n    assert enabled('false') is False\n",
+  "applicable_conditions": [
+    "布尔字符串",
+    "strip",
+    "大小写"
+  ]
+}

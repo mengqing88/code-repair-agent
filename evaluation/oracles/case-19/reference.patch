@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def display_name(data):
+-    return data['name']
++    return data.get('name', 'unknown')

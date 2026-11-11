@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-27",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "localized page cache returns the wrong language because its key omits region.",
+  "diagnosis": "Include the locale/region parameter in cache identity.",
+  "before_source": "def page_cache(path, region):\n    return repr(path)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def page_cache(path, region):\n-    return repr(path)\n+    return region + ':' + repr(path)\n",
+  "verification_tests": "from target import *\n\ndef test_experience_1(tmp_path):\n    assert page_cache('/a', 'en') != page_cache('/a', 'fr')\n\ndef test_experience_2(tmp_path):\n    assert page_cache('/a', 'en') == page_cache('/a', 'en')\n\ndef test_experience_3(tmp_path):\n    assert page_cache('/a', 'en') != page_cache('/b', 'en')\n",
+  "applicable_conditions": [
+    "缓存键",
+    "locale",
+    "参数"
+  ]
+}

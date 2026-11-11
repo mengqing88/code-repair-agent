@@ -1,0 +1,10 @@
+{
+  "case_id": "case-27",
+  "title": "缓存键忽略区域",
+  "report": "cache key must distinguish values from different locales",
+  "contract": "cache_key 为字符串，同 value 同 locale 键相同；同 value 不同 locale 键不同。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

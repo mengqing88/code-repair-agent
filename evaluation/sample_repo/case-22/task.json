@@ -1,0 +1,10 @@
+{
+  "case_id": "case-22",
+  "title": "URL 拼接双斜杠",
+  "report": "URL join should remove duplicate slashes",
+  "contract": "join_url 仅规范 base 末尾和 path 开头的斜杠，交界处恰好一个斜杠，保留协议。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

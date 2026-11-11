@@ -1,0 +1,10 @@
+{
+  "case_id": "case-02",
+  "title": "乘法误写为加法",
+  "report": "multiply 计算乘积错误",
+  "contract": "multiply(a,b) 返回数值乘积。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}
