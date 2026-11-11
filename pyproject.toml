@@ -21,6 +21,7 @@ description = "Command-line input validation for Python code repair tasks."
 dependencies = [
     "openai>=2.0,<3.0",
     "psycopg[binary]>=3.1,<4.0",
+    "qdrant-client>=1.12,<2.0",
     "python-dotenv>=1.0,<2.0",
     "langgraph>=1.0,<2.0",
     "mcp>=1.30,<2.0",
@@ -36,10 +37,12 @@ dependencies = [
 # dev：开发依赖组，通过 pip install -e ".[dev]" 安装 pytest。
 dev = ["pytest", "httpx>=0.27,<1.0"]
 
+# rerank：可选的本地 Cross-Encoder 模型运行依赖；模型权重按 CROSS_ENCODER_MODEL 配置加载。
+rerank = ["sentence-transformers>=3.0,<6.0"]
 # setuptools 的打包范围配置。
 [tool.setuptools]
 # py-modules：打包 CLI、模型调用、独立错误复现、修复状态、工作流和知识库模块，不收录测试模块。
-py-modules = ["agent_cli", "llm_client", "reproduction", "defect_regression", "repair_state", "repair_workflow", "knowledge_base", "knowledge_cli", "repair_tools", "repair_api", "repair_worker", "resilience", "trace_store", "model_contracts", "operation_store", "diagnostics", "docker_executor", "recovery_store", "recovery_manager", "recovery_agent", "mcp_tool_client"]
+py-modules = ["agent_cli", "llm_client", "reproduction", "defect_regression", "repair_state", "repair_workflow", "knowledge_base", "knowledge_cli", "repair_tools", "repair_api", "repair_worker", "resilience", "trace_store", "model_contracts", "operation_store", "diagnostics", "docker_executor", "recovery_store", "recovery_manager", "recovery_agent", "mcp_tool_client", "qdrant_store", "semantic_dedup", "retrieval_reranker"]
 
 # pytest 的项目级配置。
 [tool.pytest.ini_options]

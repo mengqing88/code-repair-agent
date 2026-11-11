@@ -1,8 +1,4 @@
-"""保存已接受的修复案例，并使用向量相似度检索历史经验。
-
-知识库使用 SQLite 保存案例正文和 JSON 编码的向量，嵌入模型由 llm_client.embed_text
-调用兼容 OpenAI 的 embeddings 接口。当前规模不需要额外部署向量数据库。
-"""
+"""保存修复案例正文，并通过 SQLite 与可选的 Qdrant 索引检索历史经验。"""
 
 # json：序列化案例正文和向量；math：计算余弦相似度并检查数字。
 import json
@@ -18,7 +14,7 @@ except ImportError:  # Python < 3.11 can still use exact pins from requirements 
     tomllib = None
 from collections import Counter
 # dataclass：组织不可变的知识库配置；datetime：记录案例写入时间。
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 # Path：表示 SQLite 文件路径；Callable、Sequence：描述嵌入函数的输入和向量输出。
 from pathlib import Path
@@ -31,6 +27,9 @@ from resilience import Fault, current, trace, error_info
 from diagnostics import redact
 # RepairState：保存案例时读取工作流的完整修复状态。
 from repair_state import RepairState
+from qdrant_store import QdrantIndexError, QdrantVectorIndex, configured_qdrant_index
+from retrieval_reranker import configured_reranker
+from semantic_dedup import collapse_semantic_duplicates
 
 
 EmbeddingFunction = Callable[[str], Sequence[float]]
@@ -472,12 +471,41 @@ def _cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
 
 @dataclass(frozen=True)
 class KnowledgeBase:
-    """SQLite 修复知识库；embedder 可替换为离线假模型以进行测试。"""
+    """SQLite 保存完整案例，Qdrant 可选地提供向量候选召回。"""
 
     # path：知识库 SQLite 文件路径；父目录不存在时由类自动创建。
     path: Path
     # embedder：接收案例文本并返回向量的函数，默认调用真实 embeddings 接口。
     embedder: EmbeddingFunction = embed_text
+    # qdrant_index：可选向量索引；None 时沿用 SQLite 本地混合检索。
+    qdrant_index: QdrantVectorIndex | None = field(default_factory=configured_qdrant_index)
+    # reranker：按需对初召回的候选案例重排；可以使用离线假模型测试。
+    reranker: object | None = field(default_factory=configured_reranker)
+
+    @property
+    def qdrant_namespace(self) -> str:
+        """返回由数据库路径哈希生成的 Qdrant 隔离命名空间。"""
+        return QdrantVectorIndex.namespace_for_path(self.path)
+
+    def _index_qdrant(
+        self, case_id: str, outcome: str, revision: int, vector: Sequence[float], document: Mapping[str, object],
+    ) -> None:
+        """把案例向量同步到可重建的 Qdrant 投影；失败时保留 SQLite 主存储。"""
+        if self.qdrant_index is None or not vector:
+            return
+        try:
+            self.qdrant_index.upsert(
+                namespace=self.qdrant_namespace,
+                case_id=case_id,
+                outcome=outcome,
+                revision=revision,
+                vector=vector,
+                retrieval_scope=_case_retrieval_scope(document),
+            )
+        except QdrantIndexError as error:
+            trace("knowledge.qdrant", "degraded", fault=error, decision="sqlite_remains_authoritative")
+            if current() and "Qdrant 索引不可用，本次经验仍已保存在本地知识库" not in current().warnings:
+                current().warnings.append("Qdrant 索引不可用，本次经验仍已保存在本地知识库")
 
     def _connect(self) -> sqlite3.Connection:
         """打开数据库并确保案例表存在；调用方负责关闭返回的连接。"""
@@ -602,12 +630,17 @@ class KnowledgeBase:
                  search_text, content_hash),
             )
             self._receipt(connection, document, write=True)
+            row = connection.execute(
+                "SELECT revision FROM repair_cases WHERE case_id = ?", (state["task_id"],),
+            ).fetchone()
+            revision = int(row["revision"])
             connection.commit()
         except sqlite3.Error as error:
             connection.rollback()
             raise KnowledgeBaseError(f"保存修复案例失败：{error}") from error
         finally:
             connection.close()
+        self._index_qdrant(state["task_id"], "accepted", revision, vector, json.loads(document))
 
     def record_rejection(self, state: RepairState) -> None:
         """记录拒绝理由，并把它保存为可检索但明确标记为失败的负向经验。"""
@@ -657,12 +690,17 @@ class KnowledgeBase:
                  search_text, content_hash),
             )
             self._receipt(connection, document, write=True)
+            row = connection.execute(
+                "SELECT revision FROM repair_failures WHERE case_id = ?", (state["task_id"],),
+            ).fetchone()
+            revision = int(row["revision"])
             connection.commit()
         except sqlite3.Error as error:
             connection.rollback()
             raise KnowledgeBaseError(f"保存拒绝审核记录失败：{error}") from error
         finally:
             connection.close()
+        self._index_qdrant(state["task_id"], "rejected", revision, vector, json.loads(document))
 
     def import_cases(self, records: Sequence[object], source: str = "") -> dict[str, object]:
         """逐条校验并导入历史案例；相同正文重复导入不增加版本或重复嵌入。"""
@@ -741,6 +779,8 @@ class KnowledgeBase:
         min_similarity: float = 0.35,
         outcome: Literal["accepted", "rejected"] = "accepted",
         filters: Mapping[str, object] | None = None,
+        strategy: Literal["hybrid", "keyword", "vector"] = "hybrid",
+        rerank: bool = True,
     ) -> list[dict[str, object]]:
         """按结果类型和严格元数据过滤分别执行 BM25/向量召回。"""
         if not isinstance(query, str) or not query.strip():
@@ -751,6 +791,10 @@ class KnowledgeBase:
             raise ValueError("min_similarity 必须在 0 到 1 之间")
         if outcome not in ("accepted", "rejected"):
             raise ValueError("outcome 必须是 accepted 或 rejected")
+        if strategy not in ("hybrid", "keyword", "vector"):
+            raise ValueError("strategy 必须是 hybrid、keyword 或 vector")
+        if not isinstance(rerank, bool):
+            raise ValueError("rerank 必须是布尔值")
         normalized_filters = _normalize_retrieval_filters(filters)
         table = "repair_cases" if outcome == "accepted" else "repair_failures"
         connection = self._connect()
@@ -767,11 +811,13 @@ class KnowledgeBase:
         if not rows:
             return []
         candidates = []
+        documents_by_id: dict[str, dict[str, object]] = {}
         for row in rows:
             try:
                 document = json.loads(row["document"])
                 if not isinstance(document, dict):
                     raise ValueError("案例正文必须为对象")
+                documents_by_id[row["case_id"]] = document
                 if not _matches_retrieval_filters(document, normalized_filters):
                     continue
                 candidates.append((row, row["search_text"] or _case_search_text(document)))
@@ -783,28 +829,89 @@ class KnowledgeBase:
         if not candidates:
             return []
         lexical = _lexical_scores(query, [text for _, text in candidates])
-        try:
-            query_vector = _validated_vector(self.embedder(query), "查询向量")
-        except (ValueError, RuntimeError) as error:
-            if isinstance(error, Fault) and error.category == "budget":
-                raise
-            query_vector = None
-            trace("knowledge.search", "degraded", fault=error, decision="keyword_only")
-            if current() and "向量检索不可用，本次已降级为关键词检索" not in current().warnings:
-                current().warnings.append("向量检索不可用，本次已降级为关键词检索")
+        query_vector = None
+        if strategy != "keyword":
+            try:
+                query_vector = _validated_vector(self.embedder(query), "查询向量")
+            except (ValueError, RuntimeError) as error:
+                if isinstance(error, Fault) and error.category == "budget":
+                    raise
+                trace("knowledge.search", "degraded", fault=error, decision="keyword_only")
+                if current() and "向量检索不可用，本次已降级为关键词检索" not in current().warnings:
+                    current().warnings.append("向量检索不可用，本次已降级为关键词检索")
+
+        qdrant_scores: dict[str, float] = {}
+        candidate_ids: set[str] | None = None
+        if self.qdrant_index is not None and query_vector is not None:
+            try:
+                if self.qdrant_index.needs_sync(namespace=self.qdrant_namespace, outcome=outcome):
+                    index_entries = []
+                    for row in rows:
+                        document = documents_by_id.get(row["case_id"])
+                        if document is None:
+                            try:
+                                document = json.loads(row["document"])
+                            except (json.JSONDecodeError, TypeError):
+                                continue
+                        try:
+                            vector = _validated_vector(json.loads(row["embedding"]), "已保存向量")
+                        except (json.JSONDecodeError, KnowledgeBaseError, TypeError):
+                            continue
+                        index_entries.append({
+                            "case_id": row["case_id"], "revision": row["revision"], "vector": vector,
+                            "retrieval_scope": _case_retrieval_scope(document),
+                        })
+                    self.qdrant_index.sync_once(
+                        namespace=self.qdrant_namespace, outcome=outcome, entries=index_entries,
+                    )
+                matches = self.qdrant_index.search(
+                    namespace=self.qdrant_namespace,
+                    vector=query_vector,
+                    limit=max(10, limit * 3),
+                    outcome=outcome,
+                    filters=normalized_filters,
+                )
+                qdrant_scores = {item["case_id"]: item["score"] for item in matches}
+                if qdrant_scores:
+                    candidate_ids = set(qdrant_scores)
+                    if strategy == "hybrid":
+                        lexical_indices = sorted(range(len(candidates)), key=lambda index: lexical[index], reverse=True)
+                        candidate_ids.update(
+                            candidates[index][0]["case_id"] for index in lexical_indices[:max(10, limit * 3)]
+                        )
+            except QdrantIndexError as error:
+                trace("knowledge.qdrant", "degraded", fault=error, decision="sqlite_vector_scan")
+                if current() and "Qdrant 检索不可用，本次已降级为 SQLite 本地检索" not in current().warnings:
+                    current().warnings.append("Qdrant 检索不可用，本次已降级为 SQLite 本地检索")
+
         results: list[dict[str, object]] = []
+        stored_vectors: dict[str, Sequence[float]] = {}
         for index, (row, _) in enumerate(candidates):
+            if candidate_ids is not None and row["case_id"] not in candidate_ids:
+                continue
             semantic = None
             try:
                 stored_vector = _validated_vector(json.loads(row["embedding"]), "已保存向量")
-                if query_vector is not None and len(query_vector) == len(stored_vector):
+                stored_vectors[row["case_id"]] = stored_vector
+                if row["case_id"] in qdrant_scores:
+                    semantic = qdrant_scores[row["case_id"]]
+                elif query_vector is not None and len(query_vector) == len(stored_vector):
                     semantic = _cosine_similarity(query_vector, stored_vector)
             except (json.JSONDecodeError, KnowledgeBaseError, TypeError) as error:
                 error_info(error, operation="knowledge.embedding.decode")
             keyword_score = lexical[index] / (lexical[index] + 1)
-            if not keyword_score and (semantic is None or semantic <= 0 or semantic < min_similarity):
-                continue
-            score = 0.7 * max(0.0, semantic or 0.0) + 0.3 * keyword_score if semantic is not None else keyword_score
+            if strategy == "keyword":
+                if not keyword_score:
+                    continue
+                score = keyword_score
+            elif strategy == "vector":
+                if semantic is None or semantic < min_similarity:
+                    continue
+                score = max(0.0, semantic)
+            else:
+                if not keyword_score and (semantic is None or semantic <= 0 or semantic < min_similarity):
+                    continue
+                score = 0.7 * max(0.0, semantic or 0.0) + 0.3 * keyword_score if semantic is not None else keyword_score
             results.append({
                 "case_id": row["case_id"],
                 "revision": row["revision"],
@@ -812,10 +919,36 @@ class KnowledgeBase:
                 "document": row["document"],
                 "vector_score": semantic,
                 "keyword_score": keyword_score,
-                "retrieval_mode": "hybrid" if semantic is not None else "keyword",
+                "retrieval_mode": (
+                    "keyword" if strategy == "keyword" or semantic is None
+                    else "vector" if strategy == "vector" else "hybrid"
+                ),
                 "outcome": row["outcome"],
+                "_rerank_text": candidates[index][1],
             })
         results.sort(key=lambda item: float(item["score"]), reverse=True)
+        results = collapse_semantic_duplicates(results, stored_vectors)
+        if rerank and self.reranker is not None and results:
+            rerank_count = max(5, min(10, max(limit, 5)))
+            rerank_candidates = results[:rerank_count]
+            try:
+                scores = self.reranker.score(query, [str(item["_rerank_text"]) for item in rerank_candidates])
+                if len(scores) != len(rerank_candidates) or any(not math.isfinite(float(score)) for score in scores):
+                    raise ValueError("重排器返回了无效分数")
+                for item, score in zip(rerank_candidates, scores):
+                    item["rerank_score"] = float(score)
+                rerank_candidates.sort(
+                    key=lambda item: (float(item["rerank_score"]), float(item["score"])), reverse=True,
+                )
+                results = rerank_candidates + results[rerank_count:]
+            except Exception as error:
+                if isinstance(error, Fault) and error.category == "budget":
+                    raise
+                trace("knowledge.rerank", "degraded", fault=error, decision="keep_initial_ranking")
+                if current() and "Cross-Encoder 不可用，本次保留初始检索排序" not in current().warnings:
+                    current().warnings.append("Cross-Encoder 不可用，本次保留初始检索排序")
+        for item in results:
+            item.pop("_rerank_text", None)
         return results[:limit]
 
     def count(self) -> int:

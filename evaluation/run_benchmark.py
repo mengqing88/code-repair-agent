@@ -7,6 +7,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -16,7 +17,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from knowledge_base import KnowledgeBase
+from knowledge_base import KnowledgeBase, _case_search_text, build_case_document
+from repair_state import create_initial_state
 
 ROOT = Path(__file__).resolve().parent
 TARGETS = {"top5_hit_rate": 0.82, "baseline_successes": 16,
@@ -167,18 +169,73 @@ def disabled_embedding(_text):
     raise RuntimeError("Offline benchmark deliberately disables query embeddings")
 
 
+def ranking_metrics(ranked_ids: list[str], relevant_ids: list[str], ks=(1, 3, 5, 10)) -> dict[str, float]:
+    """计算单个查询的 Recall@K、Precision@K 和 MRR@K。"""
+    relevant = set(relevant_ids)
+    metrics = {}
+    first_rank = next((index for index, case_id in enumerate(ranked_ids, 1) if case_id in relevant), None)
+    metrics["mrr"] = 1 / first_rank if first_rank is not None else 0.0
+    for k in ks:
+        hits = sum(case_id in relevant for case_id in ranked_ids[:k])
+        metrics[f"recall@{k}"] = hits / len(relevant) if relevant else 0.0
+        metrics[f"precision@{k}"] = hits / k
+        metrics[f"mrr@{k}"] = 1 / first_rank if first_rank is not None and first_rank <= k else 0.0
+    return metrics
+
+
+def aggregate_ranking_metrics(per_query: list[dict[str, float]]) -> dict[str, float]:
+    """对各查询的指标取宏平均。"""
+    if not per_query:
+        return {}
+    keys = per_query[0]
+    return {key: sum(item[key] for item in per_query) / len(per_query) for key in keys}
+
+
+def evaluate_outcome_and_scope_filters(directory: Path) -> dict:
+    """检查成功/失败经验分开召回，以及指定范围严格排除缺元数据案例。"""
+    knowledge = KnowledgeBase(directory / "filter-contract.sqlite3", embedder=lambda _text: [1.0, 0.0])
+    scope = {"repository_id": "repo-a", "file_paths": ["src/worker.py"],
+             "dependency_versions": {"library": "2.1"}}
+    accepted = create_initial_state(
+        "accepted-match", {"type": "python_file", "path": "src/worker.py"}, "timeout in worker",
+        remaining_seconds=60, remaining_tokens=1000, remaining_attempts=1,
+    )
+    accepted.update(
+        review_decision="accepted", diagnosis="The worker retries without a bounded delay.",
+        patch_diff="accepted patch", patch_hash="accepted-hash", source={"retrieval_scope": scope},
+        applicable_conditions=["worker timeout"],
+        validation={"passed": True, "patch_hash": "accepted-hash", "summary": "tests passed"},
+    )
+    knowledge.save_case(accepted)
+    old = {**accepted, "task_id": "accepted-old", "source": {}, "review_decision": "accepted"}
+    knowledge.save_case(old)
+    rejected = {**accepted, "task_id": "rejected-match", "review_decision": "rejected",
+                "review_reason": "The patch retries forever under this dependency version."}
+    knowledge.record_rejection(rejected)
+    filters = {"repository_id": "repo-a", "file_paths": ["src/worker.py"],
+               "dependency_versions": {"library": "2.1"}}
+    accepted_ids = [item["case_id"] for item in knowledge.search("worker timeout", outcome="accepted", filters=filters)]
+    rejected_ids = [item["case_id"] for item in knowledge.search("worker timeout", outcome="rejected", filters=filters)]
+    passed = accepted_ids == ["accepted-match"] and rejected_ids == ["rejected-match"]
+    return {"passed": passed, "accepted_ids": accepted_ids, "rejected_ids": rejected_ids,
+            "excluded_missing_metadata": "accepted-old" not in accepted_ids}
+
+
 def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
                        directory: Path, mode: str, min_similarity: float) -> dict:
     if mode == "configured-embeddings":
-        from llm_client import embed_text
-        embedder = embed_text
+        from llm_client import embed_texts
     else:
-        embedder = lambda _text: [0.0]
-    knowledge = KnowledgeBase(directory / "retrieval.sqlite3", embedder=embedder)
+        embed_texts = None
+    from retrieval_reranker import CrossEncoderReranker
+    reranker = CrossEncoderReranker.from_environment() if mode == "configured-embeddings" else None
+    strategies = ["keyword"] if mode == "keyword" else ["keyword", "vector", "hybrid"]
+    if reranker is not None:
+        strategies.append("hybrid+cross_encoder")
+    case_states = []
     for document in histories:
-        # Production-schema compatibility in a temporary DB, not human review.
         patch = document["patch_diff"]
-        knowledge.save_case({
+        case_states.append({
             "task_id": document["experience_id"], "review_decision": "accepted",
             "original_report": document["original_report"], "diagnosis": document["diagnosis"],
             "patch_diff": patch, "patch_hash": digest(patch),
@@ -189,21 +246,66 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
             "validation": {"passed": True, "patch_hash": digest(patch),
                            "summary": "Observed fixture tests passed in this evaluation run"},
         })
-    if mode == "keyword":
-        knowledge = KnowledgeBase(directory / "retrieval.sqlite3", embedder=disabled_embedding)
-    details = []
-    for record in records:
-        matches = knowledge.search(record["query"], limit=5, min_similarity=min_similarity)
-        identifiers = [match["case_id"] for match in matches]
-        details.append({"case_id": record["case_id"], "query": record["query"],
-                        "top5": identifiers, "relevant": labels[record["case_id"]],
-                        "hit": bool(set(identifiers).intersection(labels[record["case_id"]])),
-                        "returned_modes": [match["retrieval_mode"] for match in matches]})
-    hits = sum(item["hit"] for item in details)
-    return {"measured": True, "method": mode, "min_similarity": min_similarity,
-            "corpus_size": len(histories), "queries": len(details), "hits": hits,
-            "top5_hit_rate": hits / len(details), "details": details,
-            "limitation": "Synthetic authored labels; keyword mode does not measure embedding quality"}
+    case_texts = [_case_search_text(json.loads(build_case_document(state))) for state in case_states]
+    embedding_inputs = case_texts + [record["query"] for record in records]
+    if embed_texts is None:
+        embedding_vectors = [[0.0] for _ in embedding_inputs]
+    else:
+        embedding_vectors = embed_texts(embedding_inputs, batch_size=8)
+    embedding_cache = dict(zip(embedding_inputs, embedding_vectors))
+
+    def cached_embed(text):
+        """从预先分批生成的向量中读取结果，不在查询循环中重复调用服务。"""
+        if text not in embedding_cache:
+            raise RuntimeError("评测输入没有预生成 embedding")
+        return embedding_cache[text]
+
+    knowledge = KnowledgeBase(
+        directory / "retrieval.sqlite3",
+        embedder=cached_embed,
+        reranker=reranker,
+    )
+    for state in case_states:
+        knowledge.save_case(state)
+    evaluations = {}
+    for strategy in strategies:
+        strategy_name = "hybrid" if strategy == "hybrid+cross_encoder" else strategy
+        per_query = []
+        details = []
+        for record in records:
+            matches = knowledge.search(
+                record["query"], limit=10, min_similarity=min_similarity,
+                strategy=strategy_name, rerank=(strategy == "hybrid+cross_encoder"),
+            )
+            identifiers = [match["case_id"] for match in matches]
+            relevant = labels[record["case_id"]]
+            metrics = ranking_metrics(identifiers, relevant)
+            per_query.append(metrics)
+            details.append({"case_id": record["case_id"], "query": record["query"],
+                            "ranked": identifiers, "relevant": relevant, "metrics": metrics,
+                            "returned_modes": [match["retrieval_mode"] for match in matches]})
+        aggregate = aggregate_ranking_metrics(per_query)
+        evaluations[strategy] = {"metrics": aggregate, "details": details}
+    primary = "hybrid" if mode == "configured-embeddings" else "keyword"
+    primary_details = evaluations[primary]["details"]
+    hits = sum(bool(set(item["ranked"][:5]).intersection(item["relevant"])) for item in primary_details)
+    return {
+        "measured": True, "method": mode, "min_similarity": min_similarity,
+        "corpus_size": len(histories), "queries": len(records), "hits": hits,
+        "top5_hit_rate": hits / len(records), "metrics_by_strategy": evaluations,
+        "details": [{"case_id": item["case_id"], "query": item["query"],
+                     "top5": item["ranked"][:5], "relevant": item["relevant"],
+                     "hit": bool(set(item["ranked"][:5]).intersection(item["relevant"])),
+                     "returned_modes": item["returned_modes"]} for item in primary_details],
+        "not_measured": ({
+            "hybrid+cross_encoder": "install the rerank extra and configure CROSS_ENCODER_MODEL"
+        } if mode == "configured-embeddings" and reranker is None else {} if mode == "configured-embeddings" else {
+            "vector": "configured embeddings service is required",
+            "hybrid": "configured embeddings service is required",
+            "hybrid+cross_encoder": "configured embeddings and CROSS_ENCODER_MODEL are required",
+        }),
+        "limitation": "Synthetic authored labels; configured service modes require real credentials and model runs",
+    }
 
 
 def evaluate_patches(records: list[dict], patch_directory: Path, directory: Path) -> dict:
@@ -236,14 +338,104 @@ def evaluate_patches(records: list[dict], patch_directory: Path, directory: Path
             "regression_pass_rate": passed / expected, "cases": outcomes}
 
 
-def evaluate_agent(records: list[dict], baseline: Path | None, rag: Path | None, directory: Path) -> dict:
+def load_experiment_manifest(path: Path, benchmark_hash: str) -> dict:
+    """读取并校验配对 Agent 实验配置、预算以及产物目录。"""
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError("实验清单根节点必须是 JSON 对象")
+    if not isinstance(manifest.get("experiment_id"), str) or not manifest["experiment_id"].strip():
+        raise ValueError("实验清单必须提供 experiment_id")
+    if not isinstance(manifest.get("model"), str) or not manifest["model"].strip():
+        raise ValueError("实验清单必须固定 model")
+    if not isinstance(manifest.get("prompt_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["prompt_sha256"]):
+        raise ValueError("prompt_sha256 必须是 64 位小写 SHA-256")
+    if manifest.get("dataset_sha256") != benchmark_hash:
+        raise ValueError("实验数据集哈希与当前 benchmark.json 不一致")
+    budget = manifest.get("budget")
+    required_budget = {"runtime_seconds", "tokens", "cost_yuan", "repair_attempts"}
+    if not isinstance(budget, dict) or set(budget) != required_budget:
+        raise ValueError("实验清单必须完整记录运行时间、Token、费用和修复次数预算")
+    for field in ("runtime_seconds", "tokens", "repair_attempts"):
+        if isinstance(budget[field], bool) or not isinstance(budget[field], int) or budget[field] <= 0:
+            raise ValueError(f"budget.{field} 必须是正整数")
+    if isinstance(budget["cost_yuan"], bool) or not isinstance(budget["cost_yuan"], (int, float)) or budget["cost_yuan"] <= 0:
+        raise ValueError("budget.cost_yuan 必须是正数")
+    runs = manifest.get("runs")
+    if not isinstance(runs, dict) or set(runs) != {"baseline", "rag"}:
+        raise ValueError("实验清单必须分别提供 baseline 和 rag 运行")
+    resolved_runs = {}
+    for name in ("baseline", "rag"):
+        run = runs[name]
+        if not isinstance(run, dict) or run.get("model") != manifest["model"]:
+            raise ValueError(f"{name} 必须使用实验清单中固定的模型")
+        if run.get("prompt_sha256") != manifest["prompt_sha256"]:
+            raise ValueError(f"{name} 必须使用相同提示词哈希")
+        if run.get("budget") != budget:
+            raise ValueError(f"{name} 必须使用相同预算")
+        resolved_runs[name] = {}
+        for field in ("patch_dir", "trace_dir"):
+            raw = run.get(field)
+            if not isinstance(raw, str) or not raw.strip():
+                raise ValueError(f"runs.{name}.{field} 必须是相对或绝对目录")
+            directory = Path(raw)
+            resolved_runs[name][field] = (path.parent / directory).resolve() if not directory.is_absolute() else directory
+    return {**manifest, "runs": resolved_runs}
+
+
+def validate_experiment_artifacts(records: list[dict], run: dict) -> dict:
+    """确认每个实际补丁有对应 Trace，并为产物生成可复核摘要。"""
+    issues = []
+    artifacts = []
+    for record in records:
+        case_id = record["case_id"]
+        patch_path = run["patch_dir"] / f"{case_id}.patch"
+        trace_path = run["trace_dir"] / f"{case_id}.jsonl"
+        if not patch_path.is_file():
+            issues.append(f"{case_id}: missing patch")
+            continue
+        if not trace_path.is_file():
+            issues.append(f"{case_id}: missing trace")
+            continue
+        try:
+            events = [json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        except (OSError, json.JSONDecodeError) as error:
+            issues.append(f"{case_id}: invalid trace ({type(error).__name__})")
+            continue
+        if not events:
+            issues.append(f"{case_id}: empty trace")
+            continue
+        artifacts.append({"case_id": case_id,
+                          "patch_sha256": hashlib.sha256(patch_path.read_bytes()).hexdigest(),
+                          "trace_path": str(trace_path), "trace_events": len(events)})
+    return {"complete": not issues, "issues": issues, "artifacts": artifacts}
+
+
+def evaluate_agent(
+    records: list[dict], baseline: Path | None, rag: Path | None, directory: Path,
+    experiment: dict | None = None,
+) -> dict:
+    """计分配对补丁；只有固定配置和完整 Trace 证据才标记真实 Agent 实验。"""
     if baseline is None or rag is None:
         return {"measured": False, "reason": "No paired Agent patch submissions; reference patches do not measure repair ability"}
     before = evaluate_patches(records, baseline, directory / "baseline")
     after = evaluate_patches(records, rag, directory / "rag")
-    return {"measured": True, "baseline": before, "rag": after,
-            "uplift": after["repair_successes"] - before["repair_successes"],
-            "limitation": "Patch correctness measured; Agent provenance, model and budgets must be recorded separately"}
+    comparison = {"baseline": before, "rag": after,
+                  "uplift": after["repair_successes"] - before["repair_successes"]}
+    if experiment is None:
+        return {"measured": False, "patch_comparison": comparison,
+                "reason": "Patch behavior was scored, but fixed model/prompt/budget and per-case Trace artifacts were not supplied"}
+    baseline_artifacts = validate_experiment_artifacts(records, experiment["runs"]["baseline"])
+    rag_artifacts = validate_experiment_artifacts(records, experiment["runs"]["rag"])
+    measured = baseline_artifacts["complete"] and rag_artifacts["complete"]
+    return {
+        "measured": measured,
+        "experiment": {key: experiment[key] for key in ("experiment_id", "model", "prompt_sha256", "dataset_sha256", "budget")},
+        "patch_comparison": comparison,
+        "baseline_artifacts": baseline_artifacts,
+        "rag_artifacts": rag_artifacts,
+        "reason": None if measured else "At least one run lacks a valid patch or Trace for every benchmark case",
+        "limitation": "Synthetic benchmark and authored relevance labels do not establish production performance",
+    }
 
 
 def main() -> int:
@@ -253,16 +445,30 @@ def main() -> int:
     parser.add_argument("--min-similarity", type=float, default=0.35)
     parser.add_argument("--baseline-patches", type=Path)
     parser.add_argument("--rag-patches", type=Path)
+    parser.add_argument("--experiment-manifest", type=Path,
+                        help="配对 Agent 实验清单；固定模型、提示词哈希、数据集哈希、预算和两组产物目录")
     parser.add_argument("--output", type=Path, default=ROOT / "results.json")
     args = parser.parse_args()
     if (args.baseline_patches is None) != (args.rag_patches is None):
         parser.error("必须同时提供 --baseline-patches 和 --rag-patches")
+    if args.experiment_manifest is not None and (args.baseline_patches is not None or args.rag_patches is not None):
+        parser.error("使用 --experiment-manifest 时，请在清单中填写两组补丁目录，不要重复传入补丁参数")
     if not 0 <= args.min_similarity <= 1:
         parser.error("--min-similarity 必须在 0 到 1 之间")
-    for directory in (args.baseline_patches, args.rag_patches):
+    payload = json.loads((ROOT / "benchmark.json").read_text(encoding="utf-8"))
+    benchmark_hash = digest((ROOT / "benchmark.json").read_text(encoding="utf-8"))
+    try:
+        experiment = load_experiment_manifest(args.experiment_manifest, benchmark_hash) if args.experiment_manifest else None
+    except (OSError, json.JSONDecodeError, ValueError) as error:
+        parser.error(f"实验清单无效：{error}")
+    baseline_patches = args.baseline_patches
+    rag_patches = args.rag_patches
+    if experiment is not None:
+        baseline_patches = experiment["runs"]["baseline"]["patch_dir"]
+        rag_patches = experiment["runs"]["rag"]["patch_dir"]
+    for directory in (baseline_patches, rag_patches):
         if directory is not None and not directory.is_dir():
             parser.error(f"补丁目录不存在：{directory}")
-    payload = json.loads((ROOT / "benchmark.json").read_text(encoding="utf-8"))
     records = payload["cases"]
     labels = json.loads((ROOT / "relevance.json").read_text(encoding="utf-8"))["labels"]
     histories = [json.loads(path.read_text(encoding="utf-8")) for path in sorted((ROOT / "history_cases").glob("*.json"))]
@@ -280,14 +486,15 @@ def main() -> int:
             print(f"history {document['experience_id']}: {'valid' if result['valid'] else 'INVALID'}", flush=True)
         valid = len(cases) == len(experiences) == 30 and all(item["valid"] for item in cases + experiences)
         retrieval = evaluate_retrieval(records, histories, labels, directory, args.retrieval_mode, args.min_similarity) if valid else {"measured": False, "reason": "Invalid dataset"}
-        agent = evaluate_agent(records, args.baseline_patches, args.rag_patches, directory) if valid else {"measured": False, "reason": "Invalid dataset"}
+        filter_evaluation = evaluate_outcome_and_scope_filters(directory) if valid else {"measured": False, "reason": "Invalid dataset"}
+        agent = evaluate_agent(records, baseline_patches, rag_patches, directory, experiment) if valid else {"measured": False, "reason": "Invalid dataset"}
     report = {"benchmark": payload["version"], "targets": TARGETS,
               "dataset_manifest_sha256": digest((ROOT / "benchmark.json").read_text(encoding="utf-8")),
               "status": "valid" if valid else "invalid",
               "self_check": {"valid_tasks": sum(item["valid"] for item in cases),
                              "valid_experiences": sum(item["valid"] for item in experiences),
                              "tasks": cases, "experiences": experiences},
-              "retrieval": retrieval, "agent_outcomes": agent,
+              "retrieval": retrieval, "retrieval_filtering": filter_evaluation, "agent_outcomes": agent,
               "target_assessment": {"agent_targets_measured": agent["measured"],
                                     "min_top5_hits_out_of_30": math.ceil(30 * TARGETS["top5_hit_rate"]),
                                     "min_regression_passes_out_of_90": math.ceil(90 * TARGETS["regression_pass_rate"]),

@@ -364,6 +364,73 @@ def embed_text(text: str, env_path: Path | None = None) -> list[float]:
     return vector
 
 
+def embed_texts(texts: Sequence[str], env_path: Path | None = None, *, batch_size: int = 8) -> list[list[float]]:
+    """分批调用 embeddings 接口，返回与输入顺序一致的向量列表。"""
+    if isinstance(texts, (str, bytes)) or not isinstance(texts, Sequence):
+        raise ValueError("texts 必须是字符串序列")
+    if any(not isinstance(text, str) or not text.strip() for text in texts):
+        raise ValueError("texts 中每一项都必须是非空字符串")
+    if isinstance(batch_size, bool) or not isinstance(batch_size, int) or not 1 <= batch_size <= 128:
+        raise ValueError("batch_size 必须是 1 到 128 的整数")
+    if not texts:
+        return []
+
+    config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
+    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
+    api_key = _read_setting(settings, "EMBEDDING_API_KEY", "API_KEY")
+    base_url = _read_setting(settings, "EMBEDDING_BASE_URL", "BASE_URL").rstrip("/")
+    model = _read_setting(settings, "EMBEDDING_MODEL")
+    if not api_key:
+        raise ValueError("请在 .env 或环境变量中填写 EMBEDDING_API_KEY")
+    if not base_url:
+        raise ValueError("请在 .env 或环境变量中填写 EMBEDDING_BASE_URL")
+    if not model:
+        raise ValueError("请在 .env 或环境变量中填写 EMBEDDING_MODEL")
+    address = urlsplit(base_url)
+    if address.scheme not in ("http", "https") or not address.netloc:
+        raise ValueError("EMBEDDING_BASE_URL 必须是包含 http:// 或 https:// 的完整 API 地址")
+
+    rate = _read_optional_rate(settings, "EMBEDDING_PRICE_PER_1K_TOKENS")
+    vectors = []
+    for start in range(0, len(texts), batch_size):
+        batch = list(texts[start:start + batch_size])
+
+        def send(timeout):
+            with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
+                return client.embeddings.create(model=model, input=batch)
+
+        response = call_with_retry(
+            "model.embeddings.batch", send,
+            classify=lambda error: _service_fault(error, "向量"), replay_safe=True,
+            parameters={"model": model, "count": len(batch)}, endpoint=base_url,
+        )
+        tokens = _usage_value(getattr(response, "usage", None), "total_tokens")
+        charge_usage(tokens, tokens / 1000 * rate if rate is not None else None)
+        data = getattr(response, "data", None)
+        if not isinstance(data, list) or len(data) != len(batch):
+            raise Fault("embedding_protocol", "向量服务返回的 data 数量与输入不一致", category="protocol")
+        indexed = []
+        for position, item in enumerate(data):
+            index = getattr(item, "index", position)
+            embedding = getattr(item, "embedding", None)
+            if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(batch):
+                raise Fault("embedding_protocol", "向量服务返回了无效输入索引", category="protocol")
+            if not isinstance(embedding, list) or not embedding:
+                raise Fault("embedding_protocol", "向量服务没有返回有效 embedding", category="protocol")
+            try:
+                vector = [float(value) for value in embedding]
+            except (TypeError, ValueError):
+                raise Fault("embedding_protocol", "向量服务返回了非数字 embedding", category="protocol") from None
+            if any(not math.isfinite(value) for value in vector):
+                raise Fault("embedding_protocol", "向量服务返回了无效数字", category="protocol")
+            indexed.append((index, vector))
+        indexed.sort(key=lambda item: item[0])
+        if [index for index, _ in indexed] != list(range(len(batch))):
+            raise Fault("embedding_protocol", "向量服务返回了重复或缺失的输入索引", category="protocol")
+        vectors.extend(vector for _, vector in indexed)
+    return vectors
+
+
 def main() -> int:
     """发送一句简短问候来测试连通性；成功返回退出码 0，失败返回 1。"""
     # 内置 hasattr(对象, 属性名) 返回 True 或 False；这里检查输出流是否支持 reconfigure()。

@@ -1,6 +1,7 @@
 """Check that evaluation cannot confuse broken validation with a real repair."""
 from pathlib import Path
 import json
+import hashlib
 import sys
 
 import pytest
@@ -108,6 +109,60 @@ def test_no_agent_submissions_does_not_make_up_successes(tmp_path):
     report = evaluator.evaluate_agent([first_record()], None, None, tmp_path)
     assert report["measured"] is False
     assert "baseline" not in report and "rag" not in report
+
+
+def test_ranking_metrics_use_relevant_count_and_fixed_k_denominator():
+    metrics = evaluator.ranking_metrics(["irrelevant", "target", "another"], ["target", "also-relevant"])
+    assert metrics["recall@3"] == 0.5
+    assert metrics["precision@3"] == 1 / 3
+    assert metrics["mrr"] == 0.5
+    assert metrics["mrr@1"] == 0.0
+
+
+def test_outcome_and_range_filter_evaluation_checks_success_failure_and_old_metadata(tmp_path):
+    report = evaluator.evaluate_outcome_and_scope_filters(tmp_path)
+    assert report == {
+        "passed": True,
+        "accepted_ids": ["accepted-match"],
+        "rejected_ids": ["rejected-match"],
+        "excluded_missing_metadata": True,
+    }
+
+
+def test_experiment_manifest_requires_identical_model_prompt_and_budget(tmp_path):
+    benchmark_hash = evaluator.digest((evaluator.ROOT / "benchmark.json").read_text(encoding="utf-8"))
+    budget = {"runtime_seconds": 120, "tokens": 20000, "cost_yuan": 0.1, "repair_attempts": 10}
+    common = {"model": "fixed-model", "prompt_sha256": "a" * 64, "budget": budget,
+              "patch_dir": "patches", "trace_dir": "traces"}
+    manifest = {
+        "experiment_id": "paired-001", "model": "fixed-model", "prompt_sha256": "a" * 64,
+        "dataset_sha256": benchmark_hash, "budget": budget,
+        "runs": {"baseline": dict(common), "rag": dict(common)},
+    }
+    path = tmp_path / "experiment.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    loaded = evaluator.load_experiment_manifest(path, benchmark_hash)
+    assert loaded["runs"]["baseline"]["patch_dir"] == (tmp_path / "patches").resolve()
+
+    manifest["runs"]["rag"]["budget"] = {**budget, "tokens": 10000}
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="相同预算"):
+        evaluator.load_experiment_manifest(path, benchmark_hash)
+
+
+def test_experiment_artifact_validation_requires_patch_and_nonempty_valid_trace(tmp_path):
+    records = [{"case_id": "case-01"}]
+    patch_dir, trace_dir = tmp_path / "patches", tmp_path / "traces"
+    patch_dir.mkdir()
+    trace_dir.mkdir()
+    (patch_dir / "case-01.patch").write_text("patch", encoding="utf-8")
+    (trace_dir / "case-01.jsonl").write_text('{"event":"done"}\n', encoding="utf-8")
+    run = {"patch_dir": patch_dir, "trace_dir": trace_dir}
+    complete = evaluator.validate_experiment_artifacts(records, run)
+    assert complete["complete"] is True
+    assert complete["artifacts"][0]["patch_sha256"] == hashlib.sha256(b"patch").hexdigest()
+    (trace_dir / "case-01.jsonl").write_text("not json\n", encoding="utf-8")
+    assert evaluator.validate_experiment_artifacts(records, run)["complete"] is False
 
 
 def test_generator_refuses_cleanup_outside_evaluation(tmp_path):

@@ -15,7 +15,7 @@ import httpx
 from openai import APIStatusError, APITimeoutError
 
 # ask_model：被测试的模型调用函数；ask_model_with_usage：带用量统计的调用函数；embed_text：向量调用函数。
-from llm_client import ask_model, ask_model_with_tools, ask_model_with_usage, embed_text
+from llm_client import ask_model, ask_model_with_tools, ask_model_with_usage, embed_text, embed_texts
 from resilience import execution_scope, Fault
 
 
@@ -177,6 +177,30 @@ class ModelClientTests(unittest.TestCase):
             client.embeddings.create.assert_called_once_with(
                 model="test-embedding-model", input="待向量化案例"
             )
+
+    def test_embed_texts_batches_and_restores_service_response_order(self) -> None:
+        """批量 embeddings 使用分组输入，并按服务返回的 index 恢复输入顺序。"""
+        self.env_path.write_text(
+            "EMBEDDING_API_KEY=embedding-test-only-key\n"
+            "EMBEDDING_BASE_URL=https://embedding.example.invalid/v1\n"
+            "EMBEDDING_MODEL=test-embedding-model\n",
+            encoding="utf-8",
+        )
+        with patch("llm_client.OpenAI") as factory:
+            client = factory.return_value.__enter__.return_value
+            client.embeddings.create.side_effect = [
+                SimpleNamespace(data=[
+                    SimpleNamespace(index=1, embedding=[0, 2]),
+                    SimpleNamespace(index=0, embedding=[1, 2]),
+                ]),
+                SimpleNamespace(data=[SimpleNamespace(index=0, embedding=[3, 4])]),
+            ]
+
+            vectors = embed_texts(["first", "second", "third"], self.env_path, batch_size=2)
+
+        self.assertEqual(vectors, [[1.0, 2.0], [0.0, 2.0], [3.0, 4.0]])
+        self.assertEqual(client.embeddings.create.call_args_list[0].kwargs["input"], ["first", "second"])
+        self.assertEqual(client.embeddings.create.call_args_list[1].kwargs["input"], ["third"])
 
     def test_environment_variables_override_local_config(self) -> None:
         """检查进程环境变量可覆盖本地配置，避免部署时被 .env 的旧值覆盖。"""

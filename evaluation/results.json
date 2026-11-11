@@ -1885,12 +1885,12 @@
             {
               "test": "test_boundary_1",
               "status": "failed",
-              "message": "AssertionError: assert False is True\n +  where False = can_update('editor')\n +    where 'editor' = <built-in method join of str object at 0x00007FF8E524C6E0>(['ed', 'itor'])\n +      where <built-in method join of str object at 0x00007FF8E524C6E0> = ''.join"
+              "message": "AssertionError: assert False is True\n +  where False = can_update('editor')\n +    where 'editor' = <built-in method join of str object at 0x00007FF8F6C9C6E0>(['ed', 'itor'])\n +      where <built-in method join of str object at 0x00007FF8F6C9C6E0> = ''.join"
             },
             {
               "test": "test_boundary_2",
               "status": "failed",
-              "message": "AssertionError: assert False is True\n +  where False = can_update('editor')\n +    where 'editor' = <built-in method lower of str object at 0x000001F93C030CF0>()\n +      where <built-in method lower of str object at 0x000001F93C030CF0> = 'EDITOR'.lower\n +        where 'EDITOR' = <built-in method uppe"
+              "message": "AssertionError: assert False is True\n +  where False = can_update('editor')\n +    where 'editor' = <built-in method lower of str object at 0x000001DC67F49270>()\n +      where <built-in method lower of str object at 0x000001DC67F49270> = 'EDITOR'.lower\n +        where 'EDITOR' = <built-in method uppe"
             }
           ]
         },
@@ -2016,17 +2016,17 @@
             {
               "test": "test_reported_defect",
               "status": "failed",
-              "message": "AssertionError: assert 0 == 1\n +  where 0 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-494/test_reported_defect0/one.txt'))"
+              "message": "AssertionError: assert 0 == 1\n +  where 0 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-936/test_reported_defect0/one.txt'))"
             },
             {
               "test": "test_boundary_1",
               "status": "failed",
-              "message": "AssertionError: assert 1 == 2\n +  where 1 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-494/test_boundary_10/d'))"
+              "message": "AssertionError: assert 1 == 2\n +  where 1 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-936/test_boundary_10/d'))"
             },
             {
               "test": "test_boundary_2",
               "status": "failed",
-              "message": "AssertionError: assert 2 == 3\n +  where 2 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-494/test_boundary_20/e'))"
+              "message": "AssertionError: assert 2 == 3\n +  where 2 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-936/test_boundary_20/e'))"
             }
           ]
         },
@@ -3438,12 +3438,3907 @@
   },
   "retrieval": {
     "measured": true,
-    "method": "keyword",
+    "method": "configured-embeddings",
     "min_similarity": 0.35,
     "corpus_size": 30,
     "queries": 30,
-    "hits": 23,
-    "top5_hit_rate": 0.7666666666666667,
+    "hits": 26,
+    "top5_hit_rate": 0.8666666666666667,
+    "metrics_by_strategy": {
+      "keyword": {
+        "metrics": {
+          "mrr": 0.5583333333333333,
+          "recall@1": 0.4666666666666667,
+          "precision@1": 0.4666666666666667,
+          "mrr@1": 0.4666666666666667,
+          "recall@3": 0.6333333333333333,
+          "precision@3": 0.21111111111111105,
+          "mrr@3": 0.55,
+          "recall@5": 0.6666666666666666,
+          "precision@5": 0.13333333333333336,
+          "mrr@5": 0.5583333333333333,
+          "recall@10": 0.6666666666666666,
+          "precision@10": 0.06666666666666668,
+          "mrr@10": 0.5583333333333333
+        },
+        "details": [
+          {
+            "case_id": "case-01",
+            "query": "add 返回结果错误，两个整数相加",
+            "ranked": [
+              "experience-01",
+              "experience-26",
+              "experience-08"
+            ],
+            "relevant": [
+              "experience-01"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-02",
+            "query": "multiply 计算乘积错误",
+            "ranked": [
+              "experience-01"
+            ],
+            "relevant": [
+              "experience-02"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-03",
+            "query": "divide 空除数触发 ZeroDivisionError",
+            "ranked": [
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-04",
+            "query": "empty list first item IndexError",
+            "ranked": [
+              "experience-25",
+              "experience-04",
+              "experience-11",
+              "experience-23",
+              "experience-13",
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-04"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-05",
+            "query": "last item returns the wrong list element",
+            "ranked": [
+              "experience-27",
+              "experience-05",
+              "experience-17",
+              "experience-23",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-05"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-06",
+            "query": "clamp upper bound lets values exceed the maximum",
+            "ranked": [
+              "experience-11",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-07",
+            "query": "inclusive range misses the end value",
+            "ranked": [
+              "experience-07",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-08",
+            "query": "lookup missing dictionary key should use a default",
+            "ranked": [
+              "experience-19",
+              "experience-27",
+              "experience-02",
+              "experience-11",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-08"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-09",
+            "query": "parse_bool rejects whitespace around true",
+            "ranked": [
+              "experience-09",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-09"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-10",
+            "query": "normalize name keeps leading and trailing spaces",
+            "ranked": [
+              "experience-09",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-10"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-11",
+            "query": "dedupe should preserve the input order",
+            "ranked": [
+              "experience-23",
+              "experience-03",
+              "experience-29",
+              "experience-11",
+              "experience-17",
+              "experience-05",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-11"
+            ],
+            "metrics": {
+              "mrr": 0.25,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.25,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.25
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-12",
+            "query": "chunk list skips items when size is greater than one",
+            "ranked": [
+              "experience-19",
+              "experience-23",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-13",
+            "query": "average empty list should return zero",
+            "ranked": [
+              "experience-13",
+              "experience-15",
+              "experience-03",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-14",
+            "query": "median of an even list should average the middle pair",
+            "ranked": [
+              "experience-11",
+              "experience-19",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-02",
+              "experience-17",
+              "experience-05",
+              "experience-23"
+            ],
+            "relevant": [
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-15",
+            "query": "percentage with a zero total should not divide by zero",
+            "ranked": [
+              "experience-15",
+              "experience-03",
+              "experience-13",
+              "experience-25",
+              "experience-09",
+              "experience-23",
+              "experience-19",
+              "experience-29",
+              "experience-07",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-16",
+            "query": "retry loop should include the configured final attempt",
+            "ranked": [
+              "experience-27",
+              "experience-05",
+              "experience-07",
+              "experience-17",
+              "experience-23",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-16"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-17",
+            "query": "timeout at the exact deadline should still be accepted",
+            "ranked": [
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-18",
+            "query": "pagination next offset must advance by the page limit",
+            "ranked": [
+              "experience-13",
+              "experience-18",
+              "experience-27",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-07",
+              "experience-25",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-18"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-19",
+            "query": "json field lookup should provide a missing name default",
+            "ranked": [
+              "experience-19",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-20",
+            "query": "regex validation must reject trailing characters",
+            "ranked": [
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-21",
+            "query": "file extension should be normalized to lowercase",
+            "ranked": [
+              "experience-21",
+              "experience-25",
+              "experience-02",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-22",
+            "query": "URL join should remove duplicate slashes",
+            "ranked": [
+              "experience-22"
+            ],
+            "relevant": [
+              "experience-22"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-23",
+            "query": "records should be sorted by score descending",
+            "ranked": [
+              "experience-23",
+              "experience-13",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-24",
+            "query": "unique ids should add every accepted id to the seen set",
+            "ranked": [
+              "experience-11",
+              "experience-24",
+              "experience-21",
+              "experience-02",
+              "experience-15",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07"
+            ],
+            "relevant": [
+              "experience-24"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-25",
+            "query": "CSV rows should skip the header row",
+            "ranked": [
+              "experience-25",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-26",
+            "query": "money formatting should return two decimal places as text",
+            "ranked": [
+              "experience-09",
+              "experience-13",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-26"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-27",
+            "query": "cache key must distinguish values from different locales",
+            "ranked": [
+              "experience-27",
+              "experience-11",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-28",
+            "query": "editor role should be allowed to update a document",
+            "ranked": [
+              "experience-15",
+              "experience-28",
+              "experience-02",
+              "experience-19",
+              "experience-21",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-28"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-29",
+            "query": "factorial negative input should use the base case",
+            "ranked": [
+              "experience-29",
+              "experience-05",
+              "experience-09",
+              "experience-02",
+              "experience-11",
+              "experience-19",
+              "experience-17",
+              "experience-23",
+              "experience-27",
+              "experience-07"
+            ],
+            "relevant": [
+              "experience-29"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-30",
+            "query": "line count should count a final line without a newline",
+            "ranked": [
+              "experience-19",
+              "experience-07",
+              "experience-05",
+              "experience-29",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          }
+        ]
+      },
+      "vector": {
+        "metrics": {
+          "mrr": 0.875925925925926,
+          "recall@1": 0.8333333333333334,
+          "precision@1": 0.8333333333333334,
+          "mrr@1": 0.8333333333333334,
+          "recall@3": 0.9,
+          "precision@3": 0.29999999999999993,
+          "mrr@3": 0.8555555555555555,
+          "recall@5": 0.9666666666666667,
+          "precision@5": 0.1933333333333334,
+          "mrr@5": 0.8722222222222221,
+          "recall@10": 1.0,
+          "precision@10": 0.10000000000000005,
+          "mrr@10": 0.875925925925926
+        },
+        "details": [
+          {
+            "case_id": "case-01",
+            "query": "add 返回结果错误，两个整数相加",
+            "ranked": [
+              "experience-16",
+              "experience-26",
+              "experience-01",
+              "experience-12",
+              "experience-05",
+              "experience-06",
+              "experience-15",
+              "experience-07",
+              "experience-17",
+              "experience-14"
+            ],
+            "relevant": [
+              "experience-01"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-02",
+            "query": "multiply 计算乘积错误",
+            "ranked": [
+              "experience-02",
+              "experience-01",
+              "experience-16",
+              "experience-26",
+              "experience-13",
+              "experience-15",
+              "experience-05",
+              "experience-06",
+              "experience-12",
+              "experience-24"
+            ],
+            "relevant": [
+              "experience-02"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-03",
+            "query": "divide 空除数触发 ZeroDivisionError",
+            "ranked": [
+              "experience-13",
+              "experience-15",
+              "experience-05",
+              "experience-03",
+              "experience-16",
+              "experience-04",
+              "experience-08",
+              "experience-12",
+              "experience-26",
+              "experience-29"
+            ],
+            "relevant": [
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 0.25,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.25,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.25
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-04",
+            "query": "empty list first item IndexError",
+            "ranked": [
+              "experience-04",
+              "experience-05",
+              "experience-15",
+              "experience-08",
+              "experience-16",
+              "experience-07",
+              "experience-12",
+              "experience-25",
+              "experience-03",
+              "experience-23"
+            ],
+            "relevant": [
+              "experience-04"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-05",
+            "query": "last item returns the wrong list element",
+            "ranked": [
+              "experience-05",
+              "experience-16",
+              "experience-07",
+              "experience-12",
+              "experience-04",
+              "experience-06",
+              "experience-15",
+              "experience-23",
+              "experience-30",
+              "experience-26"
+            ],
+            "relevant": [
+              "experience-05"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-06",
+            "query": "clamp upper bound lets values exceed the maximum",
+            "ranked": [
+              "experience-06",
+              "experience-01",
+              "experience-03",
+              "experience-19",
+              "experience-08"
+            ],
+            "relevant": [
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-07",
+            "query": "inclusive range misses the end value",
+            "ranked": [
+              "experience-07",
+              "experience-16",
+              "experience-12",
+              "experience-17",
+              "experience-05",
+              "experience-06",
+              "experience-26",
+              "experience-15",
+              "experience-04",
+              "experience-30"
+            ],
+            "relevant": [
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-08",
+            "query": "lookup missing dictionary key should use a default",
+            "ranked": [
+              "experience-08",
+              "experience-03",
+              "experience-15",
+              "experience-19",
+              "experience-16",
+              "experience-30",
+              "experience-04",
+              "experience-07",
+              "experience-05",
+              "experience-27"
+            ],
+            "relevant": [
+              "experience-08"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-09",
+            "query": "parse_bool rejects whitespace around true",
+            "ranked": [
+              "experience-09",
+              "experience-10",
+              "experience-20",
+              "experience-30",
+              "experience-26",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-09"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-10",
+            "query": "normalize name keeps leading and trailing spaces",
+            "ranked": [
+              "experience-10",
+              "experience-09",
+              "experience-21",
+              "experience-26"
+            ],
+            "relevant": [
+              "experience-10"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-11",
+            "query": "dedupe should preserve the input order",
+            "ranked": [
+              "experience-11",
+              "experience-24",
+              "experience-23",
+              "experience-07",
+              "experience-04",
+              "experience-10",
+              "experience-30",
+              "experience-16",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-11"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-12",
+            "query": "chunk list skips items when size is greater than one",
+            "ranked": [
+              "experience-12",
+              "experience-16",
+              "experience-07",
+              "experience-05",
+              "experience-04",
+              "experience-30",
+              "experience-14",
+              "experience-11",
+              "experience-23",
+              "experience-24"
+            ],
+            "relevant": [
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-13",
+            "query": "average empty list should return zero",
+            "ranked": [
+              "experience-03",
+              "experience-15",
+              "experience-04",
+              "experience-14",
+              "experience-08",
+              "experience-23",
+              "experience-05",
+              "experience-07",
+              "experience-13",
+              "experience-16"
+            ],
+            "relevant": [
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 0.1111111111111111,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.1111111111111111
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-14",
+            "query": "median of an even list should average the middle pair",
+            "ranked": [
+              "experience-14",
+              "experience-23",
+              "experience-04",
+              "experience-12",
+              "experience-07",
+              "experience-11",
+              "experience-05"
+            ],
+            "relevant": [
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-15",
+            "query": "percentage with a zero total should not divide by zero",
+            "ranked": [
+              "experience-15",
+              "experience-03",
+              "experience-13",
+              "experience-08",
+              "experience-04",
+              "experience-16",
+              "experience-23",
+              "experience-26",
+              "experience-07",
+              "experience-30"
+            ],
+            "relevant": [
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-16",
+            "query": "retry loop should include the configured final attempt",
+            "ranked": [
+              "experience-16",
+              "experience-07",
+              "experience-06",
+              "experience-29",
+              "experience-15",
+              "experience-17",
+              "experience-12",
+              "experience-23",
+              "experience-03",
+              "experience-26"
+            ],
+            "relevant": [
+              "experience-16"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-17",
+            "query": "timeout at the exact deadline should still be accepted",
+            "ranked": [
+              "experience-16",
+              "experience-07",
+              "experience-15",
+              "experience-17",
+              "experience-26",
+              "experience-06",
+              "experience-12",
+              "experience-24",
+              "experience-05",
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 0.25,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.25,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.25
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-18",
+            "query": "pagination next offset must advance by the page limit",
+            "ranked": [
+              "experience-18",
+              "experience-16",
+              "experience-12",
+              "experience-07",
+              "experience-15",
+              "experience-06",
+              "experience-24",
+              "experience-05",
+              "experience-21",
+              "experience-26"
+            ],
+            "relevant": [
+              "experience-18"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-19",
+            "query": "json field lookup should provide a missing name default",
+            "ranked": [
+              "experience-08",
+              "experience-03",
+              "experience-19",
+              "experience-15",
+              "experience-27",
+              "experience-10",
+              "experience-21",
+              "experience-04",
+              "experience-30",
+              "experience-23"
+            ],
+            "relevant": [
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-20",
+            "query": "regex validation must reject trailing characters",
+            "ranked": [
+              "experience-20",
+              "experience-10",
+              "experience-21",
+              "experience-26",
+              "experience-01",
+              "experience-09",
+              "experience-24",
+              "experience-30",
+              "experience-06",
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-21",
+            "query": "file extension should be normalized to lowercase",
+            "ranked": [
+              "experience-21",
+              "experience-10",
+              "experience-09",
+              "experience-26",
+              "experience-30",
+              "experience-16",
+              "experience-15",
+              "experience-23",
+              "experience-05",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-22",
+            "query": "URL join should remove duplicate slashes",
+            "ranked": [
+              "experience-22",
+              "experience-21",
+              "experience-10",
+              "experience-24",
+              "experience-30",
+              "experience-20"
+            ],
+            "relevant": [
+              "experience-22"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-23",
+            "query": "records should be sorted by score descending",
+            "ranked": [
+              "experience-23",
+              "experience-16",
+              "experience-15",
+              "experience-07",
+              "experience-05",
+              "experience-26",
+              "experience-06",
+              "experience-04",
+              "experience-12",
+              "experience-11"
+            ],
+            "relevant": [
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-24",
+            "query": "unique ids should add every accepted id to the seen set",
+            "ranked": [
+              "experience-24",
+              "experience-11",
+              "experience-16",
+              "experience-21",
+              "experience-07",
+              "experience-30",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-24"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-25",
+            "query": "CSV rows should skip the header row",
+            "ranked": [
+              "experience-25",
+              "experience-30",
+              "experience-04",
+              "experience-08",
+              "experience-23",
+              "experience-11",
+              "experience-03",
+              "experience-18"
+            ],
+            "relevant": [
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-26",
+            "query": "money formatting should return two decimal places as text",
+            "ranked": [
+              "experience-26",
+              "experience-15",
+              "experience-16",
+              "experience-10",
+              "experience-09",
+              "experience-21",
+              "experience-07",
+              "experience-06",
+              "experience-12",
+              "experience-30"
+            ],
+            "relevant": [
+              "experience-26"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-27",
+            "query": "cache key must distinguish values from different locales",
+            "ranked": [
+              "experience-27",
+              "experience-16",
+              "experience-21",
+              "experience-10",
+              "experience-26",
+              "experience-24",
+              "experience-07",
+              "experience-15",
+              "experience-05",
+              "experience-23"
+            ],
+            "relevant": [
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-28",
+            "query": "editor role should be allowed to update a document",
+            "ranked": [
+              "experience-28",
+              "experience-15",
+              "experience-24",
+              "experience-21",
+              "experience-16",
+              "experience-10",
+              "experience-26",
+              "experience-08",
+              "experience-07",
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-28"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-29",
+            "query": "factorial negative input should use the base case",
+            "ranked": [
+              "experience-29",
+              "experience-03",
+              "experience-15",
+              "experience-01",
+              "experience-05",
+              "experience-04",
+              "experience-08",
+              "experience-16",
+              "experience-06",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-29"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          },
+          {
+            "case_id": "case-30",
+            "query": "line count should count a final line without a newline",
+            "ranked": [
+              "experience-30",
+              "experience-07",
+              "experience-16",
+              "experience-26",
+              "experience-21",
+              "experience-15",
+              "experience-12",
+              "experience-10",
+              "experience-20",
+              "experience-05"
+            ],
+            "relevant": [
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector",
+              "vector"
+            ]
+          }
+        ]
+      },
+      "hybrid": {
+        "metrics": {
+          "mrr": 0.7548941798941798,
+          "recall@1": 0.6666666666666666,
+          "precision@1": 0.6666666666666666,
+          "mrr@1": 0.6666666666666666,
+          "recall@3": 0.8333333333333334,
+          "precision@3": 0.2777777777777777,
+          "mrr@3": 0.7333333333333333,
+          "recall@5": 0.8666666666666667,
+          "precision@5": 0.1733333333333334,
+          "mrr@5": 0.7416666666666667,
+          "recall@10": 0.9666666666666667,
+          "precision@10": 0.0966666666666667,
+          "mrr@10": 0.7548941798941798
+        },
+        "details": [
+          {
+            "case_id": "case-01",
+            "query": "add 返回结果错误，两个整数相加",
+            "ranked": [
+              "experience-01",
+              "experience-26",
+              "experience-08",
+              "experience-16",
+              "experience-12",
+              "experience-05",
+              "experience-06",
+              "experience-15",
+              "experience-07",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-01"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-02",
+            "query": "multiply 计算乘积错误",
+            "ranked": [
+              "experience-01",
+              "experience-02",
+              "experience-16",
+              "experience-26",
+              "experience-13",
+              "experience-15",
+              "experience-05",
+              "experience-06",
+              "experience-12",
+              "experience-24"
+            ],
+            "relevant": [
+              "experience-02"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-03",
+            "query": "divide 空除数触发 ZeroDivisionError",
+            "ranked": [
+              "experience-03",
+              "experience-13",
+              "experience-15",
+              "experience-05",
+              "experience-16",
+              "experience-04",
+              "experience-08",
+              "experience-12",
+              "experience-26",
+              "experience-29"
+            ],
+            "relevant": [
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-04",
+            "query": "empty list first item IndexError",
+            "ranked": [
+              "experience-04",
+              "experience-25",
+              "experience-03",
+              "experience-23",
+              "experience-11",
+              "experience-13",
+              "experience-05",
+              "experience-15",
+              "experience-08",
+              "experience-16"
+            ],
+            "relevant": [
+              "experience-04"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-05",
+            "query": "last item returns the wrong list element",
+            "ranked": [
+              "experience-05",
+              "experience-07",
+              "experience-23",
+              "experience-27",
+              "experience-17",
+              "experience-21",
+              "experience-25",
+              "experience-03",
+              "experience-13",
+              "experience-16"
+            ],
+            "relevant": [
+              "experience-05"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-06",
+            "query": "clamp upper bound lets values exceed the maximum",
+            "ranked": [
+              "experience-11",
+              "experience-23",
+              "experience-03",
+              "experience-07",
+              "experience-25",
+              "experience-17",
+              "experience-27",
+              "experience-13",
+              "experience-05",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-07",
+            "query": "inclusive range misses the end value",
+            "ranked": [
+              "experience-07",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-21",
+              "experience-27",
+              "experience-03",
+              "experience-25",
+              "experience-16",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-08",
+            "query": "lookup missing dictionary key should use a default",
+            "ranked": [
+              "experience-19",
+              "experience-03",
+              "experience-15",
+              "experience-27",
+              "experience-07",
+              "experience-11",
+              "experience-08",
+              "experience-17",
+              "experience-29",
+              "experience-02"
+            ],
+            "relevant": [
+              "experience-08"
+            ],
+            "metrics": {
+              "mrr": 0.14285714285714285,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.14285714285714285
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-09",
+            "query": "parse_bool rejects whitespace around true",
+            "ranked": [
+              "experience-09",
+              "experience-17",
+              "experience-10",
+              "experience-20",
+              "experience-30",
+              "experience-26",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-09"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-10",
+            "query": "normalize name keeps leading and trailing spaces",
+            "ranked": [
+              "experience-09",
+              "experience-21",
+              "experience-10",
+              "experience-26"
+            ],
+            "relevant": [
+              "experience-10"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-11",
+            "query": "dedupe should preserve the input order",
+            "ranked": [
+              "experience-11",
+              "experience-23",
+              "experience-03",
+              "experience-07",
+              "experience-29",
+              "experience-05",
+              "experience-21",
+              "experience-17",
+              "experience-25",
+              "experience-27"
+            ],
+            "relevant": [
+              "experience-11"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-12",
+            "query": "chunk list skips items when size is greater than one",
+            "ranked": [
+              "experience-23",
+              "experience-13",
+              "experience-19",
+              "experience-12",
+              "experience-16",
+              "experience-07",
+              "experience-05",
+              "experience-04",
+              "experience-30",
+              "experience-14"
+            ],
+            "relevant": [
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 0.25,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.25,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.25
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-13",
+            "query": "average empty list should return zero",
+            "ranked": [
+              "experience-03",
+              "experience-15",
+              "experience-13",
+              "experience-25",
+              "experience-04",
+              "experience-14",
+              "experience-08",
+              "experience-23",
+              "experience-05",
+              "experience-07"
+            ],
+            "relevant": [
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-14",
+            "query": "median of an even list should average the middle pair",
+            "ranked": [
+              "experience-11",
+              "experience-07",
+              "experience-14",
+              "experience-03",
+              "experience-23",
+              "experience-05",
+              "experience-13",
+              "experience-02",
+              "experience-17",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-15",
+            "query": "percentage with a zero total should not divide by zero",
+            "ranked": [
+              "experience-15",
+              "experience-03",
+              "experience-13",
+              "experience-23",
+              "experience-25",
+              "experience-19",
+              "experience-07",
+              "experience-09",
+              "experience-29",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-16",
+            "query": "retry loop should include the configured final attempt",
+            "ranked": [
+              "experience-07",
+              "experience-05",
+              "experience-27",
+              "experience-17",
+              "experience-23",
+              "experience-03",
+              "experience-16",
+              "experience-25",
+              "experience-21",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-16"
+            ],
+            "metrics": {
+              "mrr": 0.14285714285714285,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.14285714285714285
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-17",
+            "query": "timeout at the exact deadline should still be accepted",
+            "ranked": [
+              "experience-17",
+              "experience-07",
+              "experience-05",
+              "experience-23",
+              "experience-03",
+              "experience-27",
+              "experience-21",
+              "experience-16",
+              "experience-25",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-18",
+            "query": "pagination next offset must advance by the page limit",
+            "ranked": [
+              "experience-18",
+              "experience-17",
+              "experience-27",
+              "experience-07",
+              "experience-05",
+              "experience-23",
+              "experience-13",
+              "experience-21",
+              "experience-25",
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-18"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-19",
+            "query": "json field lookup should provide a missing name default",
+            "ranked": [
+              "experience-19",
+              "experience-03",
+              "experience-15",
+              "experience-08",
+              "experience-07",
+              "experience-29",
+              "experience-17",
+              "experience-25",
+              "experience-27",
+              "experience-10"
+            ],
+            "relevant": [
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-20",
+            "query": "regex validation must reject trailing characters",
+            "ranked": [
+              "experience-13",
+              "experience-20",
+              "experience-10",
+              "experience-21",
+              "experience-26",
+              "experience-01",
+              "experience-09",
+              "experience-24",
+              "experience-30",
+              "experience-06"
+            ],
+            "relevant": [
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-21",
+            "query": "file extension should be normalized to lowercase",
+            "ranked": [
+              "experience-21",
+              "experience-15",
+              "experience-25",
+              "experience-02",
+              "experience-10",
+              "experience-09",
+              "experience-26",
+              "experience-30",
+              "experience-16",
+              "experience-23"
+            ],
+            "relevant": [
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-22",
+            "query": "URL join should remove duplicate slashes",
+            "ranked": [
+              "experience-22",
+              "experience-21",
+              "experience-10",
+              "experience-24",
+              "experience-30",
+              "experience-20"
+            ],
+            "relevant": [
+              "experience-22"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-23",
+            "query": "records should be sorted by score descending",
+            "ranked": [
+              "experience-23",
+              "experience-25",
+              "experience-13",
+              "experience-16",
+              "experience-15",
+              "experience-07",
+              "experience-05",
+              "experience-26",
+              "experience-06",
+              "experience-04"
+            ],
+            "relevant": [
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-24",
+            "query": "unique ids should add every accepted id to the seen set",
+            "ranked": [
+              "experience-24",
+              "experience-11",
+              "experience-21",
+              "experience-07",
+              "experience-15",
+              "experience-23",
+              "experience-02",
+              "experience-05",
+              "experience-27",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-24"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-25",
+            "query": "CSV rows should skip the header row",
+            "ranked": [
+              "experience-25",
+              "experience-23",
+              "experience-05",
+              "experience-03",
+              "experience-07",
+              "experience-27",
+              "experience-13",
+              "experience-21",
+              "experience-17",
+              "experience-30"
+            ],
+            "relevant": [
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-26",
+            "query": "money formatting should return two decimal places as text",
+            "ranked": [
+              "experience-26",
+              "experience-15",
+              "experience-09",
+              "experience-03",
+              "experience-25",
+              "experience-13",
+              "experience-16",
+              "experience-10",
+              "experience-21",
+              "experience-07"
+            ],
+            "relevant": [
+              "experience-26"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-27",
+            "query": "cache key must distinguish values from different locales",
+            "ranked": [
+              "experience-27",
+              "experience-11",
+              "experience-13",
+              "experience-16",
+              "experience-21",
+              "experience-10",
+              "experience-26",
+              "experience-24",
+              "experience-07",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-28",
+            "query": "editor role should be allowed to update a document",
+            "ranked": [
+              "experience-28",
+              "experience-15",
+              "experience-21",
+              "experience-07",
+              "experience-02",
+              "experience-03",
+              "experience-17",
+              "experience-19",
+              "experience-29",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-28"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-29",
+            "query": "factorial negative input should use the base case",
+            "ranked": [
+              "experience-29",
+              "experience-05",
+              "experience-03",
+              "experience-17",
+              "experience-02",
+              "experience-07",
+              "experience-09",
+              "experience-23",
+              "experience-19",
+              "experience-11"
+            ],
+            "relevant": [
+              "experience-29"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          },
+          {
+            "case_id": "case-30",
+            "query": "line count should count a final line without a newline",
+            "ranked": [
+              "experience-07",
+              "experience-05",
+              "experience-15",
+              "experience-17",
+              "experience-25",
+              "experience-03",
+              "experience-29",
+              "experience-19",
+              "experience-30",
+              "experience-16"
+            ],
+            "relevant": [
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 0.1111111111111111,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.1111111111111111
+            },
+            "returned_modes": [
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid",
+              "hybrid"
+            ]
+          }
+        ]
+      }
+    },
     "details": [
       {
         "case_id": "case-01",
@@ -3451,112 +7346,160 @@
         "top5": [
           "experience-01",
           "experience-26",
-          "experience-24",
-          "experience-08"
+          "experience-08",
+          "experience-16",
+          "experience-12"
         ],
         "relevant": [
           "experience-01"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-02",
         "query": "multiply 计算乘积错误",
         "top5": [
-          "experience-01"
+          "experience-01",
+          "experience-02",
+          "experience-16",
+          "experience-26",
+          "experience-13"
         ],
         "relevant": [
           "experience-02"
         ],
-        "hit": false,
+        "hit": true,
         "returned_modes": [
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-03",
         "query": "divide 空除数触发 ZeroDivisionError",
         "top5": [
-          "experience-03"
+          "experience-03",
+          "experience-13",
+          "experience-15",
+          "experience-05",
+          "experience-16"
         ],
         "relevant": [
           "experience-03"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-04",
         "query": "empty list first item IndexError",
         "top5": [
-          "experience-25",
-          "experience-07",
           "experience-04",
+          "experience-25",
           "experience-03",
-          "experience-13"
+          "experience-23",
+          "experience-11"
         ],
         "relevant": [
           "experience-04"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-05",
         "query": "last item returns the wrong list element",
         "top5": [
-          "experience-27",
           "experience-05",
           "experience-07",
-          "experience-17",
-          "experience-23"
+          "experience-23",
+          "experience-27",
+          "experience-17"
         ],
         "relevant": [
           "experience-05"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-06",
         "query": "clamp upper bound lets values exceed the maximum",
         "top5": [
-          "experience-06",
           "experience-11",
-          "experience-17",
-          "experience-05",
-          "experience-27"
+          "experience-23",
+          "experience-03",
+          "experience-07",
+          "experience-25"
         ],
         "relevant": [
           "experience-06"
         ],
-        "hit": true,
+        "hit": false,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3564,21 +7507,26 @@
         "query": "inclusive range misses the end value",
         "top5": [
           "experience-07",
-          "experience-08",
-          "experience-16",
-          "experience-12",
-          "experience-17"
+          "experience-17",
+          "experience-05",
+          "experience-23",
+          "experience-21"
         ],
         "relevant": [
           "experience-07"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3586,21 +7534,26 @@
         "query": "lookup missing dictionary key should use a default",
         "top5": [
           "experience-19",
-          "experience-24",
-          "experience-23",
-          "experience-02",
-          "experience-27"
+          "experience-03",
+          "experience-15",
+          "experience-27",
+          "experience-07"
         ],
         "relevant": [
           "experience-08"
         ],
         "hit": false,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3609,16 +7562,22 @@
         "top5": [
           "experience-09",
           "experience-17",
-          "experience-23"
+          "experience-10",
+          "experience-20",
+          "experience-30"
         ],
         "relevant": [
           "experience-09"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3626,59 +7585,73 @@
         "query": "normalize name keeps leading and trailing spaces",
         "top5": [
           "experience-09",
-          "experience-21"
+          "experience-21",
+          "experience-10",
+          "experience-26"
         ],
         "relevant": [
           "experience-10"
         ],
-        "hit": false,
+        "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-11",
         "query": "dedupe should preserve the input order",
         "top5": [
+          "experience-11",
           "experience-23",
           "experience-03",
-          "experience-29",
-          "experience-11",
-          "experience-17"
+          "experience-07",
+          "experience-29"
         ],
         "relevant": [
           "experience-11"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-12",
         "query": "chunk list skips items when size is greater than one",
         "top5": [
-          "experience-19",
-          "experience-07",
-          "experience-20",
+          "experience-23",
           "experience-13",
-          "experience-23"
+          "experience-19",
+          "experience-12",
+          "experience-16"
         ],
         "relevant": [
           "experience-12"
         ],
-        "hit": false,
+        "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3686,87 +7659,107 @@
         "query": "average empty list should return zero",
         "top5": [
           "experience-03",
-          "experience-13",
           "experience-15",
-          "experience-07",
-          "experience-25"
+          "experience-13",
+          "experience-25",
+          "experience-04"
         ],
         "relevant": [
           "experience-13"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-14",
         "query": "median of an even list should average the middle pair",
         "top5": [
-          "experience-07",
-          "experience-19",
           "experience-11",
-          "experience-25",
-          "experience-03"
+          "experience-07",
+          "experience-14",
+          "experience-03",
+          "experience-23"
         ],
         "relevant": [
           "experience-14"
         ],
-        "hit": false,
+        "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-15",
         "query": "percentage with a zero total should not divide by zero",
         "top5": [
-          "experience-13",
           "experience-15",
           "experience-03",
-          "experience-09",
-          "experience-23"
+          "experience-13",
+          "experience-23",
+          "experience-25"
         ],
         "relevant": [
           "experience-15"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-16",
         "query": "retry loop should include the configured final attempt",
         "top5": [
-          "experience-27",
-          "experience-16",
-          "experience-05",
           "experience-07",
-          "experience-17"
+          "experience-05",
+          "experience-27",
+          "experience-17",
+          "experience-23"
         ],
         "relevant": [
           "experience-16"
         ],
-        "hit": true,
+        "hit": false,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3774,21 +7767,26 @@
         "query": "timeout at the exact deadline should still be accepted",
         "top5": [
           "experience-17",
-          "experience-05",
-          "experience-27",
           "experience-07",
-          "experience-23"
+          "experience-05",
+          "experience-23",
+          "experience-03"
         ],
         "relevant": [
           "experience-17"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3796,21 +7794,26 @@
         "query": "pagination next offset must advance by the page limit",
         "top5": [
           "experience-18",
-          "experience-13",
+          "experience-17",
           "experience-27",
-          "experience-25",
-          "experience-17"
+          "experience-07",
+          "experience-05"
         ],
         "relevant": [
           "experience-18"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3818,35 +7821,53 @@
         "query": "json field lookup should provide a missing name default",
         "top5": [
           "experience-19",
-          "experience-08",
-          "experience-29",
           "experience-03",
-          "experience-17"
+          "experience-15",
+          "experience-08",
+          "experience-07"
         ],
         "relevant": [
           "experience-19"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-20",
         "query": "regex validation must reject trailing characters",
         "top5": [
-          "experience-13"
+          "experience-13",
+          "experience-20",
+          "experience-10",
+          "experience-21",
+          "experience-26"
         ],
         "relevant": [
           "experience-20"
         ],
-        "hit": false,
+        "hit": true,
         "returned_modes": [
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3854,33 +7875,49 @@
         "query": "file extension should be normalized to lowercase",
         "top5": [
           "experience-21",
+          "experience-15",
           "experience-25",
           "experience-02",
-          "experience-15"
+          "experience-10"
         ],
         "relevant": [
           "experience-21"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-22",
         "query": "URL join should remove duplicate slashes",
         "top5": [
-          "experience-22"
+          "experience-22",
+          "experience-21",
+          "experience-10",
+          "experience-24",
+          "experience-30"
         ],
         "relevant": [
           "experience-22"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3888,21 +7925,26 @@
         "query": "records should be sorted by score descending",
         "top5": [
           "experience-23",
-          "experience-13",
           "experience-25",
-          "experience-11",
-          "experience-14"
+          "experience-13",
+          "experience-16",
+          "experience-15"
         ],
         "relevant": [
           "experience-23"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3912,7 +7954,7 @@
           "experience-24",
           "experience-11",
           "experience-21",
-          "experience-02",
+          "experience-07",
           "experience-15"
         ],
         "relevant": [
@@ -3920,11 +7962,16 @@
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3932,43 +7979,53 @@
         "query": "CSV rows should skip the header row",
         "top5": [
           "experience-25",
-          "experience-24",
-          "experience-17",
+          "experience-23",
           "experience-05",
-          "experience-27"
+          "experience-03",
+          "experience-07"
         ],
         "relevant": [
           "experience-25"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-26",
         "query": "money formatting should return two decimal places as text",
         "top5": [
-          "experience-25",
-          "experience-30",
-          "experience-20",
+          "experience-26",
+          "experience-15",
+          "experience-09",
           "experience-03",
-          "experience-09"
+          "experience-25"
         ],
         "relevant": [
           "experience-26"
         ],
-        "hit": false,
+        "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3976,21 +8033,26 @@
         "query": "cache key must distinguish values from different locales",
         "top5": [
           "experience-27",
-          "experience-24",
+          "experience-11",
           "experience-13",
-          "experience-23",
-          "experience-11"
+          "experience-16",
+          "experience-21"
         ],
         "relevant": [
           "experience-27"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -3998,21 +8060,26 @@
         "query": "editor role should be allowed to update a document",
         "top5": [
           "experience-28",
-          "experience-02",
           "experience-15",
           "experience-21",
-          "experience-19"
+          "experience-07",
+          "experience-02"
         ],
         "relevant": [
           "experience-28"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
@@ -4021,46 +8088,69 @@
         "top5": [
           "experience-29",
           "experience-05",
-          "experience-09",
-          "experience-02",
-          "experience-19"
+          "experience-03",
+          "experience-17",
+          "experience-02"
         ],
         "relevant": [
           "experience-29"
         ],
         "hit": true,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       },
       {
         "case_id": "case-30",
         "query": "line count should count a final line without a newline",
         "top5": [
-          "experience-13",
-          "experience-19",
-          "experience-05",
           "experience-07",
-          "experience-30"
+          "experience-05",
+          "experience-15",
+          "experience-17",
+          "experience-25"
         ],
         "relevant": [
           "experience-30"
         ],
-        "hit": true,
+        "hit": false,
         "returned_modes": [
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword",
-          "keyword"
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid",
+          "hybrid"
         ]
       }
     ],
-    "limitation": "Synthetic authored labels; keyword mode does not measure embedding quality"
+    "not_measured": {
+      "hybrid+cross_encoder": "install the rerank extra and configure CROSS_ENCODER_MODEL"
+    },
+    "limitation": "Synthetic authored labels; configured service modes require real credentials and model runs"
+  },
+  "retrieval_filtering": {
+    "passed": true,
+    "accepted_ids": [
+      "accepted-match"
+    ],
+    "rejected_ids": [
+      "rejected-match"
+    ],
+    "excluded_missing_metadata": true
   },
   "agent_outcomes": {
     "measured": false,

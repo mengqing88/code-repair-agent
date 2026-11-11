@@ -42,6 +42,8 @@
 .venv\Scripts\python.exe evaluation\run_benchmark.py --retrieval-mode configured-embeddings --output evaluation/embedding-results.json
 ```
 
+`configured-embeddings` 会分别测量 keyword、vector 和 hybrid，输出 Recall@K、MRR、Precision@K；若设置了 `CROSS_ENCODER_MODEL`，还会测量 `hybrid+cross_encoder`。Cross-Encoder 是可选依赖：先运行 `pip install -e ".[rerank]"`。没有配置或模型不可用时，该策略不会被报告为实测。报告另含成功/失败经验分开召回及仓库、文件、依赖范围严格过滤的合成自检。
+
 ## 实际补丁的对照计分
 
 本次任务只生成评测集，未自动运行真实修复模型。后续对同一批 30 个缺陷分别关闭和开启 RAG，固定模型、提示词、基线、预算、重试次数和环境，并保存 Trace。两组产物分别存到 `work/evaluation/baseline/`、`work/evaluation/rag/`，每个文件为 `case-01.patch` 至 `case-30.patch` 的完整 unified diff。模型信息、参数和 Trace 路径应另存实验记录，评测器仅核验补丁行为，不认证其来源。
@@ -50,14 +52,24 @@
 .venv\Scripts\python.exe evaluation\run_benchmark.py --baseline-patches work/evaluation/baseline --rag-patches work/evaluation/rag --output work/evaluation/comparison.json
 ```
 
+上面的补丁目录参数只做补丁行为对照，不会声称 Agent 实验已测量。要得到 `agent_outcomes.measured=true`，还要提供实验清单，固定同一个模型、提示词 SHA-256、数据集 SHA-256 和预算，并为两组每个案例提供完整补丁及非空 JSONL Trace：
+
+```powershell
+.venv\Scripts\python.exe evaluation\run_benchmark.py --experiment-manifest work/evaluation/experiment.json --output work/evaluation/comparison.json
+```
+
+清单中 `runs.baseline` 和 `runs.rag` 各需包含 `model`、`prompt_sha256`、`budget`、`patch_dir`、`trace_dir`；预算字段为 `runtime_seconds`、`tokens`、`cost_yuan`、`repair_attempts`。Trace 文件按 `case-01.jsonl` 至 `case-30.jsonl` 命名。评测器会记录补丁哈希和 Trace 事件数；缺少任一案例产物时实验保持未测。
+
 每个补丁都在新副本中应用，只允许修改 `target.py`，再运行现有测试和隐藏验收测试。缺失、无法应用、修改测试、仅通过现有测试的补丁都不能算修复成功。补丁后的源码、生成答案和模型自报的 true/false 均不能代替实际执行结果。
 
 | 指标 | 本评测集的计分方式 |
 | --- | --- |
-| Top-5 命中率 | 30 个查询中，前 5 条结果包含指定相关经验的查询数 / 30 |
+| Recall@K | 每个查询的相关经验中，前 K 条实际召回的比例，再对查询取宏平均 |
+| Precision@K | 前 K 条中相关经验比例，再对查询取宏平均，K 固定为 1、3、5、10 |
+| MRR | 每个查询第一条相关经验排名的倒数，再对查询取宏平均 |
 | 修复数对照 | 两组分别统计 6 条测试全通过的任务数 / 30，同时报告增量 |
 | 回归通过率 | 各组实际通过的现有测试数 / 固定 90 条现有测试；缺失或未执行不计通过，同时报告执行覆盖率 |
 
 回归通过率采用测试用例为分母，是本评测集的默认口径；原目标中的 96% 是否采用同一口径尚未确认。30 个查询达到至少 82% 需要命中 25 个，即 83.33%；90 条回归测试达到至少 96% 需要通过 87 条，即 96.67%。16/30、22/30 和 96% 仅保留为目标，不会为了得到目标数字修改答案或挑选样例。
 
-`results.json` 中的 `self_check` 是数据有效性检查；`retrieval` 是注明方法的合成检索结果；只有提供两组补丁时，`agent_outcomes.measured` 才会为 true。参考补丁的通过数不会计入 Agent 指标。
+`results.json` 中的 `self_check` 是数据有效性检查；`retrieval` 是注明方法的合成检索结果；普通补丁目录只产生 `patch_comparison`，只有实验清单和两组完整补丁/Trace 均通过核验时，`agent_outcomes.measured` 才会为 true。参考补丁的通过数不会计入 Agent 指标。

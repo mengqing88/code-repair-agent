@@ -27,6 +27,8 @@ from repair_tools import PostgresKnowledgeBase, RepairToolbox, create_checkpoint
 # build_repair_workflow：构建并执行完整的 LangGraph 修复流程。
 from repair_workflow import build_repair_workflow
 from knowledge_base import KnowledgeBase, default_knowledge_path, retrieval_scope_for_path
+from qdrant_store import QdrantVectorIndex
+from retrieval_reranker import CrossEncoderReranker
 from docker_executor import get_execution_backend
 
 # 类型注解中的 str 表示字符串，int 表示整数，dict 表示字典；
@@ -288,7 +290,11 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
     test_targets = tuple(args.test_targets or (".",))
     # 优先使用项目配置的 PostgreSQL/pgvector；未配置时使用本地 SQLite 知识库。
     postgres_knowledge_base = PostgresKnowledgeBase.from_environment(project_root / ".env")
-    knowledge_base = postgres_knowledge_base or KnowledgeBase(args.knowledge_base)
+    qdrant_index = QdrantVectorIndex.from_environment(project_root / ".env")
+    reranker = CrossEncoderReranker.from_environment(project_root / ".env")
+    knowledge_base = postgres_knowledge_base or KnowledgeBase(
+        args.knowledge_base, qdrant_index=qdrant_index, reranker=reranker,
+    )
     # toolbox：把当前工作区和测试配置绑定到固定工具节点；未配置知识库时仍可完成普通修复。
     toolbox = RepairToolbox(
         workspace_root=workspace_root,
@@ -318,7 +324,7 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
             work_root=project_root / "work",
             timeout=min(10.0, seconds),
             execution_backend=toolbox.execution_backend,
-            task_id=task_id,
+            task_id=task_id, clarifications=state.get("clarifications", []),
         )
         # matched：只有复现模块已经用真实输出确认报告一致时，才允许进入修复阶段。
         matched = record.get("status") == "已复现，与报告一致"
