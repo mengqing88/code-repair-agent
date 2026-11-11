@@ -29,7 +29,8 @@ from dotenv import dotenv_values
 from pydantic import ValidationError
 
 from knowledge_base import (
-    KnowledgeBaseError, _normalize_retrieval_filters, build_case_document, build_rejection_document,
+    KnowledgeBaseError, _case_search_text, _normalize_retrieval_filters,
+    build_case_document, build_rejection_document,
 )
 from defect_regression import generate_regression_test, reproduction_exit_matches_test
 from docker_executor import BindMount, get_execution_backend, run_execution
@@ -617,7 +618,8 @@ class PostgresKnowledgeBase:
     def save_case(self, state: RepairState) -> None:
         """保存已接受且独立验证通过的案例，并递增同一任务的版本号。"""
         document = build_case_document(state)
-        vector = _validated_vector(self.embedder(document), "案例向量")
+        search_text = _case_search_text(json.loads(document))
+        vector = _validated_vector(self.embedder(search_text), "案例向量")
         self.ensure_schema()
         connection = self._connect()
         literal = _vector_literal(vector)
@@ -648,7 +650,8 @@ class PostgresKnowledgeBase:
         """记录用户拒绝补丁的理由；拒绝审核不写入已验收案例表。"""
         document = build_rejection_document(state)
         reason = str(state["review_reason"]).strip()
-        vector = _validated_vector(self.embedder(document), "失败经验向量")
+        search_text = _case_search_text(json.loads(document))
+        vector = _validated_vector(self.embedder(search_text), "失败经验向量")
         literal = _vector_literal(vector)
         self.ensure_schema()
         connection = self._connect()

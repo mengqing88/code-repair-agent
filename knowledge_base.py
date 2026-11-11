@@ -269,15 +269,30 @@ def _matches_retrieval_filters(document: Mapping[str, object], filters: Mapping[
     return True
 
 
-def _case_search_text(document: dict[str, object]) -> str:
-    """仅嵌入缺陷、根因和修复要点，排除路径、时间及大量验证日志。"""
-    reproduction = document.get("reproduction") or {}
-    parts = [str(document.get(name) or "") for name in ("original_report", "diagnosis")]
-    parts.extend(str(item) for item in document.get("applicable_conditions", []))
-    if isinstance(reproduction, dict):
-        parts.extend(str(reproduction.get(name) or "") for name in ("revised_report", "steps", "reproduction_code"))
-    parts.append(str(document.get("patch_diff") or "")[:12_000])
-    return "\n".join(parts)[:20_000]
+def _case_search_text(document: Mapping[str, object]) -> str:
+    """生成面向语义检索的精简文本，完整案例正文仍单独保存供审阅。"""
+    parts: list[str] = []
+
+    def add(label: str, value: object, limit: int) -> None:
+        """加入有明确检索价值的文本字段，并限制单字段长度。"""
+        if isinstance(value, str) and value.strip():
+            parts.append(f"{label}：{value.strip()[:limit]}")
+
+    add("缺陷表现", document.get("original_report"), 3000)
+    add("根因", document.get("diagnosis"), 2500)
+
+    conditions = document.get("applicable_conditions")
+    if isinstance(conditions, list):
+        selected_conditions = [item.strip()[:400] for item in conditions[:12]
+                               if isinstance(item, str) and item.strip()]
+        add("适用条件", "\n".join(selected_conditions), 3000)
+
+    reproduction = document.get("reproduction")
+    if isinstance(reproduction, Mapping):
+        add("修订后的报告", reproduction.get("revised_report"), 1500)
+
+    add("拒绝原因", document.get("review_reason"), 2000)
+    return "\n".join(parts)[:10_000]
 
 
 def _tokens(text: str) -> Counter:
@@ -599,7 +614,7 @@ class KnowledgeBase:
         document = build_rejection_document(state)
         reason = str(state["review_reason"]).strip()
         content_hash = hashlib.sha256(document.encode("utf-8")).hexdigest()
-        search_text = _case_search_text(json.loads(document)) + "\n拒绝原因：" + reason
+        search_text = _case_search_text(json.loads(document))
         try:
             vector = _validated_vector(self.embedder(search_text), "失败经验向量")
         except Exception as error:  # noqa: BLE001 - 失败经验允许降级为关键词检索。
