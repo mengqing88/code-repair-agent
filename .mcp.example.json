@@ -1,3 +1,58 @@
 {
-  "servers": []
+  "servers": [
+    {
+      "name": "context7",
+      "transport": "streamable_http",
+      "url": "https://mcp.context7.com/mcp",
+      "allow_tools": [
+        "resolve-library-id",
+        "query-docs"
+      ]
+    },
+    {
+      "name": "github",
+      "transport": "streamable_http",
+      "url": "https://api.githubcopilot.com/mcp/readonly",
+      "required_env": [
+        "GITHUB_PERSONAL_ACCESS_TOKEN"
+      ],
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}",
+        "X-MCP-Readonly": "true",
+        "X-MCP-Tools": "get_file_contents,search_code,search_repositories,issue_read,list_issues,search_issues,pull_request_read,list_pull_requests,list_commits,get_commit"
+      },
+      "allow_tools": [
+        "get_file_contents",
+        "search_code",
+        "search_repositories",
+        "issue_read",
+        "list_issues",
+        "search_issues",
+        "pull_request_read",
+        "list_pull_requests",
+        "list_commits",
+        "get_commit"
+      ]
+    },
+    {
+      "name": "sentry",
+      "transport": "streamable_http",
+      "url": "https://mcp.sentry.dev/mcp?skills=inspect",
+      "required_env": [
+        "SENTRY_AUTH_TOKEN"
+      ],
+      "headers": {
+        "Authorization": "Sentry-Bearer ${SENTRY_AUTH_TOKEN}"
+      },
+      "allow_tools": [
+        "find_organizations",
+        "find_projects",
+        "get_sentry_resource",
+        "get_issue_details",
+        "get_issue_activity",
+        "get_issue_breadcrumbs",
+        "get_event_stacktrace"
+      ]
+    }
+  ]
 }

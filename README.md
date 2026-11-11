@@ -75,6 +75,8 @@
 
 远程服务可将 `transport` 设为 `streamable_http`，并配置 `url` 与 `headers`；密钥应通过 `${ENV_NAME}` 引用环境变量或项目 `.env`，不要写入或提交 `.mcp.json`。也可以通过 `MCP_SERVERS_CONFIG` 指定配置文件路径。
 
+模板还包含 Sentry 官方 MCP 服务，仅开放组织/项目发现、Issue 详情、活动、Breadcrumb 和事件堆栈读取。启用前需创建仅有 `org:read`、`project:read`、`event:read` 权限的 Sentry token，并将 `SENTRY_AUTH_TOKEN` 写入项目 `.env`；缺少该变量时客户端会跳过 Sentry。配置不包含需要额外模型服务的自然语言 Issue 搜索工具。相关服务说明见 [Sentry MCP](https://mcp.sentry.dev) 和 [官方源码](https://github.com/getsentry/toolkit/tree/main/packages/mcp-server)。
+
 MCP 服务在修复 worker 所在主机运行，不受 Docker 代码执行容器的隔离。只配置可信服务和所需工具；MCP 服务的外部副作用不属于任务 checkpoint 的回滚范围。项目不会自动查询 Smithery/Glama 等工具目录，也不会默认启动任何第三方 MCP 服务。
 
 ## 本地检查

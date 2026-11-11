@@ -80,6 +80,64 @@ def test_streamable_http_config_resolves_credentials_from_env_file(tmp_path: Pat
     assert server.headers["Authorization"] == "Bearer local-secret"
 
 
+def test_server_with_missing_required_env_is_skipped_until_credential_is_set(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """缺少可选 MCP 服务凭证时跳过该服务，其他服务仍可启动。"""
+    config_path = tmp_path / ".mcp.json"
+    config_path.write_text(json.dumps({
+        "servers": [
+            {
+                "name": "docs",
+                "transport": "streamable_http",
+                "url": "https://docs.example.test/mcp",
+                "allow_tools": ["search"],
+            },
+            {
+                "name": "github",
+                "transport": "streamable_http",
+                "url": "https://github.example.test/mcp",
+                "headers": {"Authorization": "Bearer ${GITHUB_TOKEN}"},
+                "required_env": ["GITHUB_TOKEN"],
+                "allow_tools": ["search_code"],
+            },
+        ],
+    }), encoding="utf-8")
+    env_path = tmp_path / ".env"
+    env_path.write_text("", encoding="utf-8")
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    client = MCPToolClient(config_path, env_path)
+
+    assert [server.name for server in client._load_servers()] == ["docs"]
+    assert any("github" in warning and "GITHUB_TOKEN" in warning for warning in client.warnings)
+
+    env_path.write_text("GITHUB_TOKEN=local-secret\n", encoding="utf-8")
+    loaded = client._load_servers()
+    github = next(server for server in loaded if server.name == "github")
+    assert github.headers["Authorization"] == "Bearer local-secret"
+
+
+def test_sentry_example_config_exposes_only_read_tools() -> None:
+    """Sentry 模板只开放经核实的只读工具，并从环境变量读取令牌。"""
+    config_path = Path(__file__).with_name(".mcp.example.json")
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    sentry = next(server for server in payload["servers"] if server["name"] == "sentry")
+
+    assert sentry["transport"] == "streamable_http"
+    assert sentry["url"] == "https://mcp.sentry.dev/mcp?skills=inspect"
+    assert sentry["required_env"] == ["SENTRY_AUTH_TOKEN"]
+    assert sentry["headers"]["Authorization"] == "Sentry-Bearer ${SENTRY_AUTH_TOKEN}"
+    assert sentry["allow_tools"] == [
+        "find_organizations",
+        "find_projects",
+        "get_sentry_resource",
+        "get_issue_details",
+        "get_issue_activity",
+        "get_issue_breadcrumbs",
+        "get_event_stacktrace",
+    ]
+
+
 def test_mcp_config_rejects_http_server_with_stdio_fields(tmp_path: Path) -> None:
     """HTTP MCP 配置不能混入本地进程启动参数。"""
     config_path = tmp_path / ".mcp.json"

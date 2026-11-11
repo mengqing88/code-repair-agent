@@ -51,11 +51,16 @@ class MCPServerConfig(BaseModel):
     cwd: str | None = None
     url: str | None = None
     headers: dict[str, str] = Field(default_factory=dict)
+    required_env: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_transport_fields(self) -> MCPServerConfig:
         if len(set(self.allow_tools)) != len(self.allow_tools) or any(not item.strip() for item in self.allow_tools):
             raise ValueError("allow_tools 必须由不重复的非空工具名称组成")
+        if len(set(self.required_env)) != len(self.required_env) or any(
+            re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", item) is None for item in self.required_env
+        ):
+            raise ValueError("required_env 必须由不重复的环境变量名称组成")
         if self.transport == "stdio":
             if not self.command or not self.command.strip() or self.url or self.headers:
                 raise ValueError("stdio 服务必须提供 command，且不能配置 url 或 headers")
@@ -181,6 +186,15 @@ class MCPToolClient:
 
         result = []
         for server in config.servers:
+            missing = [
+                key for key in server.required_env
+                if not (os.environ.get(key) or dotenv_values_map.get(key) or "").strip()
+            ]
+            if missing:
+                self.warnings.append(
+                    f"MCP 服务 {server.name} 缺少必要环境变量，已跳过：{', '.join(missing)}"
+                )
+                continue
             values = server.model_dump()
             if server.transport == "stdio":
                 values["command"] = expand(server.command or "")
