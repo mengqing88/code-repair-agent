@@ -33,6 +33,7 @@ from defect_regression import generate_regression_test, reproduction_exit_matche
 from docker_executor import BindMount, get_execution_backend, run_execution
 from llm_client import embed_text
 from model_contracts import TOOL_ARGUMENTS, MODEL_TOOL_ALLOWLIST
+from mcp_tool_client import MCPToolClient
 from resilience import Fault, cleanup_scope, trace, run_process, error_info, traced_call
 from reproduction import execute_reproduction, fenced
 from repair_state import RepairState
@@ -1010,14 +1011,20 @@ class RepairToolbox:
     permitted_model_tools: tuple[str, ...] = (
         "read_code", "search_code", "retrieve_repair_experience", "apply_patch", "run_tests",
     )
+    mcp_client: MCPToolClient = field(default_factory=MCPToolClient, repr=False)
     protected_test_hashes: dict[str, str] = field(default_factory=dict, init=False, repr=False)
     _regression_case: dict[str, object] | None = field(default=None, init=False, repr=False)
     _definitions: tuple[dict[str, object], ...] = field(default=TOOL_DEFINITIONS, init=False, repr=False)
 
     def model_tool_definitions(self) -> list[dict[str, object]]:
-        """返回可交给模型的工具定义。"""
-        return [dict(definition) for definition in self._definitions
-                if definition["name"] in self.permitted_model_tools and definition["name"] in MODEL_TOOL_ALLOWLIST]
+        """返回本地工具和 MCP allowlist 中可交给模型的工具定义。"""
+        local = [dict(definition) for definition in self._definitions
+                 if definition["name"] in self.permitted_model_tools and definition["name"] in MODEL_TOOL_ALLOWLIST]
+        return local + self.mcp_client.start()
+
+    def close_mcp_client(self) -> None:
+        """释放本次补丁提议使用的 MCP 会话。"""
+        self.mcp_client.close()
 
     def read_code(self, path: str, max_bytes: int = 1_000_000) -> dict[str, object]:
         """调用工作区文件读取工具。"""
@@ -1384,18 +1391,25 @@ class RepairToolbox:
             def execute_tool(name: str, arguments: Mapping[str, object]) -> object:
                 """执行已授权工具，并把本次 ReAct 剩余时间预算传给补丁和测试工具。"""
                 nonlocal used_side_effect_tool
-                if name in ("apply_patch", "run_tests"):
+                if name in ("apply_patch", "run_tests") or name.startswith("mcp__"):
                     used_side_effect_tool = True
                 remaining = float(state["remaining_budget"]["seconds"]) - (time.monotonic() - started)
                 return self.call_model_tool(name, arguments, remaining_seconds=remaining)
 
             try:
+                definitions = self.model_tool_definitions()
                 return llm_propose_patch(
-                    state, tool_definitions=self.model_tool_definitions(), tool_executor=execute_tool,
+                    state,
+                    tool_definitions=definitions,
+                    tool_executor=execute_tool,
+                    additional_tool_names=tuple(self.mcp_client.tool_names),
                 )
             finally:
-                if used_side_effect_tool and self.checkpoint_revision is not None:
-                    self.restore_workspace(state)
+                try:
+                    if used_side_effect_tool and self.checkpoint_revision is not None:
+                        self.restore_workspace(state)
+                finally:
+                    self.close_mcp_client()
 
         return RepairServices(
             reproduce=reproduce_with_regression,
@@ -1416,7 +1430,12 @@ class RepairToolbox:
         remaining_seconds: float | None = None,
     ) -> object:
         """校验并执行模型工具，成对记录参数、观察结果或失败。"""
-        with traced_call(name, parameters=arguments, input_data=arguments, tool_name=name) as call:
+        external_tool = name.startswith("mcp__")
+        trace_arguments = arguments
+        if external_tool:
+            digest = hashlib.sha256(json.dumps(arguments, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+            trace_arguments = {"arguments_sha256": digest}
+        with traced_call(name, parameters=trace_arguments, input_data=trace_arguments, tool_name=name) as call:
             result = self._call_model_tool(name, arguments, remaining_seconds=remaining_seconds)
             call["result"] = result
             return result
@@ -1425,7 +1444,12 @@ class RepairToolbox:
         """先执行服务端权限校验，再校验参数并分派到固定工具实现。"""
         if remaining_seconds is not None and remaining_seconds <= 0:
             raise RepairToolError("自动运行时间预算已耗尽，无法执行模型请求的工具")
-        if name not in MODEL_TOOL_ALLOWLIST or name not in self.permitted_model_tools:
+        if name not in MODEL_TOOL_ALLOWLIST:
+            if name not in self.mcp_client.tool_names:
+                raise RepairToolError(f"模型不能直接调用工具：{name}")
+            trace("mcp.tool", "authorized", decision="explicit_server_allowlist", details={"model_tool": name})
+            return self.mcp_client.call_tool(name, arguments, timeout_seconds=remaining_seconds)
+        if name not in self.permitted_model_tools:
             raise RepairToolError(f"模型不能直接调用工具：{name}")
         try:
             arguments = TOOL_ARGUMENTS[name].model_validate(dict(arguments)).model_dump()

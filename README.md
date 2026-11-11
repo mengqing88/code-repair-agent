@@ -54,6 +54,29 @@
 - 前端调用 Python/LangGraph API 创建、查询和审核任务；任务与审核结果由 SQLite 持久保存。在线运行仍依赖后端、模型和执行环境可用。
 - 模型服务需支持 Responses API 函数工具调用。真实服务和 PostgreSQL 是否可用，需在对应环境中单独验证；离线单元测试不证明外部服务已连通。
 
+## 可选 MCP 服务
+
+项目支持从根目录 `.mcp.json` 连接本地 `stdio` 或远程 Streamable HTTP MCP 服务。配置模板见 `.mcp.example.json`；每个服务都必须通过 `allow_tools` 明确列出允许暴露给模型的 MCP 工具。模型侧工具名会加上 `mcp__服务名__` 前缀，参数按服务提供的 JSON Schema 校验。没有配置 MCP 服务时，现有 5 个项目工具保持不变。
+
+`stdio` 配置示例：
+
+```json
+{
+  "servers": [{
+    "name": "docs",
+    "transport": "stdio",
+    "command": "python",
+    "args": ["-m", "your_mcp_server"],
+    "env": {"DOCS_TOKEN": "${DOCS_TOKEN}"},
+    "allow_tools": ["search_docs"]
+  }]
+}
+```
+
+远程服务可将 `transport` 设为 `streamable_http`，并配置 `url` 与 `headers`；密钥应通过 `${ENV_NAME}` 引用环境变量或项目 `.env`，不要写入或提交 `.mcp.json`。也可以通过 `MCP_SERVERS_CONFIG` 指定配置文件路径。
+
+MCP 服务在修复 worker 所在主机运行，不受 Docker 代码执行容器的隔离。只配置可信服务和所需工具；MCP 服务的外部副作用不属于任务 checkpoint 的回滚范围。项目不会自动查询 Smithery/Glama 等工具目录，也不会默认启动任何第三方 MCP 服务。
+
 ## 本地检查
 
 在仓库根目录安装 Python 开发依赖并运行测试：

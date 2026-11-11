@@ -1,5 +1,6 @@
 # 本地 API 密钥配置，避免提交到 Git。
 .env
+.mcp.json
 work/
 __pycache__/
 .pytest_cache/

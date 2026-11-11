@@ -296,6 +296,32 @@ class RepairToolsTests(unittest.TestCase):
                 self.assertIn("参数无效", str(raised.exception))
                 self.assertNotIn("sensitive-value", str(raised.exception))
 
+    def test_toolbox_registers_and_dispatches_configured_mcp_tools(self) -> None:
+        """工具箱将 MCP 工具定义交给模型，并把调用转发给 MCP 客户端。"""
+        name = "mcp__docs__search"
+
+        class FakeMCPClient:
+            tool_names = frozenset({name})
+
+            def start(self):
+                return [{"type": "function", "name": name, "description": "search docs",
+                         "parameters": {"type": "object", "properties": {"query": {"type": "string"}}}}]
+
+            def call_tool(self, tool_name, arguments, timeout_seconds=None):
+                return {"tool": tool_name, "arguments": dict(arguments), "timeout": timeout_seconds}
+
+            def close(self):
+                return None
+
+        toolbox = RepairToolbox(workspace_root=self.root, mcp_client=FakeMCPClient())
+
+        definitions = toolbox.model_tool_definitions()
+        result = toolbox.call_model_tool(name, {"query": "repair flow"}, remaining_seconds=4)
+
+        self.assertEqual(len(definitions), 6)
+        self.assertEqual(definitions[-1]["name"], name)
+        self.assertEqual(result, {"tool": name, "arguments": {"query": "repair flow"}, "timeout": 4})
+
     def test_react_can_apply_and_test_then_fixed_nodes_revalidate_final_patch(self) -> None:
         """模型可试用补丁和运行固定测试，结束后固定节点重新应用并验收最终补丁。"""
         import subprocess

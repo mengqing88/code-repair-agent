@@ -226,6 +226,41 @@ class RepairWorkflowTests(unittest.TestCase):
         self.assertEqual(result["token_usage"]["total_tokens"], 290)
         self.assertEqual(result["estimated_cost"], 0.03)
 
+    def test_llm_propose_patch_accepts_only_explicitly_allowed_mcp_tools(self) -> None:
+        """MCP 工具只有出现在服务端额外 allowlist 中时才会交给执行器。"""
+        state = self.initial_state()
+        name = "mcp__docs__search"
+        tool = {
+            "type": "function", "name": name,
+            "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
+        }
+        first_turn = ModelCallResult(
+            text="", input_tokens=10, output_tokens=5, total_tokens=15, cost_yuan=0.001,
+            tool_calls=(ModelToolCall("call-mcp", name, '{"query":"timeout handling"}'),),
+            output_items=({"type": "function_call", "call_id": "call-mcp", "name": name,
+                           "arguments": '{"query":"timeout handling"}'},),
+        )
+        final_turn = ModelCallResult(
+            text=json.dumps({"diagnosis": "已查阅文档", "patch_diff": "完整 diff"}),
+            input_tokens=10, output_tokens=5, total_tokens=15, cost_yuan=0.001,
+        )
+        executed = []
+
+        with patch("repair_workflow.ask_model_with_tools", side_effect=[first_turn, final_turn]):
+            result = llm_propose_patch(
+                state,
+                tool_definitions=(tool,),
+                tool_executor=lambda tool_name, arguments: executed.append((tool_name, arguments)) or {"matches": []},
+                additional_tool_names=(name,),
+            )
+
+        self.assertEqual(executed, [(name, {"query": "timeout handling"})])
+        self.assertEqual(result["diagnosis"], "已查阅文档")
+
+        with self.assertRaisesRegex(RuntimeError, "权限白名单"):
+            with patch("repair_workflow.ask_model_with_tools", return_value=final_turn):
+                llm_propose_patch(state, tool_definitions=(tool,), tool_executor=lambda *_: None)
+
     def test_llm_propose_patch_stops_tool_loop_when_token_budget_is_spent(self) -> None:
         """工具回合耗尽 Token 预算时不执行工具，并把已用量交给工作流。"""
         state = self.initial_state()
