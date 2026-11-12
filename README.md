@@ -56,6 +56,15 @@
 - 前端调用 Python/LangGraph API 创建、查询和审核任务；任务与审核结果由 SQLite 持久保存。在线运行仍依赖后端、模型和执行环境可用。
 - 模型服务需支持 Responses API 函数工具调用。真实服务和 PostgreSQL 是否可用，需在对应环境中单独验证；离线单元测试不证明外部服务已连通。
 
+真实容器验收命令如下；固定模型回复只用于消除模型服务依赖，Git、pytest、复现、挂载探测和超时清理必须使用真实 Docker：
+
+```powershell
+docker build -t code-repair-sandbox:py311 .\docker\runner
+.venv\Scripts\python.exe -m evaluation.docker_acceptance --output evaluation/docker-acceptance.json
+```
+
+早先 Engine 不可连接的阻塞记录保留在 `evaluation/docker-acceptance-20261112.json` 与 `evaluation/docker-acceptance-20261112-recheck.json`；连通后遇到的 Windows 只读 Git 对象清理失败记录保留在 `evaluation/docker-acceptance-20261112-cleanup-failed.json`。修复任务副本清理后，`evaluation/docker-acceptance-20261112-verified.json` 为 `passed`，容器与工作区清理均通过。该结论仅覆盖当前合成缺陷、固定模型回复的真实容器验收，不代表真实模型审查质量、数据库、第三方 MCP 写入或公网部署通过。
+
 ## 可选 MCP 服务
 
 项目支持从根目录 `.mcp.json` 连接本地 `stdio` 或远程 Streamable HTTP MCP 服务。配置模板见 `.mcp.example.json`；每个服务都必须通过 `allow_tools` 明确列出允许暴露给模型的 MCP 工具。模型侧工具名会加上 `mcp__服务名__` 前缀，参数按服务提供的 JSON Schema 校验。没有配置 MCP 服务时，现有 5 个项目工具保持不变。

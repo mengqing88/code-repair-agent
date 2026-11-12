@@ -13,6 +13,7 @@ import math
 # os、shutil、subprocess：读取运行环境、查找 rg、执行受限的 git/pytest 子进程。
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -255,6 +256,27 @@ def restore_checkpoint_workspace(workspace_root: Path, checkpoint_revision: str)
         raise RepairToolError(f"清理 checkpoint 外的文件失败：{(clean.stderr or clean.stdout).strip()}")
 
 
+def _remove_task_tree(root: Path) -> None:
+    """删除已核验的任务目录；仅重试 Windows 只读文件的删除。"""
+    root = root.resolve()
+
+    def retry_readonly_file(function, path, exception_info):
+        error = exception_info[1]
+        target = Path(path)
+        if (os.name != "nt" or not isinstance(error, PermissionError)
+                or function not in (os.unlink, os.remove)
+                or target.is_symlink() or not target.resolve().is_relative_to(root)):
+            raise error
+        metadata = target.lstat()
+        if (not stat.S_ISREG(metadata.st_mode)
+                or not metadata.st_file_attributes & stat.FILE_ATTRIBUTE_READONLY):
+            raise error
+        target.chmod(stat.S_IREAD | stat.S_IWRITE)
+        function(path)
+
+    shutil.rmtree(root, onerror=retry_readonly_file)
+
+
 def remove_checkpoint_workspace(workspace_root: Path, checkpoint_revision: str) -> None:
     """Remove only a verified task worktree and its task-owned private Git repository."""
     workspace = workspace_root.expanduser().resolve()
@@ -285,9 +307,9 @@ def remove_checkpoint_workspace(workspace_root: Path, checkpoint_revision: str) 
         )
         if removed.returncode != 0:
             raise RepairToolError(f"移除任务 worktree 失败：{(removed.stderr or removed.stdout).strip()}")
-        shutil.rmtree(common)
+        _remove_task_tree(common)
     else:
-        shutil.rmtree(workspace)
+        _remove_task_tree(workspace)
     marker_path.unlink(missing_ok=True)
 
 

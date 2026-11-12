@@ -13,7 +13,7 @@
 ## 外部验收
 
 - [ ] **外部服务验收**（部分待验收）：聊天模型短请求已返回“连接成功”；Embedding API 已用于 30 条查询的真实向量评测。Qdrant 未配置 `QDRANT_URL`，PostgreSQL 未配置 `KNOWLEDGE_DB_URL`/`DATABASE_URL`，尚未真实连通；Cross-Encoder 还需安装模型依赖并加载配置权重。
-- [ ] **Docker 端到端验收**（外部待验收）：Docker CLI 已安装，但当前 Docker Engine 不可连接；需启动 Engine 后执行真实隔离修复任务，核实容器、挂载、资源限制和结果回传。
+- [x] **Docker 端到端验收**（当前合成场景已验收）：`python -m evaluation.docker_acceptance --output evaluation/docker-acceptance-20261112-verified.json` 在真实 Engine 29.7.2/Linux 容器上返回 `passed`，覆盖修复/复现/pytest、敏感遮蔽、只读挂载、网络/能力限制、超时清理、失败回归和结果回传，容器与工作区清理均通过。较早 Engine 不可连接的两个 `blocked` 报告及 `docker-acceptance-20261112-cleanup-failed.json` 保留；后者暴露的 Windows 只读 Git 对象删除问题已修复。模型回复固定，缺陷为合成样例，不能据此声称真实模型质量、第三方写入或公网生产隔离通过。
 - [ ] **真实 Agent 配对实验**（外部待验收）：目前没有关闭/开启 RAG 的 Agent 补丁与 Trace；运行同一模型、提示词、数据集和预算下的两组任务，保存 30 个实际补丁及对应 Trace，再使用 `--experiment-manifest` 计分。
 - [ ] **团队知识库简历描述核验**（外部待验收）：需要对应项目源码或可核验材料；当前仓库无法证明该项目的实现和指标。
 

@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import stat
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -195,6 +198,55 @@ class RepairToolsTests(unittest.TestCase):
         with self.assertRaisesRegex(RepairToolError, "仅允许"):
             restore_checkpoint_workspace(self.root, "a" * 40)
         self.assertEqual(original.read_text(encoding="utf-8"), "value = 9\n")
+
+    @unittest.skipUnless(os.name == "nt", "Windows read-only Git object regression")
+    def test_remove_checkpoint_clears_readonly_git_objects_only_in_task_copy(self) -> None:
+        source = self.root / "readonly-source"
+        source.mkdir()
+        original = source / "target.py"
+        original.write_text("value = 1\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q", str(source)], check=True)
+        subprocess.run(["git", "-C", str(source), "add", "target.py"], check=True)
+        subprocess.run(["git", "-C", str(source), "-c", "user.name=Test",
+                        "-c", "user.email=test@localhost", "commit", "-qm", "baseline"], check=True)
+        revision = subprocess.run(["git", "-C", str(source), "rev-parse", "HEAD"],
+                                  check=True, capture_output=True, text=True).stdout.strip()
+        original_objects = {p.relative_to(source): p.read_bytes()
+                            for p in (source / ".git" / "objects").glob("*/*") if p.is_file()}
+        for mode in ("snapshot", "worktree"):
+            with self.subTest(mode=mode):
+                workspace = self.root / mode / "workspace"
+                checkpoint = create_checkpoint_workspace(
+                    source, workspace, revision=revision if mode == "worktree" else None)
+                repository = (workspace.parent / ".workspace-repository.git"
+                              if mode == "worktree" else workspace / ".git")
+                objects = [p for p in (repository / "objects").glob("*/*") if p.is_file()]
+                self.assertTrue(objects)
+                for path in objects:
+                    path.chmod(stat.S_IREAD)
+                self.assertTrue(all(p.stat().st_file_attributes & stat.FILE_ATTRIBUTE_READONLY
+                                    for p in objects))
+                with self.assertRaisesRegex(RepairToolError, "标记不一致"):
+                    remove_checkpoint_workspace(workspace, "0" * 40)
+                remove_checkpoint_workspace(workspace, checkpoint)
+                self.assertFalse(workspace.exists())
+                self.assertFalse(repository.exists())
+                self.assertFalse((workspace.parent / ".workspace-repair-checkpoint.json").exists())
+        self.assertEqual(original.read_text(encoding="utf-8"), "value = 1\n")
+        self.assertEqual(original_objects, {p.relative_to(source): p.read_bytes()
+                         for p in (source / ".git" / "objects").glob("*/*") if p.is_file()})
+
+    @unittest.skipUnless(os.name == "nt", "Windows read-only Git object regression")
+    def test_remove_checkpoint_reports_genuine_permission_failure(self) -> None:
+        source = self.root / "permission-source"
+        source.mkdir()
+        (source / "target.py").write_text("value = 1\n", encoding="utf-8")
+        workspace = self.root / "permission-task" / "workspace"
+        checkpoint = create_checkpoint_workspace(source, workspace)
+        with patch("repair_tools.os.chmod", side_effect=PermissionError("access still denied")):
+            with self.assertRaises(PermissionError):
+                remove_checkpoint_workspace(workspace, checkpoint)
+        self.assertTrue((workspace.parent / ".workspace-repair-checkpoint.json").is_file())
 
     def test_run_tests_returns_real_exit_code_and_hides_model_credentials(self) -> None:
         """测试工具返回 pytest 的真实退出码，并不向子进程传递模型密钥。"""
