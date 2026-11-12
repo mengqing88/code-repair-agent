@@ -98,6 +98,45 @@ work\rag-acceptance-venv\Scripts\python.exe -m evaluation.corpus_quality --recor
 
 生产验收要换成有授权、脱敏、说明抽样方法的真实业务正文和独立标签；不读取用户私有知识库后自行编造标签。该入口的真实生产数据命令本轮未运行。
 
+### 4.1 重排加速的小样本对照（2026-11-12）
+
+`reranker_speed.py` 只添加独立诊断，不启用业务重排、不修改 `.env`。固定随机种子 20261112，从原 30 条作者标签的合成查询抽 16 条：4 条只校准按需重排的分差阈值，另外 12 条比较 13 个方案，各计时两轮。初排候选、向量和查询固定；每轮打乱方案与查询顺序。计时包括分词、成对打分与排序，不含检索、Embedding、模型加载、导出和预热；不能直接与此前 30 题全检索计时作优化前后对比。
+
+CPU 是 i9-13900HX。CPU/GPU 的 ONNX Runtime 均为 1.23.0；GPU 使用 Windows DirectML，DXGI 枚举确认默认适配器 0 是 RTX 4060 Laptop 8GiB。运行剖析实际观察到 423 个 DirectML 算子事件和 148 个 CPU 算子事件，属于混合执行，未把仅注册 GPU provider 当成 GPU 验收。没有测试 CUDA 路径。
+
+| 方法 | 重排 P50 / P95（ms） | Recall@5 | MRR | 本轮选择 |
+| --- | ---: | ---: | ---: | --- |
+| 原模型、CPU 2 线程、10 候选 | 232.9 / 271.1 | 100% | 1.0000 | 对照 |
+| 精简字段、128 Token 上限 | 199.2 / 238.7 | 100% | 0.9583 | 排名有损失 |
+| 仅重排前 5 条 | 116.5 / 126.6 | 75% | 0.7786 | 召回有损失 |
+| 改为逐条推理 batch=1 | 358.5 / 372.5 | 100% | 1.0000 | 更慢 |
+| 原模型、CPU 8 线程 | 135.1 / 153.6 | 100% | 1.0000 | CPU 首选 |
+| 按需重排 | 236.3 / 264.7 | 100% | 1.0000 | 跳过 4/12，尾延迟改善有限 |
+| 成对分数缓存未命中 | 235.1 / 264.1 | 100% | 1.0000 | 与对照接近，不能据小差异宣称加速 |
+| 成对分数缓存全部命中 | 0.065 / 0.126 | 100% | 1.0000 | 仅重复查询场景，不参加通用方案排名 |
+| ONNX FP32、CPU 2 线程 | 226.9 / 280.7 | 100% | 1.0000 | 没有尾延迟收益 |
+| ONNX 动态 INT8、CPU 2 线程 | 89.0 / 100.9 | 100% | 0.9583 | 一条正确案例从第一降到第二 |
+| 英文 MiniLM L6 小模型 | 133.5 / 161.2 | 100% | 0.7222 | 中文查询排名明显退化 |
+| ONNX FP32、GPU DirectML | 76.7 / 141.9 | 100% | 1.0000 | 本轮最快且通过质量筛选 |
+| 直接保留初排 | <0.002 / <0.002 | 75% | 0.6952 | 仅测跳过重排的开销，不是全检索耗时 |
+
+事先确定的选择规则：Recall@5 不低于对照、MRR 降幅不超过 0.01，再选 P95 最小的非纯缓存方案。因此本轮选择 **DirectML GPU + 原多语言模型 + 10 候选 + 预热**，CPU 备选是 **原模型 + 8 线程 + 10 候选 + 预热**。GPU P95 比同轮 CPU 2 线程低约 47.7%，比 CPU 8 线程低约 7.7%；样本很少，后一个差异不能宣称有统计显著性。两者的全部候选排序在本轮均与对照一致。
+
+模型常驻/预热单独记录：本次加载 Cross-Encoder 1.086 秒（不含 Python/框架导入，操作系统文件缓存可能已热），第一次 10 对预测 248ms，再次 190ms。GPU session 初始化 2.543 秒，首次调用 1.659 秒，均不计入稳态表格。原字段已经精简，输入中位数 66 Token、最大 80；进一步精简后中位数 55、最大 71，128 上限实际没有触发截断。缓存只在独立合成用户空间内测试，键绑定用户、模型权重哈希、查询和实际文本；没有把此内存实验接入业务或验证真实缓存命中率。
+
+运行命令与报告：
+
+```powershell
+work\rag-acceptance-venv\Scripts\python.exe -m pip install onnxruntime==1.23.0 onnx==1.19.1 ml_dtypes==0.5.4
+.venv\Scripts\python.exe -m venv --system-site-packages work/reranker-dml-venv
+work\reranker-dml-venv\Scripts\python.exe -m pip install onnxruntime-directml==1.23.0 transformers==4.48.3 huggingface-hub==0.36.2
+work\rag-acceptance-venv\Scripts\python.exe -m evaluation.reranker_speed --directml-python work/reranker-dml-venv/Scripts/python.exe --output evaluation/reranker-speed-local.json
+```
+
+需先按前节准备原有两份模型。小模型下载 `cross-encoder/ms-marco-MiniLM-L6-v2`、revision `233902d25c440f23af6f7d6e94d2946bac0bee0a`（Apache-2.0），采用前节 `snapshot_download` 的方法保存至 `work/models/ms-marco-MiniLM-L6`，只下载 JSON、safetensors、vocab.txt 和 README，排除 ONNX/OpenVINO 目录；不提供小模型时该方法标记 unavailable。模型哈希与包版本保存在 `reranker-speed-20261112.json`。ONNX 文件、DirectML 剖析及独立环境留在忽略的 `work/`。首次环境探测因缺少 `ml_dtypes` 停止，补齐并固定上述运行时后才得到本次完整报告。
+
+限制：12 个合成查询、每种 24 次计时，只是快速选型诊断；不是独立标注、正式冻结集或生产流量，没有测长输入、并发、功耗或独立重复实验。GPU 与 CPU 分阶段计时，仍可能受温度与系统负载影响；DirectML 有 CPU 算子回退。这里只选出本机下一步接入的方案，业务默认没有改为 GPU、8 线程或 INT8。专项回归 `work\rag-acceptance-venv\Scripts\python.exe -m pytest -q test_retrieval_reranker.py`：**2 passed in 2.29s**；全量 Python 和前端测试本轮未运行。
+
 ## 5. 还需要什么证据
 
 工程与在线验收已完成的部分见上述报告。仍缺独立人工审核、跨组相关性标签，以及授权且脱敏的代表性生产查询/经验/重复关系标注；这类事实不能通过增加一个模拟测试补出来。当前为“真实服务通过 + 开发诊断有效 + 正式准入未完成”。没有在本轮运行完整 Agent 修复率实验，也没有把 3 个公开缺陷当作公司生产语料。

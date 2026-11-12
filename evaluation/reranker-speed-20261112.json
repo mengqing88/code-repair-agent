@@ -1,0 +1,5598 @@
+{
+  "status": "completed_diagnostic",
+  "created_at": "2026-11-12T08:34:17.816894+00:00",
+  "seed": 20261112,
+  "inputs_sha256": "bb750bbb019ad54ab747f391971ef5767aae2aa6b1fdc986a97277faeaab14dd",
+  "torch_threads": 2,
+  "packages": {
+    "torch": "2.6.0+cpu",
+    "transformers": "4.48.3",
+    "sentence-transformers": "3.4.1",
+    "onnx": "1.19.1",
+    "onnxruntime": "1.23.0"
+  },
+  "calibration_ids": [
+    "case-07",
+    "case-26",
+    "case-17",
+    "case-30"
+  ],
+  "evaluation_ids": [
+    "case-13",
+    "case-24",
+    "case-08",
+    "case-20",
+    "case-04",
+    "case-25",
+    "case-14",
+    "case-12",
+    "case-06",
+    "case-16",
+    "case-27",
+    "case-22"
+  ],
+  "rounds": 2,
+  "selection_rule": "No Recall@5 loss and MRR decrease <= 0.01 vs baseline; smallest P95 among uncached general-query methods",
+  "timing_scope": "Rerank including tokenization and sorting; retrieval, embedding, setup and warmup excluded",
+  "retrieval_p95_ms": 11.068694999812577,
+  "limitations": [
+    "12 authored synthetic comparison queries, 4 disjoint gate calibration queries; not independent production labels",
+    "Two rounds only; small-sample P95 and one sequential laptop run, no concurrency or energy benchmark",
+    "Cache hits are a separate repeated-query scenario and excluded from universal winner selection",
+    "Small model is English-trained; a multilingual replacement was not available locally",
+    "Application configuration and default reranker are unchanged"
+  ],
+  "methods": {
+    "baseline_top10": {
+      "status": "measured",
+      "p50_ms": 232.93934999855992,
+      "p95_ms": 271.1255800006256,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.2731093000002147,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.25988450000295416,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.22068369999760762,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.23613449999902514,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.21956700000009732,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.2179500000020198,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.21581789999981993,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.2275379000020621,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.2754404000006616,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.22467239999969024,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.25420020000092336,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.2312192999997933,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.25620660000276985,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.2271762000018498,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.25904609999997774,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.23753080000096816,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.22538560000248253,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.2572896999990917,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.2338210000016261,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.21746279999933904,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.23342609999963315,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.2509079000010388,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.21433199999955832,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.2324525999974867,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 1
+    },
+    "compact_128": {
+      "status": "measured",
+      "p50_ms": 199.1995999997016,
+      "p95_ms": 238.72973499837826,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 0.9583333333333334,
+        "recall@1": 0.9166666666666666
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.1910334000021976,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-03",
+            "experience-29",
+            "experience-07",
+            "experience-25",
+            "experience-27",
+            "experience-11",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.1969189000010374,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-23",
+            "experience-21",
+            "experience-07",
+            "experience-27",
+            "experience-05",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.1902276000000711,
+          "ranked_ids": [
+            "experience-27",
+            "experience-20",
+            "experience-04",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.22482939999827067,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-24",
+            "experience-10",
+            "experience-04",
+            "experience-02",
+            "experience-11",
+            "experience-19",
+            "experience-23",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.19491569999809144,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-23",
+            "experience-27",
+            "experience-25",
+            "experience-02",
+            "experience-13",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.18560190000061993,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-16",
+            "experience-26",
+            "experience-24",
+            "experience-15",
+            "experience-03",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.1825022999983048,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-24",
+            "experience-05",
+            "experience-10",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.19739619999745628,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-29",
+            "experience-07",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-03",
+            "experience-27",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.22141430000192486,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-23",
+            "experience-02",
+            "experience-07",
+            "experience-11",
+            "experience-25",
+            "experience-17",
+            "experience-13",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.1887548999984574,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-12",
+            "experience-30",
+            "experience-24",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-25",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.22414500000013504,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-11",
+            "experience-03",
+            "experience-07",
+            "experience-13",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.1975434000014502,
+          "ranked_ids": [
+            "experience-30",
+            "experience-20",
+            "experience-10",
+            "experience-26",
+            "experience-29",
+            "experience-05",
+            "experience-09",
+            "experience-21",
+            "experience-27",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.236423599999398,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-23",
+            "experience-02",
+            "experience-07",
+            "experience-11",
+            "experience-25",
+            "experience-17",
+            "experience-13",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.2033171000002767,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-29",
+            "experience-07",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-03",
+            "experience-27",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.24122309999802383,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-11",
+            "experience-03",
+            "experience-07",
+            "experience-13",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.20327739999993355,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-23",
+            "experience-27",
+            "experience-25",
+            "experience-02",
+            "experience-13",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.18882160000066506,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-24",
+            "experience-05",
+            "experience-10",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.2391366999981983,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-24",
+            "experience-10",
+            "experience-04",
+            "experience-02",
+            "experience-11",
+            "experience-19",
+            "experience-23",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.21537030000035884,
+          "ranked_ids": [
+            "experience-30",
+            "experience-20",
+            "experience-10",
+            "experience-26",
+            "experience-29",
+            "experience-05",
+            "experience-09",
+            "experience-21",
+            "experience-27",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.20036980000077165,
+          "ranked_ids": [
+            "experience-27",
+            "experience-20",
+            "experience-04",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.20414420000088285,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-23",
+            "experience-21",
+            "experience-07",
+            "experience-27",
+            "experience-05",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.19406329999765148,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-12",
+            "experience-30",
+            "experience-24",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-25",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.2175811999986763,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-16",
+            "experience-26",
+            "experience-24",
+            "experience-15",
+            "experience-03",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.19802939999863156,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-03",
+            "experience-29",
+            "experience-07",
+            "experience-25",
+            "experience-27",
+            "experience-11",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": false,
+      "rank_agreement_vs_baseline": 0
+    },
+    "top5": {
+      "status": "measured",
+      "p50_ms": 116.46029999974417,
+      "p95_ms": 126.56657499901486,
+      "metrics": {
+        "recall@5": 0.75,
+        "mrr": 0.7785714285714286,
+        "recall@1": 0.75
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.11520719999680296,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-11",
+            "experience-25",
+            "experience-27",
+            "experience-29",
+            "experience-07",
+            "experience-02",
+            "experience-04",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.1123665000013716,
+          "ranked_ids": [
+            "experience-25",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-27",
+            "experience-07",
+            "experience-17",
+            "experience-03",
+            "experience-18",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.10410340000089491,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-08",
+            "experience-11",
+            "experience-13",
+            "experience-22",
+            "experience-20",
+            "experience-05",
+            "experience-24",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.11153080000076443,
+          "ranked_ids": [
+            "experience-12",
+            "experience-24",
+            "experience-13",
+            "experience-23",
+            "experience-19",
+            "experience-02",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-11"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.10716999999931431,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-25",
+            "experience-21",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-17"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.100643100002344,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-16",
+            "experience-03",
+            "experience-15",
+            "experience-26",
+            "experience-25",
+            "experience-29",
+            "experience-24",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.10281940000277245,
+          "ranked_ids": [
+            "experience-04",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-05",
+            "experience-24",
+            "experience-10",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.10584069999822532,
+          "ranked_ids": [
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-17",
+            "experience-27",
+            "experience-23",
+            "experience-13",
+            "experience-03",
+            "experience-12",
+            "experience-16"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.11605110000164132,
+          "ranked_ids": [
+            "experience-05",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-11",
+            "experience-02",
+            "experience-14",
+            "experience-03",
+            "experience-17",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.11347400000158814,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-18",
+            "experience-11",
+            "experience-25",
+            "experience-30",
+            "experience-21",
+            "experience-24",
+            "experience-20",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.11245540000163601,
+          "ranked_ids": [
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-11",
+            "experience-07",
+            "experience-03",
+            "experience-13",
+            "experience-21",
+            "experience-14",
+            "experience-06"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.10868960000152583,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-10",
+            "experience-27",
+            "experience-21",
+            "experience-26",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.12260150000292924,
+          "ranked_ids": [
+            "experience-05",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-11",
+            "experience-02",
+            "experience-14",
+            "experience-03",
+            "experience-17",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.11686949999784702,
+          "ranked_ids": [
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-17",
+            "experience-27",
+            "experience-23",
+            "experience-13",
+            "experience-03",
+            "experience-12",
+            "experience-16"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.1259040000004461,
+          "ranked_ids": [
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-11",
+            "experience-07",
+            "experience-03",
+            "experience-13",
+            "experience-21",
+            "experience-14",
+            "experience-06"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.12668349999876227,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-25",
+            "experience-21",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-17"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.12304629999925965,
+          "ranked_ids": [
+            "experience-04",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-05",
+            "experience-24",
+            "experience-10",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.13386630000240984,
+          "ranked_ids": [
+            "experience-12",
+            "experience-24",
+            "experience-13",
+            "experience-23",
+            "experience-19",
+            "experience-02",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-11"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.12481910000133212,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-10",
+            "experience-27",
+            "experience-21",
+            "experience-26",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.1228701000000001,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-08",
+            "experience-11",
+            "experience-13",
+            "experience-22",
+            "experience-20",
+            "experience-05",
+            "experience-24",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.12310549999892828,
+          "ranked_ids": [
+            "experience-25",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-27",
+            "experience-07",
+            "experience-17",
+            "experience-03",
+            "experience-18",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.11753220000173314,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-18",
+            "experience-11",
+            "experience-25",
+            "experience-30",
+            "experience-21",
+            "experience-24",
+            "experience-20",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.11768529999972088,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-16",
+            "experience-03",
+            "experience-15",
+            "experience-26",
+            "experience-25",
+            "experience-29",
+            "experience-24",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.1252877000006265,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-11",
+            "experience-25",
+            "experience-27",
+            "experience-29",
+            "experience-07",
+            "experience-02",
+            "experience-04",
+            "experience-03"
+          ]
+        }
+      ],
+      "quality_eligible": false,
+      "rank_agreement_vs_baseline": 0
+    },
+    "batch1": {
+      "status": "measured",
+      "p50_ms": 358.48744999930204,
+      "p95_ms": 372.5439899995763,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.35817239999960293,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.35880249999900116,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.38712399999712943,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.3713086000025214,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.35760600000139675,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.3351827999977104,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.3392058999997971,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.356617900000856,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.34831349999876693,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.34165500000017346,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.36199069999929634,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.3432819000008749,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.3597033999976702,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.34414599999945494,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.36145630000100937,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.3621249000025273,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.35017770000195014,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.35928669999702834,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.37276199999905657,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.36313370000061695,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.36117169999852194,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.3591009999981907,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.3438757000003534,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.3454225999994378,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 1
+    },
+    "threads8": {
+      "status": "measured",
+      "p50_ms": 135.14034999934665,
+      "p95_ms": 153.64179999978657,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.13482479999947827,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.12852860000202782,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.13066549999712151,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.14000330000271788,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.131237699999474,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.13167020000037155,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.1375028000002203,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.1472886000010476,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.15441909999935888,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.14923710000221035,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.15543459999753395,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.14633880000110366,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.1398016999992251,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.12961230000291835,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.134882700000162,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.13165699999808567,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.1271560999994108,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.1370046000010916,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.13992059999873163,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.13185920000250917,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.132998500001122,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.12767929999972694,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.1353979999985313,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.1354535999998916,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 1
+    },
+    "initial_no_rerank": {
+      "status": "measured",
+      "p50_ms": 0.0005000001692678779,
+      "p95_ms": 0.0013950007996754708,
+      "metrics": {
+        "recall@5": 0.75,
+        "mrr": 0.6952380952380952,
+        "recall@1": 0.5833333333333334
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 1.5000005078036338e-06,
+          "ranked_ids": [
+            "experience-19",
+            "experience-08",
+            "experience-27",
+            "experience-11",
+            "experience-25",
+            "experience-29",
+            "experience-07",
+            "experience-02",
+            "experience-04",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 7.00001692166552e-07,
+          "ranked_ids": [
+            "experience-25",
+            "experience-05",
+            "experience-23",
+            "experience-21",
+            "experience-27",
+            "experience-07",
+            "experience-17",
+            "experience-03",
+            "experience-18",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 3.9999940781854093e-07,
+          "ranked_ids": [
+            "experience-27",
+            "experience-11",
+            "experience-13",
+            "experience-08",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-05",
+            "experience-24",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 7.999988156370819e-07,
+          "ranked_ids": [
+            "experience-12",
+            "experience-23",
+            "experience-13",
+            "experience-19",
+            "experience-24",
+            "experience-02",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-11"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-25",
+            "experience-21",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-17"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 6.000009307172149e-07,
+          "ranked_ids": [
+            "experience-03",
+            "experience-13",
+            "experience-15",
+            "experience-04",
+            "experience-16",
+            "experience-26",
+            "experience-25",
+            "experience-29",
+            "experience-24",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-04",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-05",
+            "experience-24",
+            "experience-10",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-05",
+            "experience-07",
+            "experience-17",
+            "experience-27",
+            "experience-29",
+            "experience-23",
+            "experience-13",
+            "experience-03",
+            "experience-12",
+            "experience-16"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 3.9999940781854093e-07,
+          "ranked_ids": [
+            "experience-23",
+            "experience-11",
+            "experience-07",
+            "experience-05",
+            "experience-13",
+            "experience-02",
+            "experience-14",
+            "experience-03",
+            "experience-17",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 3.9999940781854093e-07,
+          "ranked_ids": [
+            "experience-22",
+            "experience-18",
+            "experience-11",
+            "experience-25",
+            "experience-10",
+            "experience-30",
+            "experience-21",
+            "experience-24",
+            "experience-20",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-17",
+            "experience-23",
+            "experience-11",
+            "experience-05",
+            "experience-07",
+            "experience-03",
+            "experience-13",
+            "experience-21",
+            "experience-14",
+            "experience-06"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 2.00001522898674e-07,
+          "ranked_ids": [
+            "experience-20",
+            "experience-13",
+            "experience-09",
+            "experience-30",
+            "experience-29",
+            "experience-10",
+            "experience-27",
+            "experience-21",
+            "experience-26",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 2.1999985619913787e-06,
+          "ranked_ids": [
+            "experience-23",
+            "experience-11",
+            "experience-07",
+            "experience-05",
+            "experience-13",
+            "experience-02",
+            "experience-14",
+            "experience-03",
+            "experience-17",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-05",
+            "experience-07",
+            "experience-17",
+            "experience-27",
+            "experience-29",
+            "experience-23",
+            "experience-13",
+            "experience-03",
+            "experience-12",
+            "experience-16"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-17",
+            "experience-23",
+            "experience-11",
+            "experience-05",
+            "experience-07",
+            "experience-03",
+            "experience-13",
+            "experience-21",
+            "experience-14",
+            "experience-06"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 7.00001692166552e-07,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-25",
+            "experience-21",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-17"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 3.9999940781854093e-07,
+          "ranked_ids": [
+            "experience-04",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-05",
+            "experience-24",
+            "experience-10",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-12",
+            "experience-23",
+            "experience-13",
+            "experience-19",
+            "experience-24",
+            "experience-02",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-11"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 5.000001692678779e-07,
+          "ranked_ids": [
+            "experience-20",
+            "experience-13",
+            "experience-09",
+            "experience-30",
+            "experience-29",
+            "experience-10",
+            "experience-27",
+            "experience-21",
+            "experience-26",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 8.00002453615889e-07,
+          "ranked_ids": [
+            "experience-27",
+            "experience-11",
+            "experience-13",
+            "experience-08",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-05",
+            "experience-24",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 3.9999940781854093e-07,
+          "ranked_ids": [
+            "experience-25",
+            "experience-05",
+            "experience-23",
+            "experience-21",
+            "experience-27",
+            "experience-07",
+            "experience-17",
+            "experience-03",
+            "experience-18",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 6.000009307172149e-07,
+          "ranked_ids": [
+            "experience-22",
+            "experience-18",
+            "experience-11",
+            "experience-25",
+            "experience-10",
+            "experience-30",
+            "experience-21",
+            "experience-24",
+            "experience-20",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 3.9999940781854093e-07,
+          "ranked_ids": [
+            "experience-03",
+            "experience-13",
+            "experience-15",
+            "experience-04",
+            "experience-16",
+            "experience-26",
+            "experience-25",
+            "experience-29",
+            "experience-24",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 1.00000761449337e-07,
+          "ranked_ids": [
+            "experience-19",
+            "experience-08",
+            "experience-27",
+            "experience-11",
+            "experience-25",
+            "experience-29",
+            "experience-07",
+            "experience-02",
+            "experience-04",
+            "experience-03"
+          ]
+        }
+      ],
+      "quality_eligible": false,
+      "rank_agreement_vs_baseline": 0
+    },
+    "adaptive_gate": {
+      "status": "measured",
+      "p50_ms": 236.27059999853373,
+      "p95_ms": 264.6938450025118,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.24921209999956773,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 2.2999993234407157e-06,
+          "ranked_ids": [
+            "experience-25",
+            "experience-05",
+            "experience-23",
+            "experience-21",
+            "experience-27",
+            "experience-07",
+            "experience-17",
+            "experience-03",
+            "experience-18",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 8.999995770864189e-07,
+          "ranked_ids": [
+            "experience-27",
+            "experience-11",
+            "experience-13",
+            "experience-08",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-05",
+            "experience-24",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.26491250000253785,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.2514173000017763,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.2374433000004501,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 3.5000011848751456e-06,
+          "ranked_ids": [
+            "experience-04",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-05",
+            "experience-24",
+            "experience-10",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.24609150000105728,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.2830345000002126,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 1.7000020307023078e-06,
+          "ranked_ids": [
+            "experience-22",
+            "experience-18",
+            "experience-11",
+            "experience-25",
+            "experience-10",
+            "experience-30",
+            "experience-21",
+            "experience-24",
+            "experience-20",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.261400200000935,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.23912089999794262,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.25725880000027246,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.2223487999981444,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.25083710000035353,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.23509789999661734,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 1.2999989849049598e-06,
+          "ranked_ids": [
+            "experience-04",
+            "experience-25",
+            "experience-03",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-05",
+            "experience-24",
+            "experience-10",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.2634548000023642,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.23825439999927767,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 1.6999983927235007e-06,
+          "ranked_ids": [
+            "experience-27",
+            "experience-11",
+            "experience-13",
+            "experience-08",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-05",
+            "experience-24",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 7.999988156370819e-07,
+          "ranked_ids": [
+            "experience-25",
+            "experience-05",
+            "experience-23",
+            "experience-21",
+            "experience-27",
+            "experience-07",
+            "experience-17",
+            "experience-03",
+            "experience-18",
+            "experience-10"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 8.00002453615889e-07,
+          "ranked_ids": [
+            "experience-22",
+            "experience-18",
+            "experience-11",
+            "experience-25",
+            "experience-10",
+            "experience-30",
+            "experience-21",
+            "experience-24",
+            "experience-20",
+            "experience-12"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.21611630000188597,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.23235959999874467,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 0.6666666666666666
+    },
+    "cache_miss": {
+      "status": "measured",
+      "p50_ms": 235.07225000139442,
+      "p95_ms": 264.06640500026697,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.2109930999977223,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.21440330000041286,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.20942230000218842,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.23940980000043055,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.22318319999976666,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.20980989999952726,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.20773790000021108,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.21949100000347244,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.2393253000009281,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.20765299999766285,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.25488770000083605,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.23480150000250433,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.2642529000004288,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.2389724999993632,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.26300959999935003,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.2400192999994033,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.2252526999982365,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.2760508999999729,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.24063919999753125,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.2345815999979095,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.23685829999885755,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.23534300000028452,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.22818759999790927,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.24780830000236165,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 1
+    },
+    "cache_hit": {
+      "status": "measured",
+      "p50_ms": 0.06475000191130675,
+      "p95_ms": 0.12571499792102245,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.0001412999990861863,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 7.239999831654131e-05,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 7.229999755509198e-05,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 6.370000119204633e-05,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 6.460000076913275e-05,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 6.330000178422779e-05,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 6.490000305348076e-05,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 6.520000169984996e-05,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 6.349999966914766e-05,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 6.0200000007171184e-05,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 7.650000043213367e-05,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 6.270000085351057e-05,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.00013439999747788534,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 7.200000254670158e-05,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 7.18000010238029e-05,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 6.98000003467314e-05,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 6.779999966965988e-05,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 6.379999831551686e-05,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 6.629999916185625e-05,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 6.290000237640925e-05,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 6.360000043059699e-05,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 6.049999865354039e-05,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 6.120000034570694e-05,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 6.239999856916256e-05,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 1
+    },
+    "onnx_fp32": {
+      "status": "measured",
+      "p50_ms": 226.9448500010185,
+      "p95_ms": 280.71142499866255,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.22631320000073174,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.22955450000154087,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.2097061999993457,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.2552160000013828,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.2594676000007894,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.2264751000002434,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.22561029999997118,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.23465539999961038,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.2626285000005737,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.22065999999904307,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.26316529999894556,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.23382109999874956,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.2838077999986126,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.22067389999938314,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.2976249999992433,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.2274146000017936,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.1963060999987647,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.24352250000083586,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.21597229999679257,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.21329419999892707,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.22336180000274908,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.2159155000008468,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.2016315000000759,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.24183160000029602,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 1
+    },
+    "onnx_int8": {
+      "status": "measured",
+      "p50_ms": 88.98654999939026,
+      "p95_ms": 100.88273999972444,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 0.9583333333333334,
+        "recall@1": 0.9166666666666666
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.0905136000001221,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-29",
+            "experience-03",
+            "experience-25",
+            "experience-27",
+            "experience-02",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.08683699999892269,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.08644750000166823,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-10",
+            "experience-24",
+            "experience-05",
+            "experience-08",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.09738469999865629,
+          "ranked_ids": [
+            "experience-14",
+            "experience-12",
+            "experience-10",
+            "experience-24",
+            "experience-04",
+            "experience-02",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.0871514999998908,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-02",
+            "experience-23",
+            "experience-25",
+            "experience-21",
+            "experience-17"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.08352650000233552,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-24",
+            "experience-03",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.08454119999805698,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.08915960000013001,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.09453600000051665,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-13",
+            "experience-23",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.0818887999994331,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-30",
+            "experience-12",
+            "experience-24",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.10088550000000396,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-03",
+            "experience-11",
+            "experience-21",
+            "experience-13",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.08731450000050245,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-09",
+            "experience-05",
+            "experience-29",
+            "experience-21",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.10725819999788655,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-13",
+            "experience-23",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.08654650000244146,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.10086709999814047,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-03",
+            "experience-11",
+            "experience-21",
+            "experience-13",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.09470390000205953,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-02",
+            "experience-23",
+            "experience-25",
+            "experience-21",
+            "experience-17"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.09056929999860586,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.09779920000073616,
+          "ranked_ids": [
+            "experience-14",
+            "experience-12",
+            "experience-10",
+            "experience-24",
+            "experience-04",
+            "experience-02",
+            "experience-11",
+            "experience-23",
+            "experience-13",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.08970160000171745,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-09",
+            "experience-05",
+            "experience-29",
+            "experience-21",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.08368960000007064,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-10",
+            "experience-24",
+            "experience-05",
+            "experience-08",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.08881349999865051,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.08576909999828786,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-30",
+            "experience-12",
+            "experience-24",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.08423910000055912,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-24",
+            "experience-03",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.09921420000318903,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-29",
+            "experience-03",
+            "experience-25",
+            "experience-27",
+            "experience-02",
+            "experience-07"
+          ]
+        }
+      ],
+      "quality_eligible": false,
+      "rank_agreement_vs_baseline": 0.25
+    },
+    "small_english_l6": {
+      "status": "measured",
+      "p50_ms": 133.5026500000822,
+      "p95_ms": 161.1954450005214,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 0.7222222222222222,
+        "recall@1": 0.5
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.1218391000002157,
+          "ranked_ids": [
+            "experience-19",
+            "experience-27",
+            "experience-08",
+            "experience-04",
+            "experience-11",
+            "experience-29",
+            "experience-25",
+            "experience-03",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.13882920000105514,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-23",
+            "experience-07",
+            "experience-05",
+            "experience-03",
+            "experience-17",
+            "experience-27",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.14166190000105416,
+          "ranked_ids": [
+            "experience-27",
+            "experience-08",
+            "experience-11",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-10",
+            "experience-24",
+            "experience-13",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.1504873999983829,
+          "ranked_ids": [
+            "experience-12",
+            "experience-04",
+            "experience-14",
+            "experience-10",
+            "experience-24",
+            "experience-23",
+            "experience-02",
+            "experience-13",
+            "experience-11",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.13647380000111298,
+          "ranked_ids": [
+            "experience-11",
+            "experience-24",
+            "experience-23",
+            "experience-27",
+            "experience-02",
+            "experience-13",
+            "experience-17",
+            "experience-25",
+            "experience-05",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.13131570000041393,
+          "ranked_ids": [
+            "experience-13",
+            "experience-03",
+            "experience-15",
+            "experience-04",
+            "experience-16",
+            "experience-26",
+            "experience-24",
+            "experience-12",
+            "experience-25",
+            "experience-29"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.1306743999994069,
+          "ranked_ids": [
+            "experience-03",
+            "experience-04",
+            "experience-25",
+            "experience-13",
+            "experience-11",
+            "experience-05",
+            "experience-23",
+            "experience-10",
+            "experience-24",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.13661059999867575,
+          "ranked_ids": [
+            "experience-29",
+            "experience-05",
+            "experience-16",
+            "experience-07",
+            "experience-12",
+            "experience-17",
+            "experience-23",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.13618420000057085,
+          "ranked_ids": [
+            "experience-14",
+            "experience-25",
+            "experience-11",
+            "experience-03",
+            "experience-23",
+            "experience-02",
+            "experience-07",
+            "experience-17",
+            "experience-13",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.13431430000127875,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-12",
+            "experience-20",
+            "experience-24",
+            "experience-30",
+            "experience-11",
+            "experience-18",
+            "experience-25",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.13342819999888889,
+          "ranked_ids": [
+            "experience-23",
+            "experience-06",
+            "experience-11",
+            "experience-14",
+            "experience-03",
+            "experience-17",
+            "experience-07",
+            "experience-21",
+            "experience-13",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.13634749999982887,
+          "ranked_ids": [
+            "experience-26",
+            "experience-20",
+            "experience-10",
+            "experience-30",
+            "experience-29",
+            "experience-09",
+            "experience-13",
+            "experience-27",
+            "experience-05",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.12966009999945527,
+          "ranked_ids": [
+            "experience-14",
+            "experience-25",
+            "experience-11",
+            "experience-03",
+            "experience-23",
+            "experience-02",
+            "experience-07",
+            "experience-17",
+            "experience-13",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.13013910000154283,
+          "ranked_ids": [
+            "experience-29",
+            "experience-05",
+            "experience-16",
+            "experience-07",
+            "experience-12",
+            "experience-17",
+            "experience-23",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.13331919999836828,
+          "ranked_ids": [
+            "experience-23",
+            "experience-06",
+            "experience-11",
+            "experience-14",
+            "experience-03",
+            "experience-17",
+            "experience-07",
+            "experience-21",
+            "experience-13",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.12888729999758652,
+          "ranked_ids": [
+            "experience-11",
+            "experience-24",
+            "experience-23",
+            "experience-27",
+            "experience-02",
+            "experience-13",
+            "experience-17",
+            "experience-25",
+            "experience-05",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.12417900000218651,
+          "ranked_ids": [
+            "experience-03",
+            "experience-04",
+            "experience-25",
+            "experience-13",
+            "experience-11",
+            "experience-05",
+            "experience-23",
+            "experience-10",
+            "experience-24",
+            "experience-18"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.13331119999929797,
+          "ranked_ids": [
+            "experience-12",
+            "experience-04",
+            "experience-14",
+            "experience-10",
+            "experience-24",
+            "experience-23",
+            "experience-02",
+            "experience-13",
+            "experience-11",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.16308510000089882,
+          "ranked_ids": [
+            "experience-26",
+            "experience-20",
+            "experience-10",
+            "experience-30",
+            "experience-29",
+            "experience-09",
+            "experience-13",
+            "experience-27",
+            "experience-05",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.1351297999972303,
+          "ranked_ids": [
+            "experience-27",
+            "experience-08",
+            "experience-11",
+            "experience-04",
+            "experience-22",
+            "experience-20",
+            "experience-10",
+            "experience-24",
+            "experience-13",
+            "experience-05"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.13357710000127554,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-23",
+            "experience-07",
+            "experience-05",
+            "experience-03",
+            "experience-17",
+            "experience-27",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.16606469999896945,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-12",
+            "experience-20",
+            "experience-24",
+            "experience-30",
+            "experience-11",
+            "experience-18",
+            "experience-25",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.12980349999997998,
+          "ranked_ids": [
+            "experience-13",
+            "experience-03",
+            "experience-15",
+            "experience-04",
+            "experience-16",
+            "experience-26",
+            "experience-24",
+            "experience-12",
+            "experience-25",
+            "experience-29"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.11037729999952717,
+          "ranked_ids": [
+            "experience-19",
+            "experience-27",
+            "experience-08",
+            "experience-04",
+            "experience-11",
+            "experience-29",
+            "experience-25",
+            "experience-03",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "quality_eligible": false,
+      "rank_agreement_vs_baseline": 0
+    },
+    "gpu_directml": {
+      "p50_ms": 76.67150000088441,
+      "p95_ms": 141.86066000074786,
+      "metrics": {
+        "recall@5": 1.0,
+        "mrr": 1.0,
+        "recall@1": 1.0
+      },
+      "queries": 12,
+      "timed_calls": 24,
+      "samples": [
+        {
+          "case_id": "case-08",
+          "repeat": 0,
+          "seconds": 0.14487110000118264,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 0,
+          "seconds": 0.14940550000028452,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 0,
+          "seconds": 0.12480149999828427,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 0,
+          "seconds": 0.10280670000065584,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 0,
+          "seconds": 0.0954589000029955,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 0,
+          "seconds": 0.04721270000300137,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 0,
+          "seconds": 0.03101020000030985,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 0,
+          "seconds": 0.0860402999969665,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 0,
+          "seconds": 0.07830069999909028,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 0,
+          "seconds": 0.07606510000186972,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 0,
+          "seconds": 0.09344530000089435,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 0,
+          "seconds": 0.08300510000117356,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-14",
+          "repeat": 1,
+          "seconds": 0.09169530000144732,
+          "ranked_ids": [
+            "experience-14",
+            "experience-05",
+            "experience-02",
+            "experience-07",
+            "experience-23",
+            "experience-13",
+            "experience-25",
+            "experience-11",
+            "experience-17",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-16",
+          "repeat": 1,
+          "seconds": 0.07234099999914179,
+          "ranked_ids": [
+            "experience-16",
+            "experience-12",
+            "experience-07",
+            "experience-29",
+            "experience-05",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-13",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-06",
+          "repeat": 1,
+          "seconds": 0.07875780000176746,
+          "ranked_ids": [
+            "experience-06",
+            "experience-14",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-21",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-07"
+          ]
+        },
+        {
+          "case_id": "case-24",
+          "repeat": 1,
+          "seconds": 0.07682890000069165,
+          "ranked_ids": [
+            "experience-24",
+            "experience-11",
+            "experience-05",
+            "experience-13",
+            "experience-27",
+            "experience-23",
+            "experience-02",
+            "experience-25",
+            "experience-17",
+            "experience-21"
+          ]
+        },
+        {
+          "case_id": "case-04",
+          "repeat": 1,
+          "seconds": 0.029905499999586027,
+          "ranked_ids": [
+            "experience-04",
+            "experience-18",
+            "experience-05",
+            "experience-24",
+            "experience-25",
+            "experience-10",
+            "experience-03",
+            "experience-13",
+            "experience-11",
+            "experience-23"
+          ]
+        },
+        {
+          "case_id": "case-12",
+          "repeat": 1,
+          "seconds": 0.07651410000107717,
+          "ranked_ids": [
+            "experience-12",
+            "experience-14",
+            "experience-04",
+            "experience-10",
+            "experience-24",
+            "experience-02",
+            "experience-11",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ]
+        },
+        {
+          "case_id": "case-20",
+          "repeat": 1,
+          "seconds": 0.07509919999938575,
+          "ranked_ids": [
+            "experience-20",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-05",
+            "experience-09",
+            "experience-29",
+            "experience-13",
+            "experience-21",
+            "experience-27"
+          ]
+        },
+        {
+          "case_id": "case-27",
+          "repeat": 1,
+          "seconds": 0.06952280000041355,
+          "ranked_ids": [
+            "experience-27",
+            "experience-04",
+            "experience-20",
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-08",
+            "experience-05",
+            "experience-11",
+            "experience-13"
+          ]
+        },
+        {
+          "case_id": "case-25",
+          "repeat": 1,
+          "seconds": 0.07403250000061234,
+          "ranked_ids": [
+            "experience-25",
+            "experience-10",
+            "experience-18",
+            "experience-17",
+            "experience-21",
+            "experience-23",
+            "experience-05",
+            "experience-07",
+            "experience-27",
+            "experience-03"
+          ]
+        },
+        {
+          "case_id": "case-22",
+          "repeat": 1,
+          "seconds": 0.07312869999805116,
+          "ranked_ids": [
+            "experience-22",
+            "experience-10",
+            "experience-24",
+            "experience-30",
+            "experience-12",
+            "experience-18",
+            "experience-20",
+            "experience-11",
+            "experience-21",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-13",
+          "repeat": 1,
+          "seconds": 0.02958000000216998,
+          "ranked_ids": [
+            "experience-13",
+            "experience-04",
+            "experience-26",
+            "experience-16",
+            "experience-03",
+            "experience-24",
+            "experience-15",
+            "experience-12",
+            "experience-29",
+            "experience-25"
+          ]
+        },
+        {
+          "case_id": "case-08",
+          "repeat": 1,
+          "seconds": 0.07487689999834402,
+          "ranked_ids": [
+            "experience-08",
+            "experience-19",
+            "experience-04",
+            "experience-11",
+            "experience-03",
+            "experience-29",
+            "experience-25",
+            "experience-27",
+            "experience-07",
+            "experience-02"
+          ]
+        }
+      ],
+      "status": "measured",
+      "runtime": "DirectML",
+      "version": "1.23.0",
+      "providers": [
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "load_seconds": 2.542872800000623,
+      "first_call_seconds": 1.6594765999980154,
+      "profile_operator_counts": {
+        "DmlExecutionProvider": 423,
+        "CPUExecutionProvider": 148
+      },
+      "quality_eligible": true,
+      "rank_agreement_vs_baseline": 1
+    }
+  },
+  "model_fingerprint": "741615d21874edd00ee93afdbc4422c4131391f02f05447ed68ed52e55d28151",
+  "model_load_seconds": 1.0861986000018078,
+  "first_prediction_seconds": 0.2484710000026098,
+  "warm_prediction_seconds": 0.19004530000165687,
+  "pair_token_lengths": {
+    "texts": {
+      "p50": 66.0,
+      "max": 80
+    },
+    "compact_texts": {
+      "p50": 55.0,
+      "max": 71
+    }
+  },
+  "gate": {
+    "calibration_queries": 4,
+    "gap_threshold": 0.2,
+    "evaluation_skipped": 4
+  },
+  "onnx_export_seconds": 5.378166399998008,
+  "quantization_seconds": 12.064882500002568,
+  "small_model": {
+    "repository": "cross-encoder/ms-marco-MiniLM-L6-v2",
+    "revision": "233902d25c440f23af6f7d6e94d2946bac0bee0a",
+    "weights_sha256": "821d1aa69520101d6e0737f78a042ae25b19e5cb9160701909d10434f4aeb0ae"
+  },
+  "recommended_measured_method": "gpu_directml"
+}
