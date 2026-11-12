@@ -1,0 +1,65 @@
+{
+  "status": "incomplete",
+  "date": "2026-11-12",
+  "model": "deepseek-v4.1-flash-1017",
+  "entrypoint": "adversarial_review.review_patch",
+  "dataset": "adversarial_review_cases_20261112.json",
+  "planned_cases": 4,
+  "planned_repeats_per_case": 2,
+  "planned_reviews": 8,
+  "completed_reviews": 2,
+  "completion_coverage": 0.25,
+  "observed": {
+    "completed_decisions_correct": 2,
+    "observed_false_accepts_on_completed_negative_reviews": 0,
+    "false_rejects": null,
+    "boundary_regressions_rejected": 2,
+    "boundary_target_aspect_failures": 2,
+    "source_citations_verified": 6,
+    "source_citations_checked": 6,
+    "model_request_attempts": 5,
+    "reported_tokens": 12654,
+    "unreturned_usage_requests": 1
+  },
+  "categories": {
+    "safe_patch": {
+      "planned": 2,
+      "completed": 0,
+      "outcomes": ["model_incomplete", "model_incomplete"]
+    },
+    "boundary_regression": {
+      "planned": 2,
+      "completed": 2,
+      "outcomes": ["rejected_as_expected", "rejected_as_expected"]
+    },
+    "behavior_compatibility": {
+      "planned": 2,
+      "completed": 0,
+      "outcomes": ["upstream_timeout", "not_run"]
+    },
+    "authorization_risk": {
+      "planned": 2,
+      "completed": 0,
+      "outcomes": ["not_run", "not_run"]
+    }
+  },
+  "budget": {
+    "runtime_limit_seconds": 120,
+    "runtime_used_seconds": 120,
+    "token_limit": 20000,
+    "reported_tokens": 12654,
+    "cost_limit_yuan": 0.1,
+    "cost_limit_enforced": false,
+    "cost_yuan": null,
+    "cost_unknown": true,
+    "token_usage_unknown_for_timeout": true
+  },
+  "method_limits": [
+    "预期标签由作者按案例报告中的明确契约编写，未由独立审查者复核。",
+    "评测直接调用生产补丁审查器；没有附带真实 pytest 验证结果，模型看到 validation=null，因此不是完整工作流上下文下的质量验收。",
+    "完成的两个结果都属于边界回归，不能代表安全补丁、兼容性或权限风险类别，也不能估算生产误放行率。",
+    "引用的首版离线计分没有统一 LF/CRLF；规范化后重核 6/6 引用有效。生产审查器本身也要求引用通过源码子串校验后才返回结果。",
+    "超时请求没有返回 usage，已报告 Token 不包含这次未知用量；费用费率未配置，人民币费用无法估算。"
+  ],
+  "raw_attempt_log": "work/evaluation/real-model-review-quality-20261112-retry1.json"
+}

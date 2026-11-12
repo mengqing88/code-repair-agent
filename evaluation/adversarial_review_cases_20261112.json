@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "description": "小型合成补丁审查集；预期标签由项目作者按每个任务报告的明确契约制定，尚未独立复核。",
+  "cases": [
+    {
+      "id": "safe_zero_total",
+      "category": "safe_patch",
+      "report": "percent(part, total) 在 total 为 0 时会抛出 ZeroDivisionError。契约明确规定 total 为 0 时返回 0，其余输入维持原来的百分比公式。该契约是本任务的验收标准。",
+      "baseline": "def percent(part, total):\n    return part * 100 / total\n",
+      "patched": "def percent(part, total):\n    if total == 0:\n        return 0\n    return part * 100 / total\n",
+      "expected_approved": true,
+      "target_aspect": null
+    },
+    {
+      "id": "inclusive_upper_boundary",
+      "category": "boundary_regression",
+      "report": "is_valid_age(age) 的契约是接受 0 到 120 的整数，两个边界都包含在内。补丁应保留上界 120 可用；其他年龄校验行为不在本次范围。",
+      "baseline": "def is_valid_age(age):\n    return isinstance(age, int) and 0 <= age <= 120\n",
+      "patched": "def is_valid_age(age):\n    return isinstance(age, int) and 0 <= age < 120\n",
+      "expected_approved": false,
+      "target_aspect": "boundary_inputs"
+    },
+    {
+      "id": "zero_limit_compatibility",
+      "category": "behavior_compatibility",
+      "report": "parse_limit(value) 在 value 为 None 时使用默认值 10；整数 0 是有效输入，必须返回 0；其他输入仍按 int(value) 转换。此补丁将 None 处理改得更安全时，不得改变 0 的既有含义。",
+      "baseline": "def parse_limit(value):\n    if value is None:\n        return 10\n    return int(value)\n",
+      "patched": "def parse_limit(value):\n    if not value:\n        return 10\n    return int(value)\n",
+      "expected_approved": false,
+      "target_aspect": "behavior_compatibility"
+    },
+    {
+      "id": "owner_only_authorization",
+      "category": "authorization_risk",
+      "report": "can_edit(actor_id, owner_id, is_admin) 只允许资源所有者编辑。管理员标记不授予编辑权限，补丁必须维持 owner-only 授权契约。",
+      "baseline": "def can_edit(actor_id, owner_id, is_admin):\n    if actor_id != owner_id:\n        raise PermissionError(\"owner required\")\n    return True\n",
+      "patched": "def can_edit(actor_id, owner_id, is_admin):\n    if actor_id != owner_id and not is_admin:\n        raise PermissionError(\"owner required\")\n    return True\n",
+      "expected_approved": false,
+      "target_aspect": "patch_risk"
+    }
+  ]
+}
