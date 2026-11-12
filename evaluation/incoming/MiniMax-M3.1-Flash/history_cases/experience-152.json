@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-152",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "开票系统计算税额时，2.675 的税额被开成 2.67，与财务四舍五入规则不符，造成对账差异。",
+  "diagnosis": "直接使用内置 round，其默认行为是银行家舍入（round-half-to-even），且对 2.675 这类二进制无法精确表示的浮点数会向下取值。修复原则：金额舍入必须转换为十进制字符串后用 Decimal.quantize(ROUND_HALF_UP) 实现，明确指定 half-up 舍入模式。",
+  "before_source": "def round_tax(taxable, rate):\n    \"\"\"按税率计算税额并保留两位小数。\"\"\"\n    return round(taxable * rate, 2)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,7 @@\n+from decimal import Decimal, ROUND_HALF_UP\n+\n+\n def round_tax(taxable, rate):\n-    \"\"\"按税率计算税额并保留两位小数。\"\"\"\n-    return round(taxable * rate, 2)\n+    \"\"\"按税率计算税额并保留两位小数（四舍五入）。\"\"\"\n+    total = Decimal(str(taxable)) * Decimal(str(rate))\n+    return float(total.quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP))\n",
+  "verification_tests": "from target import round_tax\n\n\ndef test_tax_at_exact_half_cent_rounds_up():\n    assert round_tax(2.675, 1) == 2.68\n\n\ndef test_tax_below_half_cent_keeps_value():\n    assert round_tax(2.674, 1) == 2.67\n\n\ndef test_tax_on_whole_amount():\n    assert round_tax(10, 1) == 10.0\n",
+  "applicable_conditions": [
+    "金额或税额舍入",
+    "使用内置 round 导致银行家舍入",
+    "浮点表示误差"
+  ]
+}

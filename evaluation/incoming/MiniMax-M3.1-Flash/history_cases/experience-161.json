@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-161",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "导入供应商报价表时，规格列里的逗号把一行拆成了两行，报价条目数量翻倍且金额对不上。",
+  "diagnosis": "解析前对原始文本做了逐行切分再手工按逗号分割，引号内的逗号与转义引号被破坏。修复原则：CSV 必须整体交给标准库 csv 模块解析，不能手工切分；列数与表头不一致时，多余值要显式收集而不是丢弃。",
+  "before_source": "def parse_supplier_rows(text):\n    \"\"\"把供应商报价 CSV 解析成字典列表。\"\"\"\n    if not text.strip():\n        return []\n    lines = [line for line in text.splitlines() if line.strip()]\n    header = [cell.strip() for cell in lines[0].split(\",\")]\n    rows = []\n    for line in lines[1:]:\n        values = [cell.strip().strip('\"') for cell in line.split(\",\")]\n        rows.append(dict(zip(header, values)))\n    return rows\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,11 +1,24 @@\n+import csv\n+import io\n+\n+\n def parse_supplier_rows(text):\n     \"\"\"把供应商报价 CSV 解析成字典列表。\"\"\"\n     if not text.strip():\n         return []\n-    lines = [line for line in text.splitlines() if line.strip()]\n-    header = [cell.strip() for cell in lines[0].split(\",\")]\n-    rows = []\n-    for line in lines[1:]:\n-        values = [cell.strip().strip('\"') for cell in line.split(\",\")]\n-        rows.append(dict(zip(header, values)))\n-    return rows\n+    reader = csv.reader(io.StringIO(text))\n+    rows = [row for row in reader if any(cell.strip() for cell in row)]\n+    if not rows:\n+        return []\n+    header = rows[0]\n+    result = []\n+    for row in rows[1:]:\n+        record = {}\n+        for index, name in enumerate(header):\n+            if index < len(row):\n+                record[name] = row[index]\n+        extra = row[len(header):]\n+        if extra:\n+            record[\"_extra\"] = extra\n+        result.append(record)\n+    return result\n",
+  "verification_tests": "from target import parse_supplier_rows\n\n\ndef test_quoted_field_with_comma_is_preserved():\n    assert parse_supplier_rows('sku,desc\\nA,\"10x20, blue\"\\n') == [\n        {\"sku\": \"A\", \"desc\": \"10x20, blue\"}\n    ]\n\n\ndef test_simple_row_is_parsed():\n    assert parse_supplier_rows(\"sku,desc\\nA,blue\\n\") == [{\"sku\": \"A\", \"desc\": \"blue\"}]\n\n\ndef test_escaped_quotes_are_decoded():\n    assert parse_supplier_rows('sku,desc\\nA,\"say \"\"hi\"\"\"\\n') == [\n        {\"sku\": \"A\", \"desc\": 'say \"hi\"'}\n    ]\n",
+  "applicable_conditions": [
+    "CSV 解析",
+    "手工切分破坏引号字段",
+    "多余列被丢弃"
+  ]
+}

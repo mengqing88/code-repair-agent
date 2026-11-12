@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def parse_row(line):
+     """返回该行的字段列表。"""
+-    return [p for p in line.split(",") if p]
++    return line.split(",")

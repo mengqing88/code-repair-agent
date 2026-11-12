@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-33",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "温度读数按整摄氏度记录时总是向下截断，24.9 度被记成 24 度。",
+  "diagnosis": "整体截断丢弃了小数部分，且截断后没有重新推导余量。修复原则：先按目标精度四舍五入得到整数单位，再由该整数反推余量，保证整数与余量自洽。",
+  "before_source": "def celsius_record(celsius_tenths):\n    if celsius_tenths < -500:\n        raise ValueError('reading out of range')\n    return celsius_tenths // 10\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,5 @@\n def celsius_record(celsius_tenths):\n     if celsius_tenths < -500:\n         raise ValueError('reading out of range')\n-    return celsius_tenths // 10\n+    return (celsius_tenths + 5) // 10\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert celsius_record(200) == 20\n\n\ndef test_experience_2():\n    assert celsius_record(355) == 36\n\n\ndef test_experience_3():\n    assert celsius_record(0) == 0\n",
+  "applicable_conditions": [
+    "分钟级四舍五入",
+    "半入进位",
+    "整分钟输出"
+  ]
+}

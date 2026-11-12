@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-106",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "归档文件名清洗函数没有处理 '..' 段，包含上级目录引用的路径被原样保留，归档键名出现异常层级。",
+  "diagnosis": "栈式路径解析中遗漏 '..' 分支：遇到 '..' 应弹出栈顶（栈空则忽略）。修复原则：路径段分类处理（空、'.'、'..'、普通段）必须完整覆盖。",
+  "before_source": "def clean_archive_key(path):\n    \"\"\"清洗对象存储键：处理 '.'、'..'、多余斜杠；返回不含首尾斜杠的键。\n    '..' 弹出上一级，根级 '..' 忽略。\"\"\"\n    parts = path.split(\"/\")\n    stack = []\n    for part in parts:\n        if part in (\"\", \".\"):\n            continue\n        stack.append(part)\n    return \"/\".join(stack)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,5 +6,9 @@\n     for part in parts:\n         if part in (\"\", \".\"):\n             continue\n+        if part == \"..\":\n+            if stack:\n+                stack.pop()\n+            continue\n         stack.append(part)\n     return \"/\".join(stack)\n",
+  "verification_tests": "from target import clean_archive_key\n\ndef test_plain_key():\n    assert clean_archive_key(\"logs/app.log\") == \"logs/app.log\"\n\ndef test_dots_removed():\n    assert clean_archive_key(\"logs/./x.txt\") == \"logs/x.txt\"\n\ndef test_parent_resolved():\n    assert clean_archive_key(\"logs/tmp/../app.log\") == \"logs/app.log\"\n",
+  "applicable_conditions": [
+    "路径栈解析遗漏 '..' 处理",
+    "父目录引用未被消解",
+    "键名/路径规范化"
+  ]
+}

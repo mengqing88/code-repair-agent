@@ -1,0 +1,17 @@
+--- a/target.py
++++ b/target.py
+@@ -4,13 +4,7 @@
+ def totals_by_group(rows, key):
+     """按 key 分组求 amount 之和。"""
+     totals = {}
+-    current = None
+-    accumulator = 0
+     for row in rows:
+         group = row[key]
+-        if group != current:
+-            current = group
+-            accumulator = 0
+-        accumulator += row["amount"]
+-        totals[group] = accumulator
++        totals[group] = totals.get(group, 0) + row["amount"]
+     return totals

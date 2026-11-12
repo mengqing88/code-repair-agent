@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def amounts_match(a, b):
+     """返回两个金额是否视为相等。"""
+-    return a == b
++    return abs(a - b) <= 1e-9

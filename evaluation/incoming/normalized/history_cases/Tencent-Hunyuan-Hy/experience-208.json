@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "契约要求处理所有匹配项或两侧数据",
+    "缺陷表现为只处理第一处/单侧，剩余部分残留",
+    "验收必须包含多个匹配或两侧都需处理的输入"
+  ],
+  "before_source": "# 脱敏：把文本中所有的 x 替换成 *。\n\n\ndef mask(text):\n    return text.replace(\"x\", \"*\", 1)\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-208",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "字符串替换/清理操作默认应作用于全部匹配；误传 count=1 或只处理一侧会让部分匹配残留，且不会报错。修复原则是移除次数限制（或使用双侧处理），并覆盖多匹配输入。",
+  "experience_id": "experience-208",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】脱敏处理场景：文本 axbx 只把第一个 x 换成了 *，第二个仍是 x，脱敏不完整。预期：所有 x 都替换成 *。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def mask(text):\n-    return text.replace(\"x\", \"*\", 1)\n+    return text.replace(\"x\", \"*\")\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import mask\n\n\ndef test_no_match():\n    assert mask(\"a\") == \"a\"\n\n\ndef test_single_match():\n    assert mask(\"x\") == \"*\"\n\n\ndef test_multiple_matches():\n    assert mask(\"axbx\") == \"a*b*\"\n"
+}

@@ -1,0 +1,14 @@
+--- a/target.py
++++ b/target.py
+@@ -10,7 +10,9 @@
+ 
+     def release_expired(self, now):
+         released = []
+-        for bid, exp, _ in self.bookings:
+-            if exp <= now:
++        for item in self.bookings:
++            bid, exp, done = item
++            if not done and exp <= now:
++                item[2] = True
+                 released.append(bid)
+         return released

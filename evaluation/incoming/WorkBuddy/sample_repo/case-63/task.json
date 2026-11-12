@@ -1,0 +1,10 @@
+{
+  "case_id": "case-63",
+  "title": "买赠活动免错商品",
+  "report": "buy_x_get_y_free(prices, x, y)：每 x+y 件商品为一组，组内最便宜的 y 件免费。当前实现把组内最贵的 y 件免了，导致优惠金额错误。",
+  "contract": "prices 为非负数字列表；x,y 为正整数。按价格降序分组（每组 x+y 件），每组释放最便宜的 y 件；返回应付总额 = 总价 - 免单金额。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

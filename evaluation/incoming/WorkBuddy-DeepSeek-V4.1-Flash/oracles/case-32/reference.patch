@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -2,4 +2,6 @@
+     if not 0 <= start_minute <= 1439 or not 0 <= end_minute <= 1439:
+         raise ValueError('minute must be within a day')
+     span = (end_minute - start_minute) % 1440
+-    return span // 60
++    if span == 0:
++        return 24
++    return (span + 59) // 60

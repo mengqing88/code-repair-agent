@@ -1,0 +1,10 @@
+{
+  "case_id": "case-103",
+  "title": "去重丢失首次出现顺序",
+  "report": "去重函数返回的结果顺序与首次出现顺序不一致（内部用了 set），契约要求保留首次出现的顺序。",
+  "contract": "dedup_keep_order(items)：返回去除重复元素后的列表，保留每个元素首次出现的相对顺序。items 元素可哈希。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

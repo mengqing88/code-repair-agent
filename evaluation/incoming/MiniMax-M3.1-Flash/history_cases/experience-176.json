@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-176",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "三件商品的单笔订单打折后比按整单打折多收了 1 分，逐单核对时对不上。",
+  "diagnosis": "折扣在单价上计算后再乘以数量，等价于对单价取整后丢弃了余数，而合同要求以小计为折扣基数计算。修复原则：折扣基数必须是订单小计；先算小计再算折扣，任何情况下都不要在明细级别做会产生取整误差的中间折算。",
+  "before_source": "def basket_total(item_price_cents, item_count, rebate_percent):\n    \"\"\"计算购物篮应付金额（分）。\"\"\"\n    if item_count <= 0:\n        raise ValueError(\"item_count must be positive\")\n    unit_after = item_price_cents - item_price_cents * rebate_percent // 100\n    return unit_after * item_count\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,5 +2,6 @@\n     \"\"\"计算购物篮应付金额（分）。\"\"\"\n     if item_count <= 0:\n         raise ValueError(\"item_count must be positive\")\n-    unit_after = item_price_cents - item_price_cents * rebate_percent // 100\n-    return unit_after * item_count\n+    subtotal = item_price_cents * item_count\n+    rebate = subtotal * rebate_percent // 100\n+    return subtotal - rebate\n",
+  "verification_tests": "from target import basket_total\n\n\ndef test_rebate_applies_to_subtotal():\n    assert basket_total(1000, 3, 10) == 2700\n\n\ndef test_rebate_base_is_subtotal():\n    assert basket_total(333, 3, 50) == 500\n\n\ndef test_full_rebate_returns_zero():\n    assert basket_total(1000, 2, 100) == 0\n",
+  "applicable_conditions": [
+    "整单折扣",
+    "折扣基数错误（用单价而非小计）",
+    "明细级取整误差"
+  ]
+}

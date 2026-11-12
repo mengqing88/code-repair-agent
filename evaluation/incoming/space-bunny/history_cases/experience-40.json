@@ -1,0 +1,15 @@
+{
+  "experience_id": "experience-40",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "部署脚本里写成了 PORT= （空值），\n结果应用拿到的端口号是空字符串而不是模板里的 8080。",
+  "diagnosis": "合并优先级时把“空字符串”当成了有效值。修复原则：在分层配置合并中，空字符串通常表示“未提供”，应当继续向低优先级层取值；并且最终结果里不应残留空字符串值。",
+  "before_source": "\n\"\"\"Deployment settings resolution.\"\"\"\n\n\ndef resolve_settings(template, image_env):\n    \"\"\"Combine template settings with environment overrides.\"\"\"\n    result = dict(template)\n    result.update(image_env)\n    return result\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,6 +4,10 @@\n \n def resolve_settings(template, image_env):\n     \"\"\"Combine template settings with environment overrides.\"\"\"\n-    result = dict(template)\n-    result.update(image_env)\n-    return result\n+    result = {}\n+    for layer in (template, image_env):\n+        for key, value in layer.items():\n+            if value == \"\":\n+                continue\n+            result[key] = value\n+    return {key: value for key, value in result.items() if value != \"\"}\n",
+  "verification_tests": "\nfrom target import resolve_settings\n\n\ndef test_env_overrides_template():\n    assert resolve_settings({\"port\": \"8080\"}, {\"port\": \"9090\"}) == {\"port\": \"9090\"}\n\n\ndef test_empty_env_value_keeps_template_value():\n    assert resolve_settings({\"port\": \"8080\"}, {\"port\": \"\"}) == {\"port\": \"8080\"}\n\n\ndef test_empty_everywhere_drops_the_key():\n    assert resolve_settings({\"port\": \"\"}, {\"port\": \"\"}) == {}\n",
+  "applicable_conditions": [
+    "环境变量",
+    "空字符串",
+    "优先级合并",
+    "未提供语义"
+  ]
+}

@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -2,4 +2,4 @@
+ 
+ 
+ def is_mode(config, expected):
+-    return config.get("mode") is expected
++    return config.get("mode") == expected

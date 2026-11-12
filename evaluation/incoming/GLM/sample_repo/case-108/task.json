@@ -1,0 +1,10 @@
+{
+  "case_id": "case-108",
+  "title": "插入位置取了最左侧",
+  "report": "向有序列表查插入位置时返回了相等段的最左侧位置，契约要求最右侧（相等元素之后）。",
+  "contract": "insert_position(sorted_values, target)：sorted_values 升序可含重复。返回插入 target 后仍保持升序的最右侧位置（排在所有相等元素之后）。等价于 bisect_right。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

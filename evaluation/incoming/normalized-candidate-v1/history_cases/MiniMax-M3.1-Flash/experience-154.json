@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "配置默认值与覆盖值合并",
+    "嵌套字典被整体覆盖",
+    "浅合并与深合并"
+  ],
+  "before_source": "def apply_overrides(base, overrides):\n    \"\"\"把 overrides 覆盖到 base 上，返回新的配置。\"\"\"\n    merged = dict(base)\n    merged.update(overrides)\n    return merged\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-154",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "配置合并使用了 dict.update 的浅合并语义，嵌套 dict 被整体替换而不是逐 key 递归合并。修复原则：合并时若两侧同 key 都是 dict，必须递归合并；只有类型不同或 overrides 侧不是 dict 时才整体替换。",
+  "experience_id": "experience-154",
+  "normalization_notes": [],
+  "original_report": "发布平台覆盖服务配置时，只改了端口号，结果同级的机器名和线程数也被清空，发布后服务连接到了错误的机器。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,9 @@\n def apply_overrides(base, overrides):\n     \"\"\"把 overrides 覆盖到 base 上，返回新的配置。\"\"\"\n     merged = dict(base)\n-    merged.update(overrides)\n+    for key, value in overrides.items():\n+        if isinstance(value, dict) and isinstance(merged.get(key), dict):\n+            merged[key] = apply_overrides(merged[key], value)\n+        else:\n+            merged[key] = value\n     return merged\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import apply_overrides\n\n\ndef test_nested_override_keeps_other_nested_keys():\n    assert apply_overrides(\n        {\"server\": {\"port\": 80, \"host\": \"a\"}}, {\"server\": {\"port\": 8080}}\n    ) == {\"server\": {\"port\": 8080, \"host\": \"a\"}}\n\n\ndef test_two_level_nested_override_is_merged():\n    assert apply_overrides(\n        {\"db\": {\"pool\": {\"size\": 5, \"max\": 10}}}, {\"db\": {\"pool\": {\"size\": 20}}}\n    ) == {\"db\": {\"pool\": {\"size\": 20, \"max\": 10}}}\n\n\ndef test_top_level_override_replaces_scalar():\n    assert apply_overrides({\"debug\": False}, {\"debug\": True}) == {\"debug\": True}\n"
+}

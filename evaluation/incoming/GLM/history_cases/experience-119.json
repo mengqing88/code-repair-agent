@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-119",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "特征存储的键用逗号拼接设备号与指标名，设备号含逗号时两个不同组合碰撞，特征被错误复用。",
+  "diagnosis": "分隔符拼接的复合键存在歧义：字段值包含分隔符时产生碰撞。修复原则：对字段做转义/定界（如 repr、长度前缀、JSON 序列化）再拼接。",
+  "before_source": "def feature_key(device, metric):\n    \"\"\"生成特征键：不同 (device, metric) 二元组必须对应不同键。\"\"\"\n    return \"{},{}\".format(device, metric)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n def feature_key(device, metric):\n     \"\"\"生成特征键：不同 (device, metric) 二元组必须对应不同键。\"\"\"\n-    return \"{},{}\".format(device, metric)\n+    return \"{!r},{!r}\".format(device, metric)\n",
+  "verification_tests": "from target import feature_key\n\ndef test_stable_key():\n    assert feature_key(\"d1\", \"temp\") == feature_key(\"d1\", \"temp\")\n\ndef test_distinct_metrics():\n    assert feature_key(\"d1\", \"temp\") != feature_key(\"d1\", \"hum\")\n\ndef test_comma_no_collision():\n    assert feature_key(\"a,b\", \"m\") != feature_key(\"a\", \"b,m\")\n",
+  "applicable_conditions": [
+    "复合缓存键分隔符歧义",
+    "字段值含分隔符导致碰撞",
+    "键序列化需要转义"
+  ]
+}

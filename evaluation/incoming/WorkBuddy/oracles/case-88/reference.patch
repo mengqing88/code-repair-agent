@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -14,6 +14,6 @@
+             self.order.remove(key)
+         self.store[key] = value
+         self.order.append(key)
+-        while len(self.order) >= self.cap:
++        while len(self.order) > self.cap:
+             old = self.order.pop(0)
+             del self.store[old]

@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -3,6 +3,6 @@
+ 
+ 
+ def final_price(price, discount_bp, coupon):
+-    base = price - coupon
++    base = price
+     discounted = (base * discount_bp + 50) // 100
+-    return max(0, discounted)
++    return max(0, discounted - coupon)

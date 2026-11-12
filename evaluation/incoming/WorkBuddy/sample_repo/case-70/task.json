@@ -1,0 +1,10 @@
+{
+  "case_id": "case-70",
+  "title": "计费秒数向下取整",
+  "report": "billing_seconds(duration_ms)：按毫秒计费，向上取整到整秒，最少 1 秒。当前实现向下取整，导致不足整秒的部分不计费。",
+  "contract": "duration_ms>=0 整数。返回 int：max(1, ceil(duration_ms/1000))。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

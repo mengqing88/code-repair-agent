@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -16,7 +16,7 @@
+ 
+     discounted = _discount(price_cents, rate_bp)
+     # 满减门槛应基于折后金额；此处误用了折前金额。
+-    if price_cents >= threshold_cents:
++    if discounted >= threshold_cents:
+         discounted -= reduction_cents
+     if discounted < 0:
+         discounted = 0

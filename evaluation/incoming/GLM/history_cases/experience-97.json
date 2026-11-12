@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-97",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "登录票据缓存本应 30 分钟固定过期，但活跃用户的票据被反复续期，注销策略完全失效。",
+  "diagnosis": "把固定 TTL 实现成了滑动 TTL：读取时回写时间戳等于延长有效期。修复原则：读取路径必须是纯操作，不得修改条目的过期基准时间。",
+  "before_source": "class TicketStore:\n    \"\"\"票据缓存：自签发起 ttl 秒有效，读取不续期。过期返回 None。\"\"\"\n\n    def __init__(self, ttl):\n        self.ttl = ttl\n        self._items = {}\n\n    def issue(self, token, now):\n        self._items[token] = now\n\n    def check(self, token, now):\n        if token not in self._items:\n            return False\n        issued = self._items[token]\n        if now - issued >= self.ttl:\n            return False\n        self._items[token] = now\n        return True\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -12,7 +12,4 @@\n         if token not in self._items:\n             return False\n         issued = self._items[token]\n-        if now - issued >= self.ttl:\n-            return False\n-        self._items[token] = now\n-        return True\n+        return now - issued < self.ttl\n",
+  "verification_tests": "from target import TicketStore\n\ndef test_valid_within_ttl():\n    t = TicketStore(60)\n    t.issue(\"tk\", 0)\n    assert t.check(\"tk\", 30) is True\n\ndef test_unknown_token():\n    t = TicketStore(60)\n    assert t.check(\"nope\", 5) is False\n\ndef test_read_no_renewal():\n    t = TicketStore(60)\n    t.issue(\"tk\", 0)\n    t.check(\"tk\", 50)\n    assert t.check(\"tk\", 70) is False\n",
+  "applicable_conditions": [
+    "固定 TTL 被实现为滑动续期",
+    "读取路径产生状态变更",
+    "过期基准时间被意外刷新"
+  ]
+}

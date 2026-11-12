@@ -1,0 +1,10 @@
+{
+  "case_id": "case-198",
+  "title": "去重保序被排序破坏",
+  "report": "访问路径去重要求保持首次出现的顺序，但当前实现先排序再输出，导致 c,a,b 变成 a,b,c，带重复的输入顺序也被整体打乱；数字字符串还出现字典序（'10' 排在 '2' 前）的错乱。预期：只去重，不重排，输出顺序与首次出现顺序一致。",
+  "contract": "unique_paths(paths: list[str]) -> list[str]。去除重复元素，保留每个元素**首次出现**的相对顺序；不修改 paths；空列表返回 []；不做任何排序、不做大小写归一化。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,35 @@
+--- a/target.py
++++ b/target.py
+@@ -1,6 +1,31 @@
+ """金额相等判断。"""
++
++
++def _to_number(value):
++    """把金额转成数值，无法解析时返回 None。"""
++    if isinstance(value, bool):
++        return None
++    if isinstance(value, (int, float)):
++        return value
++    if isinstance(value, str):
++        stripped = value.strip()
++        if not stripped:
++            return None
++        try:
++            return int(stripped)
++        except ValueError:
++            pass
++        try:
++            return float(stripped)
++        except ValueError:
++            return None
++    return None
+ 
+ 
+ def amounts_equal(left, right):
+     """判断两个金额是否相等。"""
+-    return left == right
++    left_number = _to_number(left)
++    right_number = _to_number(right)
++    if left_number is None or right_number is None:
++        return False
++    return left_number == right_number

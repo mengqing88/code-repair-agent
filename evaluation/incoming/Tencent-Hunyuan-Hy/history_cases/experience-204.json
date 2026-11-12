@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-204",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】页面缓存场景：同一用户同一路径因响应耗时不同生成了不同的缓存键，缓存命中率很低。预期：缓存键只由 user_id 与 path 决定。",
+  "diagnosis": "缓存/幂等键中只能包含决定资源身份的字段；混入耗时、时间戳、随机数等可变字段，会让逻辑上相同的请求映射到不同键，缓存与去重同时失效。修复原则是从键中移除可变字段，保留稳定标识。",
+  "before_source": "# 页面缓存键：只应由用户与路径决定。\n\n\ndef cache_key(user_id, path, latency_ms):\n    return (user_id, path, latency_ms)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def cache_key(user_id, path, latency_ms):\n-    return (user_id, path, latency_ms)\n+    return (user_id, path)\n",
+  "verification_tests": "from target import cache_key\n\n\ndef test_key_shape():\n    assert cache_key(\"u\", \"/a\", 10) == (\"u\", \"/a\")\n\n\ndef test_latency_does_not_change_key():\n    assert cache_key(\"u\", \"/a\", 10) == cache_key(\"u\", \"/a\", 99)\n\n\ndef test_zero_latency():\n    assert cache_key(\"u\", \"/a\", 0) == (\"u\", \"/a\")\n",
+  "applicable_conditions": [
+    "缓存键/幂等键由多个字段组合而成",
+    "缺陷表现为键中混入了随时间或状态变化的字段",
+    "逻辑上相同的输入必须生成完全相同的键"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-62",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "手续费换算：入金按 rate 乘、出金按 rate 除，但代码写反。",
+  "diagnosis": "单位换算的方向（乘/除）必须与语义一致，写反会得到倒数结果。",
+  "before_source": "def settle(amount, rate, kind):\n    if kind == 'in':\n        return amount / rate\n    else:\n        return amount * rate\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,5 +1,5 @@\n def settle(amount, rate, kind):\n     if kind == 'in':\n+        return amount * rate\n+    else:\n         return amount / rate\n-    else:\n-        return amount * rate\n",
+  "verification_tests": "import pytest\nfrom target import settle\n\ndef test_in():\n    assert settle(100.0, 2.0, 'in') == 200.0\n\ndef test_out():\n    assert settle(100.0, 2.0, 'out') == 50.0\n\ndef test_out_frac():\n    assert settle(250.0, 4.0, 'out') == 62.5\n",
+  "applicable_conditions": [
+    "乘/除方向写反的换算错误",
+    "单位换算语义与运算一致"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "线性扫描合并未先排序",
+    "算法前置条件未显式建立",
+    "区间/时段合并"
+  ],
+  "before_source": "def merge_free_slots(slots):\n    \"\"\"合并重叠或相接的空闲时段，输入顺序任意，返回按 start 升序列表。\"\"\"\n    merged = []\n    for start, end in slots:\n        if merged and start <= merged[-1][1]:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return [tuple(x) for x in merged]\n",
+  "dataset_experience_id": "GLM::experience-111",
+  "dataset_id": "GLM",
+  "diagnosis": "线性扫描合并的前提是按 start 排序；输入顺序无保证时必须先 sorted。修复原则：算法的前置条件要么由契约保证，要么在实现中显式建立。",
+  "experience_id": "experience-111",
+  "normalization_notes": [],
+  "original_report": "会议室预订合并空闲时段时假设输入有序，前端乱序传入后合并结果出现重叠时段，重复订出了会议室。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,7 @@\n def merge_free_slots(slots):\n     \"\"\"合并重叠或相接的空闲时段，输入顺序任意，返回按 start 升序列表。\"\"\"\n     merged = []\n-    for start, end in slots:\n+    for start, end in sorted(slots):\n         if merged and start <= merged[-1][1]:\n             merged[-1][1] = max(merged[-1][1], end)\n         else:\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import merge_free_slots\n\ndef test_already_sorted():\n    assert merge_free_slots([[1, 2], [2, 3]]) == [(1, 3)]\n\ndef test_empty_input():\n    assert merge_free_slots([]) == []\n\ndef test_unsorted():\n    assert merge_free_slots([[7, 9], [1, 3], [2, 5]]) == [(1, 5), (7, 9)]\n"
+}

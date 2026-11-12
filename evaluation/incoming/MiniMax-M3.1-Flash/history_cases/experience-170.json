@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-170",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "API 限流在 500 毫秒的突发窗口里只放行了 1 个请求，客户端频繁收到 429，重试又加剧了拥塞。",
+  "diagnosis": "令牌补充时把经过时间先取整（int(elapsed)），不足一秒的时间被截断为 0，导致亚秒级补充的令牌全部丢失。修复原则：令牌桶的时间与令牌都应使用浮点精度计算，只在最终比较时按需取整。",
+  "before_source": "class RateLimiter:\n    \"\"\"按速率补充令牌的限流器。\"\"\"\n\n    def __init__(self, rate, capacity):\n        self.rate = rate\n        self.capacity = capacity\n        self._tokens = float(capacity)\n        self._last = None\n\n    def _refill(self, now):\n        if self._last is None:\n            self._last = now\n            return\n        elapsed = now - self._last\n        if elapsed <= 0:\n            return\n        self._tokens = min(self.capacity, self._tokens + int(elapsed) * self.rate)\n        self._last = now\n\n    def allow(self, now):\n        \"\"\"尝试放行一个请求。\"\"\"\n        self._refill(now)\n        if self._tokens >= 1:\n            self._tokens -= 1\n            return True\n        return False\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -14,7 +14,7 @@\n         elapsed = now - self._last\n         if elapsed <= 0:\n             return\n-        self._tokens = min(self.capacity, self._tokens + int(elapsed) * self.rate)\n+        self._tokens = min(self.capacity, self._tokens + elapsed * self.rate)\n         self._last = now\n \n     def allow(self, now):\n",
+  "verification_tests": "from target import RateLimiter\n\n\ndef test_sub_second_refill_produces_fractional_tokens():\n    limiter = RateLimiter(rate=2, capacity=2)\n    limiter.allow(0.0)\n    assert limiter.allow(0.5) is True\n\n\ndef test_sub_second_refill_produces_another_token():\n    limiter = RateLimiter(rate=2, capacity=2)\n    limiter.allow(0.0)\n    limiter.allow(0.5)\n    assert limiter.allow(0.75) is True\n\n\ndef test_full_second_refill():\n    limiter = RateLimiter(rate=2, capacity=2)\n    limiter.allow(0.0)\n    assert limiter.allow(1.0) is True\n",
+  "applicable_conditions": [
+    "限流令牌补充",
+    "时间取整导致亚秒补充丢失",
+    "浮点精度令牌桶"
+  ]
+}

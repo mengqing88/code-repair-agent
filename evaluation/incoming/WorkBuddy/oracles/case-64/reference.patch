@@ -1,0 +1,6 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,2 @@
+ def daily_interest(principal, annual_rate, days):
+-    return round(principal * annual_rate * days / 360, 2)
++    return round(principal * annual_rate * days / 365, 2)

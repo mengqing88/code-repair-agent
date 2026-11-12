@@ -1,0 +1,10 @@
+{
+  "case_id": "case-160",
+  "title": "幂等存储重复写入时覆盖了首次响应",
+  "report": "同一个请求因网关重试被处理了两次，第二次写入的响应覆盖了第一次已经返回给客户端的响应，客户端拿到的是与首次不一致的结果。",
+  "contract": "IdempotencyStore 维护 request_id -> response 的幂等映射。check_and_get(request_id)：若该 request_id 已被 remember 过，返回已存的响应对象（与写入时同一对象，恒等相等）；否则把 request_id 标记为已见并返回 None。remember(request_id, response)：写入 request_id 对应的响应；若该 request_id 已有响应，必须保留首次写入的响应而不得覆盖。规则：request_id 为空字符串或 None 时抛出 ValueError；不同 request_id 相互独立；只保留最近 capacity 条记录，超出后淘汰最早写入的一条。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

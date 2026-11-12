@@ -1,0 +1,15 @@
+{
+  "experience_id": "experience-32",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "机柜 A 的占用结束时间等于机柜 B 的开始时间时，排班系统判定为冲突，\n导致一台服务器被两个工单同时预约。",
+  "diagnosis": "区间采用半开语义 [start, end)，端点相接不算冲突。缺陷是把比较写成了 <=，使“相接”被误判为“相交”。修复原则：半开区间的相交条件是 a.start < b.end 且 b.start < a.end；并且空区间（start >= end）必须显式返回不相交，否则空区间在 <= 写法下会被判为相交。",
+  "before_source": "\n\"\"\"Rack booking overlap.\"\"\"\n\n\ndef racks_conflict(a, b):\n    \"\"\"Return True if two rack reservations conflict.\"\"\"\n    return a[\"start\"] <= b[\"end\"] and b[\"start\"] <= a[\"end\"]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,4 +4,6 @@\n \n def racks_conflict(a, b):\n     \"\"\"Return True if two rack reservations conflict.\"\"\"\n-    return a[\"start\"] <= b[\"end\"] and b[\"start\"] <= a[\"end\"]\n+    if a[\"start\"] >= a[\"end\"] or b[\"start\"] >= b[\"end\"]:\n+        return False\n+    return a[\"start\"] < b[\"end\"] and b[\"start\"] < a[\"end\"]\n",
+  "verification_tests": "\nfrom target import racks_conflict\n\n\ndef test_overlapping_reservations_conflict():\n    assert racks_conflict({\"start\": 10, \"end\": 20}, {\"start\": 15, \"end\": 25}) is True\n\n\ndef test_touching_reservations_do_not_conflict():\n    assert racks_conflict({\"start\": 10, \"end\": 20}, {\"start\": 20, \"end\": 30}) is False\n\n\ndef test_empty_reservation_never_conflicts():\n    assert racks_conflict({\"start\": 10, \"end\": 10}, {\"start\": 1, \"end\": 100}) is False\n",
+  "applicable_conditions": [
+    "半开区间",
+    "端点相接",
+    "比较运算符",
+    "空区间"
+  ]
+}

@@ -1,0 +1,12 @@
+--- a/target.py
++++ b/target.py
+@@ -3,5 +3,8 @@
+     同键两边都是 dict 时递归合并，保留未覆盖的兄弟键。返回新 dict。"""
+     result = dict(defaults)
+     for key, value in overrides.items():
+-        result[key] = value
++        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
++            result[key] = merge_settings(result[key], value)
++        else:
++            result[key] = value
+     return result

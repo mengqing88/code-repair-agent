@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "部分态到终态转换",
+    "状态机遗漏合法边"
+  ],
+  "before_source": "class Coupon:\n    def __init__(self):\n        self.state = 'unused'\n    def use(self, kind):\n        if self.state == 'unused' and kind == 'partial':\n            self.state = 'partial'\n        elif self.state == 'unused' and kind == 'full':\n            self.state = 'used'\n        else:\n            raise ValueError('invalid')\n        return self.state\n",
+  "dataset_experience_id": "WorkBuddy::experience-77",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "部分态到终态的合法转换必须被允许。",
+  "experience_id": "experience-77",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "优惠券：部分使用后应允许后续全额退，却拒绝。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,6 +6,8 @@\n             self.state = 'partial'\n         elif self.state == 'unused' and kind == 'full':\n             self.state = 'used'\n+        elif self.state == 'partial' and kind == 'full':\n+            self.state = 'used'\n         else:\n             raise ValueError('invalid')\n         return self.state\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import Coupon\n\ndef test_a():\n    c = Coupon(); c.use('partial')\n    assert c.use('full') == 'used'\n\ndef test_b():\n    c = Coupon(); c.use('partial')\n    assert c.use('full') == 'used'\n\ndef test_c():\n    c = Coupon(); c.use('partial')\n    assert c.use('full') == 'used'\n"
+}

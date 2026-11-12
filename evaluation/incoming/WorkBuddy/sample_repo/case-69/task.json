@@ -1,0 +1,10 @@
+{
+  "case_id": "case-69",
+  "title": "年龄计算未校验证生日",
+  "report": "age(birth_date, today)：返回满周岁。当前实现直接 year 相减，未考虑今年生日尚未到达的情况，导致多算一岁。",
+  "contract": "birth_date, today 为 datetime.date 且 today>=birth_date。返回整数周岁：若 (today.month, today.day) < (birth.month, birth.day) 则 year差-1，否则 year差。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

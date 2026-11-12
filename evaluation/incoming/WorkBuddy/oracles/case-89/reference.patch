@@ -1,0 +1,7 @@
+--- a/target.py
++++ b/target.py
+@@ -9,3 +9,4 @@
+         return self.cache[uid]
+     def update_user(self, uid, name):
+         self.store[uid] = name
++        self.cache.pop(uid, None)

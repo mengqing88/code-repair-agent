@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-55",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "统计一页按钮的点击总量时只返回了最后一个按钮的次数。",
+  "diagnosis": "循环体内使用普通赋值覆盖了累计变量，累加语义没有体现。修复原则：累计变量在循环内必须是“读取旧值再写回新值”，即使用增广赋值或显式自增。",
+  "before_source": "def page_clicks(pages):\n    total = 0\n    for count in pages:\n        total = count\n    return total\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,6 +1,6 @@\n def page_clicks(pages):\n     total = 0\n     for count in pages:\n-        total = count\n+        total += count\n     return total\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert page_clicks([]) == 0\n\n\ndef test_experience_2():\n    assert page_clicks([7]) == 7\n\n\ndef test_experience_3():\n    assert page_clicks([1, 2]) == 3\n",
+  "applicable_conditions": [
+    "累加",
+    "循环内赋值",
+    "Decimal 金额"
+  ]
+}

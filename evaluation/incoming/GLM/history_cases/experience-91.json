@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-91",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "快递费阶梯：重量恰好 5kg 的包裹没有按 30 元档计费，仍收 20 元。",
+  "diagnosis": "阈值比较误用严格大于（>），契约要求恰好达到阈值适用该档时，应改为 >=。修复原则：阶梯边界统一使用包含式比较。",
+  "before_source": "def shipping_fee(weight_kg):\n    \"\"\"包裹运费：1kg 及以内 10 元；(1kg, 5kg] 区间 20 元；\n    超过 5kg（不含恰好 5kg）适用 30 元档。\"\"\"\n    if weight_kg > 5:\n        return 30\n    if weight_kg > 1:\n        return 20\n    return 10\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,7 @@\n def shipping_fee(weight_kg):\n-    \"\"\"包裹运费：1kg 及以内 10 元；(1kg, 5kg] 区间 20 元；\n-    超过 5kg（不含恰好 5kg）适用 30 元档。\"\"\"\n-    if weight_kg > 5:\n+    \"\"\"包裹运费：1kg 及以内 10 元；(1kg, 5kg) 区间 20 元；\n+    恰好 5kg 及以上适用 30 元档。\"\"\"\n+    if weight_kg >= 5:\n         return 30\n     if weight_kg > 1:\n         return 20\n",
+  "verification_tests": "from target import shipping_fee\n\ndef test_small_parcel():\n    assert shipping_fee(0.5) == 10\n\ndef test_multi_kg():\n    assert shipping_fee(3.2) == 20\n\ndef test_heavy():\n    assert shipping_fee(5.0) == 30\n",
+  "applicable_conditions": [
+    "阈值/档位类规则中边界值归属错误",
+    "比较运算符 > 与 >= 混用",
+    "契约明确要求恰好达到阈值适用该档"
+  ]
+}

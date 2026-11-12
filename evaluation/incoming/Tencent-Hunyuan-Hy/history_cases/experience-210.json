@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-210",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】记录比对场景：两条内容完全相同的字符串因为是两个不同对象，被判为不相等。预期：按值相等判断，与对象身份无关。",
+  "diagnosis": "`is` 与 `id()` 比较的是对象身份，`==` 比较的是值；除 None / 单例等明确场景外都不应用身份比较代替值比较，否则动态构造的同值对象会被误判。修复原则是改用值比较运算符。",
+  "before_source": "# 记录比对：按内容（值）相等判断两条记录是否相同。\n\n\ndef same_record(a, b):\n    return id(a) == id(b)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def same_record(a, b):\n-    return id(a) == id(b)\n+    return a == b\n",
+  "verification_tests": "from target import same_record\n\n\ndef test_same_object():\n    s = \"x\"\n    assert same_record(s, s) is True\n\n\ndef test_different_values():\n    assert same_record(\"a\", \"b\") is False\n\n\ndef test_equal_values_different_objects():\n    assert same_record(\"\".join([\"a\", \"b\"]), \"ab\") is True\n",
+  "applicable_conditions": [
+    "需要判断两个值是否相等（而非是否同一对象）",
+    "缺陷表现为动态构造的同值对象被判不等",
+    "除单例/None 外应使用 == 进行值比较"
+  ]
+}

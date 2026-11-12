@@ -1,0 +1,10 @@
+{
+  "case_id": "case-173",
+  "title": "数值文本解析时把无效行静默跳过，坏数据被吞掉",
+  "report": "导入的订单金额文本里混进了非法行（单位后缀、货币符号），这些行被悄悄丢弃，导致导入条数比源文件少，但没有任何报错提示。",
+  "contract": "parse_amounts(text) 把多行文本解析成整数金额列表，返回 list[int]。规则：文本按行拆分（换行符 \\n 或 \\r\\n）；忽略完全空白的行；每行去掉首尾空白后必须是由十进制数字组成的非负整数（允许前导零），否则必须抛出 ValueError，且错误消息中包含该行的原始内容；结果按行顺序返回；text 为空字符串时返回空列表。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

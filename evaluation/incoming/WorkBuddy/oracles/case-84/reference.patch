@@ -1,0 +1,13 @@
+--- a/target.py
++++ b/target.py
+@@ -1,9 +1,8 @@
+ def dedupe(items):
+     seen = set()
+     result = []
+-    for x in reversed(items):
++    for x in items:
+         if x not in seen:
+             seen.add(x)
+             result.append(x)
+-    result.reverse()
+     return result

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-162",
+  "title": "分组取最新记录时取成了组内最早的一条",
+  "report": "按用户取最新一条订单时取到了该用户最早的那条订单，报表展示的是历史订单而不是最新订单。",
+  "contract": "latest_by(rows, key) 按 key 分组并返回每组最新的一条记录，rows 为 dict 列表，每条含 \"key\" 与 \"ts\"（整数时间戳）。规则：组内最新定义为 ts 最大的那条；ts 相同时取在原列表中靠后出现的那条；返回列表按 key 升序排列；rows 为空时返回空列表；不修改入参。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

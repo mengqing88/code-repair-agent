@@ -1,0 +1,10 @@
+{
+  "case_id": "case-97",
+  "title": "TTL 缓存读取延长有效期",
+  "report": "缓存条目本应自写入起固定 ttl 秒后过期，但每次读取都会延长有效期，导致热键永不过期。",
+  "contract": "TTLCache(ttl)：put(key, value, now) 写入；get(key, now) 在 now - 写入时刻 < ttl 时返回值，否则返回 None。读取不得影响有效期。now 由调用方注入，为单调递增数值。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

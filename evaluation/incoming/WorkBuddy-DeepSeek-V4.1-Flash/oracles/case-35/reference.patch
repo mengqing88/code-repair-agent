@@ -1,0 +1,14 @@
+--- a/target.py
++++ b/target.py
+@@ -3,5 +3,10 @@
+     for layer in layers:
+         if layer is None:
+             continue
+-        result.update(layer)
++        for key, value in layer.items():
++            current = result.get(key)
++            if isinstance(current, dict) and isinstance(value, dict):
++                result[key] = merge_config(current, value)
++            else:
++                result[key] = value
+     return result

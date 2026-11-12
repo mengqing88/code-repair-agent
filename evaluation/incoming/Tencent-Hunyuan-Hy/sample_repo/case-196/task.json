@@ -1,0 +1,10 @@
+{
+  "case_id": "case-196",
+  "title": "CSV 空字段被过滤",
+  "report": "导入 CSV 行时，形如 a,,b 的行被解析成两个字段，中间的空列不见了；首尾为空的行和整行为空的行同样被错误地压缩。列位置因此整体错位，后续按列取数取错。预期：严格按逗号切分，空字段必须保留为空字符串，字段数量等于分隔符数量加一。",
+  "contract": "parse_row(line: str) -> list[str]。按单个逗号 ',' 切分 line，保留所有空字段（不丢弃、不 strip 空白）；空字符串输入返回 ['']；返回列表长度恒为 line.count(',') + 1；不修改输入。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

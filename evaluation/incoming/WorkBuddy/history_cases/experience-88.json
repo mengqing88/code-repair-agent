@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-88",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "LRU 在达到容量时即淘汰，实际少存一项。",
+  "diagnosis": "容量边界淘汰条件应为 >capacity 而非 >=capacity。",
+  "before_source": "class LRU:\n    def __init__(self, cap):\n        self.cap = cap; self.s = {}; self.o = []\n    def get(self, k):\n        if k in self.s:\n            self.o.remove(k); self.o.append(k); return self.s[k]\n        return None\n    def put(self, k, v):\n        if k in self.s: self.o.remove(k)\n        self.s[k] = v; self.o.append(k)\n        while len(self.o) >= self.cap:\n            old = self.o.pop(0); del self.s[old]\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -8,5 +8,5 @@\n     def put(self, k, v):\n         if k in self.s: self.o.remove(k)\n         self.s[k] = v; self.o.append(k)\n-        while len(self.o) >= self.cap:\n+        while len(self.o) > self.cap:\n             old = self.o.pop(0); del self.s[old]\n",
+  "verification_tests": "import pytest\nfrom target import LRU\n\ndef test_a():\n    c = LRU(2); c.put('a',1); c.put('b',2); c.put('c',3)\n    assert c.get('b') == 2\n\ndef test_b():\n    c = LRU(2); c.put('a',1); c.put('b',2); c.get('a'); c.put('c',3)\n    assert c.get('a') == 1\n\ndef test_c():\n    c = LRU(2); c.put('a',1); c.put('b',2); c.put('c',3); c.put('d',4)\n    assert c.get('c') == 3\n",
+  "applicable_conditions": [
+    "容量边界淘汰差一",
+    "LRU 溢出条件"
+  ]
+}

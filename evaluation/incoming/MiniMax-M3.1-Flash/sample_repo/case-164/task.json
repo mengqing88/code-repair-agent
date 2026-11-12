@@ -1,0 +1,10 @@
+{
+  "case_id": "case-164",
+  "title": "闰年判定只按能否被 4 整除，世纪年被误判",
+  "report": "1900 年被当成闰年，2 月被多算了一天，日历类功能的年份偏移逐日累积错误。",
+  "contract": "is_leap_year(year) 返回 bool。规则：遵循公历闰年规则——能被 400 整除的年份是闰年；能被 4 整除但不能被 100 整除的年份是闰年；其余不是闰年。year 为负数时按绝对值判定。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

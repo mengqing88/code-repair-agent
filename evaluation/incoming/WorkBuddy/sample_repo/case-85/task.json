@@ -1,0 +1,10 @@
+{
+  "case_id": "case-85",
+  "title": "时长解析遗漏分钟",
+  "report": "parse_duration(s)：格式如 '1h30m'，返回总分钟数。当前实现只解析小时部分，忽略分钟，导致 '1h30m' 被算成 60 分钟。",
+  "contract": "s 形如 '<h>h<m>m'（小时与分钟部分均可为 0 或省略）。返回 int 总分钟 = h*60 + m。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

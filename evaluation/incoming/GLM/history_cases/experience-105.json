@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-105",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "接口限流在整点边界误判：恰好 60 秒前的请求被计入当前窗口，导致整点附近的合法请求被 429 拒绝。",
+  "diagnosis": "窗口区间 (ts-window, ts] 为左开右闭：恰好 window 之前的请求已滑出窗口。修复原则：时间窗口边界统一使用 ts - t < window 判定，并写明开闭约定。",
+  "before_source": "class SlidingDeny:\n    \"\"\"滑动窗口拒绝器：统计 (ts-window, ts] 内失败次数，超限则拒绝。\"\"\"\n\n    def __init__(self, max_failures, window):\n        self.max_failures = max_failures\n        self.window = window\n\n    def should_deny(self, failure_times, ts):\n        recent = [t for t in failure_times if ts - t <= self.window]\n        return len(recent) >= self.max_failures\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,5 +6,5 @@\n         self.window = window\n \n     def should_deny(self, failure_times, ts):\n-        recent = [t for t in failure_times if ts - t <= self.window]\n+        recent = [t for t in failure_times if ts - t < self.window]\n         return len(recent) >= self.max_failures\n",
+  "verification_tests": "from target import SlidingDeny\n\ndef test_no_failures():\n    assert SlidingDeny(3, 60).should_deny([], 100) is False\n\ndef test_under_threshold():\n    assert SlidingDeny(3, 60).should_deny([90, 95], 100) is False\n\ndef test_boundary_evicted():\n    assert SlidingDeny(1, 60).should_deny([40], 100) is False\n",
+  "applicable_conditions": [
+    "时间窗口边界的开闭区间错误",
+    "恰好在 window 之前的记录被计入",
+    "限流/风控窗口判定"
+  ]
+}

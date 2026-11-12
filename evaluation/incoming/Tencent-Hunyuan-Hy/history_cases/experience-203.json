@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-203",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】重试调度场景：多次重试后，下次重试时刻仍按首次尝试时刻计算，导致重试间隔被压缩。预期：基于上一次尝试时刻加固定退避。",
+  "diagnosis": "时间类计算必须明确基准点：首次时间、上次时间、窗口起点语义完全不同。用错基准会让续期、退避、过期等行为整体偏移，且代码看起来仍然合理。修复原则是把基准字段替换为契约指定的那个，并保持公式不变。",
+  "before_source": "# 重试调度：下次重试时刻基于上一次尝试时刻。\n\n\ndef next_retry(first_attempt, last_attempt, base_delay):\n    return first_attempt + base_delay\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def next_retry(first_attempt, last_attempt, base_delay):\n-    return first_attempt + base_delay\n+    return last_attempt + base_delay\n",
+  "verification_tests": "from target import next_retry\n\n\ndef test_first_attempt_equals_last():\n    assert next_retry(0, 0, 5) == 5\n\n\ndef test_after_later_attempt():\n    assert next_retry(0, 10, 5) == 15\n\n\ndef test_large_timestamps():\n    assert next_retry(100, 200, 30) == 230\n",
+  "applicable_conditions": [
+    "计算依赖某个时间基准（创建时间 / 最后活跃时间 / 窗口起点）",
+    "缺陷表现为续期或退避不生效、结果按旧基准偏移",
+    "修复应替换基准字段而非改动计算公式"
+  ]
+}

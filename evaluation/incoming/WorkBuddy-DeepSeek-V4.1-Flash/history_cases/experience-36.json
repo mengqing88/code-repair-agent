@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-36",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "权限判断只看了第一个角色来源，后面的来源被忽略，合法用户被拒绝。",
+  "diagnosis": "只在索引 0 的位置判断一次，缺少对后续来源的遍历。修复原则：按优先级顺序遍历全部来源，命中即返回，全部不满足才给出默认结果。",
+  "before_source": "def first_permission(sources, action):\n    if action in sources[0]:\n        return True\n    return False\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,6 @@\n def first_permission(sources, action):\n-    if action in sources[0]:\n-        return True\n+    for source in sources:\n+        if action in source:\n+            return True\n     return False\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert first_permission([{'read'}], 'read') is True\n\n\ndef test_experience_2():\n    assert first_permission([set(), {'write'}], 'write') is True\n\n\ndef test_experience_3():\n    assert first_permission([set()], 'read') is False\n",
+  "applicable_conditions": [
+    "分层查找",
+    "缺失键继续下探",
+    "优先级"
+  ]
+}

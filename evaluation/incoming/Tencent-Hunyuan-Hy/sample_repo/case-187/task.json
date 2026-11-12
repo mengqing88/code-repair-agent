@@ -1,0 +1,10 @@
+{
+  "case_id": "case-187",
+  "title": "排行榜并列名次",
+  "report": "积分榜要求分数相同按用户名升序展示，但当前实现同分时保持了输入顺序：bob 与 alice 同为 10 分却显示 bob 在前；多人同分时顺序完全取决于上游数据顺序。预期：主排序按分数降序，同分按用户名（字典序）升序，结果稳定可复现。",
+  "contract": "rank(players) -> list[tuple[str, int]]。players 为 (name: str, score: int) 序列；返回按 score 降序排列的新列表；score 相同时按 name 的字典序升序排列；不修改 players；空输入返回 []。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

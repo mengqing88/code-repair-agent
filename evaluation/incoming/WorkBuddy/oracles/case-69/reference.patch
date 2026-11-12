@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,7 @@
+ import datetime
+ 
+ def age(birth_date, today):
+-    return today.year - birth_date.year
++    a = today.year - birth_date.year
++    if (today.month, today.day) < (birth_date.month, birth_date.day):
++        a -= 1
++    return a

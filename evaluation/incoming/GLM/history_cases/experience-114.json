@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-114",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "表单导入校验遇到第一个错误就返回，运营每次只能修复一个错误再重试，批量导入效率极低。",
+  "diagnosis": "收集型校验不得提前 return：应为每行累积错误后统一返回。修复原则：区分 '快速失败' 与 '全量收集' 两种契约，收集型用 append 而非 return。",
+  "before_source": "def check_cells(cells):\n    \"\"\"校验 (名称, 数量) 单元格：名称空 -> \"no name\"；数量<0 -> \"neg qty\"。\n    返回所有违规 (行号, 原因) 列表；全部合法返回 []。\"\"\"\n    problems = []\n    for i, (name, qty) in enumerate(cells):\n        if name == \"\":\n            return [(i, \"no name\")]\n        if qty < 0:\n            return [(i, \"neg qty\")]\n    return problems\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,7 +4,7 @@\n     problems = []\n     for i, (name, qty) in enumerate(cells):\n         if name == \"\":\n-            return [(i, \"no name\")]\n-        if qty < 0:\n-            return [(i, \"neg qty\")]\n+            problems.append((i, \"no name\"))\n+        elif qty < 0:\n+            problems.append((i, \"neg qty\"))\n     return problems\n",
+  "verification_tests": "from target import check_cells\n\ndef test_all_ok():\n    assert check_cells([(\"pen\", 3), (\"book\", 0)]) == []\n\ndef test_one_bad():\n    assert check_cells([(\"pen\", 3), (\"\", 1)]) == [(1, \"no name\")]\n\ndef test_collect_all():\n    assert check_cells([(\"\", -1), (\"pen\", 2), (\"\", 4)]) == [\n        (0, \"no name\"), (2, \"no name\")]\n",
+  "applicable_conditions": [
+    "批量校验提前返回只报第一个错误",
+    "收集型契约被实现为快速失败",
+    "return 与 append 的循环内误用"
+  ]
+}

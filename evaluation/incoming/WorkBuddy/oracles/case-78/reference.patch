@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -4,8 +4,6 @@
+     def start(self):
+         if self.state == 'pending':
+             self.state = 'running'
+-        else:
+-            raise RuntimeError('cannot start')
+         return self.state
+     def finish(self):
+         if self.state == 'running':

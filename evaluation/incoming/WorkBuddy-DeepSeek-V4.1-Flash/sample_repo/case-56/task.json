@@ -1,0 +1,10 @@
+{
+  "case_id": "case-56",
+  "title": "序列号在时钟回拨时直接复用时间戳，产生重复编号",
+  "report": "系统时钟回拨后，序列号返回了比上次更小的值，业务层把它判为重复请求并丢弃。",
+  "contract": "Sequence().next_id(now_ms) 每次返回唯一整数。当 now_ms 严格大于上一次发出的编号时，直接使用 now_ms；否则（时钟回拨或同一毫秒内重复调用）返回上一次编号加一。now_ms 必须为非负 int，否则抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

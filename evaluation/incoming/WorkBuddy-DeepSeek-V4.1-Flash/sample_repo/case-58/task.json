@@ -1,0 +1,10 @@
+{
+  "case_id": "case-58",
+  "title": "授权规则遍历不提前终止，最后一条规则覆盖了更优先的规则",
+  "report": "用户已被首条规则显式拒绝，却因为后面一条旧规则而被放行，拒绝规则没有生效。",
+  "contract": "Policy(rules) 中 rules 为 (role, allowed) 二元组列表，自上而下匹配，第一条命中该 role 的规则决定结果，后续规则不再参与。没有任何规则命中时返回 False。返回 bool。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-180",
+  "title": "追加写入时用了浅拷贝追加，多个记录共享同一个字典",
+  "report": "日志记录追加到列表后，修改其中一条记录影响了所有记录，所有日志内容都变成了最后一条。",
+  "contract": "append_records(records, new_record) 把 new_record 追加到 records 并返回新列表。规则：必须深拷贝 new_record 与其内部的嵌套 dict/list，追加后的记录与传入的 new_record 之间不得共享可变对象；不修改传入的 new_record；records 本身不修改（返回新列表）；new_record 必须是非空 dict，否则抛出 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

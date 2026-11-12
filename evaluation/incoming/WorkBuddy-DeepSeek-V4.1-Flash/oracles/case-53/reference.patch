@@ -1,0 +1,12 @@
+--- a/target.py
++++ b/target.py
+@@ -5,6 +5,6 @@
+         raise TypeError('float is not allowed')
+     if places < 0:
+         raise ValueError('places must be non-negative')
+-    shifted = decimal.Decimal(str(value)).scaleb(places)
+-    truncated = shifted.quantize(decimal.Decimal('1'))
+-    return truncated.scaleb(-places)
++    quantum = decimal.Decimal(1).scaleb(-places)
++    return decimal.Decimal(str(value)).quantize(
++        quantum, rounding=decimal.ROUND_HALF_UP)

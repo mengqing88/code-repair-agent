@@ -1,0 +1,10 @@
+{
+  "case_id": "case-170",
+  "title": "限制器令牌桶补充令牌时按整秒计算，短窗口内限流不准",
+  "report": "限流器在 1 秒窗口内本应放行 2 个请求，实际只放行了 1 个，短时突发流量被误杀。",
+  "contract": "TokenBucket 令牌桶。构造参数 rate（每秒补充的令牌数，必须为正数）与 capacity（桶容量，必须为正整数）。acquire(tokens=1) 尝试取令牌：成功返回 True；桶内令牌不足时返回 False，不做等待。规则：初始桶内令牌数为 capacity；每经过 elapsed 秒补充 elapsed * rate 个令牌，上限为 capacity；令牌数为浮点数，允许小数累积；tokens 必须为正整数，否则抛出 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

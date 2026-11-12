@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def rank(players):
+     """players: [(name, score)]，返回排序后的新列表。"""
+-    return sorted(players, key=lambda p: -p[1])
++    return sorted(players, key=lambda p: (-p[1], p[0]))

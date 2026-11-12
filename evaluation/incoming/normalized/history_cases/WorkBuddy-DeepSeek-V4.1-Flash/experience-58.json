@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "规则优先级",
+    "首条命中即返回",
+    "默认拒绝"
+  ],
+  "before_source": "def match_mail(candidates, domain):\n    found = None\n    for address in candidates:\n        if address.endswith(domain):\n            found = address\n    return found\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-58",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "遍历过程没有提前终止，后出现的匹配覆盖了先出现的结果。修复原则：优先级语义下首次命中即应返回，循环体内不要保留“最后一次”的副作用状态。",
+  "experience_id": "experience-58",
+  "normalization_notes": [],
+  "original_report": "多个邮箱中匹配验证邮箱时，用了最后一个匹配项而不是第一个。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,6 @@\n def match_mail(candidates, domain):\n-    found = None\n     for address in candidates:\n         if address.endswith(domain):\n-            found = address\n-    return found\n+            return address\n+    return None\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert match_mail([], '@a') is None\n\n\ndef test_experience_2():\n    assert match_mail(['a@x', 'b@x'], '@x') == 'a@x'\n\n\ndef test_experience_3():\n    assert match_mail(['x@b'], '@a') is None\n"
+}

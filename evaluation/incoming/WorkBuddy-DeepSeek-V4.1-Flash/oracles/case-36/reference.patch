@@ -1,0 +1,12 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,7 @@
+ def resolve(layers, key):
+-    if key in layers[0]:
+-        return layers[0][key]
++    for layer in layers:
++        if layer is None:
++            continue
++        if key in layer:
++            return layer[key]
+     return None

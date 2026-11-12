@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "先修改状态后校验导致失败路径污染",
+    "异常路径必须保持状态不变的契约",
+    "扣减类操作校验前置"
+  ],
+  "before_source": "class Account:\n    \"\"\"账户扣款：余额不足时抛 ValueError 且余额不变。\"\"\"\n\n    def __init__(self, balance):\n        self.balance = balance\n\n    def debit(self, amount):\n        self.balance -= amount\n        if self.balance < 0:\n            raise ValueError(\"insufficient funds\")\n        return self.balance\n",
+  "dataset_experience_id": "GLM::experience-100",
+  "dataset_id": "GLM",
+  "diagnosis": "先变更后校验使失败路径污染状态：所有带失败语义的写操作必须先完成全部校验，再执行变更。修复原则：校验前置，失败时状态零变更。",
+  "experience_id": "experience-100",
+  "normalization_notes": [],
+  "original_report": "账户扣款在校验余额前就修改了余额，余额不足的失败交易把账户扣成了负数。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -5,7 +5,7 @@\n         self.balance = balance\n \n     def debit(self, amount):\n+        if amount > self.balance:\n+            raise ValueError(\"insufficient funds\")\n         self.balance -= amount\n-        if self.balance < 0:\n-            raise ValueError(\"insufficient funds\")\n         return self.balance\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import Account\n\ndef test_normal_debit():\n    acc = Account(100)\n    assert acc.debit(30) == 70\n\ndef test_failed_debit_no_change():\n    acc = Account(50)\n    with pytest.raises(ValueError):\n        acc.debit(60)\n    assert acc.balance == 50\n\ndef test_debit_to_zero():\n    acc = Account(50)\n    assert acc.debit(50) == 0\n"
+}

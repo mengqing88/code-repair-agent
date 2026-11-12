@@ -1,0 +1,10 @@
+{
+  "case_id": "case-40",
+  "title": "缓存命中判定只看上一次的键，没有使用当前参数",
+  "report": "查询完“手机”再查“电脑”，返回的仍是“手机”的结果，两次查询共用了同一条缓存。",
+  "contract": "Memoizer(func) 缓存单参数函数的结果。get(arg)：arg 可哈希且已在缓存中时直接返回缓存值，不再调用 func；arg 可哈希但未命中时调用 func 并写入缓存；arg 不可哈希（如 list、dict）时直接调用 func，不读写缓存。cache_size() 返回当前条目数。None 是合法且可缓存的参数。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

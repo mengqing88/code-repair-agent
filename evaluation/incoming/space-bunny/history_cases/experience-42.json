@@ -1,0 +1,15 @@
+{
+  "experience_id": "experience-42",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "合同租期从 1 月到 3 月算出来是 60 天，实际只有 59 天，\n到期提醒提前了一天触发。",
+  "diagnosis": "用“月数 × 30”近似天数，忽略了月份实际长度与闰年。修复原则：日期区间天数必须基于真实日历计算，最稳妥的做法是让标准库 date 自己做差（date - date 得到 timedelta），从而自动处理闰年与月末。",
+  "before_source": "\n\"\"\"Contract period calculation.\"\"\"\n\nimport datetime\n\n\ndef contract_days(start, end):\n    \"\"\"Return the number of days in the contract period.\"\"\"\n    months = (end.year - start.year) * 12 + (end.month - start.month)\n    return months * 30 + (end.day - start.day)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,5 +6,4 @@\n \n def contract_days(start, end):\n     \"\"\"Return the number of days in the contract period.\"\"\"\n-    months = (end.year - start.year) * 12 + (end.month - start.month)\n-    return months * 30 + (end.day - start.day)\n+    return (end - start).days\n",
+  "verification_tests": "\nimport datetime\n\nfrom target import contract_days\n\n\ndef test_same_day_is_zero():\n    d = datetime.date(2024, 3, 1)\n    assert contract_days(d, d) == 0\n\n\ndef test_cross_month_span():\n    assert contract_days(datetime.date(2023, 1, 1), datetime.date(2023, 3, 1)) == 59\n\n\ndef test_leap_year_span():\n    assert contract_days(datetime.date(2024, 1, 1), datetime.date(2024, 3, 1)) == 60\n",
+  "applicable_conditions": [
+    "日期差",
+    "每月30天近似",
+    "闰年",
+    "日历计算"
+  ]
+}

@@ -1,0 +1,7 @@
+def bucket(value, edges):
+    for i in range(len(edges) - 1):
+        if edges[i] <= value <= edges[i + 1]:
+            return i
+    if value >= edges[-1]:
+        return len(edges) - 2
+    return -1

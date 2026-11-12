@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "分段计费",
+    "阈值区间",
+    "整单取单一参数",
+    "逐段累加"
+  ],
+  "before_source": "\n\"\"\"Shipping fee brackets.\"\"\"\n\n\ndef shipping_fee(weight_kg, tiers):\n    \"\"\"Return the shipping fee for a parcel of the given weight in kg.\"\"\"\n    ordered = sorted(tiers, key=lambda t: t[0])\n    rate = None\n    for threshold, tier_rate in ordered:\n        if weight_kg >= threshold:\n            rate = tier_rate\n    if rate is None:\n        return 0\n    return weight_kg * rate\n",
+  "dataset_experience_id": "space-bunny::experience-31",
+  "dataset_id": "space-bunny",
+  "diagnosis": "缺陷是“用一个档位费率决定整单待遇”，正确做法是按重量分段：每一段各自套用该段所属的档位费率，\n累加各段金额。修复原则：把“整单取一个参数”改成“逐段取参数再累加”，并且段的边界由相邻阈值确定（[t_i, t_{i+1}-1]），最后一段延伸到无穷。",
+  "experience_id": "experience-31",
+  "normalization_notes": [],
+  "original_report": "快递运费结算时整单只套用了一个档位费率，\n导致跨档重量的包裹被整体按高档费率计费。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -5,10 +5,16 @@\n def shipping_fee(weight_kg, tiers):\n     \"\"\"Return the shipping fee for a parcel of the given weight in kg.\"\"\"\n     ordered = sorted(tiers, key=lambda t: t[0])\n-    rate = None\n-    for threshold, tier_rate in ordered:\n-        if weight_kg >= threshold:\n-            rate = tier_rate\n-    if rate is None:\n-        return 0\n-    return weight_kg * rate\n+    remaining = weight_kg\n+    fee = 0\n+    for index, (threshold, rate) in enumerate(ordered):\n+        if remaining <= 0:\n+            break\n+        if index + 1 < len(ordered):\n+            capacity = ordered[index + 1][0] - threshold\n+        else:\n+            capacity = remaining\n+        billed = min(remaining, capacity)\n+        fee += billed * rate\n+        remaining -= billed\n+    return fee\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "\nimport pytest\n\nfrom target import shipping_fee\n\n\ndef test_small_parcel_uses_first_bracket_rate():\n    assert shipping_fee(2, [(1, 10), (5, 5)]) == 20\n\n\ndef test_parcel_spanning_brackets_is_billed_per_bracket():\n    # 4kg at 10 -> 40, then 1kg at 5 -> 5\n    assert shipping_fee(5, [(1, 10), (5, 5)]) == 45\n\n\ndef test_heavier_parcel_keeps_segmenting_brackets():\n    # 4kg at 10 -> 40, then 5kg at 5 -> 25\n    assert shipping_fee(9, [(1, 10), (5, 5)]) == 65\n"
+}

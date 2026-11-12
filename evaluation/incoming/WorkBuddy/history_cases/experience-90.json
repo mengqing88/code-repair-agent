@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-90",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "请求头缓存按原样作键，'Content-Type' 与 'content-type' 被视为两项。",
+  "diagnosis": "名称类缓存键通常需要大小写归一化，否则同名不同写法规避缓存。",
+  "before_source": "class HeaderCache:\n    def __init__(self):\n        self.s = {}\n    def set(self, k, v):\n        self.s[k] = v\n    def get(self, k):\n        return self.s.get(k)\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -2,6 +2,6 @@\n     def __init__(self):\n         self.s = {}\n     def set(self, k, v):\n-        self.s[k] = v\n+        self.s[k.lower()] = v\n     def get(self, k):\n-        return self.s.get(k)\n+        return self.s.get(k.lower())\n",
+  "verification_tests": "import pytest\nfrom target import HeaderCache\n\ndef test_a():\n    c = HeaderCache(); c.set('Content-Type', 'x'); assert c.get('content-type') == 'x'\n\ndef test_b():\n    c = HeaderCache(); c.set('Accept', 'y'); assert c.get('accept') == 'y'\n\ndef test_c():\n    c = HeaderCache(); c.set('X-Auth', 'z'); assert c.get('x-auth') == 'z'\n",
+  "applicable_conditions": [
+    "缓存键大小写归一",
+    "键规范化错误"
+  ]
+}

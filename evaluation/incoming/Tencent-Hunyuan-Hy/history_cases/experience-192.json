@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-192",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】几何计算场景：由浮点运算得到的点 (0.1+0.2, 1.0) 与 (0.3, 1.0) 本应视为重合，却被判为不同点。预期：坐标差在容差范围内即视为同一点。",
+  "diagnosis": "浮点结果不能直接用 == 判等，二进制表示误差会让数学上相等的值不相等；应使用 abs(a-b) <= tolerance 的容差比较，并明确容差大小。修复原则是替换比较方式，不改数据的生成逻辑。",
+  "before_source": "# 几何计算：判断两个坐标点是否重合。\n\n\ndef same_point(p, q):\n    \"\"\"p、q 为 (x, y) 浮点元组。\"\"\"\n    return p[0] == q[0] and p[1] == q[1]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,4 +3,4 @@\n \n def same_point(p, q):\n     \"\"\"p、q 为 (x, y) 浮点元组。\"\"\"\n-    return p[0] == q[0] and p[1] == q[1]\n+    return abs(p[0] - q[0]) <= 1e-9 and abs(p[1] - q[1]) <= 1e-9\n",
+  "verification_tests": "from target import same_point\n\n\ndef test_identical_points():\n    assert same_point((1.0, 2.0), (1.0, 2.0)) is True\n\n\ndef test_clearly_different_points():\n    assert same_point((1.0, 2.0), (3.0, 2.0)) is False\n\n\ndef test_binary_float_error_is_tolerated():\n    assert same_point((0.1 + 0.2, 1.0), (0.3, 1.0)) is True\n",
+  "applicable_conditions": [
+    "比较对象来自浮点运算或累加",
+    "缺陷表现为数学上相等的值因表示误差被判不等",
+    "契约应明确给出容差阈值"
+  ]
+}

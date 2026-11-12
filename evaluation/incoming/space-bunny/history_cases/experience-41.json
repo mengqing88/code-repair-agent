@@ -1,0 +1,15 @@
+{
+  "experience_id": "experience-41",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "供应商名称里有逗号（\"华强, 电子\"）时，\n导入的报价表列数多了一列，后续字段全部错位。",
+  "diagnosis": "解析只做了朴素的逗号切分，没有识别引号包裹的字段。修复原则：CSV 解析需要状态机——跟踪“当前是否在引号内”，引号内的逗号不是分隔符，双写引号表示字面引号，引号未闭合应报错而不是静默产出错误结果。",
+  "before_source": "\n\"\"\"Supplier price sheet import.\"\"\"\n\n\ndef parse_supplier_line(line):\n    \"\"\"Split one supplier CSV line into columns.\"\"\"\n    if line == \"\":\n        return []\n    return line.split(\",\")\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,4 +6,30 @@\n     \"\"\"Split one supplier CSV line into columns.\"\"\"\n     if line == \"\":\n         return []\n-    return line.split(\",\")\n+    columns = []\n+    buffer = []\n+    in_quotes = False\n+    index = 0\n+    while index < len(line):\n+        char = line[index]\n+        if in_quotes:\n+            if char == '\"':\n+                if index + 1 < len(line) and line[index + 1] == '\"':\n+                    buffer.append('\"')\n+                    index += 2\n+                    continue\n+                in_quotes = False\n+            else:\n+                buffer.append(char)\n+        elif char == '\"':\n+            in_quotes = True\n+        elif char == \",\":\n+            columns.append(\"\".join(buffer))\n+            buffer = []\n+        else:\n+            buffer.append(char)\n+        index += 1\n+    if in_quotes:\n+        raise ValueError(\"unterminated quote\")\n+    columns.append(\"\".join(buffer))\n+    return columns\n",
+  "verification_tests": "\nimport pytest\n\nfrom target import parse_supplier_line\n\n\ndef test_plain_line():\n    assert parse_supplier_line(\"a,b,c\") == [\"a\", \"b\", \"c\"]\n\n\ndef test_quoted_column_keeps_inner_comma():\n    assert parse_supplier_line('a,\"b,c\",d') == [\"a\", \"b,c\", \"d\"]\n\n\ndef test_unterminated_quote_raises():\n    with pytest.raises(ValueError):\n        parse_supplier_line('a,\"b,c')\n",
+  "applicable_conditions": [
+    "CSV",
+    "引号",
+    "状态机解析",
+    "列错位"
+  ]
+}

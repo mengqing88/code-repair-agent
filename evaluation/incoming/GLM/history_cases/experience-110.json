@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-110",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "审批流引擎对流程定义做拓扑排序时没有检测环，配置了循环审批的流程静默丢失部分节点后照常发布。",
+  "diagnosis": "Kahn 算法必须校验输出节点数等于输入节点数，否则存在环。修复原则：拓扑排序的环检测不可省略，失败要显式抛错而不是静默截断。",
+  "before_source": "def pipeline_order(stages, deps):\n    \"\"\"Kahn 拓扑排序：无依赖阶段按 stages 顺序输出；有环抛 ValueError。\"\"\"\n    indeg = {s: 0 for s in stages}\n    adj = {s: [] for s in stages}\n    for u, v in deps:\n        adj[u].append(v)\n        indeg[v] += 1\n    ready = [s for s in stages if indeg[s] == 0]\n    order = []\n    i = 0\n    while i < len(ready):\n        cur = ready[i]\n        i += 1\n        order.append(cur)\n        for nxt in adj[cur]:\n            indeg[nxt] -= 1\n            if indeg[nxt] == 0:\n                ready.append(nxt)\n    return order\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -16,4 +16,6 @@\n             indeg[nxt] -= 1\n             if indeg[nxt] == 0:\n                 ready.append(nxt)\n+    if len(order) != len(stages):\n+        raise ValueError(\"cycle detected\")\n     return order\n",
+  "verification_tests": "import pytest\nfrom target import pipeline_order\n\ndef test_linear_pipeline():\n    assert pipeline_order([\"b\", \"a\"], [(\"a\", \"b\")]) == [\"a\", \"b\"]\n\ndef test_no_deps():\n    assert pipeline_order([\"p\", \"q\"], []) == [\"p\", \"q\"]\n\ndef test_dependency_cycle():\n    with pytest.raises(ValueError):\n        pipeline_order([\"x\", \"y\"], [(\"x\", \"y\"), (\"y\", \"x\")])\n",
+  "applicable_conditions": [
+    "拓扑排序/Kahn 算法缺少环检测",
+    "失败被静默截断而非抛错",
+    "依赖图解析"
+  ]
+}

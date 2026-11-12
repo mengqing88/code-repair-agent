@@ -1,0 +1,10 @@
+{
+  "case_id": "case-99",
+  "title": "版本号按字符串比较",
+  "report": "版本号比较把每段当作字符串比较，导致 1.10.0 被认为小于 1.9.0；且段数不同（如 1.2 与 1.2.0）被误判为不相等。",
+  "contract": "compare_versions(a, b)：点分版本号字符串，每段为非负整数；a>b 返回 1，相等返回 0，a<b 返回 -1。缺省段视为 0，即 '1.2' 与 '1.2.0' 相等。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

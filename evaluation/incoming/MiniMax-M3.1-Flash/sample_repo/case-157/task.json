@@ -1,0 +1,10 @@
+{
+  "case_id": "case-157",
+  "title": "退款按比例分摊时逐项四舍五入，总额与退款额对不上",
+  "report": "一笔 100 元退款按三笔订单平均分摊后，各笔退款额相加为 99 元而不是 100 元；对账时系统判定金额不平，剩余 1 分无处可去。",
+  "contract": "allocate_refund(total, weights) 将 total 按 weights 比例分摊，返回一个整数列表（单位：分）。规则：weights 为空时返回空列表；weights 之和必须大于 0（否则抛出 ValueError）；返回值长度等于 len(weights)；各元素非负；返回值之和必须严格等于 total；分摊采用最大余数法：先按比例向下取整，再把剩余的分按小数部分从大到小依次补给各元素，小数部分相同时按 weights 的原始下标从小到大补给。total 为非负整数（分）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

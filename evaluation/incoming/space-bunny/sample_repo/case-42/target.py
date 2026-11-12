@@ -1,0 +1,10 @@
+
+"""Calendar arithmetic."""
+
+import datetime
+
+
+def days_between(start, end):
+    """Return the number of days from start to end."""
+    months = (end.year - start.year) * 12 + (end.month - start.month)
+    return months * 30 + (end.day - start.day)

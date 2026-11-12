@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def has_access(user_perms, required):
+     """返回是否允许访问。"""
+-    return any(p in user_perms for p in required)
++    return all(p in user_perms for p in required)

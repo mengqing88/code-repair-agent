@@ -1,0 +1,10 @@
+{
+  "case_id": "case-74",
+  "title": "None 表示保留却被覆盖",
+  "report": "resolve(base, override)：override 中某键值为 None 表示“保留 base 原值”，不应覆盖。当前实现把 None 当作有效值写入，覆盖了原有配置。",
+  "contract": "输入 dict。若 override[k] is None 则保留 base[k]（base 无则删除该键）；否则 override 覆盖。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

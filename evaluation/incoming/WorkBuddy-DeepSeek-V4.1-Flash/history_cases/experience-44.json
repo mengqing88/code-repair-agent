@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-44",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "包邮门槛用抵扣后的净额判断，加价后仍显示不满足包邮条件。",
+  "diagnosis": "门槛判定与金额计算作用在同一个变量上，判定前该变量已被优惠改写。修复原则：判定口径与计算口径必须分离，判定使用原始值，并对最终金额加下限保护。",
+  "before_source": "def shipping_fee(subtotal, discount):\n    net = subtotal - discount\n    if net >= 99:\n        return 0.0\n    return 8.0\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,6 +1,6 @@\n def shipping_fee(subtotal, discount):\n     net = subtotal - discount\n-    if net >= 99:\n+    if subtotal >= 99:\n         return 0.0\n     return 8.0\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert shipping_fee(150.0, 0.0) == 0.0\n\n\ndef test_experience_2():\n    assert shipping_fee(50.0, 0.0) == 8.0\n\n\ndef test_experience_3():\n    assert shipping_fee(300.0, 250.0) == 0.0\n",
+  "applicable_conditions": [
+    "满减门槛",
+    "判定口径",
+    "减免下限"
+  ]
+}

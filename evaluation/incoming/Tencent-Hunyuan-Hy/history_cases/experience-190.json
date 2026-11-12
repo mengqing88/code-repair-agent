@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-190",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】促销门槛场景：规则写明「消费满 100 元（含）可享折扣」，但消费恰好 100 元的订单没有拿到折扣。预期：等于门槛也算达标。",
+  "diagnosis": "阈值比较必须明确相等边界是否包含：「满 X（含）」对应 >=，「超过 X」对应 >。把包含边界写成严格不等，会让恰好等于阈值的合法输入被排除。修复原则是只调整比较运算符，并把相等情形列入验收边界。",
+  "before_source": "# 促销资格：消费满（含）门槛即可享受折扣费率。\n\n\ndef discount_rate(total, threshold, rate):\n    \"\"\"达到门槛返回折扣费率，否则返回 0。\"\"\"\n    if total > threshold:\n        return rate\n    return 0\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,6 +3,6 @@\n \n def discount_rate(total, threshold, rate):\n     \"\"\"达到门槛返回折扣费率，否则返回 0。\"\"\"\n-    if total > threshold:\n+    if total >= threshold:\n         return rate\n     return 0\n",
+  "verification_tests": "from target import discount_rate\n\n\ndef test_above_threshold():\n    assert discount_rate(200, 100, 15) == 15\n\n\ndef test_below_threshold():\n    assert discount_rate(50, 100, 15) == 0\n\n\ndef test_exactly_at_threshold():\n    assert discount_rate(100, 100, 15) == 15\n",
+  "applicable_conditions": [
+    "规则中的阈值明确包含或不包含相等边界",
+    "缺陷表现为恰好等于阈值的输入被错误排除（或错误纳入）",
+    "验收必须覆盖阈值相等、阈值为 0 等临界值"
+  ]
+}

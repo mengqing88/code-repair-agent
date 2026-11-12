@@ -1,0 +1,10 @@
+{
+  "case_id": "case-93",
+  "title": "配置深度合并",
+  "report": "合并配置时，overrides 里嵌套 dict 的一个键会把 defaults 中同嵌套层的其他兄弟键整个覆盖丢失。",
+  "contract": "merge_settings(defaults, overrides) 输入两个任意嵌套的 dict（值为标量或 dict）。标量直接覆盖；同键两边都是 dict 时递归合并、保留未覆盖的兄弟键。返回新 dict，不修改入参。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

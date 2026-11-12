@@ -1,0 +1,10 @@
+{
+  "case_id": "case-54",
+  "title": "叠加折扣把基数固定在循环外，只有最后一次生效",
+  "report": "两张九折券叠加后只减了 10%，第二张券完全没有生效。",
+  "contract": "stack_discounts(price, rates) 中 price 为 Decimal 或 str，rates 为比例列表，每个元素是“减去的比例”（Decimal('0.1') 表示打九折）。折扣依次作用：每次用上一步的结果乘以 (1 - rate)。返回 Decimal，量化为两位小数（ROUND_HALF_UP），下限为 Decimal('0.00')。rates 为空时返回原价量化结果。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

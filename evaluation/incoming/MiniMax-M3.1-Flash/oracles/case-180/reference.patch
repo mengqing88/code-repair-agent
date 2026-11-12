@@ -1,0 +1,17 @@
+--- a/target.py
++++ b/target.py
+@@ -1,10 +1,12 @@
+ """记录追加。"""
++
++import copy
+ 
+ 
+ def append_records(records, new_record):
+-    """把 new_record 追加到 records 并返回新列表。"""
++    """把 new_record 追加到 records 并返回新列表（深拷贝）。"""
+     if not new_record:
+         raise ValueError("new_record must be a non-empty dict")
+     result = list(records)
+-    result.append(new_record)
++    result.append(copy.deepcopy(new_record))
+     return result

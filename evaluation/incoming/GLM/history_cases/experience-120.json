@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-120",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "客服系统把通话秒数格式化为 H:MM:SS 时未补零，时长 '0:05:09' 被显示为 '0:5:9'，报表列宽与排序全部错乱。",
+  "diagnosis": "固定位数时间字段必须用 {:02d} 格式化；str/divmod 直接拼接会丢前导零。修复原则：时间显示按字段格式化，小时之外补齐两位。",
+  "before_source": "def fmt_call_time(total_seconds):\n    \"\"\"格式化为 \"H:MM:SS\"：小时不补零，分/秒固定两位。\"\"\"\n    h, rem = divmod(total_seconds, 3600)\n    m, s = divmod(rem, 60)\n    return \"{0}:{1}:{2}\".format(h, m, s)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n     \"\"\"格式化为 \"H:MM:SS\"：小时不补零，分/秒固定两位。\"\"\"\n     h, rem = divmod(total_seconds, 3600)\n     m, s = divmod(rem, 60)\n-    return \"{0}:{1}:{2}\".format(h, m, s)\n+    return \"{0}:{1:02d}:{2:02d}\".format(h, m, s)\n",
+  "verification_tests": "from target import fmt_call_time\n\ndef test_exact_minutes():\n    assert fmt_call_time(3600) == \"1:00:00\"\n\ndef test_with_seconds():\n    assert fmt_call_time(3661) == \"1:01:01\"\n\ndef test_large_hours():\n    assert fmt_call_time(90061) == \"25:01:01\"\n",
+  "applicable_conditions": [
+    "时间/时长格式化缺少补零",
+    "前导零丢失导致显示与排序错乱",
+    "{:02d} 格式化"
+  ]
+}

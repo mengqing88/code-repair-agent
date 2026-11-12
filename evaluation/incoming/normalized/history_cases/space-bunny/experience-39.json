@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "分批",
+    "尾批丢失",
+    "循环上界",
+    "元素守恒"
+  ],
+  "before_source": "\n\"\"\"Bulk upload batching.\"\"\"\n\n\ndef split_batches(rows, batch_size):\n    \"\"\"Split rows into upload batches.\"\"\"\n    batches = []\n    for start in range(0, len(rows) - batch_size + 1, batch_size):\n        batches.append(rows[start:start + batch_size])\n    return batches\n",
+  "dataset_experience_id": "space-bunny::experience-39",
+  "dataset_id": "space-bunny",
+  "diagnosis": "切分循环的上界写成了 len(items) - size + 1，导致最后不足一批的尾巴永远不会被切出来。修复原则：循环上界必须是元素总数，按固定步长切分，最后一块自然可能不足 size 条，并且要保证“所有元素恰好出现一次”的守恒性质。",
+  "experience_id": "experience-39",
+  "normalization_notes": [],
+  "original_report": "批量上传 7 条数据、上传批次大小为 3，最后一条记录没有入库。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,7 +4,8 @@\n \n def split_batches(rows, batch_size):\n     \"\"\"Split rows into upload batches.\"\"\"\n+    items = list(rows)\n     batches = []\n-    for start in range(0, len(rows) - batch_size + 1, batch_size):\n-        batches.append(rows[start:start + batch_size])\n+    for start in range(0, len(items), batch_size):\n+        batches.append(items[start:start + batch_size])\n     return batches\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "\nfrom target import split_batches\n\n\ndef test_exact_batches():\n    assert split_batches([1, 2, 3, 4], 2) == [[1, 2], [3, 4]]\n\n\ndef test_last_partial_batch_is_kept():\n    assert split_batches([1, 2, 3], 2) == [[1, 2], [3]]\n\n\ndef test_no_row_is_lost():\n    rows = list(range(7))\n    assert [r for batch in split_batches(rows, 3) for r in batch] == rows\n"
+}

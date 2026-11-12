@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "跨零点区间",
+    "向上取整",
+    "整日特例"
+  ],
+  "before_source": "def seconds_used(milliseconds):\n    if milliseconds < 0:\n        raise ValueError('milliseconds must be non-negative')\n    return milliseconds // 1000\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-32",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "用整除把毫秒折算成秒，丢掉了不足一个单位的部分。修复原则：非零长度的折算需要向上取整，零长度按约定单独返回完整周期。",
+  "experience_id": "experience-32",
+  "normalization_notes": [],
+  "original_report": "视频片段的时长统计把 1500 毫秒记成 1 秒，导致总时长偏短。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,7 @@\n def seconds_used(milliseconds):\n     if milliseconds < 0:\n         raise ValueError('milliseconds must be non-negative')\n-    return milliseconds // 1000\n+    if milliseconds == 0:\n+        return 1\n+    return (milliseconds + 999) // 1000\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert seconds_used(2000) == 2\n\n\ndef test_experience_2():\n    assert seconds_used(0) == 1\n\n\ndef test_experience_3():\n    assert seconds_used(7500) == 8\n"
+}

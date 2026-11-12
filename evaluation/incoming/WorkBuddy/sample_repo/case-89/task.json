@@ -1,0 +1,10 @@
+{
+  "case_id": "case-89",
+  "title": "更新后未失效缓存",
+  "report": "Repository.get_user(id) 带缓存；update_user(id, name) 更新底层存储但忘记清除缓存，导致后续读取返回旧值。",
+  "contract": "get_user(id) 优先缓存，缺失时读存储并缓存；update_user(id,name) 更新存储并令该 id 缓存失效。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

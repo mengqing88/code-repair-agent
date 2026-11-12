@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-78",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "作业调度：已运行作业重复触发启动应忽略，却抛错。",
+  "diagnosis": "重复触发启动在终态/运行态应幂等忽略。",
+  "before_source": "class Job:\n    def __init__(self):\n        self.state = 'idle'\n    def run(self):\n        if self.state == 'idle':\n            self.state = 'active'\n        else:\n            raise RuntimeError('cannot run')\n        return self.state\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -4,6 +4,4 @@\n     def run(self):\n         if self.state == 'idle':\n             self.state = 'active'\n-        else:\n-            raise RuntimeError('cannot run')\n         return self.state\n",
+  "verification_tests": "import pytest\nfrom target import Job\n\ndef test_a():\n    j = Job(); j.run()\n    assert j.run() == 'active'\n\ndef test_b():\n    j = Job(); j.run()\n    assert j.run() == 'active'\n\ndef test_c():\n    j = Job(); j.run(); j.run()\n    assert j.run() == 'active'\n",
+  "applicable_conditions": [
+    "启动幂等忽略",
+    "终态重复动作报错"
+  ]
+}

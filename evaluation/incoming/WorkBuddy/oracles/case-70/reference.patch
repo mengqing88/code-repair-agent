@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,4 @@
+ import math
+ 
+ def billing_seconds(duration_ms):
+-    return max(1, duration_ms // 1000)
++    return max(1, math.ceil(duration_ms / 1000))

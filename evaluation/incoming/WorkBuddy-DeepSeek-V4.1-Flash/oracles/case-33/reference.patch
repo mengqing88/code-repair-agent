@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -1,5 +1,5 @@
+ def format_duration(total_seconds):
+     if total_seconds < 0:
+         raise ValueError('total_seconds must be non-negative')
+-    minutes = total_seconds // 60
++    minutes = (total_seconds + 30) // 60
+     return '%d:00' % minutes

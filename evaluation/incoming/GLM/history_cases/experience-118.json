@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-118",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "热销商品榜并列销量的商品顺序随上架先后变化，运营要求同销量按名称升序，报表顺序每天不一致。",
+  "diagnosis": "多键排序需在单个 key 中表达：(-count, name)。仅按计数值 reverse 排序时并列项保持插入序。修复原则：并列打破规则必须编码进排序键。",
+  "before_source": "def top_products(sales, k):\n    \"\"\"销量 Top-K：销量多在前；并列按商品名升序。sales 为 {商品名: 销量}。\"\"\"\n    ranked = sorted(sales, key=sales.get, reverse=True)\n    return ranked[:k]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def top_products(sales, k):\n     \"\"\"销量 Top-K：销量多在前；并列按商品名升序。sales 为 {商品名: 销量}。\"\"\"\n-    ranked = sorted(sales, key=sales.get, reverse=True)\n+    ranked = sorted(sales, key=lambda name: (-sales[name], name))\n     return ranked[:k]\n",
+  "verification_tests": "from target import top_products\n\ndef test_clear_top():\n    assert top_products({\"a\": 5, \"b\": 9}, 1) == [\"b\"]\n\ndef test_all_names():\n    assert top_products({\"y\": 1, \"x\": 1}, 2) == [\"x\", \"y\"]\n\ndef test_tie_by_name():\n    assert top_products({\"banana\": 3, \"apple\": 3, \"fig\": 1}, 2) == [\n        \"apple\", \"banana\"]\n",
+  "applicable_conditions": [
+    "Top-K 并列项的次级排序缺失",
+    "稳定排序保留插入序与契约不符",
+    "多键排序 key 设计"
+  ]
+}

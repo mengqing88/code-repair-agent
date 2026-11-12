@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "手写循环求最大值/最小值",
+    "缺陷表现为全正（求最小）或全负（求最大）时返回初值 0",
+    "初值应取自输入数据或无穷，而非固定常量"
+  ],
+  "before_source": "# 成绩统计：返回列表中的最高分。\n\n\ndef highest(values):\n    if not values:\n        raise ValueError(\"empty\")\n    best = 0\n    for v in values:\n        if v > best:\n            best = v\n    return best\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-206",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "手写极值循环时，初值必须取自数据本身（第一个元素）或正负无穷；用 0 作初值会在「全正的最小值」或「全负的最大值」场景下返回不属于数据的 0。修复原则是把初值改为首个元素，并覆盖全正/全负/含零边界。",
+  "experience_id": "experience-206",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】成绩统计场景：成绩列表全为负数时，最高分返回 0，而 0 根本不在列表里。预期：返回列表中的真实最大值。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,7 +4,7 @@\n def highest(values):\n     if not values:\n         raise ValueError(\"empty\")\n-    best = 0\n+    best = values[0]\n     for v in values:\n         if v > best:\n             best = v\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\n\nfrom target import highest\n\n\ndef test_positive_values():\n    assert highest([0, 5, 3]) == 5\n\n\ndef test_empty_values_raises():\n    with pytest.raises(ValueError):\n        highest([])\n\n\ndef test_all_negative_values():\n    assert highest([-5, -2, -9]) == -2\n"
+}

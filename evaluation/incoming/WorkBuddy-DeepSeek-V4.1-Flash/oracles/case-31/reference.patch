@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -4,6 +4,6 @@
+     if amount < 0:
+         raise ValueError('amount must be non-negative')
+     for upper, rate in BANDS:
+-        if amount <= upper:
++        if amount < upper:
+             return rate
+     return 0.12

@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-42",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "日志按级别统计时，所有 warning 都被算进了 info。",
+  "diagnosis": "聚合时用内容特征（消息长度）猜测类别，而没有使用显式提供的级别字段。修复原则：分类必须依据调用方给出的标签字段，未知标签单独报错，不要用启发式规则替代标签。",
+  "before_source": "def count_levels(records):\n    totals = {'info': 0, 'warning': 0}\n    for level, message in records:\n        if len(message) > 20:\n            totals['warning'] += 1\n        else:\n            totals['info'] += 1\n    return totals\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,9 +1,8 @@\n def count_levels(records):\n     totals = {'info': 0, 'warning': 0}\n     for level, message in records:\n-        if len(message) > 20:\n-            totals['warning'] += 1\n-        else:\n-            totals['info'] += 1\n+        if level not in totals:\n+            raise ValueError('unknown level')\n+        totals[level] += 1\n     return totals\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert count_levels([]) == {'info': 0, 'warning': 0}\n\n\ndef test_experience_2():\n    assert count_levels([('info', 'short')])['info'] == 1\n\n\ndef test_experience_3():\n    assert count_levels([('warning', 'short')])['warning'] == 1\n",
+  "applicable_conditions": [
+    "分类汇总",
+    "按显式标签归类",
+    "缺省为 0"
+  ]
+}

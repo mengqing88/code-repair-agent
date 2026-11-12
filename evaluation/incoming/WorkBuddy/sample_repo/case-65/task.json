@@ -1,0 +1,10 @@
+{
+  "case_id": "case-65",
+  "title": "分账舍入余数丢失",
+  "report": "split_amount(total, weights)：按比例分账，除最后一份外每份四舍五入到分，最后一份吃掉舍入余数，使总和恰好等于 total。当前实现每份独立四舍五入，导致总和可能不等于 total。",
+  "contract": "total>=0，weights 为正整数列表（长度>=1）。返回长度与 weights 相同的 float 列表（2 位小数），且 sum(result)==total（最后一份吸收余数）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

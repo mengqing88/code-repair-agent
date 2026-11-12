@@ -1,0 +1,10 @@
+{
+  "case_id": "case-185",
+  "title": "复合缓存键的编码碰撞",
+  "report": "指标缓存用 (service, metric) 两段拼成键。上线后发现 ('ab','c') 与 ('a','bc') 会读到同一份数据：后者 put 之后前者 get 到的是后者的值；三段键 ('a','bc','d') 与 ('ab','c','d') 同样冲突。更严重的是对 ('ab','c') 调用 invalidate 会把 ('a','bc') 的条目一起删掉。预期：任意不同的 key_parts 序列必须对应互不干扰的独立缓存条目。",
+  "contract": "MetricsCache 提供 put(key_parts, value) / get(key_parts) / invalidate(key_parts)。key_parts 为非空字符串序列（tuple 或 list），每段只含 [a-z0-9_]，不含 U+001F。value 为任意非 None 的 int；get 命中返回该值，未命中返回 None；put 相同 key_parts 覆盖旧值；invalidate 只删除对应条目，不得影响其它 key_parts。硬性要求：不同的 key_parts 序列必须一一映射到不同缓存条目，绝不碰撞（含 2 段、3 段及更长组合）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

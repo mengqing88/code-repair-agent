@@ -1,0 +1,10 @@
+{
+  "case_id": "case-60",
+  "title": "库存预留未校验可用量，超量请求被接受",
+  "report": "两只装的订单在库存只剩一只时仍然预留成功，导致超卖。",
+  "contract": "Inventory(stock) 维护可用库存（int，初始必须 >= 0，否则抛 ValueError）。reserve(quantity) 在 quantity <= 0 时抛 ValueError；quantity 大于当前库存时不做任何修改并返回 False；否则扣减库存并返回 True。available() 返回当前库存。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

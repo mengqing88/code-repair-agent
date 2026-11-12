@@ -1,0 +1,10 @@
+{
+  "case_id": "case-174",
+  "title": "金额比较用字符串相等判断，数值相同但写法不同的金额被漏掉",
+  "report": "对账脚本比对金额时，字符串 \"100\" 和整数 100 被认为不相等，产生了大量假差异告警。",
+  "contract": "amounts_equal(left, right) 判断两个金额是否相等，返回 bool。规则：金额可以是 int、float 或它们的字符串形式；比较前把字符串形式解析为数值（数值字符串前后允许有空白；无法解析的字符串视为不相等而不是抛异常）；数值相等即视为金额相等（包括 100 与 100.0、\"100\" 与 100）；无法解析的一侧与可解析的一侧比较返回 False。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

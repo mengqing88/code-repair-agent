@@ -1,0 +1,10 @@
+{
+  "case_id": "case-191",
+  "title": "可变默认参数导致的跨调用共享",
+  "report": "购物车工具在不传 cart 参数时，本应每次得到一个只含本次商品的新列表，实际上第二次调用会带上第一次的商品，连续调用不断累积；同一个进程里不同业务流的数据互相串在一起。预期：未传 cart 时各次调用互不影响；显式传入列表时仍在该列表上追加并返回同一对象。",
+  "contract": "add_item(item, cart=None) -> list。cart 为 None（未提供）时返回一个只含 item 的新列表，且多次未提供 cart 的调用之间不得共享状态；显式传入 list 时把 item 追加到该列表并返回**同一个列表对象**；item 为任意对象；不修改任何默认值。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

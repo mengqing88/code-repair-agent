@@ -1,0 +1,10 @@
+{
+  "case_id": "case-120",
+  "title": "时长格式化未补零",
+  "report": "把秒数格式化为 H:MM:SS 时分钟和秒没有补零，3661 秒显示成 '1:1:1' 而不是 '1:01:01'。",
+  "contract": "format_duration(total_seconds)：非负整数秒。返回 'H:MM:SS'：小时不补零且可超过 24，分和秒固定两位数字。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

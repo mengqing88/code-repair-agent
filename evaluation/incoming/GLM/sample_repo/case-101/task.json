@@ -1,0 +1,10 @@
+{
+  "case_id": "case-101",
+  "title": "退避序列整体错位",
+  "report": "重试退避序列整体偏移一档：第 0 次延迟不是 base，而是 base*factor。",
+  "contract": "backoff_schedule(base, count, factor=2)：返回长度 count 的列表，第 i 项（i 从 0 开始）为 base * factor**i。count>=0，base>0，factor>0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

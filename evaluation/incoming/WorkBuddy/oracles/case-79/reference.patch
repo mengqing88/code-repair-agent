@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -2,6 +2,8 @@
+     def __init__(self):
+         self.cache = {}
+     def submit(self, request_id, processor):
++        if request_id in self.cache:
++            return self.cache[request_id]
+         result = processor()
+         self.cache[request_id] = result
+         return result

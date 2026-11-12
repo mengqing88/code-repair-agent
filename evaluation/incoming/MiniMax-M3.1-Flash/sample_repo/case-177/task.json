@@ -1,0 +1,10 @@
+{
+  "case_id": "case-177",
+  "title": "状态流转白名单查反了方向，合法流转被判为非法",
+  "report": "工单状态流转全部被拒绝，明明允许从\"处理中\"转到\"已完成\"的工单也提交不了，业务被卡住。",
+  "contract": "can_advance(state, target) 返回 bool。规则：state 与 target 均为字符串；允许的流转白名单为 {\"0\": {\"1\"}, \"1\": {\"2\", \"9\"}, \"2\": set(), \"9\": set()}，即 ALLOWED[当前状态] 给出允许到达的目标状态集合；只有白名单中明确列出的组合返回 True，其余一律返回 False；state 为空字符串或 None 时返回 False。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

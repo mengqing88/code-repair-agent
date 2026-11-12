@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-87",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "记忆化缓存用 str(args) 作键，导致 (1,) 与 '1' 冲突。",
+  "diagnosis": "缓存键应使用原始可哈希对象，不应字符串化导致冲突。",
+  "before_source": "class Memo:\n    def __init__(self):\n        self.s = {}\n    def put(self, k, v):\n        self.s[str(k)] = v\n    def get(self, k):\n        return self.s.get(str(k))\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -2,6 +2,6 @@\n     def __init__(self):\n         self.s = {}\n     def put(self, k, v):\n-        self.s[str(k)] = v\n+        self.s[k] = v\n     def get(self, k):\n-        return self.s.get(str(k))\n+        return self.s.get(k)\n",
+  "verification_tests": "import pytest\nfrom target import Memo\n\ndef test_a():\n    m = Memo(); m.put(1, 'i'); m.put('1', 's')\n    assert m.get(1) == 'i'\n\ndef test_b():\n    m = Memo(); m.put('1', 's'); m.put(1, 'i')\n    assert m.get('1') == 's'\n\ndef test_c():\n    m = Memo(); m.put(1, 'i'); m.put('1', 's')\n    assert m.get(1) == 'i' and m.get('1') == 's'\n",
+  "applicable_conditions": [
+    "缓存键字符串化冲突",
+    "键规范化错误"
+  ]
+}

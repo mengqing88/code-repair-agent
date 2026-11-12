@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-98",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "会员结算先扣了满减券再计算会员折扣，与运营规则（先折扣后满减）不符，实付金额普遍偏高。",
+  "diagnosis": "多重优惠的叠加顺序影响结果：乘法折扣与减法优惠不可交换。修复原则：严格按契约声明的顺序施加变换，顺序颠倒时中间值不同。",
+  "before_source": "def member_checkout(amount, vip_rate, coupon):\n    \"\"\"规则：先按 vip_rate（如 0.9）打折，再减 coupon。结果不低于 0。\"\"\"\n    return max(0.0, (amount - coupon) * vip_rate)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n def member_checkout(amount, vip_rate, coupon):\n     \"\"\"规则：先按 vip_rate（如 0.9）打折，再减 coupon。结果不低于 0。\"\"\"\n-    return max(0.0, (amount - coupon) * vip_rate)\n+    return max(0.0, amount * vip_rate - coupon)\n",
+  "verification_tests": "from target import member_checkout\n\ndef test_only_vip():\n    assert member_checkout(100, 0.9, 0) == 90.0\n\ndef test_only_coupon():\n    assert member_checkout(100, 1.0, 20) == 80.0\n\ndef test_combined_order():\n    assert member_checkout(200, 0.9, 30) == 150.0\n",
+  "applicable_conditions": [
+    "百分比折扣与固定减免的叠加顺序",
+    "乘法与减法变换不可交换",
+    "结算金额规则实现顺序与契约不符"
+  ]
+}

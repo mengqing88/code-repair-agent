@@ -1,0 +1,10 @@
+{
+  "case_id": "case-42",
+  "title": "分类汇总时用金额符号推断类别",
+  "report": "账单里出现一笔 -30 的退款，它被算进了支出合计；收入项里的负数金额也被错误归到了退款。",
+  "contract": "split_amounts(entries) 接收 (kind, amount) 二元组序列。kind 只能取 'income'、'expense'、'refund'，其他值抛 ValueError。amount 为 int，允许为负数。类别完全由 kind 决定，与金额符号无关。返回 dict，键固定为 income / expense / refund，值为该类别下金额之和，未出现过的类别为 0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

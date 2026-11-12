@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-171",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "同时满足会员日折扣和店铺优惠券的订单，两个优惠一起生效，结算价低于进货价。",
+  "diagnosis": "折扣计算直接把会员折扣与优惠券金额相加，没有实现业务上的“互斥”规则。修复原则：存在互斥关系的优惠必须先判定优先级并只保留一个，再进入金额计算；互斥判断要发生在计算之前而不是靠最终金额截断来掩盖。",
+  "before_source": "def checkout_total(price_cents, member_percent, gift_card_cents):\n    \"\"\"计算结算总价（分）。\"\"\"\n    member_discount = price_cents * member_percent // 100\n    discount = member_discount + gift_card_cents\n    if discount > price_cents:\n        discount = price_cents\n    return price_cents - discount\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,7 @@\n def checkout_total(price_cents, member_percent, gift_card_cents):\n     \"\"\"计算结算总价（分）。\"\"\"\n+    if member_percent > 0 and gift_card_cents > 0:\n+        gift_card_cents = 0\n     member_discount = price_cents * member_percent // 100\n     discount = member_discount + gift_card_cents\n     if discount > price_cents:\n",
+  "verification_tests": "from target import checkout_total\n\n\ndef test_gift_card_is_ignored_with_member_discount():\n    assert checkout_total(10000, 10, 500) == 9000\n\n\ndef test_gift_card_alone_is_applied():\n    assert checkout_total(10000, 0, 500) == 9500\n\n\ndef test_no_discount_returns_full_price():\n    assert checkout_total(10000, 0, 0) == 10000\n",
+  "applicable_conditions": [
+    "折扣规则互斥",
+    "两种优惠同时生效",
+    "互斥判断必须先于金额计算"
+  ]
+}

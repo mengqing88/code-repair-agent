@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-207",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】批量结算场景：规则要求先汇总金额再按比例折算并四舍五入，实现却对每一笔先取整再相加，多笔小额订单的合计与契约不一致。预期：只对总和做一次折算与取整。",
+  "diagnosis": "含取整的运算不满足分配律：「先逐项取整再求和」与「先求和再取整」结果不同。契约规定取整发生在哪一层，就必须在哪一层做一次；修复原则是调整取整的作用对象，不改费率与求和逻辑。",
+  "before_source": "# 批量结算：先求金额总和，再按折扣率四舍五入到分。\n\n\ndef total_cents(prices, rate_bp):\n    return sum((p * rate_bp + 50) // 100 for p in prices)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def total_cents(prices, rate_bp):\n-    return sum((p * rate_bp + 50) // 100 for p in prices)\n+    return (sum(prices) * rate_bp + 50) // 100\n",
+  "verification_tests": "from target import total_cents\n\n\ndef test_single_price():\n    assert total_cents([100], 50) == 50\n\n\ndef test_empty_prices():\n    assert total_cents([], 50) == 0\n\n\ndef test_rounding_applies_to_total_only():\n    assert total_cents([1, 1, 1], 50) == 2\n",
+  "applicable_conditions": [
+    "流程中同时包含聚合与取整/舍入",
+    "缺陷表现为取整施加在每一项而非总和上，误差累积",
+    "契约应明确取整发生的位置与次数"
+  ]
+}

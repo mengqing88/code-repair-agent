@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "分组键被多余的大小写/格式归一化",
+    "键必须保留原始值的契约",
+    "不同大小写键被错误合并"
+  ],
+  "before_source": "def bucket_by_label(rows):\n    \"\"\"按 label 分组：键为 label 原始字符串，值为行号列表。\"\"\"\n    buckets = {}\n    for i, row in enumerate(rows):\n        buckets.setdefault(row[\"label\"].lower(), []).append(i)\n    return buckets\n",
+  "dataset_experience_id": "GLM::experience-96",
+  "dataset_id": "GLM",
+  "diagnosis": "分组键不应做未约定的归一化：契约要求键大小写敏感时，必须用原始值做键。修复原则：归一化只允许出现在契约明确要求的场景。",
+  "experience_id": "experience-96",
+  "normalization_notes": [],
+  "original_report": "按产品标签归档工单时，标签被统一转成小写，导致 'VIP' 与 'vip' 两类标签被错误合并，且导出报表中标签名与原始数据不一致。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,5 +2,5 @@\n     \"\"\"按 label 分组：键为 label 原始字符串，值为行号列表。\"\"\"\n     buckets = {}\n     for i, row in enumerate(rows):\n-        buckets.setdefault(row[\"label\"].lower(), []).append(i)\n+        buckets.setdefault(row[\"label\"], []).append(i)\n     return buckets\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import bucket_by_label\n\ndef test_unchanged_label():\n    assert bucket_by_label([{\"label\": \"alpha\"}]) == {\"alpha\": [0]}\n\ndef test_distinct_by_case():\n    r = bucket_by_label([{\"label\": \"New\"}, {\"label\": \"new\"}])\n    assert r == {\"New\": [0], \"new\": [1]}\n\ndef test_value_order():\n    r = bucket_by_label([{\"label\": \"x\"}, {\"label\": \"x\"}])\n    assert r == {\"x\": [0, 1]}\n"
+}

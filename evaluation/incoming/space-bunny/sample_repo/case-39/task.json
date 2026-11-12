@@ -1,0 +1,10 @@
+{
+  "case_id": "case-39",
+  "title": "分组分批时丢弃了不足一批的尾部数据",
+  "report": "批量导入记录按固定条数分组时，最后一批不足条数的记录被直接丢弃，\n导致导入条数与源文件对不上。",
+  "contract": "chunk_records(records, size) -> list[list]，按顺序把 records 切成每组至多 size 条的列表。\nsize 必须为正 int，否则抛 ValueError；records 为可迭代元素序列。\n除最后一组外每组恰好 size 条，最后一组可以有 1..size 条；\nrecords 总条数不被 size 整除时，尾部记录必须出现在最后一组中，不得丢失。\nrecords 为空返回 []。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

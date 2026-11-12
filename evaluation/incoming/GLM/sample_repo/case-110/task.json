@@ -1,0 +1,10 @@
+{
+  "case_id": "case-110",
+  "title": "拓扑排序缺少环检测",
+  "report": "任务依赖排序遇到循环依赖时不报错，而是静默返回一个不完整的结果。",
+  "contract": "topo_order(nodes, edges)：nodes 为节点列表（决定无依赖节点的输出顺序），edges 为 (u, v) 表示 u 必须先于 v。返回合法顺序列表；若存在环（含自环），抛 ValueError('cycle detected')。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

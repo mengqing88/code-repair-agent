@@ -1,0 +1,10 @@
+{
+  "case_id": "case-209",
+  "title": "字符串分数按字典序排序",
+  "report": "成绩表以字符串保存分数，排序时按字典序而非数值：10 分排在 2 分前面、100 分排在 9 分前面，名次完全错误。预期：按分数的数值升序排列，同分保持输入顺序。",
+  "contract": "sort_by_score(rows) -> list[tuple[str, str]]。rows 为 (name, score_str) 序列，score_str 为十进制整数字符串；按 score 的**数值**升序排列；分数相同时保持输入顺序（稳定排序）；不修改 rows；空输入返回 []；返回新列表且元素保持原字符串形式。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

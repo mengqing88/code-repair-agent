@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "容量受限缓存",
+    "淘汰方向与 LRU 相反",
+    "取最久未使用条目"
+  ],
+  "before_source": "class TokenCache:\n    \"\"\"容量受限的会话缓存。\"\"\"\n\n    def __init__(self, capacity=100):\n        self.capacity = capacity\n        self._items = {}\n        self._hits = {}\n\n    def store(self, token, payload):\n        \"\"\"写入缓存。\"\"\"\n        self._items[token] = payload\n        self._hits[token] = self._hits.get(token, 0) + 1\n        while len(self._items) > self.capacity:\n            victim = max(self._hits, key=lambda item: self._hits[item])\n            del self._items[victim]\n            del self._hits[victim]\n\n    def load(self, token):\n        \"\"\"读取缓存。\"\"\"\n        if token not in self._items:\n            return None\n        self._hits[token] = self._hits.get(token, 0) + 1\n        return self._items[token]\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-167",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "淘汰时按使用计数取最大值，即淘汰了最近被访问最多的条目，与 LRU 语义相反。修复原则：最近最少使用淘汰应在使用计数最小的条目中选择牺牲者；get 命中后递增计数，put 也递增计数。",
+  "experience_id": "experience-167",
+  "normalization_notes": [],
+  "original_report": "会话缓存满了之后，被挤掉的是刚刷新过的那份会话，用户被迫重新登录。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -11,7 +11,7 @@\n         self._items[token] = payload\n         self._hits[token] = self._hits.get(token, 0) + 1\n         while len(self._items) > self.capacity:\n-            victim = max(self._hits, key=lambda item: self._hits[item])\n+            victim = min(self._hits, key=lambda item: self._hits[item])\n             del self._items[victim]\n             del self._hits[victim]\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import TokenCache\n\n\ndef test_least_recently_used_token_is_evicted():\n    cache = TokenCache(capacity=2)\n    cache.store(\"t1\", \"p1\")\n    cache.store(\"t2\", \"p2\")\n    cache.load(\"t1\")\n    cache.store(\"t3\", \"p3\")\n    assert cache.load(\"t2\") is None\n    assert cache.load(\"t1\") == \"p1\"\n\n\ndef test_recently_used_token_survives():\n    cache = TokenCache(capacity=2)\n    cache.store(\"t1\", \"p1\")\n    cache.store(\"t2\", \"p2\")\n    cache.load(\"t1\")\n    cache.store(\"t3\", \"p3\")\n    assert cache.load(\"t1\") == \"p1\"\n\n\ndef test_missing_token_returns_none():\n    cache = TokenCache(capacity=2)\n    assert cache.load(\"none\") is None\n"
+}

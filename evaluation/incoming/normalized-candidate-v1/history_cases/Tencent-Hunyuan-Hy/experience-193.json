@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "存在「基础配置 + 覆盖补丁」的合并流程",
+    "缺陷表现为覆盖源未参与写入，结果与基础配置完全相同",
+    "修复应核对写入操作的数据来源与优先级"
+  ],
+  "before_source": "# 用户画像构建：以 defaults 为基础，用 patch 覆盖。\n\n\ndef build_profile(defaults, patch):\n    result = dict(defaults)\n    result.update(defaults)\n    return result\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-193",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "合并两份配置时必须把「覆盖源」作为参数传给写入操作；误把基础源又写了一遍会让补丁完全失效，且由于代码不报错而难以发现。修复原则是核对写入操作的参数来源，保持合并流程不变。",
+  "experience_id": "experience-193",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】用户画像服务场景：以默认画像为基础叠加补丁字段，结果补丁里的新增字段和覆盖值都没有生效，返回的仍是默认画像。预期：以 defaults 为基础，用 patch 覆盖同名键并加入新键。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,5 +3,5 @@\n \n def build_profile(defaults, patch):\n     result = dict(defaults)\n-    result.update(defaults)\n+    result.update(patch)\n     return result\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import build_profile\n\n\ndef test_empty_patch_keeps_defaults():\n    assert build_profile({\"a\": 1}, {}) == {\"a\": 1}\n\n\ndef test_patch_override():\n    assert build_profile({\"a\": 1}, {\"a\": 9}) == {\"a\": 9}\n\n\ndef test_patch_adds_key():\n    assert build_profile({\"a\": 1}, {\"b\": 2}) == {\"a\": 1, \"b\": 2}\n"
+}

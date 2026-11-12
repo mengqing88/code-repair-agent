@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-183",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】账务日结场景：同一类别当天有多笔流水，汇总结果只等于最后一笔金额，前面的记录被丢掉，日结合计明显偏小。预期：同一类别的所有金额累加，不同类别互不影响。",
+  "diagnosis": "多个输入项映射到同一个逻辑键时，结果应当是「在已有值上增量合并/累积」，而不是用一次赋值把已有内容整块覆盖。根因是写入时没有读取已存在的键；修复原则是显式取出旧值再合并，保持原有计算流程不变。",
+  "before_source": "# 按类别汇总流水金额。rows 为 (category, amount_cents) 序列。\n# 返回 {category: 累计金额}，未出现的类别不出现在结果中。\n\n\ndef total_by_category(rows):\n    \"\"\"聚合每个类别的金额总和。\"\"\"\n    totals = {}\n    for category, amount_cents in rows:\n        # 错误：用赋值覆盖，同一类别只保留最后一条记录。\n        totals[category] = amount_cents\n    return totals\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -7,5 +7,5 @@\n     totals = {}\n     for category, amount_cents in rows:\n         # 错误：用赋值覆盖，同一类别只保留最后一条记录。\n-        totals[category] = amount_cents\n+        totals[category] = totals.get(category, 0) + amount_cents\n     return totals\n",
+  "verification_tests": "from target import total_by_category\n\n\ndef test_single_row():\n    assert total_by_category([(\"food\", 2500)]) == {\"food\": 2500}\n\n\ndef test_repeated_category_accumulates():\n    assert total_by_category(\n        [(\"food\", 2500), (\"food\", 1750), (\"book\", 3200)]\n    ) == {\"food\": 4250, \"book\": 3200}\n\n\ndef test_empty_rows():\n    assert total_by_category([]) == {}\n",
+  "applicable_conditions": [
+    "多个输入项映射到同一个聚合键或同一份嵌套结构",
+    "缺陷表现为只保留最后一次写入，先前累积内容或默认子项丢失",
+    "修复应在已有值上增量合并，而非重写整体计算流程"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-168",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "文章在 DRAFT_REVIEW 状态下无法进入发布流程，因为状态判断用了前缀匹配，命中了 DRAFT 的白名单。",
+  "diagnosis": "定位当前状态时用 startswith 做前缀匹配，导致 DRAFT 与 DRAFT_REVIEW 这类同前缀状态互相混淆，取到了错误的流转白名单。修复原则：状态标识是精确的枚举值，查找必须用相等比较；未知状态一律不允许流转。",
+  "before_source": "ALLOWED_NEXT = {\n    \"DRAFT\": {\"PUBLISHED\"},\n    \"DRAFT_REVIEW\": {\"APPROVED\"},\n    \"PUBLISHED\": {\"ARCHIVED\"},\n    \"ARCHIVED\": set(),\n}\n\n\ndef can_publish(current, target):\n    \"\"\"判断当前状态能否流转到目标状态。\"\"\"\n    for state, targets in ALLOWED_NEXT.items():\n        if current.startswith(state):\n            return target in targets\n    return False\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -8,7 +8,6 @@\n \n def can_publish(current, target):\n     \"\"\"判断当前状态能否流转到目标状态。\"\"\"\n-    for state, targets in ALLOWED_NEXT.items():\n-        if current.startswith(state):\n-            return target in targets\n-    return False\n+    if current not in ALLOWED_NEXT:\n+        return False\n+    return target in ALLOWED_NEXT[current]\n",
+  "verification_tests": "from target import can_publish\n\n\ndef test_draft_review_uses_its_own_white_list():\n    assert can_publish(\"DRAFT_REVIEW\", \"APPROVED\") is True\n\n\ndef test_draft_can_be_published():\n    assert can_publish(\"DRAFT\", \"PUBLISHED\") is True\n\n\ndef test_unknown_state_cannot_transition():\n    assert can_publish(\"REMOVED\", \"PUBLISHED\") is False\n",
+  "applicable_conditions": [
+    "状态流转白名单",
+    "用前缀匹配代替相等判断",
+    "同前缀状态混淆"
+  ]
+}

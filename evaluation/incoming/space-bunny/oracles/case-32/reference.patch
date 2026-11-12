@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -11,4 +11,6 @@
+     """Return True when the half-open intervals [start, end) intersect."""
+     _validate(a)
+     _validate(b)
+-    return a["start"] <= b["end"] and b["start"] <= a["end"]
++    if a["start"] >= a["end"] or b["start"] >= b["end"]:
++        return False
++    return a["start"] < b["end"] and b["start"] < a["end"]

@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "按 id 去重",
+    "重复请求重复处理"
+  ],
+  "before_source": "class Processor:\n    def __init__(self):\n        self.seen = {}\n    def process(self, eid, fn):\n        r = fn()\n        self.seen[eid] = r\n        return r\n",
+  "dataset_experience_id": "WorkBuddy::experience-79",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "按请求/事件 id 去重，重复提交返回首次结果。",
+  "experience_id": "experience-79",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "事件处理：同一事件 id 重复到达会重复处理，需去重。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,6 +2,8 @@\n     def __init__(self):\n         self.seen = {}\n     def process(self, eid, fn):\n+        if eid in self.seen:\n+            return self.seen[eid]\n         r = fn()\n         self.seen[eid] = r\n         return r\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import Processor\n\ndef test_a():\n    p = Processor(); c=[]\n    assert p.process('a', lambda: c.append(1) or 1) == 1\n    assert p.process('a', lambda: 9) == 1\n    assert len(c) == 1\n\ndef test_b():\n    p = Processor(); c=[]\n    p.process('x', lambda: c.append(1) or 5)\n    p.process('x', lambda: 6)\n    assert len(c) == 1\n\ndef test_c():\n    p = Processor(); c=[]\n    p.process('p', lambda: c.append(1) or 1)\n    p.process('p', lambda: 2)\n    p.process('q', lambda: c.append(1) or 3)\n    assert len(c) == 2\n"
+}

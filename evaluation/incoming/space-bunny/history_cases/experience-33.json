@@ -1,0 +1,15 @@
+{
+  "experience_id": "experience-33",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "租户只改了一个路由超时，网关却把平台默认的其余路由参数一起清空了，\n上线后路由全部走默认超时。",
+  "diagnosis": "缺陷是使用了浅合并（dict.update），嵌套 dict 被整体替换。修复原则：合并时逐键判断——两侧都是 dict 则递归合并，否则高层值替换低层值；并且不得就地修改入参，需要返回新对象。",
+  "before_source": "\n\"\"\"Gateway route configuration merging.\"\"\"\n\n\ndef merge_routes(default_routes, tenant_routes):\n    \"\"\"Combine default and tenant route configuration.\"\"\"\n    merged = dict(default_routes)\n    merged.update(tenant_routes)\n    return merged\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,6 +4,13 @@\n \n def merge_routes(default_routes, tenant_routes):\n     \"\"\"Combine default and tenant route configuration.\"\"\"\n-    merged = dict(default_routes)\n-    merged.update(tenant_routes)\n+    merged = {}\n+    for key, value in default_routes.items():\n+        if key in tenant_routes and isinstance(value, dict) and isinstance(tenant_routes[key], dict):\n+            merged[key] = merge_routes(value, tenant_routes[key])\n+        else:\n+            merged[key] = tenant_routes[key] if key in tenant_routes else value\n+    for key, value in tenant_routes.items():\n+        if key not in default_routes:\n+            merged[key] = value\n     return merged\n",
+  "verification_tests": "\nfrom target import merge_routes\n\n\ndef test_tenant_value_overrides_default():\n    assert merge_routes({\"timeout\": 5}, {\"timeout\": 9}) == {\"timeout\": 9}\n\n\ndef test_nested_route_is_merged_not_replaced():\n    result = merge_routes(\n        {\"route\": {\"host\": \"h\", \"timeout\": 5}},\n        {\"route\": {\"timeout\": 9}},\n    )\n    assert result == {\"route\": {\"host\": \"h\", \"timeout\": 9}}\n\n\ndef test_empty_tenant_section_keeps_default_route():\n    assert merge_routes({\"route\": {\"host\": \"h\"}}, {\"route\": {}}) == {\"route\": {\"host\": \"h\"}}\n",
+  "applicable_conditions": [
+    "配置合并",
+    "浅合并",
+    "嵌套字典",
+    "递归合并"
+  ]
+}

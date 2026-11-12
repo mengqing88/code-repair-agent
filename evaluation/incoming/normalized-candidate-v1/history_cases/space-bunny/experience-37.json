@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "状态机",
+    "非法跃迁",
+    "跃迁表",
+    "状态不变式"
+  ],
+  "before_source": "\n\"\"\"Ticket state machine.\"\"\"\n\nKNOWN_STATES = {\"new\", \"open\", \"closed\"}\n\n\nclass BadTransition(Exception):\n    pass\n\n\nclass Ticket:\n    def __init__(self, state=\"new\"):\n        if state not in KNOWN_STATES:\n            raise ValueError(\"unknown state\")\n        self.state = state\n\n    def move_to(self, new_state):\n        if new_state not in KNOWN_STATES:\n            raise ValueError(\"unknown state\")\n        self.state = new_state\n        return self.state\n",
+  "dataset_experience_id": "space-bunny::experience-37",
+  "dataset_id": "space-bunny",
+  "diagnosis": "实现只校验目标状态是否在已知集合内，没有校验“从当前状态能否到目标状态”。修复原则：显式维护跃迁表（当前状态 -> 允许的目标状态集合），非法跃迁抛出专门的异常并保持当前状态不变。",
+  "experience_id": "experience-37",
+  "normalization_notes": [],
+  "original_report": "已关闭的工单可以直接被重新打开并再次流转，\n统计口径里出现了从未发生过的状态跃迁。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,6 +2,12 @@\n \"\"\"Ticket state machine.\"\"\"\n \n KNOWN_STATES = {\"new\", \"open\", \"closed\"}\n+\n+ALLOWED = {\n+    \"new\": {\"open\"},\n+    \"open\": {\"closed\"},\n+    \"closed\": set(),\n+}\n \n \n class BadTransition(Exception):\n@@ -17,5 +23,7 @@\n     def move_to(self, new_state):\n         if new_state not in KNOWN_STATES:\n             raise ValueError(\"unknown state\")\n+        if new_state not in ALLOWED[self.state]:\n+            raise BadTransition(\"cannot move from %s to %s\" % (self.state, new_state))\n         self.state = new_state\n         return self.state\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "\nimport pytest\n\nfrom target import BadTransition, Ticket\n\n\ndef test_legal_move_succeeds():\n    ticket = Ticket()\n    assert ticket.move_to(\"open\") == \"open\"\n\n\ndef test_cannot_skip_new_to_closed():\n    ticket = Ticket()\n    with pytest.raises(BadTransition):\n        ticket.move_to(\"closed\")\n    assert ticket.state == \"new\"\n\n\ndef test_closed_ticket_is_final():\n    ticket = Ticket()\n    ticket.move_to(\"open\")\n    ticket.move_to(\"closed\")\n    with pytest.raises(BadTransition):\n        ticket.move_to(\"open\")\n    assert ticket.state == \"closed\"\n"
+}

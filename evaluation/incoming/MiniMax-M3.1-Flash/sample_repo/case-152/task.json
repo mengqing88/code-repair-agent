@@ -1,0 +1,10 @@
+{
+  "case_id": "case-152",
+  "title": "金额四舍五入使用了内置 round 的银行家舍入",
+  "report": "结算金额保留两位小数时，明明应该进位的 2.675 被舍成了 2.67，1.005 被舍成 1.00，0.5 取整成了 0，与业务约定的四舍五入（逢五进位）不一致。",
+  "contract": "round_money(amount, places=2) 返回按四舍五入（half-up，逢五进位）保留 places 位小数后的金额，places 为非负整数。实现必须基于十进制语义（Decimal + ROUND_HALF_UP），不能受二进制浮点表示误差影响，也不得使用银行家舍入。返回类型为 float。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

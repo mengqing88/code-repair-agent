@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-199",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】分箱场景：10 件物品每箱 5 件应需 2 个箱子，系统算出 3 个；0 件物品也算出 1 个箱子。预期：组数按向上取整且空输入为 0。",
+  "diagnosis": "计数分组应使用 ceil(n/size) = (n + size - 1) // size；写成 n // size + 1 会在整除时多算一组，且 n=0 时错误返回 1。修复原则是使用统一的向上取整公式，并单独验证 n=0 与整除边界。",
+  "before_source": "# 分组：n 条记录按每组 size 条分组，返回组数。\n\n\ndef groups_of(n, size):\n    return n // size + 1\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def groups_of(n, size):\n-    return n // size + 1\n+    return (n + size - 1) // size\n",
+  "verification_tests": "from target import groups_of\n\n\ndef test_empty_input_needs_no_group():\n    assert groups_of(0, 5) == 0\n\n\ndef test_remainder_case():\n    assert groups_of(11, 5) == 3\n\n\ndef test_exact_multiple():\n    assert groups_of(10, 5) == 2\n",
+  "applicable_conditions": [
+    "需要把 n 个元素按固定容量分成若干组并计数",
+    "缺陷表现为整除情形多算一组或空输入返回非零",
+    "应使用 (n + size - 1) // size 形式的向上取整"
+  ]
+}

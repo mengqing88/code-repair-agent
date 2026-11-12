@@ -1,0 +1,20 @@
+--- a/target.py
++++ b/target.py
+@@ -3,6 +3,14 @@
+ def split_bill_period(start, end):
+     if end < start:
+         raise ValueError('end before start')
+-    key = (start.year, start.month)
+-    days = (end - start).days
+-    return [(key, days)]
++    result = []
++    cursor = start
++    while cursor <= end:
++        if cursor.month == 12:
++            boundary = date(cursor.year + 1, 1, 1)
++        else:
++            boundary = date(cursor.year, cursor.month + 1, 1)
++        stop = min(end + timedelta(days=1), boundary)
++        result.append(((cursor.year, cursor.month), (stop - cursor).days))
++        cursor = stop
++    return result

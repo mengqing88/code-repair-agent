@@ -1,0 +1,26 @@
+--- a/target.py
++++ b/target.py
+@@ -7,8 +7,21 @@
+     for key, value in override.items():
+         if value is None:
+             continue
+-        if isinstance(value, dict) and isinstance(result.get(key), dict):
+-            result[key] = merge_config(result[key], value)
++        current = result.get(key)
++        if isinstance(value, dict) and isinstance(current, dict):
++            result[key] = merge_config(current, value)
++        elif isinstance(value, list) and isinstance(current, list):
++            merged_list = []
++            for index in range(max(len(value), len(current))):
++                if index >= len(value):
++                    merged_list.append(current[index])
++                elif index >= len(current):
++                    merged_list.append(value[index])
++                elif isinstance(value[index], dict) and isinstance(current[index], dict):
++                    merged_list.append(merge_config(current[index], value[index]))
++                else:
++                    merged_list.append(value[index])
++            result[key] = merged_list
+         else:
+             result[key] = value
+     return result

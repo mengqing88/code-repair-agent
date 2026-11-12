@@ -1,0 +1,18 @@
+--- a/target.py
++++ b/target.py
+@@ -4,6 +4,13 @@
+ 
+ def merge_configs(base, override):
+     """Return a new dict combining base and override configurations."""
+-    merged = dict(base)
+-    merged.update(override)
++    merged = {}
++    for key, value in base.items():
++        if key in override and isinstance(value, dict) and isinstance(override[key], dict):
++            merged[key] = merge_configs(value, override[key])
++        else:
++            merged[key] = value if key not in override else override[key]
++    for key, value in override.items():
++        if key not in base:
++            merged[key] = value
+     return merged

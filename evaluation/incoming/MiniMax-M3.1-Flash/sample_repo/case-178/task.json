@@ -1,0 +1,10 @@
+{
+  "case_id": "case-178",
+  "title": "去重时用了集合再排序，顺序被改成了字典序",
+  "report": "商品列表去重后顺序完全变了，运营按顺序投放的橱窗位被打乱。",
+  "contract": "dedupe_keep_order(items) 返回去重后的新列表，保持首次出现的相对顺序。规则：按元素相等性去重（不可变元素）；不修改入参；空列表返回空列表；结果不要求有序，但必须保持首次出现的顺序。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

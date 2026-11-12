@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -1,6 +1,7 @@
+ # 购物车：向购物车追加一件商品并返回购物车列表。
+ 
+ 
+-def add_item(item, cart=[]):
++def add_item(item, cart=None):
++    cart = [] if cart is None else cart
+     cart.append(item)
+     return cart

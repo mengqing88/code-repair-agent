@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-60",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "提现接口没有校验余额，超额提现后余额变成负数。",
+  "diagnosis": "扣减前缺少可用量检查，直接执行减法，失败路径也没有保持原状态。修复原则：先判定再变更，判定失败时不得修改任何状态。",
+  "before_source": "def withdraw(balance, amount):\n    return balance - amount, True\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,5 @@\n def withdraw(balance, amount):\n+    if amount > balance:\n+        return balance, False\n     return balance - amount, True\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert withdraw(100, 30) == (70, True)\n\n\ndef test_experience_2():\n    assert withdraw(5, 50) == (5, False)\n\n\ndef test_experience_3():\n    assert withdraw(0, 0) == (0, True)\n",
+  "applicable_conditions": [
+    "库存校验",
+    "失败不改状态",
+    "边界相等"
+  ]
+}

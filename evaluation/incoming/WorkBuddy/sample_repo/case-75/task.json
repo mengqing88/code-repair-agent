@@ -1,0 +1,10 @@
+{
+  "case_id": "case-75",
+  "title": "布尔配置误解析",
+  "report": "parse_config(raw)：raw 为字符串字典；'debug' 键应解析为布尔（'true'/'1' 为 True，'false'/'0' 大小写不敏感为 False）。当前实现只要非空字符串就当作 True。",
+  "contract": "raw: dict[str,str]。返回 dict，'debug' 解析为 bool：'true'/'1'（不区分大小写）为 True；'false'/'0' 为 False；未知键保持字符串。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

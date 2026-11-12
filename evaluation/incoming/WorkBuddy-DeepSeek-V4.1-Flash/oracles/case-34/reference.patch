@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,4 @@
+-from datetime import date, timedelta
++from datetime import date
+ 
+ def needs_renewal(expires_on, today):
+-    return expires_on < today + timedelta(days=1)
++    return expires_on < today

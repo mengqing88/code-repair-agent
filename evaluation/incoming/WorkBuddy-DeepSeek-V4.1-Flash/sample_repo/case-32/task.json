@@ -1,0 +1,10 @@
+{
+  "case_id": "case-32",
+  "title": "跨零点时段的计费小时数向下取整且整日特例缺失",
+  "report": "夜间值班 22:00 到次日 01:00 应记 3 小时却只记 2 小时；起止相同的 24 小时轮班被记成 0 小时。",
+  "contract": "billable_hours(start_minute, end_minute) 接收 0..1439 的分钟数，表示同一天内的时刻；end_minute 小于 start_minute 表示跨过零点。分钟差按 (end - start) % 1440 计算。返回 int，为覆盖的整小时数，不足一小时按一小时计（向上取整）。起止完全相同表示完整一天，返回 24。任一参数不在 0..1439 范围内抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

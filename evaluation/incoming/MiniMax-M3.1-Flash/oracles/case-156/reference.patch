@@ -1,0 +1,24 @@
+--- a/target.py
++++ b/target.py
+@@ -7,9 +7,19 @@
+     "DELIVER": "DELIVERED",
+ }
+ 
++ALLOWED_EVENTS = {
++    "NEW": ("PAY", "CANCEL"),
++    "PAID": ("SHIP",),
++    "SHIPPED": ("DELIVER",),
++    "DELIVERED": (),
++    "CANCELLED": (),
++}
++
+ 
+ def next_state(state, event):
+     """返回执行事件后的新状态。"""
+-    if event not in EVENT_TARGET:
+-        raise ValueError("unknown event: %s" % event)
++    if state not in ALLOWED_EVENTS:
++        raise ValueError("unknown state: %s" % state)
++    if event not in ALLOWED_EVENTS[state]:
++        raise ValueError("event %s is not allowed in state %s" % (event, state))
+     return EVENT_TARGET[event]

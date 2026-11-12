@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-177",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "审批流里所有合法的步骤流转都被拒绝，工单卡在第一步永远提交不了。",
+  "diagnosis": "查白名单时把当前状态和目标状态的位置搞反了：代码用“目标状态”去取允许集合，再判断“当前状态”是否在其中。修复原则：白名单的键是来源状态、值是允许的目标集合，查表必须以当前状态取集合、以目标状态做成员判断，方向不能颠倒。",
+  "before_source": "STEP_ALLOWED = {\n    \"0\": {\"1\"},\n    \"1\": {\"2\"},\n    \"2\": set(),\n}\n\n\ndef step_allowed(current, nxt):\n    \"\"\"判断当前步骤能否进入下一步。\"\"\"\n    if not current:\n        return False\n    return current in STEP_ALLOWED.get(nxt, set())\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -9,4 +9,4 @@\n     \"\"\"判断当前步骤能否进入下一步。\"\"\"\n     if not current:\n         return False\n-    return current in STEP_ALLOWED.get(nxt, set())\n+    return nxt in STEP_ALLOWED.get(current, set())\n",
+  "verification_tests": "from target import step_allowed\n\n\ndef test_step_zero_can_advance():\n    assert step_allowed(\"0\", \"1\") is True\n\n\ndef test_step_one_can_advance():\n    assert step_allowed(\"1\", \"2\") is True\n\n\ndef test_empty_step_cannot_advance():\n    assert step_allowed(\"\", \"1\") is False\n",
+  "applicable_conditions": [
+    "状态流转白名单",
+    "查表方向颠倒",
+    "来源状态与目标状态位置搞反"
+  ]
+}

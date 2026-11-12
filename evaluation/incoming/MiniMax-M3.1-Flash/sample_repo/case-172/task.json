@@ -1,0 +1,10 @@
+{
+  "case_id": "case-172",
+  "title": "分组统计时把累计值写到了共享的临时变量上",
+  "report": "按门店分组统计销售额时，某个门店的金额只在连续出现的那些行里被累加，门店数据一旦被其他门店行打断，该门店的总计就被覆盖成了最后一次的金额，逐店报表完全错误。",
+  "contract": "totals_by_group(rows, key) 按 key 分组求和，返回 dict。rows 为 dict 列表，每条含 key 指定的分组字段与 \"amount\"（整数分）。规则：结果字典的键为分组值，值为该组所有记录的 amount 之和（int），无论该组的记录在入参中是否连续出现；结果中不出现入参里没有的分组；不修改入参；rows 为空时返回空字典。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

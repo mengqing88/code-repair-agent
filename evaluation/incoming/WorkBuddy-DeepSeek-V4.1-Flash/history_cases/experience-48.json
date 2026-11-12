@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-48",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "四笔等额费用的分摊结果加起来是 0.96 元，少了 4 分钱。",
+  "diagnosis": "每项分摊被独立截断到分位，截断产生的残差没有回到总和中。修复原则：各项舍入后必须把差额循环补给余量最大的项，保证总和与整体守恒。",
+  "before_source": "def split_bill(total, people):\n    each = total / people\n    return [int(each * 100) / 100 for _ in range(people)]\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def split_bill(total, people):\n-    each = total / people\n-    return [int(each * 100) / 100 for _ in range(people)]\n+    each = round(total / people, 2)\n+    return [each for _ in range(people)]\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert split_bill(10, 2) == [5.0, 5.0]\n\n\ndef test_experience_2():\n    assert split_bill(1, 6) == [0.17, 0.17, 0.17, 0.17, 0.17, 0.17]\n\n\ndef test_experience_3():\n    assert split_bill(3, 7) == [0.43, 0.43, 0.43, 0.43, 0.43, 0.43, 0.43]\n",
+  "applicable_conditions": [
+    "百分比守恒",
+    "最大余数法",
+    "整数返回"
+  ]
+}

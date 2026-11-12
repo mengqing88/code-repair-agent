@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-94",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "webhook 投递组件对同一消息 id 重复回调了第三方接口，虽然响应一样，但对方收到了多次请求。",
+  "diagnosis": "先执行后查缓存的顺序错误：必须在执行前判断幂等键是否已存在。修复原则：副作用操作（执行 fn）只允许发生在缓存未命中分支内。",
+  "before_source": "class WebhookDeduper:\n    \"\"\"同一 event_id 只投递一次；重复调用直接跳过投递。\"\"\"\n\n    def __init__(self):\n        self.delivered = {}\n\n    def deliver(self, event_id, send):\n        resp = send()\n        self.delivered[event_id] = resp\n        return self.delivered[event_id]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -5,6 +5,6 @@\n         self.delivered = {}\n \n     def deliver(self, event_id, send):\n-        resp = send()\n-        self.delivered[event_id] = resp\n+        if event_id not in self.delivered:\n+            self.delivered[event_id] = send()\n         return self.delivered[event_id]\n",
+  "verification_tests": "from target import WebhookDeduper\n\ndef test_returns_response():\n    d = WebhookDeduper()\n    assert d.deliver(\"e1\", lambda: \"ok\") == \"ok\"\n\ndef test_single_delivery():\n    d = WebhookDeduper()\n    n = [0]\n    def send():\n        n[0] += 1\n        return n[0]\n    d.deliver(\"e1\", send)\n    d.deliver(\"e1\", send)\n    assert n[0] == 1\n\ndef test_distinct_events():\n    d = WebhookDeduper()\n    assert d.deliver(\"a\", lambda: 1) == 1\n    assert d.deliver(\"b\", lambda: 2) == 2\n",
+  "applicable_conditions": [
+    "幂等/去重逻辑中副作用被重复触发",
+    "先执行后判断的顺序缺陷",
+    "同一键多次调用必须只产生一次副作用"
+  ]
+}

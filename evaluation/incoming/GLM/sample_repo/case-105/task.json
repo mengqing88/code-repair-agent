@@ -1,0 +1,10 @@
+{
+  "case_id": "case-105",
+  "title": "限流窗口边界包含错误",
+  "report": "固定窗口限流把恰好一个窗口之前的请求也计入当前窗口，导致边界时刻被错误拒绝。",
+  "contract": "FixedWindowLimiter(limit, window).allow(history, ts)：history 为 ts 之前的请求时间戳列表。仅统计 (ts - window, ts] 内的请求数（恰好 window 之前的请求不计入），加本次 <= limit 则允许。返回 bool。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

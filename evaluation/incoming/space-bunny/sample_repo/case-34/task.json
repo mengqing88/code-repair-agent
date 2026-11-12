@@ -1,0 +1,10 @@
+{
+  "case_id": "case-34",
+  "title": "支付幂等键错误地使用金额",
+  "report": "重复提交的支付请求没有按请求号去重：只要金额相同，\n第二个不同的请求号会被当成同一次扣款而直接返回上一次的结果，导致用户少扣一笔。",
+  "contract": "PaymentProcessor 类：__init__ 无参数，初始化内部存储与计数器 charge_count（int，初始 0）。\ncharge(request_id, amount) -> dict，返回本次支付结果。\n幂等键是 request_id：同一个 request_id 再次调用时不得再次扣款，\n必须返回与首次完全相同的结果字典，且 charge_count 不增加。\n不同 request_id 视为不同支付，必须各自扣款（charge_count 加一）并返回各自的结果。\n结果字典结构固定为 {'request_id': str, 'amount': int, 'status': 'charged'}，\n且每次返回的都是副本，外部修改不影响内部状态。\namount 为 int；request_id 为非空 str。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

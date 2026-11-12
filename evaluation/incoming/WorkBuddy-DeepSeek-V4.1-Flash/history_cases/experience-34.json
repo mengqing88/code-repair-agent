@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-34",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "工单是否逾期用截止时间与当前时间比较时方向颠倒，全部工单都被判为逾期。",
+  "diagnosis": "比较方向写反：判定逾期应看到期时刻是否早于当前时刻。修复原则：先把判定语义写成 expired < now 再映射到运算符，相等时按约定不算逾期。",
+  "before_source": "def is_overdue(deadline_ts, now_ts):\n    return now_ts < deadline_ts\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n def is_overdue(deadline_ts, now_ts):\n-    return now_ts < deadline_ts\n+    return deadline_ts < now_ts\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert is_overdue(100, 200) is True\n\n\ndef test_experience_2():\n    assert is_overdue(200, 100) is False\n\n\ndef test_experience_3():\n    assert is_overdue(150, 150) is False\n",
+  "applicable_conditions": [
+    "日期比较",
+    "边界当天有效",
+    "闰年日期"
+  ]
+}

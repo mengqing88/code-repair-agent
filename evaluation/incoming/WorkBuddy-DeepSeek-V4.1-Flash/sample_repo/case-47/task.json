@@ -1,0 +1,10 @@
+{
+  "case_id": "case-47",
+  "title": "分页起始偏移按基于 1 的编号计算，第一页为空",
+  "report": "商品列表第一页返回空列表，用户看到“暂无数据”，而第二页却能从第一条开始返回。",
+  "contract": "page_of(items, page, size) 中 page 从 0 开始，size 为正整数。返回 (page_items, total_pages)：page_items 为对应页的切片；total_pages 为 ceil(len(items) / size)，空列表时为 0。page 超出范围时 page_items 为 []，total_pages 仍为真实值。page 为负数抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

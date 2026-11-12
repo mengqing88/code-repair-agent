@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "嵌套配置/字典合并丢失兄弟键",
+    "浅拷贝整体替换代替递归合并",
+    "返回新对象且不改入参的契约"
+  ],
+  "before_source": "def merge_quota(base, patch):\n    \"\"\"深度合并部门额度：patch 标量覆盖 base，嵌套 dict 递归合并。返回新 dict。\"\"\"\n    result = dict(base)\n    for k, v in patch.items():\n        result[k] = v\n    return result\n",
+  "dataset_experience_id": "GLM::experience-93",
+  "dataset_id": "GLM",
+  "diagnosis": "递归合并缺失：当同键两侧均为 dict 时应递归合并而不是整体替换。修复原则：仅在标量或类型不一致时直接覆盖，dict 对 dict 走递归。",
+  "experience_id": "experience-93",
+  "normalization_notes": [],
+  "original_report": "合并部门额度配置时，只改了某个子项，导致同部门其他子项额度全部丢失。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,5 +2,8 @@\n     \"\"\"深度合并部门额度：patch 标量覆盖 base，嵌套 dict 递归合并。返回新 dict。\"\"\"\n     result = dict(base)\n     for k, v in patch.items():\n-        result[k] = v\n+        if k in result and isinstance(result[k], dict) and isinstance(v, dict):\n+            result[k] = merge_quota(result[k], v)\n+        else:\n+            result[k] = v\n     return result\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import merge_quota\n\ndef test_top_scalar():\n    assert merge_quota({\"cap\": 100}, {\"cap\": 200}) == {\"cap\": 200}\n\ndef test_nested_keeps_sibling():\n    r = merge_quota({\"dev\": {\"cpu\": 4, \"mem\": 8}}, {\"dev\": {\"mem\": 16}})\n    assert r == {\"dev\": {\"cpu\": 4, \"mem\": 16}}\n\ndef test_mixed():\n    r = merge_quota({\"a\": {\"x\": 1}, \"b\": 2}, {\"a\": {\"y\": 2}, \"b\": 3})\n    assert r == {\"a\": {\"x\": 1, \"y\": 2}, \"b\": 3}\n"
+}

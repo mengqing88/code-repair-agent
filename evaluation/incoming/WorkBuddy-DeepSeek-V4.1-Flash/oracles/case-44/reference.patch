@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -6,5 +6,7 @@
+     threshold = decimal.Decimal(str(minimum))
+     cut = decimal.Decimal(str(reduction))
+     payable = total - cut if total >= threshold else total
++    if payable < 0:
++        payable = decimal.Decimal('0')
+     return payable.quantize(decimal.Decimal('0.01'),
+                             rounding=decimal.ROUND_HALF_UP)

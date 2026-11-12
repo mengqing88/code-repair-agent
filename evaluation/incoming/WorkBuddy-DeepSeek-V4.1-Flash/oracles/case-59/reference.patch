@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -1,6 +1,6 @@
+ class EventBuffer:
+-    def __init__(self, events=[]):
+-        self.events = events
++    def __init__(self, events=None):
++        self.events = list(events) if events is not None else []
+ 
+     def append(self, name):
+         self.events.append(name)

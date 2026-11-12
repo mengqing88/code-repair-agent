@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -7,5 +7,5 @@
+         self.window = window
+ 
+     def allow(self, history, ts):
+-        recent = [t for t in history if ts - t <= self.window]
++        recent = [t for t in history if ts - t < self.window]
+         return len(recent) + 1 <= self.limit

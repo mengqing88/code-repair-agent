@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "跨月区间",
+    "跨年边界",
+    "闭区间计数"
+  ],
+  "before_source": "from datetime import date\n\ndef week_spans(start, end):\n    if end < start:\n        raise ValueError('end before start')\n    week = start.isocalendar()[1]\n    return [(week, (end - start).days)]\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-51",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "统计只按起点所在的容器归档整段区间，没有在容器边界处切分。修复原则：区间需要逐段切到各容器中，每次切出“当前容器剩余部分”，再把游标推到容器边界继续。",
+  "experience_id": "experience-51",
+  "normalization_notes": [],
+  "original_report": "按周统计活跃用户时，跨周的那一天只算进了第一周。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,8 +1,15 @@\n-from datetime import date\n+from datetime import date, timedelta\n \n def week_spans(start, end):\n     if end < start:\n         raise ValueError('end before start')\n-    week = start.isocalendar()[1]\n-    return [(week, (end - start).days)]\n+    spans = []\n+    cursor = start\n+    while cursor <= end:\n+        week = cursor.isocalendar()[1]\n+        boundary = cursor + timedelta(days=7 - cursor.weekday())\n+        stop = min(end + timedelta(days=1), boundary)\n+        spans.append((week, (stop - cursor).days))\n+        cursor = stop\n+    return spans\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert week_spans(date(2024, 3, 2), date(2024, 3, 6)) == [(9, 2), (10, 3)]\n\n\ndef test_experience_2():\n    assert week_spans(date(2024, 3, 4), date(2024, 3, 6)) == [(10, 3)]\n\n\ndef test_experience_3():\n    assert week_spans(date(2024, 3, 4), date(2024, 3, 4)) == [(10, 1)]\n"
+}

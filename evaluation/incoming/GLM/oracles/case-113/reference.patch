@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -9,7 +9,7 @@
+         self.sessions[session_id] = now
+ 
+     def touch(self, session_id, now):
+-        pass
++        self.sessions[session_id] = now
+ 
+     def is_expired(self, session_id, now):
+         return now - self.sessions[session_id] > self.ttl

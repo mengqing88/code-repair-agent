@@ -1,0 +1,10 @@
+{
+  "case_id": "case-115",
+  "title": "可变默认参数共享状态",
+  "report": "add_item 的默认列表参数在多次调用间共享，第二次不传 bucket 时返回值里带着上一次的元素。",
+  "contract": "add_item(item, bucket=None)：把 item 追加到 bucket 并返回该列表；bucket 未提供时使用全新空列表，多次独立调用互不影响。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

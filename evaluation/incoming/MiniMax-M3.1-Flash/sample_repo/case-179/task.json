@@ -1,0 +1,10 @@
+{
+  "case_id": "case-179",
+  "title": "嵌套配置合并时把列表当成标量覆盖，列表元素丢失",
+  "report": "覆盖配置里给某个服务加了一条路由列表，结果整个列表被替换成了只有一个元素的列表，原有的其他路由全部消失。",
+  "contract": "merge_config(base, override) 返回合并后的新字典，不修改入参。规则：两个来源中同 key 的值都是 dict 时递归合并；都是 list 时按元素逐个合并——override 的列表中每个元素按其索引与 base 对应元素合并，索引超出 base 长度的部分直接取 override 的元素；base 有而 override 没有的元素保留；值类型不同（dict vs 非 dict、list vs 非 list）时以 override 为准；override 中值为 None 表示该 key 未提供，保留 base 的值。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,27 @@
+--- a/target.py
++++ b/target.py
+@@ -1,6 +1,6 @@
+ """退款金额分摊。"""
+ 
+-from decimal import Decimal, ROUND_HALF_UP
++from decimal import Decimal, ROUND_DOWN
+ 
+ 
+ def allocate_refund(total, weights):
+@@ -11,7 +11,14 @@
+     if weight_sum <= 0:
+         raise ValueError("weights must sum to a positive number")
+     shares = []
+-    for weight in weights:
++    remainders = []
++    for index, weight in enumerate(weights):
+         exact = Decimal(total) * Decimal(weight) / Decimal(weight_sum)
+-        shares.append(int(exact.quantize(Decimal("1"), rounding=ROUND_HALF_UP)))
++        floor_value = int(exact.quantize(Decimal("1"), rounding=ROUND_DOWN))
++        shares.append(floor_value)
++        remainders.append((exact - floor_value, index))
++    leftover = total - sum(shares)
++    remainders.sort(key=lambda item: (-item[0], item[1]))
++    for position in range(leftover):
++        shares[remainders[position][1]] += 1
+     return shares

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-183",
+  "title": "嵌套配置递归合并",
+  "report": "服务启动时合并默认配置与用户覆盖配置，用户只改了 db.host，结果 db.port、db.pool 等未指定的默认项全部消失，导致连接参数缺失；多层嵌套（svc.auth.ttl）被覆盖时，同级 svc.log 与 svc.auth.algo 也被整体丢弃。用户传入空的嵌套字典 {} 时，原有默认子项同样被清空。预期：嵌套字典按键递归合并，未提及的子键保留默认值。",
+  "contract": "merge_config(defaults: dict, overrides: dict) -> dict，返回新字典且不修改 defaults / overrides。逐键合并：若 overrides 的值与 defaults 中对应值都是 dict，则对该子字典递归合并；否则以 overrides 的值为准。None 是合法的显式覆盖值；新增键直接加入结果；空字典 {} 作为覆盖值时按递归合并语义不改动 defaults 中该键的子键。任一入参不是 dict 时抛 TypeError。返回值只含普通 dict / 标量，不要求深拷贝嵌套中的可变标量。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

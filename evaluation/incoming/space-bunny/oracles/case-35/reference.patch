@@ -1,0 +1,13 @@
+--- a/target.py
++++ b/target.py
+@@ -3,5 +3,8 @@
+ 
+ 
+ def sort_transactions(transactions):
+-    """Return transactions sorted by amount desc, timestamp asc, id asc."""
+-    return sorted(transactions, key=lambda t: (-t["amount"], t["timestamp"], t["id"]))
++    """Return transactions sorted by amount desc, timestamp asc, keeping input order on ties."""
++    return sorted(
++        transactions,
++        key=lambda t: (-t["amount"], t["timestamp"]),
++    )

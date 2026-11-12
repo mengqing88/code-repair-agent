@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-184",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】上传任务调度场景：任务标记为 done 之后，重试逻辑仍判定为「可启动」，导致已完成任务被重新入队并重复上传。预期：只有 queued 状态允许启动，done 与 failed 均为终态。",
+  "diagnosis": "合法状态转移应由显式的允许表（或明确的目标状态白名单）判定，不能用「排除某一个终态」的否定式条件代替。否定式守卫会漏掉其它已处理状态，使已完成对象被重复推进并触发额外副作用。修复原则是改为按 (当前状态, 目标状态) 查白名单。",
+  "before_source": "# 上传任务状态机。\n# 合法转移：queued -> uploading, uploading -> done, uploading -> failed。\n# done / failed 为终态，不可再转移。\n\nALLOWED = {\n    \"queued\": frozenset({\"uploading\"}),\n    \"uploading\": frozenset({\"done\", \"failed\"}),\n    \"done\": frozenset(),\n    \"failed\": frozenset(),\n}\n\n\ndef can_transit(state, target):\n    \"\"\"判断从 state 到 target 是否为合法转移。\"\"\"\n    if state not in ALLOWED:\n        raise ValueError(\"unknown state\")\n    # 错误：只排除了 failed，done 仍被当作可转移状态。\n    return state != \"failed\"\n\n\nclass UploadJob:\n    def __init__(self):\n        self.state = \"queued\"\n\n    def try_start(self):\n        if can_transit(self.state, \"uploading\"):\n            self.state = \"uploading\"\n            return True\n        return False\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -15,7 +15,7 @@\n     if state not in ALLOWED:\n         raise ValueError(\"unknown state\")\n     # 错误：只排除了 failed，done 仍被当作可转移状态。\n-    return state != \"failed\"\n+    return target in ALLOWED[state]\n \n \n class UploadJob:\n",
+  "verification_tests": "from target import can_transit, UploadJob\n\n\ndef test_queued_can_start():\n    assert can_transit(\"queued\", \"uploading\") is True\n    job = UploadJob()\n    assert job.try_start() is True\n    assert job.state == \"uploading\"\n\n\ndef test_done_is_terminal():\n    assert can_transit(\"done\", \"uploading\") is False\n\n\ndef test_failed_is_terminal():\n    assert can_transit(\"failed\", \"uploading\") is False\n",
+  "applicable_conditions": [
+    "状态机或流程只允许从特定状态向特定目标推进",
+    "缺陷表现为排除了一个终态，但其它已处理状态仍可重复执行动作",
+    "重复执行会触发额外副作用（记账、计数、重复回调）"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-158",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "供暖费的月度均摊按固定天数折算，2 月份少摊了钱，物业与业主对账长期差几元。",
+  "diagnosis": "月度分摊时没有使用各月的实际天数做权重，而是把总额除以月份数，等价于按月平均而非按天加权，天数少的月份被少摊、天数多的月份被少摊差额。修复原则：分摊权重必须使用每个计费周期的实际天数，权重之和用于归一化，误差用最大余数法消化到分。",
+  "before_source": "from decimal import Decimal, ROUND_DOWN\n\n\ndef split_heating_fee(total_cents, month_days):\n    \"\"\"把供暖费按各月天数分摊。\"\"\"\n    if not month_days:\n        raise ValueError(\"month_days must not be empty\")\n    if any(days <= 0 for days in month_days):\n        raise ValueError(\"each day count must be positive\")\n    months = len(month_days)\n    shares = []\n    remainders = []\n    for index in range(months):\n        exact = Decimal(total_cents) / Decimal(months)\n        floor_value = int(exact.quantize(Decimal(\"1\"), rounding=ROUND_DOWN))\n        shares.append(floor_value)\n        remainders.append((exact - floor_value, index))\n    leftover = total_cents - sum(shares)\n    remainders.sort(key=lambda item: (-item[0], item[1]))\n    for position in range(leftover):\n        shares[remainders[position][1]] += 1\n    return shares\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -7,11 +7,11 @@\n         raise ValueError(\"month_days must not be empty\")\n     if any(days <= 0 for days in month_days):\n         raise ValueError(\"each day count must be positive\")\n-    months = len(month_days)\n+    total_days = sum(month_days)\n     shares = []\n     remainders = []\n-    for index in range(months):\n-        exact = Decimal(total_cents) / Decimal(months)\n+    for index, days in enumerate(month_days):\n+        exact = Decimal(total_cents) * Decimal(days) / Decimal(total_days)\n         floor_value = int(exact.quantize(Decimal(\"1\"), rounding=ROUND_DOWN))\n         shares.append(floor_value)\n         remainders.append((exact - floor_value, index))\n",
+  "verification_tests": "import target\nimport pytest\n\nfrom target import split_heating_fee\n\n\ndef test_shares_sum_to_total():\n    assert sum(split_heating_fee(1000, [28, 31])) == 1000\n\n\ndef test_february_weighted_by_actual_days():\n    assert split_heating_fee(590, [28, 31]) == [280, 310]\n\n\ndef test_invalid_days_raise():\n    with pytest.raises(ValueError):\n        split_heating_fee(100, [0])\n",
+  "applicable_conditions": [
+    "按周期长度加权分摊金额",
+    "误用周期个数作为权重",
+    "权重求和归一化"
+  ]
+}

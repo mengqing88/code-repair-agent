@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-71",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "用户设置合并：遇到嵌套 dict 直接覆盖，丢失原有子项。",
+  "diagnosis": "嵌套结构合并必须递归，不能直接赋值替换。",
+  "before_source": "def merge_settings(base, over):\n    r = dict(base)\n    for k, v in over.items():\n        if k in r and isinstance(r[k], dict) and isinstance(v, dict):\n            r[k] = dict(v)\n        else:\n            r[k] = v\n    return r\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -2,7 +2,7 @@\n     r = dict(base)\n     for k, v in over.items():\n         if k in r and isinstance(r[k], dict) and isinstance(v, dict):\n-            r[k] = dict(v)\n+            r[k] = merge_settings(r[k], v)\n         else:\n             r[k] = v\n     return r\n",
+  "verification_tests": "import pytest\nfrom target import merge_settings\n\ndef test_a():\n    assert merge_settings({'db':{'h':'x','p':1}}, {'db':{'p':2}}) == {'db':{'h':'x','p':2}}\n\ndef test_b():\n    assert merge_settings({'a':{'b':{'c':1}}}, {'a':{'b':{'d':2}}}) == {'a':{'b':{'c':1,'d':2}}}\n\ndef test_c():\n    assert merge_settings({'x':{'y':1,'z':3}}, {'x':{'y':2}}) == {'x':{'y':2,'z':3}}\n",
+  "applicable_conditions": [
+    "嵌套字典递归合并",
+    "合并时丢失兄弟键"
+  ]
+}

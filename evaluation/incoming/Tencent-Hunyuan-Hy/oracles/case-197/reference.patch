@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def get_header(headers, name):
+     """命中返回头值，未命中返回 None。"""
+-    return headers.get(name)
++    return next((v for k, v in headers.items() if k.lower() == name.lower()), None)

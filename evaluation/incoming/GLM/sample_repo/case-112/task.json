@@ -1,0 +1,10 @@
+{
+  "case_id": "case-112",
+  "title": "轮询调度先自增导致跳过首台",
+  "report": "轮询调度器第一次调用返回的是第 2 台服务器而不是第 1 台，整体序列前移一位。",
+  "contract": "RoundRobin(servers).next_server()：第一次调用返回 servers[0]，之后依次循环轮转。servers 非空。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

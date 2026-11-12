@@ -1,0 +1,15 @@
+{
+  "experience_id": "experience-38",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "每单积分按订单总额四舍五入后发放，与逐单发放的总额相差几分，\n对账时积分账实不符。",
+  "diagnosis": "缺陷是把舍入从“逐条计算后累加”挪到了“累加后计算”。修复原则：涉及按件/按行计费或计税时，舍入必须发生在最小计算单元上，之后再做整数累加；用 Decimal 承载十进制中间值，最后统一量化为整数分。",
+  "before_source": "\n\"\"\"Loyalty point issuance.\"\"\"\n\nfrom decimal import Decimal, ROUND_HALF_UP\n\n\ndef points_earned(amounts, rate):\n    \"\"\"Return total loyalty points for the given amounts.\"\"\"\n    subtotal = sum(amounts)\n    value = Decimal(subtotal) * Decimal(str(rate))\n    return int(value.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP))\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,6 +6,8 @@\n \n def points_earned(amounts, rate):\n     \"\"\"Return total loyalty points for the given amounts.\"\"\"\n-    subtotal = sum(amounts)\n-    value = Decimal(subtotal) * Decimal(str(rate))\n-    return int(value.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP))\n+    total = 0\n+    for amount in amounts:\n+        value = Decimal(amount) * Decimal(str(rate))\n+        total += int(value.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP))\n+    return total\n",
+  "verification_tests": "\nfrom target import points_earned\n\n\ndef test_single_amount():\n    assert points_earned([100], 0.1) == 10\n\n\ndef test_points_are_rounded_per_amount():\n    # 55 * 0.1 = 5.5 -> 6, 55 * 0.1 = 5.5 -> 6 => 12\n    assert points_earned([55, 55], 0.1) == 12\n\n\ndef test_empty_amounts_give_zero():\n    assert points_earned([], 0.1) == 0\n",
+  "applicable_conditions": [
+    "舍入位置",
+    "逐项累加",
+    "浮点误差",
+    "Decimal"
+  ]
+}

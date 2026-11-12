@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-75",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "启用开关解析：'enabled=false' 被当作开启。",
+  "diagnosis": "布尔解析需识别 'false'/'0'，不能非空即真。",
+  "before_source": "def parse_flag(raw):\n    out = dict(raw)\n    if 'enabled' in out:\n        out['enabled'] = bool(out['enabled'])\n    return out\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,5 +1,6 @@\n def parse_flag(raw):\n     out = dict(raw)\n     if 'enabled' in out:\n-        out['enabled'] = bool(out['enabled'])\n+        v = out['enabled'].strip().lower()\n+        out['enabled'] = v in ('true', '1')\n     return out\n",
+  "verification_tests": "import pytest\nfrom target import parse_flag\n\ndef test_a():\n    assert parse_flag({'enabled':'false'}) == {'enabled':False}\n\ndef test_b():\n    assert parse_flag({'enabled':'False'}) == {'enabled':False}\n\ndef test_c():\n    assert parse_flag({'enabled':'0'}) == {'enabled':False}\n",
+  "applicable_conditions": [
+    "布尔字面量解析",
+    "非空即真错误"
+  ]
+}

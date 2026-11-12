@@ -1,0 +1,15 @@
+{
+  "experience_id": "experience-34",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "两张重量相同的发货单被当成同一张，只创建了一条物流记录，\n另一箱货没有发出。",
+  "diagnosis": "幂等键取错了字段：用了业务金额/重量这类可能重复的字段，而不是唯一的请求标识。修复原则：幂等键必须取调用方提供的唯一请求号；同键复用首次结果且不重复计数，不同键必须各自执行一次。",
+  "before_source": "\n\"\"\"Shipment creation with idempotency.\"\"\"\n\n\nclass ShipmentService:\n    def __init__(self):\n        self._created = {}\n        self.created_count = 0\n\n    def create(self, request_id, weight):\n        key = weight\n        if key in self._created:\n            return dict(self._created[key])\n        self.created_count += 1\n        record = {\"request_id\": request_id, \"weight\": weight, \"state\": \"created\"}\n        self._created[key] = record\n        return dict(record)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -8,7 +8,7 @@\n         self.created_count = 0\n \n     def create(self, request_id, weight):\n-        key = weight\n+        key = request_id\n         if key in self._created:\n             return dict(self._created[key])\n         self.created_count += 1\n",
+  "verification_tests": "\nfrom target import ShipmentService\n\n\ndef test_single_shipment_is_created():\n    service = ShipmentService()\n    assert service.create(\"r1\", 10)[\"request_id\"] == \"r1\"\n    assert service.created_count == 1\n\n\ndef test_same_request_id_is_idempotent():\n    service = ShipmentService()\n    first = service.create(\"r1\", 10)\n    assert service.create(\"r1\", 10) == first\n    assert service.created_count == 1\n\n\ndef test_same_weight_with_different_request_ids_creates_two_shipments():\n    service = ShipmentService()\n    service.create(\"r1\", 10)\n    service.create(\"r2\", 10)\n    assert service.created_count == 2\n",
+  "applicable_conditions": [
+    "幂等键",
+    "重复请求",
+    "唯一标识",
+    "缓存键选择"
+  ]
+}

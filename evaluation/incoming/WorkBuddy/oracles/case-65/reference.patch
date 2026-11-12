@@ -1,0 +1,16 @@
+--- a/target.py
++++ b/target.py
+@@ -1,3 +1,12 @@
+ def split_amount(total, weights):
+     s = sum(weights)
+-    return [round(total * w / s, 2) for w in weights]
++    result = []
++    acc = 0.0
++    for i, w in enumerate(weights):
++        if i == len(weights) - 1:
++            result.append(round(total - acc, 2))
++        else:
++            v = round(total * w / s, 2)
++            result.append(v)
++            acc += v
++    return result

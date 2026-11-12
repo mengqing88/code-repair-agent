@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "使用半开区间或切片表达连续范围（时间窗、分页、缓冲区下标）",
+    "缺陷表现为计数或切片结果系统性地比契约多 1（或少 1）",
+    "端点相接、空区间、越界等边界需要作为验收重点"
+  ],
+  "before_source": "# 列表分页：返回第 page_index 页（从 0 开始）的元素列表。\n# 页大小固定，最后一页不足时按实际元素返回，越界页返回空列表。\n\n\ndef paginate(items, page_index, page_size):\n    \"\"\"返回第 page_index 页的列表切片。\"\"\"\n    if page_size <= 0:\n        raise ValueError(\"page_size must be positive\")\n    if page_index < 0:\n        raise ValueError(\"page_index must be non-negative\")\n\n    start = page_index * page_size\n    # 错误：把切片末端当成闭区间端点，多取了一个元素。\n    end = start + page_size + 1\n    return list(items[start:end])\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-182",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "序列范围按半开区间 [start, end) 处理时，末端必须是 start + size；把末端当成闭区间端点再加 1 会造成系统性 off-by-one，使每段结果多带一个相邻元素。修复原则是统一端点口径为半开，并重点验证端点相接、最后一页与越界页。",
+  "experience_id": "experience-182",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】后台列表分页场景：每页 2 条，第 0 页返回了 3 条、第 1 页也多带了一条属于下一页的记录，前端出现重复展示。预期：按固定的页大小精确切片，最后一页不足时按实际剩余元素返回。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -11,5 +11,5 @@\n \n     start = page_index * page_size\n     # 错误：把切片末端当成闭区间端点，多取了一个元素。\n-    end = start + page_size + 1\n+    end = start + page_size\n     return list(items[start:end])\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import paginate\n\nITEMS = [\"a\", \"b\", \"c\", \"d\", \"e\"]\n\n\ndef test_first_page():\n    assert paginate(ITEMS, 0, 2) == [\"a\", \"b\"]\n\n\ndef test_middle_page():\n    assert paginate(ITEMS, 1, 2) == [\"c\", \"d\"]\n\n\ndef test_out_of_range_page_is_empty():\n    assert paginate(ITEMS, 9, 2) == []\n"
+}

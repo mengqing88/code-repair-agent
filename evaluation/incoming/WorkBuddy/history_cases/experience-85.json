@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-85",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "时间段解析 '2h30m' 只取到小时，漏掉分钟。",
+  "diagnosis": "复合格式解析需提取所有组成部分，不能只看一处。",
+  "before_source": "import re\ndef parse_timespan(s):\n    m = re.search(r'(\\d+)h', s)\n    if m:\n        return int(m.group(1)) * 60\n    return 0\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,6 +1,8 @@\n import re\n def parse_timespan(s):\n-    m = re.search(r'(\\d+)h', s)\n-    if m:\n-        return int(m.group(1)) * 60\n-    return 0\n+    h = 0; mi = 0\n+    mh = re.search(r'(\\d+)h', s)\n+    if mh: h = int(mh.group(1))\n+    mm = re.search(r'(\\d+)m', s)\n+    if mm: mi = int(mm.group(1))\n+    return h * 60 + mi\n",
+  "verification_tests": "import pytest\nfrom target import parse_timespan\n\ndef test_a():\n    assert parse_timespan('1h30m') == 90\n\ndef test_b():\n    assert parse_timespan('0h45m') == 45\n\ndef test_c():\n    assert parse_timespan('2h15m') == 135\n",
+  "applicable_conditions": [
+    "复合格式解析遗漏部分",
+    "正则只取一段"
+  ]
+}

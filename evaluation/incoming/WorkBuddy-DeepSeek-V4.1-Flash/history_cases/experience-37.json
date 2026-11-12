@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-37",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "下载任务的重试循环一次都没尝试就失败，重试预算形同虚设。",
+  "diagnosis": "循环上限直接使用了重试次数，漏掉了首次尝试。修复原则：总尝试次数 = 重试次数 + 1，并确保循环至少执行一次；无异常可抛时不要 raise None。",
+  "before_source": "def download_numbers(retries):\n    result = []\n    for attempt in range(retries):\n        result.append(attempt)\n    return result\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,6 +1,6 @@\n def download_numbers(retries):\n     result = []\n-    for attempt in range(retries):\n+    for attempt in range(retries + 1):\n         result.append(attempt)\n     return result\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert download_numbers(0) == [0]\n\n\ndef test_experience_2():\n    assert download_numbers(2) == [0, 1, 2]\n\n\ndef test_experience_3():\n    assert download_numbers(1) == [0, 1]\n",
+  "applicable_conditions": [
+    "重试语义",
+    "总调用次数",
+    "异常传播"
+  ]
+}

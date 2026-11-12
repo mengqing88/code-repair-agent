@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "规则是「先对输入做变换，再判断派生量是否达到阈值」的两阶段流程",
+    "缺陷表现为条件判断引用了变换前的原始入参，而返回值或后续计算基于变换后的值",
+    "阈值/门槛/触发条件与某个派生中间量绑定，而非与原始入参绑定"
+  ],
+  "before_source": "# 运费计算：订单商品净额达到门槛则包邮，否则收取固定运费。\n# 金额单位为分，全部为整数。\n\n\ndef shipping_fee(order_total_cents, refunded_cents, free_threshold_cents, fee_cents):\n    \"\"\"返回该订单应收运费（整数分）。\"\"\"\n    if order_total_cents < 0 or refunded_cents < 0 or fee_cents < 0:\n        raise ValueError(\"amounts must be non-negative\")\n    if refunded_cents > order_total_cents:\n        raise ValueError(\"refund cannot exceed order total\")\n\n    net_cents = order_total_cents - refunded_cents\n    # 错误：包邮门槛用的是退款前的下单金额。\n    if order_total_cents >= free_threshold_cents:\n        return 0\n    return fee_cents\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-181",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "两阶段流程中，触发规则的阈值比较必须针对「实际参与结算的派生量」（此处为退款后净额），不能把变换前的原始入参直接代入条件。根因是条件里的变量与后续计算所用的变量不一致；修复原则是把条件中的变量替换成正确的中间结果，只需改动判断条件本身，不改动计算流程。",
+  "experience_id": "experience-181",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】电商运费结算场景：下单金额满 100 元包邮，用户随后申请部分退款。系统仍按退款前的下单金额判定包邮，导致净商品金额已不足 100 元的订单被免运费，结算收入偏低。预期：以退款后净商品金额作为包邮判定依据。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -11,6 +11,6 @@\n \n     net_cents = order_total_cents - refunded_cents\n     # 错误：包邮门槛用的是退款前的下单金额。\n-    if order_total_cents >= free_threshold_cents:\n+    if net_cents >= free_threshold_cents:\n         return 0\n     return fee_cents\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import shipping_fee\n\n\ndef test_no_refund_above_threshold_is_free():\n    assert shipping_fee(12000, 0, 10000, 800) == 0\n\n\ndef test_below_threshold_pays_fee():\n    assert shipping_fee(8000, 0, 10000, 800) == 800\n\n\ndef test_refund_drops_net_below_threshold():\n    assert shipping_fee(12000, 6000, 10000, 800) == 800\n"
+}

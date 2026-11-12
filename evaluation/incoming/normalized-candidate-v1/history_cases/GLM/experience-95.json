@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "多字段排序优先级不生效",
+    "连续稳定 sort 的应用顺序错误",
+    "键列表从左到右表示优先级的契约"
+  ],
+  "before_source": "def rank_players(players, keys):\n    \"\"\"keys 形如 (\"-score\", \"time\")：最左为主键，'-' 前缀为降序。返回新列表。\"\"\"\n    result = list(players)\n    for key in keys:\n        desc = key.startswith(\"-\")\n        field = key.lstrip(\"-\")\n        result.sort(key=lambda p: p[field], reverse=desc)\n    return result\n",
+  "dataset_experience_id": "GLM::experience-95",
+  "dataset_id": "GLM",
+  "diagnosis": "Python 稳定排序要求先按次键排序、再按主键排序（或使用 reversed 遍历键列表）。修复原则：从最低优先级键开始逐级排序，最终顺序由最高优先级键主导。",
+  "experience_id": "experience-95",
+  "normalization_notes": [],
+  "original_report": "排行榜按 (分数降序, 时间升序) 排序后，同分玩家的先后顺序错乱，实际只有时间在起作用。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,7 @@\n def rank_players(players, keys):\n     \"\"\"keys 形如 (\"-score\", \"time\")：最左为主键，'-' 前缀为降序。返回新列表。\"\"\"\n     result = list(players)\n-    for key in keys:\n+    for key in reversed(keys):\n         desc = key.startswith(\"-\")\n         field = key.lstrip(\"-\")\n         result.sort(key=lambda p: p[field], reverse=desc)\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import rank_players\n\ndef test_single_key():\n    ps = [{\"s\": 1}, {\"s\": 3}, {\"s\": 2}]\n    assert [p[\"s\"] for p in rank_players(ps, (\"-s\",))] == [3, 2, 1]\n\ndef test_score_then_time():\n    ps = [{\"s\": 5, \"t\": 20}, {\"s\": 9, \"t\": 30}, {\"s\": 5, \"t\": 10}]\n    out = rank_players(ps, (\"-s\", \"t\"))\n    assert [(p[\"s\"], p[\"t\"]) for p in out] == [(9, 30), (5, 10), (5, 20)]\n\ndef test_primary_dominates():\n    ps = [{\"g\": 2, \"n\": \"a\"}, {\"g\": 1, \"n\": \"z\"}, {\"g\": 2, \"n\": \"b\"}]\n    out = rank_players(ps, (\"g\", \"n\"))\n    assert [(p[\"g\"], p[\"n\"]) for p in out] == [(1, \"z\"), (2, \"a\"), (2, \"b\")]\n"
+}

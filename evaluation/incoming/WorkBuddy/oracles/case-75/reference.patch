@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -1,5 +1,6 @@
+ def parse_config(raw):
+     out = dict(raw)
+     if 'debug' in out:
+-        out['debug'] = bool(out['debug'])
++        v = out['debug'].strip().lower()
++        out['debug'] = v in ('true', '1')
+     return out

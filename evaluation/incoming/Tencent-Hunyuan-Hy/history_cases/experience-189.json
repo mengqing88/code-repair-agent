@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-189",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】数据清洗场景：需要过滤出所有正数，但遇到第一个非正数就返回了已收集的部分结果，后面的正数全部丢失。预期：跳过无效项后继续处理全部剩余元素。",
+  "diagnosis": "循环内的控制流关键字决定作用范围：continue 只跳过本轮，break/return 会终止整个循环或函数。「跳过某项」的语义必须对应 continue；误用 break/return 会让后续有效数据被整体丢弃。修复原则是只替换控制流关键字，保留其余循环体。",
+  "before_source": "# 过滤出所有正数，保持原有顺序。\n\n\ndef collect_positive(values):\n    out = []\n    for v in values:\n        if v <= 0:\n            return out\n        out.append(v)\n    return out\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -5,6 +5,6 @@\n     out = []\n     for v in values:\n         if v <= 0:\n-            return out\n+            continue\n         out.append(v)\n     return out\n",
+  "verification_tests": "from target import collect_positive\n\n\ndef test_all_positive():\n    assert collect_positive([1, 2, 3]) == [1, 2, 3]\n\n\ndef test_empty_values():\n    assert collect_positive([]) == []\n\n\ndef test_invalid_in_the_middle():\n    assert collect_positive([1, -2, 3]) == [1, 3]\n",
+  "applicable_conditions": [
+    "需求是「跳过不符合条件的元素并继续处理后续元素」",
+    "缺陷表现为循环在第一个无效项处提前终止",
+    "修复应只改控制流关键字，不改动过滤条件"
+  ]
+}

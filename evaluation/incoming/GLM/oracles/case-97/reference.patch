@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -15,5 +15,4 @@
+         value, written_at = self._data[key]
+         if now - written_at >= self.ttl:
+             return None
+-        self._data[key] = (value, now)
+         return value

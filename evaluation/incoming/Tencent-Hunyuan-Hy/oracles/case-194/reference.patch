@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def effective_limit(config):
+     """返回生效的限流阈值。"""
+-    return config.get("limit") or 100
++    return 100 if config.get("limit") is None else config["limit"]

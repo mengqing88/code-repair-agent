@@ -1,0 +1,10 @@
+{
+  "case_id": "case-51",
+  "title": "跨月账期只在起始月份内计算天数",
+  "report": "1 月 25 日到 2 月 3 日的账单只覆盖了 1 月，2 月前三天没有计费。",
+  "contract": "split_bill_period(start, end) 接收 datetime.date，闭区间，且 start <= end，否则抛 ValueError。返回 ((year, month), days) 列表：按自然月切分区间，days 为该月被覆盖的天数，按时间顺序排列。同月时为单条记录。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

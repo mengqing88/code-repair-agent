@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-159",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "多租户配置合并后，租户 A 的自定义超时时间被租户 B 的空值挡掉了，配置回落到系统默认值。",
+  "diagnosis": "合并时只判断 key 是否已存在，没有区分“该来源未提供该 key”与“该来源显式提供了 None”。None 值被当作有效的高优先级取值写入，导致低优先级来源永远不生效。修复原则：把 None 统一解释为“未提供”，在写入前跳过 None 值。",
+  "before_source": "def merge_tenant_settings(tenant_settings, global_settings):\n    \"\"\"合并租户级与全局级设置，租户级优先。\"\"\"\n    merged = {}\n    for source in (tenant_settings, global_settings):\n        for key, value in source.items():\n            if key not in merged:\n                merged[key] = value\n    return merged\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,6 +3,6 @@\n     merged = {}\n     for source in (tenant_settings, global_settings):\n         for key, value in source.items():\n-            if key not in merged:\n+            if key not in merged and value is not None:\n                 merged[key] = value\n     return merged\n",
+  "verification_tests": "from target import merge_tenant_settings\n\n\ndef test_tenant_value_wins():\n    assert merge_tenant_settings({\"tz\": \"UTC+8\"}, {\"tz\": \"UTC\"}) == {\"tz\": \"UTC+8\"}\n\n\ndef test_none_tenant_value_falls_back_to_global():\n    assert merge_tenant_settings({\"tz\": None}, {\"tz\": \"UTC\"}) == {\"tz\": \"UTC\"}\n\n\ndef test_global_only_key_is_kept():\n    assert merge_tenant_settings({}, {\"tz\": \"UTC\"}) == {\"tz\": \"UTC\"}\n",
+  "applicable_conditions": [
+    "多来源配置合并",
+    "None 表示未提供",
+    "优先级顺序"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-102",
+  "title": "金额舍入用了银行家舍入",
+  "report": "金额舍入到分时使用了 Python 内置 round（银行家舍入），契约要求四舍五入（HALF_UP），半分位的金额被错误舍入。",
+  "contract": "round_money(amount)：非负数 amount（元），四舍五入到 0.01（十进制 HALF_UP，按十进制字面值判断），返回 float。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

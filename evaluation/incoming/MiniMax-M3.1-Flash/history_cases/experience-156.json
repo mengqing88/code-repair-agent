@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-156",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "工单系统里已关闭的工单还能被重新打开并流转到处理中，导致工单被重复处理。",
+  "diagnosis": "状态机只按事件查目标状态，完全没有校验当前状态，导致任何状态都可以跳到任意目标状态。修复原则：状态转移必须由“当前状态 + 事件”的允许转移表决定，不允许的组合要显式抛错；终态的允许事件集合为空。",
+  "before_source": "EVENT_TARGET = {\n    \"ASSIGN\": \"ASSIGNED\",\n    \"START\": \"IN_PROGRESS\",\n    \"CLOSE\": \"CLOSED\",\n}\n\n\ndef ticket_state_after(current, event):\n    \"\"\"返回工单执行事件后的新状态。\"\"\"\n    if event not in EVENT_TARGET:\n        raise ValueError(\"unknown event\")\n    return EVENT_TARGET[event]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,9 +4,18 @@\n     \"CLOSE\": \"CLOSED\",\n }\n \n+ALLOWED = {\n+    \"OPEN\": (\"ASSIGN\", \"CLOSE\"),\n+    \"ASSIGNED\": (\"START\", \"CLOSE\"),\n+    \"IN_PROGRESS\": (\"CLOSE\",),\n+    \"CLOSED\": (),\n+}\n+\n \n def ticket_state_after(current, event):\n     \"\"\"返回工单执行事件后的新状态。\"\"\"\n-    if event not in EVENT_TARGET:\n-        raise ValueError(\"unknown event\")\n+    if current not in ALLOWED:\n+        raise ValueError(\"unknown state\")\n+    if event not in ALLOWED[current]:\n+        raise ValueError(\"event not allowed in current state\")\n     return EVENT_TARGET[event]\n",
+  "verification_tests": "import pytest\n\nfrom target import ticket_state_after\n\n\ndef test_open_ticket_can_be_assigned():\n    assert ticket_state_after(\"OPEN\", \"ASSIGN\") == \"ASSIGNED\"\n\n\ndef test_start_requires_assigned_ticket():\n    with pytest.raises(ValueError):\n        ticket_state_after(\"OPEN\", \"START\")\n\n\ndef test_closed_ticket_cannot_be_restarted():\n    with pytest.raises(ValueError):\n        ticket_state_after(\"CLOSED\", \"START\")\n",
+  "applicable_conditions": [
+    "状态机状态转移",
+    "缺少当前状态前置校验",
+    "终态仍可流转"
+  ]
+}

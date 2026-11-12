@@ -1,0 +1,10 @@
+{
+  "case_id": "case-104",
+  "title": "权重抽取分母错误",
+  "report": "按权重抽取时把分母写成了条目数而不是权重总和，抽取结果与权重比例完全不符。",
+  "contract": "weighted_pick(items, weights, r)：r 为 [0,1) 内的确定值。令 threshold = r * sum(weights)，返回最小的 i 使得前 i+1 项权重累积和 > threshold；weights 均为正数，两者等长。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

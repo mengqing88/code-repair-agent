@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "四舍五入",
+    "Decimal 量化",
+    "远离零进位"
+  ],
+  "before_source": "import math\n\ndef half_days(hours):\n    return math.floor(hours / 2)\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-53",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "取整使用了截断而不是就近进位，中途多了一步取整放大了误差。修复原则：把舍入意图一次性交给库提供的舍入模式参数表达，不要自己拼接移位与截断。",
+  "experience_id": "experience-53",
+  "normalization_notes": [],
+  "original_report": "工时换算成半天时，3.5 小时被算成 3 小时而不是 4 小时。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,7 @@\n-import math\n+import decimal\n \n def half_days(hours):\n-    return math.floor(hours / 2)\n+    value = decimal.Decimal(str(hours)).quantize(\n+        decimal.Decimal('1'), rounding=decimal.ROUND_HALF_UP)\n+    return int(value)\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert half_days('2') == 2\n\n\ndef test_experience_2():\n    assert half_days('1') == 1\n\n\ndef test_experience_3():\n    assert half_days('0') == 0\n"
+}

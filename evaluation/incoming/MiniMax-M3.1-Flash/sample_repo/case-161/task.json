@@ -1,0 +1,10 @@
+{
+  "case_id": "case-161",
+  "title": "CSV 记录解析手工切分，破坏带引号的字段",
+  "report": "导出对账单时，商品名称里带逗号的记录（如 \"T恤, 短袖\"）解析后只剩前半段，后续库存统计全部偏低。",
+  "contract": "parse_records(text) 解析 CSV 文本，返回字典列表。规则：必须用标准库 csv 模块整体解析，支持带引号字段、字段内逗号与转义双引号；第一行是表头，键名即表头字段名；忽略完全空白的行；某条记录列数少于表头时，缺失的列不出现在该记录字典中；列数多于表头时，多余的值放入键 \"_extra\" 的列表中；text 为空或仅空白时返回空列表。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

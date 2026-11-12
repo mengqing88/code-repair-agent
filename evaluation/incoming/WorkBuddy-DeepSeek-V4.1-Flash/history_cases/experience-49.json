@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-49",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "解析查询串时，值里含等号的参数被截断成两段。",
+  "diagnosis": "使用了不限制次数的分割，把值内部的特殊字符也当成结构字符。修复原则：结构字符只应作为分隔符出现有限次，值的剩余部分必须原样保留。",
+  "before_source": "def parse_pair(text):\n    if '=' not in text:\n        return None\n    parts = text.split('=')\n    return parts[0], parts[1]\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,6 +1,6 @@\n def parse_pair(text):\n     if '=' not in text:\n         return None\n-    parts = text.split('=')\n+    parts = text.split('=', 1)\n     return parts[0], parts[1]\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert parse_pair('a=1=2') == ('a', '1=2')\n\n\ndef test_experience_2():\n    assert parse_pair('a=1') == ('a', '1')\n\n\ndef test_experience_3():\n    assert parse_pair('nokey') is None\n",
+  "applicable_conditions": [
+    "CSV 引号语义",
+    "字段内分隔符",
+    "转义双引号"
+  ]
+}

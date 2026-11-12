@@ -1,0 +1,10 @@
+{
+  "case_id": "case-156",
+  "title": "状态机未校验前置状态，任意状态都能跳转",
+  "report": "订单流程中，已取消或已送达的订单居然还能被推进到“已支付”，业务方据此记录了收款流水，造成账目污染。",
+  "contract": "next_state(state, event) 返回执行 event 后的新状态。允许的转移为：NEW→PAID（PAY）、NEW→CANCELLED（CANCEL）、PAID→SHIPPED（SHIP）、SHIPPED→DELIVERED（DELIVER）；DELIVERED 与 CANCELLED 为终态，不允许任何转移。若 state 未知，或在当前状态下不允许该 event，抛出 ValueError，错误信息中包含 state 与 event。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -6,6 +6,6 @@
+         group = items[i:i + x + y]
+         if len(group) < x + y:
+             break
+-        take = group[:y]
++        take = group[-y:]
+         freed += sum(take)
+     return total - freed

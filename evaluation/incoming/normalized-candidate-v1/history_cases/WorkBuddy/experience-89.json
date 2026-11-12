@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "写后缓存失效",
+    "陈旧缓存读取"
+  ],
+  "before_source": "class ProductRepo:\n    def __init__(self):\n        self.store = {}; self.cache = {}\n    def get(self, pid):\n        if pid in self.cache: return self.cache[pid]\n        self.cache[pid] = self.store.get(pid); return self.cache[pid]\n    def update(self, pid, price):\n        self.store[pid] = price\n",
+  "dataset_experience_id": "WorkBuddy::experience-89",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "写操作必须同步失效相关缓存，否则读到陈旧数据。",
+  "experience_id": "experience-89",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "商品缓存：改价后未清除缓存，页面显示旧价。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,3 +6,4 @@\n         self.cache[pid] = self.store.get(pid); return self.cache[pid]\n     def update(self, pid, price):\n         self.store[pid] = price\n+        self.cache.pop(pid, None)\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import ProductRepo\n\ndef test_a():\n    r = ProductRepo(); r.store['a']='x'; r.get('a')\n    r.update('a','new'); assert r.get('a')=='new'\n\ndef test_b():\n    r = ProductRepo(); r.store['a']='x'; r.get('a')\n    r.update('a','n1'); r.update('a','n2'); assert r.get('a')=='n2'\n\ndef test_c():\n    r = ProductRepo(); r.store['a']='x'; r.get('a')\n    r.update('a','v'); assert r.get('a')=='v'\n"
+}

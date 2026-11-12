@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -12,4 +12,4 @@
+     """判断状态能否流转到目标状态。"""
+     if not state:
+         return False
+-    return state in ALLOWED.get(target, set())
++    return target in ALLOWED.get(state, set())

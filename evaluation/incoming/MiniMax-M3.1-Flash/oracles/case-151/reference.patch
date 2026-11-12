@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -8,6 +8,6 @@
+     """
+     rate = 0.0
+     for threshold, tier_rate in tiers:
+-        if amount > threshold:
++        if amount >= threshold:
+             rate = tier_rate
+     return rate

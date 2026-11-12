@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-50",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "座位号 A10 被排在 A2 前面，楼层内编号整体错乱。",
+  "diagnosis": "含数字的标识被整体当作字符串比较，字典序与数值序不一致。修复原则：把标识拆成文本前缀与数值后缀，比较时按元组分别使用文本和数值。",
+  "before_source": "def seat_key(label):\n    return label\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,5 @@\n def seat_key(label):\n-    return label\n+    prefix = ''.join(ch for ch in label if not ch.isdigit())\n+    digits = ''.join(ch for ch in label if ch.isdigit())\n+    return prefix, int(digits) if digits else -1\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert seat_key('A1') < seat_key('A2')\n\n\ndef test_experience_2():\n    assert seat_key('B1') > seat_key('A9')\n\n\ndef test_experience_3():\n    assert seat_key('A') == ('A', -1)\n",
+  "applicable_conditions": [
+    "版本比较",
+    "分段数值化",
+    "尾零归一"
+  ]
+}

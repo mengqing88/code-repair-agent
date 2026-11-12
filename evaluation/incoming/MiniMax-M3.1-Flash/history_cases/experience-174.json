@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-174",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "对账工具比对订单金额时，把字符串形式的金额与数值形式的金额判为不等，每天产出上千条假差异。",
+  "diagnosis": "比较逻辑直接使用了 Python 的 ==，而字符串与数值本就不同类型，永远不相等，也没有对字符串做解析与归一。修复原则：跨类型比较前必须先把等价表示归一化到同一类型；解析失败应视为不相等而不是抛异常。",
+  "before_source": "def prices_match(listed_price, settled_price):\n    \"\"\"判断挂牌价与结算价是否一致。\"\"\"\n    return listed_price == settled_price\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,27 @@\n+def _to_number(value):\n+    if isinstance(value, bool):\n+        return None\n+    if isinstance(value, (int, float)):\n+        return value\n+    if isinstance(value, str):\n+        stripped = value.strip()\n+        if not stripped:\n+            return None\n+        try:\n+            return int(stripped)\n+        except ValueError:\n+            pass\n+        try:\n+            return float(stripped)\n+        except ValueError:\n+            return None\n+    return None\n+\n+\n def prices_match(listed_price, settled_price):\n     \"\"\"判断挂牌价与结算价是否一致。\"\"\"\n-    return listed_price == settled_price\n+    left = _to_number(listed_price)\n+    right = _to_number(settled_price)\n+    if left is None or right is None:\n+        return False\n+    return left == right\n",
+  "verification_tests": "from target import prices_match\n\n\ndef test_numeric_and_string_prices_match():\n    assert prices_match(100, \"100\") is True\n\n\ndef test_whitespace_is_ignored():\n    assert prices_match(\" 100 \", \"100\") is True\n\n\ndef test_unparsable_price_does_not_match():\n    assert prices_match(\"n/a\", 100) is False\n",
+  "applicable_conditions": [
+    "跨类型金额比较",
+    "缺少归一化",
+    "解析失败视为不相等"
+  ]
+}

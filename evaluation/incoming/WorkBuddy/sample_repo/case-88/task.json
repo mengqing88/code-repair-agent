@@ -1,0 +1,10 @@
+{
+  "case_id": "case-88",
+  "title": "LRU 容量淘汰差一",
+  "report": "LRUCache(capacity)：容量满（size>capacity）时淘汰最久未用。当前实现在 size>=capacity 时就淘汰，导致实际只容纳 capacity-1 项。",
+  "contract": "capacity>=1。get/put 后缓存大小不超过 capacity；溢出时淘汰最近最少使用项。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

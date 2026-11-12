@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -7,7 +7,7 @@
+         elif self.state == 'paid' and action == 'ship':
+             self.state = 'shipped'
+         elif self.state == 'paid' and action == 'pay':
+-            raise ValueError('already paid')
++            pass
+         else:
+             raise ValueError('invalid transition')
+         return self.state

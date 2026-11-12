@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-31",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "配送里程的费率档位在 10 公里整点时仍按起步价计费。",
+  "diagnosis": "档位表按“上界包含”匹配，边界值先命中低档就直接返回。修复原则：半开区间 [lo, hi) 的上界判定必须使用严格小于，让边界值落入下一档。",
+  "before_source": "def shipping_rate(km):\n    if km < 0:\n        raise ValueError('km must be non-negative')\n    if km <= 10:\n        return 3.0\n    if km <= 25:\n        return 5.5\n    return 8.0\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,9 +1,9 @@\n def shipping_rate(km):\n     if km < 0:\n         raise ValueError('km must be non-negative')\n-    if km <= 10:\n+    if km < 10:\n         return 3.0\n-    if km <= 25:\n+    if km < 25:\n         return 5.5\n     return 8.0\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert shipping_rate(10) == 5.5\n\n\ndef test_experience_2():\n    assert shipping_rate(0) == 3.0\n\n\ndef test_experience_3():\n    assert shipping_rate(40) == 8.0\n",
+  "applicable_conditions": [
+    "金额阶梯",
+    "半开区间边界归属",
+    "float 返回值"
+  ]
+}

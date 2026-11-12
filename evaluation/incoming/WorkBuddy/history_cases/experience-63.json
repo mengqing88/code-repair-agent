@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-63",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "套餐优惠：买二赠一应免最便宜的一份，却免了最贵的一份。",
+  "diagnosis": "赠品/免费项应挑价值最低的单位，而非最高。",
+  "before_source": "def meal_deal(prices, buy, free):\n    s = sorted(prices, reverse=True)\n    total = sum(s)\n    disc = sum(s[:free])\n    return total - disc\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,5 +1,5 @@\n def meal_deal(prices, buy, free):\n     s = sorted(prices, reverse=True)\n     total = sum(s)\n-    disc = sum(s[:free])\n+    disc = sum(s[-free:])\n     return total - disc\n",
+  "verification_tests": "import pytest\nfrom target import meal_deal\n\ndef test_a():\n    assert meal_deal([10, 10, 5], 2, 1) == 20\n\ndef test_b():\n    assert meal_deal([8, 8, 3], 2, 1) == 16\n\ndef test_c():\n    assert meal_deal([20, 20, 20, 5, 5], 3, 1) == 65\n",
+  "applicable_conditions": [
+    "赠品/免单取最便宜项",
+    "分组优惠的错误释放对象"
+  ]
+}

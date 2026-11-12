@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -1,5 +1,5 @@
+ def convert(amount, rate, direction):
+     if direction == 'to_usd':
++        return amount / rate
++    else:
+         return amount * rate
+-    else:
+-        return amount / rate

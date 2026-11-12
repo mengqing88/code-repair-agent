@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-180",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "批量写入的采集记录全部变成了最后一条的内容，前面的记录内容被覆盖掉了。",
+  "diagnosis": "追加时只做了列表拷贝，元素本身仍是同一个对象引用；后续对某条记录内部字段的修改就影响到了所有指向同一 dict 的位置。修复原则：只要存储层可能长期持有并修改这些对象，就必须做深拷贝，不能依赖浅拷贝。",
+  "before_source": "def append_metric(metrics, metric):\n    \"\"\"把 metric 追加到 metrics。\"\"\"\n    if not metric:\n        raise ValueError(\"metric must not be empty\")\n    combined = list(metrics)\n    combined.append(metric)\n    return combined\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,10 @@\n+import copy\n+\n+\n def append_metric(metrics, metric):\n-    \"\"\"把 metric 追加到 metrics。\"\"\"\n+    \"\"\"把 metric 追加到 metrics（深拷贝）。\"\"\"\n     if not metric:\n         raise ValueError(\"metric must not be empty\")\n     combined = list(metrics)\n-    combined.append(metric)\n+    combined.append(copy.deepcopy(metric))\n     return combined\n",
+  "verification_tests": "import pytest\n\nfrom target import append_metric\n\n\ndef test_nested_dict_is_not_shared():\n    original = {\"name\": \"cpu\", \"tags\": {\"kind\": \"x\"}}\n    result = append_metric([], original)\n    result[0][\"tags\"][\"kind\"] = \"changed\"\n    assert original[\"tags\"][\"kind\"] == \"x\"\n\n\ndef test_metric_object_is_not_reused():\n    original = {\"name\": \"cpu\"}\n    result = append_metric([], original)\n    assert result[0] is not original\n\n\ndef test_existing_metrics_are_kept():\n    assert append_metric([{\"name\": \"mem\"}], {\"name\": \"cpu\"}) == [\n        {\"name\": \"mem\"},\n        {\"name\": \"cpu\"},\n    ]\n",
+  "applicable_conditions": [
+    "追加写入共享可变对象",
+    "浅拷贝导致引用共享",
+    "需要深拷贝隔离"
+  ]
+}

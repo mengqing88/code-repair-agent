@@ -1,0 +1,10 @@
+{
+  "case_id": "case-111",
+  "title": "合并区间未先排序",
+  "report": "合并重叠区间时假设输入已按 start 排序，无序输入下合并结果错误。",
+  "contract": "merge_intervals(intervals)：输入为 [start, end) 整数区间列表（start < end），顺序任意。相接（start == 前 end）也合并。返回按 start 升序的不相交区间元组列表。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

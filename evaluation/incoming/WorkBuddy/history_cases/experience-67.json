@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-67",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "日志时间窗口：本地时间转 UTC 时加减号写反，导致时区偏移地区误判。",
+  "diagnosis": "本地->UTC 是减去时区偏移；符号写反会使窗口整体错位。",
+  "before_source": "def in_window(start, end, now_local, tz):\n    now_utc = now_local + tz * 3600\n    return start <= now_utc <= end\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,3 +1,3 @@\n def in_window(start, end, now_local, tz):\n-    now_utc = now_local + tz * 3600\n+    now_utc = now_local - tz * 3600\n     return start <= now_utc <= end\n",
+  "verification_tests": "import pytest\nfrom target import in_window\n\ndef test_a():\n    assert in_window(0, 86400, 60000, 8) is True\n\ndef test_b():\n    assert in_window(0, 86400, 100, 8) is False\n\ndef test_c():\n    assert in_window(0, 86400, 115200, 8) is True\n",
+  "applicable_conditions": [
+    "本地/UTC 偏移符号",
+    "时间戳时区转换"
+  ]
+}

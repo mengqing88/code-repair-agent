@@ -1,0 +1,14 @@
+--- a/target.py
++++ b/target.py
+@@ -8,7 +8,10 @@
+     def get(self, key, now):
+         if key not in self.entries:
+             return None
+-        value, _expire_at = self.entries[key]
++        value, expire_at = self.entries[key]
++        if now >= expire_at:
++            del self.entries[key]
++            return None
+         return value
+ 
+     def size(self):

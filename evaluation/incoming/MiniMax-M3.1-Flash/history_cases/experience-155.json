@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-155",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "部署脚本通过环境变量把日志级别显式设为空字符串以关闭额外日志，结果环境变量被忽略，程序仍然按默认级别输出。",
+  "diagnosis": "配置优先级用真值判断（if overrides[key]）来判定“是否已设置”，导致空字符串、0、False 这类合法配置值被误判为未设置。修复原则：区分“键不存在”和“键存在但值为假”，存在性判断必须用 key in mapping。",
+  "before_source": "def setting_from_env(env, key, fallback):\n    \"\"\"优先使用环境变量，其次使用 fallback。\"\"\"\n    value = env.get(key)\n    return value if value else fallback\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,5 @@\n def setting_from_env(env, key, fallback):\n     \"\"\"优先使用环境变量，其次使用 fallback。\"\"\"\n-    value = env.get(key)\n-    return value if value else fallback\n+    if key in env:\n+        return env[key]\n+    return fallback\n",
+  "verification_tests": "from target import setting_from_env\n\n\ndef test_empty_env_value_overrides_fallback():\n    assert setting_from_env({\"MODE\": \"\"}, \"MODE\", \"default\") == \"\"\n\n\ndef test_zero_env_value_overrides_fallback():\n    assert setting_from_env({\"PORT\": 0}, \"PORT\", \"8080\") == 0\n\n\ndef test_missing_env_uses_fallback():\n    assert setting_from_env({}, \"MODE\", \"default\") == \"default\"\n",
+  "applicable_conditions": [
+    "配置来源优先级",
+    "用真值判断代替存在性判断",
+    "空串/0/False 配置值"
+  ]
+}

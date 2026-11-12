@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-151",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "积分兑换时，积分恰好等于某个会员等级门槛的客户被判到了低一档，兑换折扣比例偏低。",
+  "diagnosis": "档位判定使用了严格大于号（amount > threshold），使得恰好等于门槛的金额不会命中该门槛档位。修复原则：档位区间判定使用闭区间下界（amount >= threshold），即“命中满足条件的最大门槛”。",
+  "before_source": "def member_discount_rate(points, levels):\n    \"\"\"返回积分对应的会员折扣率。levels 为升序的 (门槛积分, 折扣率)。\"\"\"\n    rate = 0.0\n    for threshold, level_rate in levels:\n        if points > threshold:\n            rate = level_rate\n    return rate\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,6 +2,6 @@\n     \"\"\"返回积分对应的会员折扣率。levels 为升序的 (门槛积分, 折扣率)。\"\"\"\n     rate = 0.0\n     for threshold, level_rate in levels:\n-        if points > threshold:\n+        if points >= threshold:\n             rate = level_rate\n     return rate\n",
+  "verification_tests": "from target import member_discount_rate\n\n\ndef test_points_exactly_at_threshold_use_that_level():\n    assert member_discount_rate(1000, [(1000, 0.05), (5000, 0.1)]) == 0.05\n\n\ndef test_points_below_first_threshold_get_no_discount():\n    assert member_discount_rate(500, [(1000, 0.05)]) == 0.0\n\n\ndef test_points_between_levels_use_lower_level():\n    assert member_discount_rate(2000, [(1000, 0.05), (5000, 0.1)]) == 0.05\n",
+  "applicable_conditions": [
+    "按门槛分档的费率/折扣计算",
+    "档位判定使用严格不等号",
+    "边界值恰好等于门槛"
+  ]
+}

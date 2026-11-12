@@ -1,0 +1,10 @@
+{
+  "case_id": "case-64",
+  "title": "计息天数基数用错",
+  "report": "daily_interest(principal, annual_rate, days)：按实际天数/365 计息。当前实现使用了 /360（银行业惯例），与契约不符。",
+  "contract": "principle>=0，annual_rate>=0，days>=0 整数。返回 round(principal*annual_rate*days/365, 2)。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

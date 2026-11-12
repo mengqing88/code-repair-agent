@@ -1,0 +1,16 @@
+--- a/target.py
++++ b/target.py
+@@ -9,10 +9,10 @@
+             hash(arg)
+         except TypeError:
+             return self.func(arg)
+-        if self.last is not None:
+-            return self.store[self.last]
++        if arg in self.store:
++            return self.store[arg]
+         value = self.func(arg)
+-        self.store[self.last] = value
++        self.store[arg] = value
+         return value
+ 
+     def cache_size(self):

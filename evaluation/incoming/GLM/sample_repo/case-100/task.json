@@ -1,0 +1,10 @@
+{
+  "case_id": "case-100",
+  "title": "库存扣减先扣后校验",
+  "report": "库存不足的扣减请求在抛出异常前已经把库存减成了负数，失败请求污染了库存状态。",
+  "contract": "Inventory(stock).withdraw(qty)（qty>=1）：若 qty > stock，抛 ValueError 且 stock 保持不变；否则扣减并返回剩余库存。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "叠加折扣",
+    "逐次作用于累计值",
+    "Decimal 精度"
+  ],
+  "before_source": "def apply_steps(total, steps):\n    base = total\n    for amount in steps:\n        total = base - amount\n    return total\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-54",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "每次迭代都用最初的价格作为基数，上一轮结果没有参与下一次计算。修复原则：累计型计算的每一步必须以当前累计值为输入，不要把循环外的不变量当作基数。",
+  "experience_id": "experience-54",
+  "normalization_notes": [],
+  "original_report": "连续两次满减后应付金额回到原价附近，第二档优惠被抵消。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,6 +1,7 @@\n def apply_steps(total, steps):\n-    base = total\n     for amount in steps:\n-        total = base - amount\n+        total = total - amount\n+        if total < 0:\n+            total = 0\n     return total\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert apply_steps(100, [10, 20]) == 70\n\n\ndef test_experience_2():\n    assert apply_steps(100, [10]) == 90\n\n\ndef test_experience_3():\n    assert apply_steps(100, []) == 100\n"
+}

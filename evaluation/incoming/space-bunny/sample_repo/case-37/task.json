@@ -1,0 +1,10 @@
+{
+  "case_id": "case-37",
+  "title": "订单状态机未拦截非法状态跃迁",
+  "report": "订单可以直接从 pending 跳到 shipped、从 cancelled 跳回 paid，\n导致已取消订单被再次发货，履约系统没有报出任何错误。",
+  "contract": "Order 类：__init__(status='pending')，status 初始为 'pending'。\n合法状态集合为 {'pending', 'paid', 'shipped', 'cancelled'}。\n合法跃迁表：pending -> {paid, cancelled}；paid -> {shipped}；shipped -> {}；cancelled -> {}。\ntransition_to(new_status) -> str：合法跃迁时更新 self.status 并返回新状态；\n目标状态不在合法集合内，或从当前状态无法跃迁到目标状态时，\n必须抛出 InvalidTransitionError（继承 ValueError），且 self.status 保持不变。\n跃迁到当前状态本身不合法（除非合法表中显式包含自身）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

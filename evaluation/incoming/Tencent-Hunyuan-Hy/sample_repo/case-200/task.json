@@ -1,0 +1,10 @@
+{
+  "case_id": "case-200",
+  "title": "扣减结果的下限截断位置",
+  "report": "积分兑换在余额不足时返回了负数余额，例如 20 积分兑换 50 积分的商品返回 -30；余额恰好差 1 分、以及历史负值余额参与兑换时同样返回负数，账务出现负资产。预期：最终返回余额一律不低于 0。",
+  "contract": "redeem(balance: int, cost: int) -> int。balance 为负数时先按 0 处理；cost 为非负整数；返回扣减后的余额，且结果必须 >= 0（不足部分截断到 0）；不抛异常。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

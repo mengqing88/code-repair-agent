@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-117",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "退款工单的过期释放接口没有更新工单状态，同一批工单被调度器重复扫描并触发了两次退款。",
+  "diagnosis": "状态转换缺少 '已处理' 标记：一次性动作必须在执行时写入终态并在扫描时跳过。修复原则：不可重复的副作用需要持久化的完成标记。",
+  "before_source": "class RefundSweeper:\n    \"\"\"过期退款工单释放：expires_at <= now 触发退款并标记；\n    已触发的工单不得重复触发。\"\"\"\n\n    def __init__(self):\n        self.tickets = []\n\n    def register(self, tid, expires_at):\n        self.tickets.append([tid, expires_at, False])\n\n    def sweep(self, now):\n        fired = []\n        for tid, exp, _ in self.tickets:\n            if exp <= now:\n                fired.append(tid)\n        return fired\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -10,7 +10,9 @@\n \n     def sweep(self, now):\n         fired = []\n-        for tid, exp, _ in self.tickets:\n-            if exp <= now:\n+        for item in self.tickets:\n+            tid, exp, done = item\n+            if not done and exp <= now:\n+                item[2] = True\n                 fired.append(tid)\n         return fired\n",
+  "verification_tests": "from target import RefundSweeper\n\ndef test_first_sweep():\n    rs = RefundSweeper()\n    rs.register(\"t1\", 4)\n    assert rs.sweep(5) == [\"t1\"]\n\ndef test_future_not_fired():\n    rs = RefundSweeper()\n    rs.register(\"t1\", 4)\n    rs.register(\"t2\", 50)\n    assert rs.sweep(5) == [\"t1\"]\n\ndef test_sweep_once_only():\n    rs = RefundSweeper()\n    rs.register(\"t1\", 4)\n    rs.sweep(5)\n    assert rs.sweep(5) == []\n",
+  "applicable_conditions": [
+    "一次性动作缺少完成标记",
+    "重复执行导致重复副作用（如重复退款）",
+    "状态机终态缺失"
+  ]
+}

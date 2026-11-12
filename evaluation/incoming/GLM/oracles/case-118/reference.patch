@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -3,5 +3,5 @@
+     counts = {}
+     for w in text.split():
+         counts[w] = counts.get(w, 0) + 1
+-    ranked = sorted(counts, key=counts.get, reverse=True)
++    ranked = sorted(counts, key=lambda w: (-counts[w], w))
+     return ranked[:k]

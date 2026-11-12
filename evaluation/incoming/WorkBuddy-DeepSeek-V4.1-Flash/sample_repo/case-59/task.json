@@ -1,0 +1,10 @@
+{
+  "case_id": "case-59",
+  "title": "可变默认参数在实例之间共享，导致跨调用污染",
+  "report": "第一批用户注册的事件被写进了第二批用户的缓冲区，两个独立实例返回了同一个列表对象。",
+  "contract": "EventBuffer(events=None) 中 events 为可选的初始事件序列。append(name) 追加并返回当前长度。drain() 返回已收集事件的新列表并清空缓冲区，之后 append 从空开始。clear() 清空缓冲区。不同实例之间必须完全隔离。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

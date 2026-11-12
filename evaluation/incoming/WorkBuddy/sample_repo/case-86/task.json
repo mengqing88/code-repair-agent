@@ -1,0 +1,10 @@
+{
+  "case_id": "case-86",
+  "title": "TTL=0 被误判立即过期",
+  "report": "Cache.set/get：ttl<=0 表示永不过期。当前实现把 ttl<=0 当成过期时间 0，导致 set 后立刻读不到。",
+  "contract": "set(key,value,ttl)：ttl<=0 永不过期；ttl>0 在 now+ttl 后过期。get(key) 未过期返回值，过期/缺失返回 None。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

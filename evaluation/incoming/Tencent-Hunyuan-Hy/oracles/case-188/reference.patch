@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -5,6 +5,6 @@
+ def count_by_day(entries):
+     """返回 {day: 条数}。"""
+     result = {}
+-    for day, group in groupby(entries, key=lambda e: e[0]):
++    for day, group in groupby(sorted(entries, key=lambda e: e[0]), key=lambda e: e[0]):
+         result[day] = sum(1 for _ in group)
+     return result

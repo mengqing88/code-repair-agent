@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "状态机",
+    "幂等操作",
+    "终态保护"
+  ],
+  "before_source": "class Ticket:\n    def __init__(self):\n        self.state = 'open'\n\n    def archive(self):\n        if self.state == 'archived':\n            raise RuntimeError('already archived')\n        self.state = 'archived'\n        return self.state\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-38",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "终态分支没有区分“重复执行同一终态操作”和“向其他状态流转”，一律拒绝。修复原则：幂等操作显式放行并返回当前状态，仅对真正改变状态的请求报错。",
+  "experience_id": "experience-38",
+  "normalization_notes": [],
+  "original_report": "对已归档的任务再次执行归档会抛异常，批量脚本中断。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,7 +4,7 @@\n \n     def archive(self):\n         if self.state == 'archived':\n-            raise RuntimeError('already archived')\n+            return self.state\n         self.state = 'archived'\n         return self.state\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\ndef _archived_then_archive():\n    ticket = Ticket()\n    ticket.archive()\n    return ticket.archive()\n\ndef _archived_state():\n    ticket = Ticket()\n    ticket.archive()\n    ticket.archive()\n    return ticket.state\n\n\ndef test_experience_1():\n    assert Ticket().archive() == 'archived'\n\n\ndef test_experience_2():\n    assert _archived_then_archive() == 'archived'\n\n\ndef test_experience_3():\n    assert _archived_state() == 'archived'\n"
+}

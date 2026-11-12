@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -6,6 +6,6 @@
+     merged = {}
+     for source in sources:
+         for key, value in source.items():
+-            if key not in merged:
++            if key not in merged and value is not None:
+                 merged[key] = value
+     return merged

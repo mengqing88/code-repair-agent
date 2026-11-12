@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-160",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "支付回调被网关重复投递了两次，第二次回调的处理结果覆盖了第一次，导致对账文件里同一笔流水对应两个结果。",
+  "diagnosis": "幂等存储在写入响应时无条件覆盖已有记录，没有遵守“首次写入生效”的幂等语义。修复原则：幂等表的写入必须是写一次（write-once）语义——已有非空响应时直接忽略新的写入，保证同一 request_id 始终返回首次响应。",
+  "before_source": "class CallbackDeduplicator:\n    \"\"\"记录已处理的回调流水号及其结果。\"\"\"\n\n    def __init__(self):\n        self._results = {}\n\n    def record(self, callback_id, result):\n        \"\"\"记录回调的处理结果。\"\"\"\n        self._results[callback_id] = result\n\n    def result_for(self, callback_id):\n        \"\"\"返回该回调的处理结果。\"\"\"\n        return self._results.get(callback_id)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -5,8 +5,9 @@\n         self._results = {}\n \n     def record(self, callback_id, result):\n-        \"\"\"记录回调的处理结果。\"\"\"\n-        self._results[callback_id] = result\n+        \"\"\"记录回调的处理结果；首次记录生效。\"\"\"\n+        if callback_id not in self._results:\n+            self._results[callback_id] = result\n \n     def result_for(self, callback_id):\n         \"\"\"返回该回调的处理结果。\"\"\"\n",
+  "verification_tests": "from target import CallbackDeduplicator\n\n\ndef test_first_record_is_kept():\n    dedup = CallbackDeduplicator()\n    dedup.record(\"cb1\", \"A\")\n    dedup.record(\"cb1\", \"B\")\n    assert dedup.result_for(\"cb1\") == \"A\"\n\n\ndef test_unseen_callback_has_no_result():\n    dedup = CallbackDeduplicator()\n    assert dedup.result_for(\"cb1\") is None\n\n\ndef test_distinct_callbacks_are_independent():\n    dedup = CallbackDeduplicator()\n    dedup.record(\"cb1\", \"A\")\n    dedup.record(\"cb2\", \"B\")\n    assert dedup.result_for(\"cb2\") == \"B\"\n",
+  "applicable_conditions": [
+    "幂等存储",
+    "重复写入覆盖了首次结果",
+    "写一次语义"
+  ]
+}

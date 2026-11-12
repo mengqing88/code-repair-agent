@@ -1,0 +1,13 @@
+--- a/target.py
++++ b/target.py
+@@ -10,7 +10,6 @@
+ 
+ def can_transition(current, target):
+     """判断 current 是否可以流转到 target。"""
+-    for state, targets in ALLOWED.items():
+-        if current.startswith(state):
+-            return target in targets
+-    return False
++    if current not in ALLOWED:
++        return False
++    return target in ALLOWED[current]

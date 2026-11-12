@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-173",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "批量导入的库存数量文本里混进了带单位后缀的行，那些行被静默跳过，导入条数对不上却没有任何报错。",
+  "diagnosis": "转换失败时用了 except: continue，把非法行悄悄吃掉，导致导入结果缺行但无人察觉。修复原则：解析失败必须显式抛错并带上原始行内容，绝不能静默跳过；是否合法应由明确的格式规则判定，而不是交给会容忍各种写法的通用转换。",
+  "before_source": "def parse_quantities(text):\n    \"\"\"把多行文本解析成数量列表。\"\"\"\n    if not text:\n        return []\n    values = []\n    for line in text.splitlines():\n        stripped = line.strip()\n        if not stripped:\n            continue\n        try:\n            values.append(int(stripped))\n        except ValueError:\n            continue\n    return values\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,8 @@\n+import re\n+\n+_QTY_RE = re.compile(r\"^[0-9]+$\")\n+\n+\n def parse_quantities(text):\n     \"\"\"把多行文本解析成数量列表。\"\"\"\n     if not text:\n@@ -7,8 +12,7 @@\n         stripped = line.strip()\n         if not stripped:\n             continue\n-        try:\n-            values.append(int(stripped))\n-        except ValueError:\n-            continue\n+        if not _QTY_RE.match(stripped):\n+            raise ValueError(\"invalid quantity line: %s\" % line)\n+        values.append(int(stripped))\n     return values\n",
+  "verification_tests": "import pytest\n\nfrom target import parse_quantities\n\n\ndef test_line_with_unit_suffix_raises_with_context():\n    with pytest.raises(ValueError) as info:\n        parse_quantities(\"5\\n6pcs\\n\")\n    assert \"6pcs\" in str(info.value)\n\n\ndef test_plain_quantities_are_parsed():\n    assert parse_quantities(\"5\\n6\\n\") == [5, 6]\n\n\ndef test_blank_lines_are_skipped():\n    assert parse_quantities(\"5\\n\\n6\\n\") == [5, 6]\n",
+  "applicable_conditions": [
+    "多行文本解析为数值",
+    "非法行被静默跳过",
+    "错误信息需包含原始行"
+  ]
+}

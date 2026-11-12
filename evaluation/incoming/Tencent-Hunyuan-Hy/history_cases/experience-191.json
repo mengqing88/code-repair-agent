@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-191",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】访问日志场景：两个独立的记录器实例，给其中一个追加页面后，另一个实例的列表里也出现了该页面。预期：每个实例维护自己的访问列表。",
+  "diagnosis": "可变状态若定义在类体上就是类属性，会被所有实例共享；同理，可变对象作为函数默认参数也会跨调用共享。修复原则是把可变状态放到实例初始化（或函数体）里创建，使每次构造都得到独立对象。",
+  "before_source": "# 访问日志记录器：每个实例维护自己的访问列表。\n\n\nclass VisitLog:\n    visits = []\n\n    def record(self, page):\n        self.visits.append(page)\n        return self.visits\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,7 +2,8 @@\n \n \n class VisitLog:\n-    visits = []\n+    def __init__(self):\n+        self.visits = []\n \n     def record(self, page):\n         self.visits.append(page)\n",
+  "verification_tests": "from target import VisitLog\n\n\ndef test_single_record():\n    log = VisitLog()\n    assert log.record(\"a\") == [\"a\"]\n\n\ndef test_same_instance_appends():\n    log = VisitLog()\n    log.record(\"a\")\n    assert log.record(\"b\") == [\"a\", \"b\"]\n\n\ndef test_instances_are_independent():\n    a = VisitLog()\n    b = VisitLog()\n    a.record(\"x\")\n    assert b.record(\"y\") == [\"y\"]\n",
+  "applicable_conditions": [
+    "可变状态在多次构造/调用之间应保持独立",
+    "缺陷表现为类属性或默认参数被共享，数据互相串",
+    "修复应在初始化阶段创建新对象，而非复用同一容器"
+  ]
+}

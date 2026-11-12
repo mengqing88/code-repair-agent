@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-107",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "从导出的 CSV 文本读取库存记录时未去除字段空白，SKU 编号带着空格参与匹配，全部查找失败。",
+  "diagnosis": "结构化字段解析后必须按契约 trim：split 只切分不清理。修复原则：解析管道中每个字段的清洗职责要显式完成。",
+  "before_source": "def parse_sku_line(line):\n    \"\"\"解析 \"sku,数量\" 行：拆分并去除字段空白，返回 (sku, qty_str)。\"\"\"\n    sku, qty = line.split(\",\")\n    return (sku, qty)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def parse_sku_line(line):\n     \"\"\"解析 \"sku,数量\" 行：拆分并去除字段空白，返回 (sku, qty_str)。\"\"\"\n     sku, qty = line.split(\",\")\n-    return (sku, qty)\n+    return (sku.strip(), qty.strip())\n",
+  "verification_tests": "from target import parse_sku_line\n\ndef test_clean_line():\n    assert parse_sku_line(\"A1,5\") == (\"A1\", \"5\")\n\ndef test_spaced_line():\n    assert parse_sku_line(\"A1, 5\") == (\"A1\", \"5\")\n\ndef test_surrounding_space():\n    assert parse_sku_line(\" A1 ,5 \") == (\"A1\", \"5\")\n",
+  "applicable_conditions": [
+    "拆分字段未去除首尾空白",
+    "CSV/定界文本解析清洗缺失",
+    "字段值带空格导致匹配失败"
+  ]
+}

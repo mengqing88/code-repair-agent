@@ -1,0 +1,10 @@
+{
+  "case_id": "case-117",
+  "title": "过期预订可重复释放",
+  "report": "release_expired 可以对同一批预订反复返回释放结果，已释放的预订没有被标记，可能触发重复退款。",
+  "contract": "ReleaseManager：add(bid, expires_at) 添加预订；release_expired(now) 释放所有 expires_at <= now 且未释放的预订，标记为已释放，返回本次释放的 id 列表（按添加顺序）。已释放的预订不得再次出现。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

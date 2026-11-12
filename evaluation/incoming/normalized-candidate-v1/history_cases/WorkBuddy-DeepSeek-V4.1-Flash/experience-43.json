@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "Decimal 精确累加",
+    "半入舍入",
+    "拒绝 float 输入"
+  ],
+  "before_source": "def apply_rate(amount, rate):\n    return round(amount * rate, 2)\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-43",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "先做二进制浮点运算再舍入，误差在中间步骤被放大，且默认舍入方式是银行家舍入。修复原则：货币计算全程使用精确十进制类型，量化时显式指定四舍五入规则。",
+  "experience_id": "experience-43",
+  "normalization_notes": [],
+  "original_report": "订单金额打折后两位小数出现偏差，与开具的发票不一致。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,7 @@\n+import decimal\n+\n def apply_rate(amount, rate):\n-    return round(amount * rate, 2)\n+    total = decimal.Decimal(str(amount)) * decimal.Decimal(str(rate))\n+    quantum = decimal.Decimal('0.01')\n+    return total.quantize(quantum, rounding=decimal.ROUND_HALF_UP)\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert str(apply_rate('10.00', '0.5')) == '5.00'\n\n\ndef test_experience_2():\n    assert str(apply_rate('0.00', '0.5')) == '0.00'\n\n\ndef test_experience_3():\n    assert str(apply_rate('1.00', '1.00')) == '1.00'\n"
+}

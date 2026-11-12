@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -7,6 +7,8 @@
+         raise ValueError("amount must not be negative")
+     if not 0 <= member_rate <= 100:
+         raise ValueError("member_rate must be between 0 and 100")
++    if member_rate > 0 and coupon > 0:
++        coupon = 0
+     member_discount = amount * member_rate // 100
+     total_discount = member_discount + coupon
+     if total_discount > amount:

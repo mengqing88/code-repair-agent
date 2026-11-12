@@ -1,0 +1,10 @@
+{
+  "case_id": "case-151",
+  "title": "阶梯费率在阈值处未命中对应档位",
+  "report": "会员消费金额刚好等于某档门槛时，返回了上一档的费率而不是门槛本身那一档，导致临界金额的折扣比预期低一档。",
+  "contract": "tiered_rate(amount, tiers) 返回 amount 对应的费率。tiers 为按门槛升序排列的 (threshold, rate) 列表，rate 为 0~1 的浮点数。规则：若 amount 大于等于某个 threshold，则命中该 threshold 对应的 rate；命中的是满足 amount >= threshold 的最大 threshold 对应的那一档；amount 小于最小 threshold 时返回 0.0。返回值类型为 float。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

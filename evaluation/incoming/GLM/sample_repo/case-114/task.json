@@ -1,0 +1,10 @@
+{
+  "case_id": "case-114",
+  "title": "批量校验提前返回",
+  "report": "批量校验遇到第一个违规行就返回，契约要求收集所有违规行，导致用户每次只能看到一个错误。",
+  "contract": "validate_rows(rows)：rows 为 (id, age) 列表。id 为空字符串记 ('empty id')；age 不是 0..150 整数记 ('bad age')；一行同时违规时 id 优先。返回所有违规的 (下标, 原因) 列表，按行号升序；全部合法返回 []。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

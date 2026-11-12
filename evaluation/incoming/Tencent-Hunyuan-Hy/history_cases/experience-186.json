@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-186",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】考勤统计场景：需要统计最长连续达标天数，但连续三天达标时结果只返回 1。原因是循环里的当前连续计数没有跨迭代累积，每轮都被重新赋值。预期：连续达标天数应为实际的最大连续长度。",
+  "diagnosis": "需要在循环迭代之间保持的状态（累加器、计数器）必须在循环外初始化，并在每轮基于上一轮的值增量更新；若在循环体内重新赋值成常量，跨迭代的信息就丢失了。修复原则是保留「上一轮结果」再计算本轮。",
+  "before_source": "# 统计最长连续达标天数。days 为布尔序列。\n\n\ndef longest_streak(days):\n    \"\"\"返回最长连续 True 的长度。\"\"\"\n    best = 0\n    current = 0\n    for ok in days:\n        current = 1 if ok else 0\n        best = max(best, current)\n    return best\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,6 +6,6 @@\n     best = 0\n     current = 0\n     for ok in days:\n-        current = 1 if ok else 0\n+        current = current + 1 if ok else 0\n         best = max(best, current)\n     return best\n",
+  "verification_tests": "from target import longest_streak\n\n\ndef test_single_true():\n    assert longest_streak([True]) == 1\n\n\ndef test_empty_days():\n    assert longest_streak([]) == 0\n\n\ndef test_three_consecutive_true():\n    assert longest_streak([True, True, True]) == 3\n",
+  "applicable_conditions": [
+    "循环内存在需要跨迭代保持的累加/计数状态",
+    "缺陷表现为同一分组或连续段只保留最后一次结果",
+    "修复应基于上一轮的值增量更新，而不是重新赋常量"
+  ]
+}

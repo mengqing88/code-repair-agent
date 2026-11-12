@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-164",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "排班系统在 1900 年这个节点把 2 月排成了 29 天，跨世纪的那一批排班整体错位一天。",
+  "diagnosis": "闰年判定只检查了能否被 4 整除，遗漏了“整百年份必须被 400 整除”的世纪例外。修复原则：闰年判定按公历三层规则实现——先看 400 整除，再排除 100 整除，最后看 4 整除。",
+  "before_source": "def is_billing_leap(year):\n    \"\"\"判断该年是否为计费闰年。\"\"\"\n    return year % 4 == 0\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,8 @@\n def is_billing_leap(year):\n     \"\"\"判断该年是否为计费闰年。\"\"\"\n+    year = abs(year)\n+    if year % 400 == 0:\n+        return True\n+    if year % 100 == 0:\n+        return False\n     return year % 4 == 0\n",
+  "verification_tests": "from target import is_billing_leap\n\n\ndef test_nineteenth_hundred_is_not_leap():\n    assert is_billing_leap(1900) is False\n\n\ndef test_two_thousand_is_leap():\n    assert is_billing_leap(2000) is True\n\n\ndef test_two_thousand_twenty_four_is_leap():\n    assert is_billing_leap(2024) is True\n",
+  "applicable_conditions": [
+    "闰年判定",
+    "缺少整百年例外规则",
+    "世纪年边界"
+  ]
+}

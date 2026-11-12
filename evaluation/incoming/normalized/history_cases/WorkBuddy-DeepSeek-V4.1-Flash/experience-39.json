@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "幂等键",
+    "结果缓存",
+    "异常不缓存"
+  ],
+  "before_source": "def apply_callback(seen, order_no, ship):\n    if order_no in seen:\n        seen[order_no] = ship()\n        return seen[order_no]\n    result = ship()\n    return result\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-39",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "已完成流水的登记只写在“命中缓存”分支里，首次成功处理时没有写入记录，于是下一次相同流水号仍然执行完整业务逻辑。修复原则：成功处理必须立即登记，登记与执行放在同一分支；命中缓存的分支只负责返回。",
+  "experience_id": "experience-39",
+  "normalization_notes": [],
+  "original_report": "支付回调对同一流水号处理两次，订单被重复发货。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,7 @@\n def apply_callback(seen, order_no, ship):\n     if order_no in seen:\n-        seen[order_no] = ship()\n         return seen[order_no]\n     result = ship()\n+    seen[order_no] = result\n     return result\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\ndef _replay():\n    seen = {}\n    calls = {'n': 0}\n    def ship():\n        calls['n'] += 1\n        return 2\n    first = apply_callback(seen, 'a', ship)\n    second = apply_callback(seen, 'a', ship)\n    return [first, second]\n\ndef _shipped_once():\n    seen = {}\n    calls = {'n': 0}\n    def ship():\n        calls['n'] += 1\n        return 5\n    apply_callback(seen, 'b', ship)\n    apply_callback(seen, 'b', ship)\n    return calls['n']\n\n\ndef test_experience_1():\n    assert _shipped_once() == 1\n\n\ndef test_experience_2():\n    assert apply_callback({}, 'a', lambda: 1) == 1\n\n\ndef test_experience_3():\n    assert _replay() == [2, 2]\n"
+}

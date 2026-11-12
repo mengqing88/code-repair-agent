@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-200",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】保底计价场景：结果不得低于下限 floor，但值高于下限时却返回了下限本身，例如 floor_value(10, 5) 返回 5。预期：返回 max(value, floor)。",
+  "diagnosis": "下限截断对应 max，上限截断对应 min；选错截断函数会把「保底」变成「封顶」。修复原则是核对截断方向与函数语义，只替换截断函数本身，并覆盖高于、低于、等于下限三种情形。",
+  "before_source": "# 保底计价：结果不得低于下限 floor。\n\n\ndef floor_value(value, floor):\n    return min(value, floor)\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def floor_value(value, floor):\n-    return min(value, floor)\n+    return max(value, floor)\n",
+  "verification_tests": "from target import floor_value\n\n\ndef test_above_floor():\n    assert floor_value(10, 5) == 10\n\n\ndef test_below_floor():\n    assert floor_value(3, 5) == 5\n\n\ndef test_equal_to_floor():\n    assert floor_value(5, 5) == 5\n",
+  "applicable_conditions": [
+    "契约要求对结果施加下限或上限截断",
+    "缺陷表现为 min/max 选错，截断方向相反",
+    "验收应覆盖高于、低于、等于阈值的三种输入"
+  ]
+}

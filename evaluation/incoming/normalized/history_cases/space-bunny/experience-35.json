@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "排序",
+    "并列",
+    "稳定排序",
+    "多余排序键"
+  ],
+  "before_source": "\n\"\"\"Event ordering.\"\"\"\n\n\ndef order_events(events):\n    \"\"\"Return events ordered by priority then timestamp.\"\"\"\n    return sorted(events, key=lambda e: (e[\"priority\"], e[\"timestamp\"], e[\"name\"]))\n",
+  "dataset_experience_id": "space-bunny::experience-35",
+  "dataset_id": "space-bunny",
+  "diagnosis": "排序键里多加了一个与业务无关的字段（事件名），破坏了“并列时保持输入顺序”的稳定性约定。修复原则：排序键只包含契约要求的字段，并且要显式确认排序算法是稳定排序（Python 的 sorted 是稳定的），从而让并列项自然保持输入顺序。",
+  "experience_id": "experience-35",
+  "normalization_notes": [],
+  "original_report": "同优先级、同时间戳的日志事件顺序被事件名字典序打乱，\n与写入顺序不一致，排查问题时对不上号。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,5 +3,5 @@\n \n \n def order_events(events):\n-    \"\"\"Return events ordered by priority then timestamp.\"\"\"\n-    return sorted(events, key=lambda e: (e[\"priority\"], e[\"timestamp\"], e[\"name\"]))\n+    \"\"\"Return events ordered by priority then timestamp, keeping input order on ties.\"\"\"\n+    return sorted(events, key=lambda e: (e[\"priority\"], e[\"timestamp\"]))\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "\nfrom target import order_events\n\n\ndef test_priority_is_respected():\n    events = [\n        {\"name\": \"b\", \"priority\": 2, \"timestamp\": \"2024-01-01\"},\n        {\"name\": \"a\", \"priority\": 1, \"timestamp\": \"2024-01-01\"},\n    ]\n    assert [e[\"name\"] for e in order_events(events)] == [\"a\", \"b\"]\n\n\ndef test_ties_keep_input_order():\n    events = [\n        {\"name\": \"z\", \"priority\": 1, \"timestamp\": \"2024-01-01\"},\n        {\"name\": \"a\", \"priority\": 1, \"timestamp\": \"2024-01-01\"},\n    ]\n    assert [e[\"name\"] for e in order_events(events)] == [\"z\", \"a\"]\n\n\ndef test_timestamp_orders_same_priority_events():\n    events = [\n        {\"name\": \"second\", \"priority\": 1, \"timestamp\": \"2024-02-01\"},\n        {\"name\": \"first\", \"priority\": 1, \"timestamp\": \"2024-01-01\"},\n    ]\n    assert [e[\"name\"] for e in order_events(events)] == [\"first\", \"second\"]\n"
+}

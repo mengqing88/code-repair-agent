@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "算法隐含依赖输入有序或按连续段组织",
+    "缺陷表现为同一逻辑键被拆散后结果被覆盖或漏查",
+    "输入顺序不受控，需要在函数内部归一化"
+  ],
+  "before_source": "# 在成绩列表中用二分查找判断某个分数是否存在。\n# values 可能未按升序排列。\n\n\ndef contains(values, target):\n    lo, hi = 0, len(values) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if values[mid] == target:\n            return True\n        if values[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return False\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-188",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "依赖「输入有序」前提的算法（二分、按连续段分组、差分）必须显式保证有序，不能把前提推给调用方；否则不连续/无序输入会让算法给出错误结果。修复原则是在算法入口处先排序（或改用不依赖顺序的实现），并保持返回语义不变。",
+  "experience_id": "experience-188",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】成绩查询场景：在成绩数组上做二分查找，当数组未按升序排列时，部分存在的分数查不到。预期：无论输入顺序，存在的分数都应返回 True。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,6 +3,7 @@\n \n \n def contains(values, target):\n+    values = sorted(values)\n     lo, hi = 0, len(values) - 1\n     while lo <= hi:\n         mid = (lo + hi) // 2\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import contains\n\n\ndef test_sorted_input_found():\n    assert contains([1, 3, 5], 3) is True\n\n\ndef test_empty_values():\n    assert contains([], 1) is False\n\n\ndef test_unsorted_input_found():\n    assert contains([5, 1, 3], 5) is True\n"
+}

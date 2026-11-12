@@ -1,0 +1,10 @@
+{
+  "case_id": "case-181",
+  "title": "折扣后满减门槛判定",
+  "report": "促销结算在叠加会员折扣与满减时出现错误：某订单原价 120 元、5 折、满 100 减 15，折后应付 60 元（未达到满减门槛），系统却仍减去了 15 元，实收 45 元。另有多笔原价刚好达门槛、折后远低于门槛的订单被错误减免，甚至被减到 0 元。预期行为：满减条件必须基于折后金额判断，折后未达门槛时不得减免。",
+  "contract": "payable_cents(price_cents, rate_bp, threshold_cents, reduction_cents) -> int，单位分，均为整数。折后金额 discounted = (price_cents * rate_bp + 50) // 100（四舍五入到分，rate_bp 为 0..100 的百分点）。仅当 discounted >= threshold_cents 时才减去 reduction_cents；结果若小于 0 则截断为 0；返回整数分。price_cents < 0、rate_bp 不在 [0,100]、threshold_cents < 0 或 reduction_cents < 0 时抛 ValueError。折后金额与门槛相等视为满足条件；折后金额小于门槛（哪怕只差 1 分）视为不满足。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

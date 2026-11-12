@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "赠品/免单取最便宜项",
+    "分组优惠的错误释放对象"
+  ],
+  "before_source": "def meal_deal(prices, buy, free):\n    s = sorted(prices, reverse=True)\n    total = sum(s)\n    disc = sum(s[:free])\n    return total - disc\n",
+  "dataset_experience_id": "WorkBuddy::experience-63",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "赠品/免费项应挑价值最低的单位，而非最高。",
+  "experience_id": "experience-63",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "套餐优惠：买二赠一应免最便宜的一份，却免了最贵的一份。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,5 @@\n def meal_deal(prices, buy, free):\n     s = sorted(prices, reverse=True)\n     total = sum(s)\n-    disc = sum(s[:free])\n+    disc = sum(s[-free:])\n     return total - disc\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import meal_deal\n\ndef test_a():\n    assert meal_deal([10, 10, 5], 2, 1) == 20\n\ndef test_b():\n    assert meal_deal([8, 8, 3], 2, 1) == 16\n\ndef test_c():\n    assert meal_deal([20, 20, 20, 5, 5], 3, 1) == 65\n"
+}

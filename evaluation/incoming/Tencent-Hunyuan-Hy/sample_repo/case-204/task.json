@@ -1,0 +1,10 @@
+{
+  "case_id": "case-204",
+  "title": "幂等键混入可变字段",
+  "report": "接口幂等要求同一 request_id 无论何时重试都只处理一次，但当前实现把 received_at 一起放进键里，导致换个时间重发的同一请求被当作新请求重复处理；payload 变化但时间未变时反而被误判为重复。预期：幂等键只由 request_id 决定，payload 与 received_at 都不参与。",
+  "contract": "Deduper.process(request_id, payload, received_at) -> bool。以 request_id 为唯一幂等键：同一 request_id 第一次调用返回 True，之后无论 payload / received_at 如何变化都返回 False；不同 request_id 各自独立；不修改外部状态以外的任何入参。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

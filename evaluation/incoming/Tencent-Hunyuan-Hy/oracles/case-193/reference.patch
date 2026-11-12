@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def resolve(defaults, env, user):
+     """按优先级合并三份配置，返回新字典。"""
+-    return {**defaults, **user, **env}
++    return {**defaults, **env, **user}

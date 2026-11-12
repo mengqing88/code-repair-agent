@@ -1,0 +1,10 @@
+{
+  "case_id": "case-154",
+  "title": "配置合并只做浅合并，嵌套配置被整体覆盖",
+  "report": "部署配置合并时，只想覆盖 server.timeout，但整个 server 节点被替换掉了，同级未指定的 host、workers 等默认值全部丢失，导致服务启动后用了错误的默认参数。",
+  "contract": "merge_config(defaults, overrides) 返回合并后的新配置字典，且不修改任何入参。规则：若某个 key 在两侧都是 dict，则递归合并（子 key 逐个覆盖）；否则以 overrides 中的值为准；仅在 defaults 中出现的 key 原样保留。仅在 overrides 中出现的 key 原样保留（dict 值也需复制，不与入参共享引用）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -5,7 +5,7 @@
+ 
+     def handle(self, key, payload):
+         if key in self.results:
+-            self.results[key] = self.handler(payload)
+             return self.results[key]
+         result = self.handler(payload)
++        self.results[key] = result
+         return result

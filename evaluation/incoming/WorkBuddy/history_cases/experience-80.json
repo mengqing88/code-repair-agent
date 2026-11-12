@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-80",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "流水线阶段：允许从构建直接跳到部署，缺失校验阶段。",
+  "diagnosis": "有序阶段转换必须校验前置阶段，禁止跳变。",
+  "before_source": "class Pipeline:\n    def __init__(self):\n        self.state = 'build'\n    def go(self, name):\n        self.state = name\n        return self.state\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,6 +1,13 @@\n class Pipeline:\n+    ORDER = ['build', 'test', 'deploy']\n     def __init__(self):\n         self.state = 'build'\n     def go(self, name):\n+        if name not in self.ORDER:\n+            raise ValueError('unknown')\n+        cur = self.ORDER.index(self.state)\n+        nxt = self.ORDER.index(name)\n+        if nxt != cur and nxt != cur + 1:\n+            raise ValueError('skip')\n         self.state = name\n         return self.state\n",
+  "verification_tests": "import pytest\nfrom target import Pipeline\n\ndef test_a():\n    p = Pipeline()\n    with pytest.raises(ValueError):\n        p.go('deploy')\n\ndef test_b():\n    p = Pipeline()\n    assert p.go('test') == 'test'\n    assert p.go('deploy') == 'deploy'\n    with pytest.raises(ValueError):\n        p.go('build')\n\ndef test_c():\n    p = Pipeline()\n    with pytest.raises(ValueError):\n        p.go('deploy')\n",
+  "applicable_conditions": [
+    "有序阶段转换",
+    "允许跳变/缺失校验"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "聚合量在最后统一舍入",
+    "避免在求和/平均前对中间值四舍五入"
+  ],
+  "before_source": "def class_average(grades, weights):\n    total = 0.0\n    for g, w in zip(grades, weights):\n        total += round(g * w, 2)\n    return round(total, 2)\n",
+  "dataset_experience_id": "WorkBuddy::experience-61",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "聚合量应在最后一步统一舍入，不能在中间步骤逐条舍入，否则舍入误差会被累积。",
+  "experience_id": "experience-61",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "班级平均分计算：先对每位学生的平均分四舍五入再累加，导致班级总分偏差。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,3 @@\n def class_average(grades, weights):\n-    total = 0.0\n-    for g, w in zip(grades, weights):\n-        total += round(g * w, 2)\n+    total = sum(g * w for g, w in zip(grades, weights))\n     return round(total, 2)\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import class_average\n\ndef test_one():\n    assert class_average([10.004, 10.004], [1, 1]) == 20.01\n\ndef test_two():\n    assert class_average([10.006, 10.006], [1, 1]) == 20.01\n\ndef test_three():\n    assert class_average([10.333, 10.333], [1, 1]) == 20.67\n"
+}

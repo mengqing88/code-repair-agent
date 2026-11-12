@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-73",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "插件列表应从配置文件与命令行追加合并，却整体覆盖。",
+  "diagnosis": "列表类配置通常需拼接而非替换。",
+  "before_source": "def combine(base, over):\n    r = dict(base)\n    for k, v in over.items():\n        r[k] = v\n    return r\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,5 +1,8 @@\n def combine(base, over):\n     r = dict(base)\n     for k, v in over.items():\n-        r[k] = v\n+        if k in r and isinstance(r[k], list) and isinstance(v, list):\n+            r[k] = r[k] + v\n+        else:\n+            r[k] = v\n     return r\n",
+  "verification_tests": "import pytest\nfrom target import combine\n\ndef test_a():\n    assert combine({'a':[1,2]}, {'a':[3,4]}) == {'a':[1,2,3,4]}\n\ndef test_b():\n    assert combine({'tags':['x']}, {'tags':['y','z']}) == {'tags':['x','y','z']}\n\ndef test_c():\n    assert combine({'a':[1],'b':1}, {'a':[2],'b':2}) == {'a':[1,2],'b':2}\n",
+  "applicable_conditions": [
+    "列表配置拼接",
+    "覆盖与追加混淆"
+  ]
+}

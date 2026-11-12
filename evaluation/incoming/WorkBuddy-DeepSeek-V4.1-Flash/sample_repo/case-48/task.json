@@ -1,0 +1,10 @@
+{
+  "case_id": "case-48",
+  "title": "百分比拆分逐项向下取整，各项之和不足 100",
+  "report": "三项份额各占 1/3 却显示为 33%、33%、33%，合计 99%，报表守恒校验不通过。",
+  "contract": "percentages(shares) 接收非负整数列表，总和必须大于 0，否则抛 ValueError。返回与输入等长的整数列表，各项为四舍五入到整数的百分比，且 sum(percentages(shares)) 必须恰好为 100：先取整，再把差额按小数部分从大到小补给若干项，小数部分相同时下标小者优先。percentages([1, 1, 1]) 必须为 [34, 33, 33]。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

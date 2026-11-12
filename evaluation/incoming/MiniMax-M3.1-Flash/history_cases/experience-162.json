@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-162",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "设备台账导出时，每台设备显示的是第一次登记的记录而不是最近一次巡检记录，运维看不到真实状态。",
+  "diagnosis": "分组取最新时更新条件把比较方向写反了（保留 ts 更小的记录），并且并列时保留了先出现的一条。修复原则：取最大值时用 >= 更新，使 ts 更大的记录胜出，且并列时以后出现的记录为准。",
+  "before_source": "def newest_inspection_per_device(readings, device_field):\n    \"\"\"按设备分组，返回每台设备 ts 最大的巡检记录。\"\"\"\n    grouped = {}\n    for reading in readings:\n        device = reading[device_field]\n        if device not in grouped:\n            grouped[device] = reading\n        elif reading[\"ts\"] < grouped[device][\"ts\"]:\n            grouped[device] = reading\n    return [grouped[device] for device in sorted(grouped)]\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -5,6 +5,6 @@\n         device = reading[device_field]\n         if device not in grouped:\n             grouped[device] = reading\n-        elif reading[\"ts\"] < grouped[device][\"ts\"]:\n+        elif reading[\"ts\"] >= grouped[device][\"ts\"]:\n             grouped[device] = reading\n     return [grouped[device] for device in sorted(grouped)]\n",
+  "verification_tests": "from target import newest_inspection_per_device\n\n\ndef test_largest_ts_wins():\n    assert newest_inspection_per_device(\n        [{\"device\": \"d1\", \"ts\": 1}, {\"device\": \"d1\", \"ts\": 9}], \"device\"\n    ) == [{\"device\": \"d1\", \"ts\": 9}]\n\n\ndef test_tie_keeps_later_row():\n    assert newest_inspection_per_device(\n        [{\"device\": \"d1\", \"ts\": 5, \"n\": 1}, {\"device\": \"d1\", \"ts\": 5, \"n\": 2}], \"device\"\n    ) == [{\"device\": \"d1\", \"ts\": 5, \"n\": 2}]\n\n\ndef test_empty_input_gives_empty_output():\n    assert newest_inspection_per_device([], \"device\") == []\n",
+  "applicable_conditions": [
+    "分组取最新/最大",
+    "比较方向写反",
+    "并列时应保留后出现的记录"
+  ]
+}

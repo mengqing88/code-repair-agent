@@ -1,0 +1,13 @@
+{
+  "experience_id": "experience-64",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "租金按实际天数分摊，却用 360 天基数。",
+  "diagnosis": "天数基数（360/365/实际）必须与契约一致，不能随意套用惯例。",
+  "before_source": "def prorate_rent(monthly, days):\n    return round(monthly * days / 360, 2)\n",
+  "patch_diff": "--- a/solution.py\n+++ b/solution.py\n@@ -1,2 +1,2 @@\n def prorate_rent(monthly, days):\n-    return round(monthly * days / 360, 2)\n+    return round(monthly * days / 365, 2)\n",
+  "verification_tests": "import pytest\nfrom target import prorate_rent\n\ndef test_a():\n    assert prorate_rent(1000, 365) == 1000.0\n\ndef test_b():\n    assert prorate_rent(1000, 36) == 98.63\n\ndef test_c():\n    assert prorate_rent(1000, 73) == 200.0\n",
+  "applicable_conditions": [
+    "天基数 360/365 不一致",
+    "计息/分摊的日期基数契约"
+  ]
+}

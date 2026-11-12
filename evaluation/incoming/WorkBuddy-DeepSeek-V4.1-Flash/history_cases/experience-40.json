@@ -1,0 +1,14 @@
+{
+  "experience_id": "experience-40",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "original_report": "按城市查询天气时，切换到另一个城市仍返回上一个城市的数据。",
+  "diagnosis": "缓存只保留了一个“上一次的键”，用旧键取值导致新参数不参与查找。修复原则：缓存键必须由当前参数决定，命中判定应直接使用参数本身。",
+  "before_source": "def cached_rate(rates, city):\n    previous = None\n    if previous is not None:\n        return rates[previous]\n    value = rates[city]\n    previous = city\n    return value\n\n",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,8 +1,5 @@\n def cached_rate(rates, city):\n-    previous = None\n-    if previous is not None:\n-        return rates[previous]\n-    value = rates[city]\n-    previous = city\n-    return value\n+    if city in rates:\n+        return rates[city]\n+    return None\n \n",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert cached_rate({'beijing': 1}, 'beijing') == 1\n\n\ndef test_experience_2():\n    assert cached_rate({}, 'shanghai') is None\n\n\ndef test_experience_3():\n    assert cached_rate({'a': 0}, 'a') == 0\n",
+  "applicable_conditions": [
+    "缓存键",
+    "参数区分",
+    "不可哈希参数"
+  ]
+}
