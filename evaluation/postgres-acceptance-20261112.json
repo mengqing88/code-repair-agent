@@ -1,0 +1,80 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-12T07:31:12.983490+00:00",
+  "scope": "real PostgreSQL/pgvector + Docker restart; synthetic cases and fixed embeddings",
+  "limitations": [
+    "No production database or external embedding/model service used",
+    "No production-scale performance, HA or abrupt power-loss testing",
+    "Web knowledge storage remains SQLite; this validates the PostgreSQL adapter"
+  ],
+  "container": "repair-pg-acceptance-8d389330c959",
+  "checks": {
+    "dedicated_database_guard": true,
+    "real_sql_integration": true
+  },
+  "docker_engine": "29.7.2",
+  "image": {
+    "tag": "pgvector/pgvector:pg16",
+    "id": "sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f",
+    "digests": [
+      "pgvector/pgvector@sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f"
+    ]
+  },
+  "pytest": {
+    "exit_code": 0,
+    "output": "...........                                                              [100%]\n11 passed in 10.10s\n",
+    "cases": [
+      {
+        "name": "test_schema_is_idempotent",
+        "status": "passed"
+      },
+      {
+        "name": "test_accepted_and_rejected_round_trip",
+        "status": "passed"
+      },
+      {
+        "name": "test_real_cosine_ordering_and_dimension_filter",
+        "status": "passed"
+      },
+      {
+        "name": "test_metadata_filters_are_strict[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_metadata_filters_are_strict[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_upsert_preserves_one_row_and_increments_revision[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_upsert_preserves_one_row_and_increments_revision[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_rejection_failure_rolls_back_review_and_case_together[False]",
+        "status": "passed"
+      },
+      {
+        "name": "test_rejection_failure_rolls_back_review_and_case_together[True]",
+        "status": "passed"
+      },
+      {
+        "name": "test_unaccepted_or_unverified_cases_do_not_write",
+        "status": "passed"
+      },
+      {
+        "name": "test_postgres_snapshot_exports_both_outcomes",
+        "status": "passed"
+      }
+    ]
+  },
+  "postgresql": "PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+  "pgvector": "0.8.7",
+  "reason": "RuntimeError: Disposable PostgreSQL did not become ready within its time budget",
+  "cleanup": {
+    "container_removed": true,
+    "anonymous_volumes_removed": true
+  }
+}

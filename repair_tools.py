@@ -611,7 +611,7 @@ class PostgresKnowledgeBase:
         try:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    """
+                    f"""
                     SELECT case_id, revision, document,
                            1 - (embedding <=> %s::vector) AS score, '{outcome}' AS outcome
                     FROM {table}
@@ -619,7 +619,7 @@ class PostgresKnowledgeBase:
                     ORDER BY score DESC
                     LIMIT %s
                     """,
-                    (literal, len(vector), literal, limit),
+                    tuple(parameters),
                 )
                 rows = cursor.fetchall()
         except Exception as error:

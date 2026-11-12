@@ -12,7 +12,8 @@
 
 ## 外部验收
 
-- [ ] **外部服务验收**（部分待验收）：聊天模型短请求已返回“连接成功”；Embedding API 已用于 30 条查询的真实向量评测。Qdrant 未配置 `QDRANT_URL`，PostgreSQL 未配置 `KNOWLEDGE_DB_URL`/`DATABASE_URL`，尚未真实连通；Cross-Encoder 还需安装模型依赖并加载配置权重。
+- [ ] **外部服务验收**（部分待验收）：聊天模型短请求已返回“连接成功”；Embedding API 已用于 30 条查询的真实向量评测。PostgreSQL 独立测试容器已完成下述在线验收，日常业务 DSN 未变；Qdrant 尚未真实连接，Cross-Encoder 还需安装模型依赖并加载配置权重。
+- [x] **PostgreSQL/pgvector 在线验收**（一次性测试库已验收）：`python -m evaluation.postgres_acceptance --output evaluation/postgres-acceptance-20261112-verified.json` 在真实 PostgreSQL 16.15 / pgvector 0.8.7 上通过 11 项集成测试，覆盖建表幂等、成功/拒绝案例与审核记录、余弦检索与维度过滤、严格元数据过滤、upsert 版本、插入/更新事务回滚、验收前置条件和 SQLite 快照导出；另实际重启容器核对三表数据与版本，清理容器及匿名卷。首次重启连接超时报告保留；验收器已处理重启后的随机端口变化。固定向量/合成案例不证明真实 Embedding 质量、生产负载、高可用或断电恢复，Web 仍使用 SQLite 正文。
 - [x] **Docker 端到端验收**（当前合成场景已验收）：`python -m evaluation.docker_acceptance --output evaluation/docker-acceptance-20261112-verified.json` 在真实 Engine 29.7.2/Linux 容器上返回 `passed`，覆盖修复/复现/pytest、敏感遮蔽、只读挂载、网络/能力限制、超时清理、失败回归和结果回传，容器与工作区清理均通过。较早 Engine 不可连接的两个 `blocked` 报告及 `docker-acceptance-20261112-cleanup-failed.json` 保留；后者暴露的 Windows 只读 Git 对象删除问题已修复。模型回复固定，缺陷为合成样例，不能据此声称真实模型质量、第三方写入或公网生产隔离通过。
 - [ ] **真实 Agent 配对实验**（外部待验收）：目前没有关闭/开启 RAG 的 Agent 补丁与 Trace；运行同一模型、提示词、数据集和预算下的两组任务，保存 30 个实际补丁及对应 Trace，再使用 `--experiment-manifest` 计分。
 - [ ] **团队知识库简历描述核验**（外部待验收）：需要对应项目源码或可核验材料；当前仓库无法证明该项目的实现和指标。
@@ -24,4 +25,4 @@
 - 当前 `evaluation/results.json` 的真实 Embedding 合成集结果：关键词 Top-5 20/30，向量 Recall@5 29/30，混合 Top-5 26/30；过滤自检通过。Cross-Encoder 与真实 Agent 配对实验未测。
 - 语义合并验证：同范围高相似案例合并、不同文件/依赖/结果类型与低相似案例隔离、旧 SQLite 首次迁移、主案例更新后重分组、Qdrant 删除重复点及阈值提高后的向量恢复均有专项测试。1,000 条合成向量记录分成 64 组，合并 936 条重复记录，算法用时约 0.78 秒；该计时不包括 SQLite 写入或真实 Qdrant 服务。
 - 2026-11-12 全量 Python 测试：375 passed、1 skipped、3 failed、48 subtests passed。3 个失败位于 `test_repair_api.py` 与 `test_resilience.py` 的现有 worker/API 审核与状态码断言；知识库合并专项与 RAG 集成测试通过。
-- 尚未验证真实生产语料上的相似度阈值/误合并率、真实 Qdrant 服务索引一致性、PostgreSQL 持久化语义合并和大规模数据库写入性能；本地没有可连接的 Qdrant/PostgreSQL 服务配置。
+- 尚未验证真实生产语料上的相似度阈值/误合并率、真实 Qdrant 服务索引一致性、PostgreSQL 持久化语义合并和大规模数据库写入性能。PostgreSQL 在线验收使用自动创建并清理的一次性库，不保留业务服务连接；Qdrant 仍未真实连通。

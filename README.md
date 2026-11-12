@@ -65,6 +65,16 @@ docker build -t code-repair-sandbox:py311 .\docker\runner
 
 早先 Engine 不可连接的阻塞记录保留在 `evaluation/docker-acceptance-20261112.json` 与 `evaluation/docker-acceptance-20261112-recheck.json`；连通后遇到的 Windows 只读 Git 对象清理失败记录保留在 `evaluation/docker-acceptance-20261112-cleanup-failed.json`。修复任务副本清理后，`evaluation/docker-acceptance-20261112-verified.json` 为 `passed`，容器与工作区清理均通过。该结论仅覆盖当前合成缺陷、固定模型回复的真实容器验收，不代表真实模型审查质量、数据库、第三方 MCP 写入或公网部署通过。
 
+PostgreSQL/pgvector 独立在线验收使用真实 Linux Docker 容器、合成案例和固定向量，不读取或修改 `.env` 的业务数据库连接：
+
+```powershell
+.venv\Scripts\python.exe -m evaluation.postgres_acceptance --output evaluation/postgres-acceptance-local.json
+```
+
+程序按需拉取 `pgvector/pgvector:pg16`，创建仅绑定本机随机端口、带随机密码和归属标记的一次性测试库，运行 11 项真实 SQL 集成测试，再实际重启容器核对数据。结束时删除自建容器及匿名数据卷；清理失败也判验收失败。输出文件已存在时拒绝覆盖，请换一个报告名。直接运行 `test_postgres_integration.py` 需要显式提供 `REPAIR_TEST_POSTGRES_DSN` 与 `REPAIR_TEST_POSTGRES_GUARD`，并匹配库内归属标记；未配置时跳过，不回退到 `KNOWLEDGE_DB_URL` 或 `DATABASE_URL`。优先使用上述自动建库命令。
+
+`evaluation/postgres-acceptance-20261112-verified.json` 记录 PostgreSQL 16.15 / pgvector 0.8.7 上 11 项集成测试通过，以及真实重启持久化和最终清理通过；首次重启连接超时记录保留在 `evaluation/postgres-acceptance-20261112.json`。Docker 重启可能改变随机宿主端口，验收器会重新发现并核验目标。该验收覆盖 CLI PostgreSQL 适配器，不切换 Web 的 SQLite 正文存储，不证明真实 Embedding 召回质量、生产性能、高可用或断电恢复。
+
 ## 可选 MCP 服务
 
 项目支持从根目录 `.mcp.json` 连接本地 `stdio` 或远程 Streamable HTTP MCP 服务。配置模板见 `.mcp.example.json`；每个服务都必须通过 `allow_tools` 明确列出允许暴露给模型的 MCP 工具。模型侧工具名会加上 `mcp__服务名__` 前缀，参数按服务提供的 JSON Schema 校验。没有配置 MCP 服务时，现有 5 个项目工具保持不变。
