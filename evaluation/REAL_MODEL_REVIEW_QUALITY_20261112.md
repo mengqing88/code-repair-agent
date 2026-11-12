@@ -7,7 +7,7 @@
 
 评测入口为 `evaluation/run_adversarial_review_quality.py`，样例位于 `evaluation/adversarial_review_cases_20261112.json`。预检命令 `.venv\Scripts\python.exe -m evaluation.run_adversarial_review_quality --dry-run` 实际通过：4 个补丁均在独立副本内成功应用，静态审查均未提前拦截，模型调用数为 0。初始评测脚手架因没有 pytest 收集目标而被测试保护机制拒绝；补齐固定收集目标并把临时副本移出仓库后，预检通过。
 
-操作说明：首版脚手架没有重定向 pytest 收集器内部 `tempfile.TemporaryFile` 的系统临时目录；这些文件由上下文自动删除。脚本现将 `TMPDIR`、`TEMP`、`TMP` 和 Python `tempfile` 目录统一设为 `F:\CodexTemp\repair-review-quality`，后续预检只使用 F 盘。首版预检还曾把受保护读取结果与原始源码逐字比较；改为核对隔离副本中的文件内容后，4 个补丁预检全部通过。
+操作说明：首版脚手架没有重定向 pytest 收集器内部 `tempfile.TemporaryFile` 的系统临时目录；预检时这些临时文件短暂写入 Windows 默认 C 盘 Temp，随后由上下文自动删除。后续脚本已将 `TMPDIR`、`TEMP`、`TMP` 和 Python `tempfile` 目录统一设为 `F:\CodexTemp\repair-review-quality`，所有后续预检和评测临时文件只使用 F 盘。首版预检还曾把受保护读取结果与原始源码逐字比较；改为核对隔离副本中的文件内容后，4 个补丁预检全部通过。
 
 ## 结果
 
