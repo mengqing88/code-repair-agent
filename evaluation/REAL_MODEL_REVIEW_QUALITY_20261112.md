@@ -1,9 +1,9 @@
 # 真实模型补丁审查质量初测
 
-日期：2026-11-12  
-模型：`deepseek-v4.1-flash-1017`  
-生产入口：`adversarial_review.review_patch`，实际调用兼容 API；不是模拟回复。  
-范围：4 个作者编写的合成补丁，每个计划重复 2 次。预期标签尚未由独立审查者复核。
+- 日期：2026-11-12
+- 模型：`deepseek-v4.1-flash-1017`
+- 生产入口：`adversarial_review.review_patch`，实际调用兼容 API；不是模拟回复。
+- 范围：4 个作者编写的合成补丁，每个计划重复 2 次。预期标签尚未由独立审查者复核。
 
 评测入口为 `evaluation/run_adversarial_review_quality.py`，样例位于 `evaluation/adversarial_review_cases_20261112.json`。预检命令 `.venv\Scripts\python.exe -m evaluation.run_adversarial_review_quality --dry-run` 实际通过：4 个补丁均在独立副本内成功应用，静态审查均未提前拦截，模型调用数为 0。初始评测脚手架因没有 pytest 收集目标而被测试保护机制拒绝；补齐固定收集目标并把临时副本移出仓库后，预检通过。
 
