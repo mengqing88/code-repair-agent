@@ -1,0 +1,10 @@
+{
+  "case_id": "case-39",
+  "title": "幂等服务在首次成功后没有登记结果",
+  "report": "同一幂等键的两次提交都执行了下单逻辑，创建了两条订单；第二次本应直接返回首次结果。",
+  "contract": "IdempotentService(handler) 中 handler(payload) 为业务函数。handle(key, payload)：同一 key 第一次调用执行 handler 并缓存返回值；之后同一 key 再调用（无论 payload 是否相同）直接返回缓存值，不再调用 handler。不同 key 互不影响。handler 抛异常时不缓存，异常原样传播。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

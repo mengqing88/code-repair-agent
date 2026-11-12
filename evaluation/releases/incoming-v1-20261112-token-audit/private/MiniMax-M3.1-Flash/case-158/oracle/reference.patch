@@ -1,0 +1,17 @@
+--- a/target.py
++++ b/target.py
+@@ -9,11 +9,11 @@
+         raise ValueError("days_of_months must not be empty")
+     if any(days <= 0 for days in days_of_months):
+         raise ValueError("each day count must be positive")
+-    months = len(days_of_months)
++    total_days = sum(days_of_months)
+     shares = []
+     remainders = []
+-    for index in range(months):
+-        exact = Decimal(total_cents) / Decimal(months)
++    for index, days in enumerate(days_of_months):
++        exact = Decimal(total_cents) * Decimal(days) / Decimal(total_days)
+         floor_value = int(exact.quantize(Decimal("1"), rounding=ROUND_DOWN))
+         shares.append(floor_value)
+         remainders.append((exact - floor_value, index))

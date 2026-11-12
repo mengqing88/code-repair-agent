@@ -1,0 +1,10 @@
+{
+  "case_id": "case-35",
+  "title": "排序在并列时按 ID 排序导致顺序错乱",
+  "report": "流水列表在金额相同、金额相同且时间也相同时的排序结果不符合“保持原始输入顺序”的约定，\n导致对账页面上的条目顺序与导入顺序不一致。",
+  "contract": "sort_transactions(transactions) -> list，按以下规则返回新列表（不修改入参）：\n1) amount 数值降序；\n2) amount 相同时按 timestamp 升序（timestamp 为可比较的字符串，字典序即时间序）；\n3) amount 与 timestamp 都相同时，保持它们在原始输入中的相对顺序（稳定）。\n元素为 dict，必须包含 'amount'（数值）与 'timestamp'（字符串），'id' 字段可选且不参与排序。\n入参为空列表时返回空列表。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

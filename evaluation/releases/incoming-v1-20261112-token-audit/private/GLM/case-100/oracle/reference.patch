@@ -1,0 +1,12 @@
+--- a/target.py
++++ b/target.py
+@@ -6,7 +6,7 @@
+         self.stock = stock
+ 
+     def withdraw(self, qty):
++        if qty > self.stock:
++            raise ValueError("insufficient stock")
+         self.stock -= qty
+-        if self.stock < 0:
+-            raise ValueError("insufficient stock")
+         return self.stock

@@ -1,0 +1,13 @@
+--- a/target.py
++++ b/target.py
+@@ -1,5 +1,9 @@
+ def resolve(base, override):
+     result = dict(base)
+     for k, v in override.items():
+-        result[k] = v
++        if v is None:
++            if k not in base:
++                result.pop(k, None)
++        else:
++            result[k] = v
+     return result

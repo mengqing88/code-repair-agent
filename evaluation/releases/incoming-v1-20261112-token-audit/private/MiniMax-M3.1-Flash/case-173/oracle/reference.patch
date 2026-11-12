@@ -1,0 +1,23 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,8 @@
+ """金额文本解析。"""
++
++import re
++
++_LINE_RE = re.compile(r"^[0-9]+$")
+ 
+ 
+ def parse_amounts(text):
+@@ -10,8 +14,7 @@
+         stripped = line.strip()
+         if not stripped:
+             continue
+-        try:
+-            amounts.append(int(stripped))
+-        except ValueError:
+-            continue
++        if not _LINE_RE.match(stripped):
++            raise ValueError("invalid amount line: %s" % line)
++        amounts.append(int(stripped))
+     return amounts

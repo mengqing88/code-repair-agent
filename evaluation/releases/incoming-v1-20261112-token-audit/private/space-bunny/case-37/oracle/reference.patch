@@ -1,0 +1,26 @@
+--- a/target.py
++++ b/target.py
+@@ -2,6 +2,13 @@
+ """Order state machine."""
+ 
+ VALID_STATES = {"pending", "paid", "shipped", "cancelled"}
++
++ALLOWED_TRANSITIONS = {
++    "pending": {"paid", "cancelled"},
++    "paid": {"shipped"},
++    "shipped": set(),
++    "cancelled": set(),
++}
+ 
+ 
+ class InvalidTransitionError(ValueError):
+@@ -17,5 +24,9 @@
+     def transition_to(self, new_status):
+         if new_status not in VALID_STATES:
+             raise ValueError("unknown status: %s" % new_status)
++        if new_status not in ALLOWED_TRANSITIONS[self.status]:
++            raise InvalidTransitionError(
++                "cannot transition from %s to %s" % (self.status, new_status)
++            )
+         self.status = new_status
+         return self.status

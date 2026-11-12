@@ -1,0 +1,10 @@
+{
+  "case_id": "case-176",
+  "title": "百分比折扣按单价计算而不是按订单总额计算",
+  "report": "多件商品的订单，整单 8 折没有按总额算，而是每件商品各自打了 8 折再相加，凑单优惠反而多收了钱。",
+  "contract": "order_total(unit_cents, quantity, discount_percent) 返回订单应付金额（int，单位分）。规则：先计算小计 = unit_cents * quantity；再按小计计算折扣 = 小计 * discount_percent // 100（整除，向下取整）；最终金额 = 小计 - 折扣；quantity 必须为正整数，否则抛出 ValueError；discount_percent 必须在 0~100 之间，否则抛出 ValueError；unit_cents 必须为非负整数。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

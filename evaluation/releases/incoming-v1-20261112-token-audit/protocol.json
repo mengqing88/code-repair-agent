@@ -1,0 +1,13 @@
+{
+  "agent_input": "Only the selected task input directory; no private oracle, labels or release root",
+  "corpus_rule": "Only development histories; never histories in validation/test families",
+  "formal_gate": "independent human contract/family/relevance review + source/license evidence required",
+  "limitations": "Synthetic convenience set; group ratios are approximate; AST can overgroup or miss semantic equivalence",
+  "ratios": [
+    0.6,
+    0.2,
+    0.2
+  ],
+  "seed": "repair-split-v1",
+  "unit": "connected leakage family"
+}

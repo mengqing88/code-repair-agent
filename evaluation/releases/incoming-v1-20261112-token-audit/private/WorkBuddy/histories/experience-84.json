@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "去重保留首/末",
+    "顺序错误"
+  ],
+  "before_source": "def unique_visitors(items):\n    seen = set(); out = []\n    for x in reversed(items):\n        if x not in seen:\n            seen.add(x); out.append(x)\n    out.reverse()\n    return out\n",
+  "dataset_experience_id": "WorkBuddy::experience-84",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "去重保留策略（首/末）必须明确，不能反向。",
+  "experience_id": "experience-84",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "访客去重：保留最后一次访问记录，应保留首次。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,6 @@\n def unique_visitors(items):\n     seen = set(); out = []\n-    for x in reversed(items):\n+    for x in items:\n         if x not in seen:\n             seen.add(x); out.append(x)\n-    out.reverse()\n     return out\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import unique_visitors\n\ndef test_a():\n    assert unique_visitors([1,2,1,3]) == [1,2,3]\n\ndef test_b():\n    assert unique_visitors(['a','b','a','c','b']) == ['a','b','c']\n\ndef test_c():\n    assert unique_visitors([1,2,3,2,1]) == [1,2,3]\n"
+}

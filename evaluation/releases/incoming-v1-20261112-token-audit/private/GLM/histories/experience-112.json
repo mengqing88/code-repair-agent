@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "轮询/游标先自增后取值",
+    "首轮行为与契约不符",
+    "循环索引回绕"
+  ],
+  "before_source": "class ChannelPicker:\n    \"\"\"渠道轮询：第一次调用返回 channels[0]，之后依次循环。\"\"\"\n\n    def __init__(self, channels):\n        self.channels = list(channels)\n        self.pos = 0\n\n    def pick(self):\n        self.pos = (self.pos + 1) % len(self.channels)\n        return self.channels[self.pos]\n",
+  "dataset_experience_id": "GLM::experience-112",
+  "dataset_id": "GLM",
+  "diagnosis": "轮询索引先自增后取值使序列整体前移：应先取当前值再推进索引。修复原则：取值与推进的顺序决定首轮行为。",
+  "experience_id": "experience-112",
+  "normalization_notes": [],
+  "original_report": "支付渠道轮询首个交易被路由到第二个渠道，第一个渠道在每轮轮询中永远被跳过一次，流量分布不均。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -6,5 +6,6 @@\n         self.pos = 0\n \n     def pick(self):\n+        ch = self.channels[self.pos]\n         self.pos = (self.pos + 1) % len(self.channels)\n-        return self.channels[self.pos]\n+        return ch\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import ChannelPicker\n\ndef test_first_is_zero():\n    cp = ChannelPicker([\"c1\", \"c2\"])\n    assert cp.pick() == \"c1\"\n\ndef test_cycle():\n    cp = ChannelPicker([\"c1\", \"c2\"])\n    got = [cp.pick() for _ in range(4)]\n    assert got == [\"c1\", \"c2\", \"c1\", \"c2\"]\n\ndef test_three_cycle():\n    cp = ChannelPicker([\"x\", \"y\", \"z\"])\n    got = [cp.pick() for _ in range(3)]\n    assert got == [\"x\", \"y\", \"z\"]\n"
+}

@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -6,7 +6,7 @@
+         self._seen = set()
+ 
+     def process(self, request_id, payload, received_at):
+-        key = (request_id, received_at)
++        key = request_id
+         if key in self._seen:
+             return False
+         self._seen.add(key)

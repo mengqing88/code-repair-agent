@@ -1,0 +1,10 @@
+{
+  "case_id": "case-188",
+  "title": "未排序输入的按天分组",
+  "report": "日志聚合按天统计条数，但上游日志未按天排序。当前实现把同一天出现的多段记录分别计数，后一段的计数会覆盖前一段，导致总数偏小；例如 d1/d2/d1 的顺序下 d1 只统计到 1 条。预期：无论输入顺序如何，同一天的所有记录都应合并统计。",
+  "contract": "count_by_day(entries) -> dict[str, int]。entries 为 (day: str, message: str) 序列，day 为任意字符串且输入**可以无序**。返回每个 day 对应的记录总数；同一 day 出现多次、多次出现之间夹杂其它 day 时都应累加；空输入返回 {}；不修改 entries；返回值为新字典。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

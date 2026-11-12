@@ -1,0 +1,10 @@
+{
+  "case_id": "case-84",
+  "title": "去重保留末次而非首次",
+  "report": "dedupe(items)：去除重复元素，保留首次出现顺序。当前实现保留末次出现，顺序不符契约。",
+  "contract": "返回列表，保留每个值的首次出现（按原顺序），其余重复删除。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

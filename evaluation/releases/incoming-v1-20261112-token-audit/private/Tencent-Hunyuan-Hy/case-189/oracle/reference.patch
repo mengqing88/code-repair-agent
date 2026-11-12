@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -6,6 +6,6 @@
+     total = 0
+     for amount in orders:
+         if amount <= 0:
+-            break
++            continue
+         total += amount
+     return total

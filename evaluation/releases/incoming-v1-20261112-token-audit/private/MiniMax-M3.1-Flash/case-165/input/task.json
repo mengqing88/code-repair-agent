@@ -1,0 +1,10 @@
+{
+  "case_id": "case-165",
+  "title": "多关键字排序只用了第一个关键字",
+  "report": "工单列表按优先级排序后，同优先级的工单之间顺序错乱，期望按创建时间从早到晚排列，实际是输入顺序。",
+  "contract": "sort_orders(orders) 返回按 (priority 降序, created_at 升序) 排序后的新列表，不修改入参。orders 为 dict 列表，每条含 \"priority\"（整数，越大越优先）与 \"created_at\"（整数时间戳）。规则：priority 大的排在前面；priority 相同时 created_at 小的排在前面；两个关键字都相同时保持原有相对顺序（稳定排序）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

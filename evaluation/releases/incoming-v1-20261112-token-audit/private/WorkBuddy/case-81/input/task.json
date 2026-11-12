@@ -1,0 +1,10 @@
+{
+  "case_id": "case-81",
+  "title": "CSV 引号内逗号截断",
+  "report": "parse_csv_line(line)：应识别双引号包裹的字段，引号内逗号不视为分隔符。当前实现直接按逗号 split，破坏含逗号的字段。",
+  "contract": "输入一行 CSV 文本。返回字段列表；双引号内逗号不是分隔符；双引号内两个引号表示一个引号字符。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

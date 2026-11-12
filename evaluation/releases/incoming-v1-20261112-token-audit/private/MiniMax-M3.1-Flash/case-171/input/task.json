@@ -1,0 +1,10 @@
+{
+  "case_id": "case-171",
+  "title": "折扣叠加时忽略了互斥规则，两种折扣同时生效",
+  "report": "一张同时满足会员折扣和满减券的订单，两个折扣都被应用了，订单金额低于成本，客服收到大量投诉。",
+  "contract": "apply_discounts(amount, member_rate, coupon) 计算最终应付金额，返回 int（单位：分）。规则：amount 必须为非负整数，member_rate 为 0~100 的整数（会员折扣百分比），coupon 为整数减免金额（分，可为 0）。若 coupon > 0 且 member_rate > 0，则二者互斥：只应用 member_rate 对应的折扣，coupon 被忽略；否则只应用非零的那一个；两个都为 0 时返回 amount；最终金额不得小于 0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

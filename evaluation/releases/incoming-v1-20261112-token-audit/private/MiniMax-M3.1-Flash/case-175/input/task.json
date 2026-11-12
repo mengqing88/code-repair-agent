@@ -1,0 +1,10 @@
+{
+  "case_id": "case-175",
+  "title": "排序时把浮点分数当整数比较，比较方向反了",
+  "report": "排行榜里评分 9.6 的用户排在了评分 8.2 的用户后面，排名与评分完全相反。",
+  "contract": "rank_users(users) 返回按 score 降序排序后的新列表，不修改入参。users 为 dict 列表，每条含 \"name\"（字符串）与 \"score\"（数值，可为整数或浮点）。规则：score 大的排在前面；score 相同时保持原有相对顺序（稳定排序）；不修改入参；空列表返回空列表。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

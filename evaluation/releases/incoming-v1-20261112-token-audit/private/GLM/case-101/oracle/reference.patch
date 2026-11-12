@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -3,6 +3,6 @@
+     delays = []
+     delay = base
+     for i in range(count):
++        delays.append(delay)
+         delay = delay * factor
+-        delays.append(delay)
+     return delays

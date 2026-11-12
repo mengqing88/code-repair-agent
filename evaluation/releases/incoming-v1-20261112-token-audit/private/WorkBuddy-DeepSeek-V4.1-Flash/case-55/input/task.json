@@ -1,0 +1,10 @@
+{
+  "case_id": "case-55",
+  "title": "购物车合计在循环内被重新赋值，只统计最后一行",
+  "report": "订单有三件商品，小计只统计了最后一件的价格，之前的金额全部丢失。",
+  "contract": "Cart 维护商品行 (name, unit_price, quantity)。add(name, unit_price, quantity=1) 中 unit_price 为 Decimal 或 str 且 >= 0，quantity 为正整数，违反时抛 ValueError。total() 返回所有行 unit_price * quantity 之和，量化为两位小数（ROUND_HALF_UP），空购物车返回 Decimal('0.00')。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

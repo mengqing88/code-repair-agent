@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -8,6 +8,6 @@
+         group_key = row[key]
+         if group_key not in groups:
+             groups[group_key] = row
+-        elif row["ts"] < groups[group_key]["ts"]:
++        elif row["ts"] >= groups[group_key]["ts"]:
+             groups[group_key] = row
+     return [groups[group_key] for group_key in sorted(groups)]

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-68",
+  "title": "营业时间跨午夜未处理",
+  "report": "is_open(open_hour, close_hour, current_hour)：小时为 0-24 浮点。若 close_hour < open_hour 表示跨午夜（如 22 到 2）。当前实现仅做 open<=cur<=close，跨午夜时整段误判为关闭。",
+  "contract": "返回 bool。若 close_hour >= open_hour：open<=cur<=close；否则（跨午夜）cur>=open 或 cur<=close。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

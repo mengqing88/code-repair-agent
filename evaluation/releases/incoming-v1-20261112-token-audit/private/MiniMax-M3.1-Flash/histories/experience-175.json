@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "数值降序排序",
+    "排序键未取负",
+    "排序方向与需求相反"
+  ],
+  "before_source": "def rank_contributors(contributors):\n    \"\"\"按分数降序排列贡献者。\"\"\"\n    return sorted(contributors, key=lambda item: item[\"points\"])\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-175",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "排序键没有取负，导致升序排列被当成了降序使用。修复原则：需要降序时，排序键必须显式取负（而不是依赖反向排序参数，以免与稳定性、多关键字组合时出错）。",
+  "experience_id": "experience-175",
+  "normalization_notes": [],
+  "original_report": "贡献排行榜里分数最高的人排在最后，榜单完全是反的。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n def rank_contributors(contributors):\n     \"\"\"按分数降序排列贡献者。\"\"\"\n-    return sorted(contributors, key=lambda item: item[\"points\"])\n+    return sorted(contributors, key=lambda item: -item[\"points\"])\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import rank_contributors\n\n\ndef test_higher_points_comes_first():\n    items = [{\"name\": \"a\", \"points\": 1}, {\"name\": \"b\", \"points\": 9}]\n    assert [item[\"name\"] for item in rank_contributors(items)] == [\"b\", \"a\"]\n\n\ndef test_equal_points_keep_input_order():\n    items = [{\"name\": \"a\", \"points\": 5}, {\"name\": \"b\", \"points\": 5}]\n    assert [item[\"name\"] for item in rank_contributors(items)] == [\"a\", \"b\"]\n\n\ndef test_empty_input_returns_empty_list():\n    assert rank_contributors([]) == []\n"
+}

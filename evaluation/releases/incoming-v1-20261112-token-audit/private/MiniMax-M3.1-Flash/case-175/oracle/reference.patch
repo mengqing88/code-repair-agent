@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def rank_users(users):
+     """按 score 降序排列用户。"""
+-    return sorted(users, key=lambda user: user["score"])
++    return sorted(users, key=lambda user: -user["score"])

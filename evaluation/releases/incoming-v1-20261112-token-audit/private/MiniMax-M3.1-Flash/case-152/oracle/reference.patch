@@ -1,0 +1,14 @@
+--- a/target.py
++++ b/target.py
+@@ -1,6 +1,9 @@
+ """金额四舍五入。"""
++
++from decimal import Decimal, ROUND_HALF_UP
+ 
+ 
+ def round_money(amount, places=2):
+-    """按四舍五入保留 places 位小数。"""
+-    return round(amount, places)
++    """按四舍五入（half-up）保留 places 位小数。"""
++    quantum = Decimal(1).scaleb(-places)
++    return float(Decimal(str(amount)).quantize(quantum, rounding=ROUND_HALF_UP))

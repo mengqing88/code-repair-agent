@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "数值字段被按字符串比较",
+    "多位数排序错乱（10 < 9）",
+    "版本号/编号分段比较"
+  ],
+  "before_source": "def compare_builds(a, b):\n    \"\"\"比较形如 \"v7\" 的构建号：a>b 返回 1，相等返回 0，a<b 返回 -1。\"\"\"\n    if a > b:\n        return 1\n    if a < b:\n        return -1\n    return 0\n",
+  "dataset_experience_id": "GLM::experience-99",
+  "dataset_id": "GLM",
+  "diagnosis": "版本/编号分段比较必须按数值逐段比较并补齐长度，字符串字典序在多位数段上不成立。修复原则：先转 int 再比较，短版本按 0 补齐。",
+  "experience_id": "experience-99",
+  "normalization_notes": [],
+  "original_report": "插件系统按字符串比较构建号，build 100 被判定低于 build 99，导致升级检查跳过新版本。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,9 @@\n def compare_builds(a, b):\n     \"\"\"比较形如 \"v7\" 的构建号：a>b 返回 1，相等返回 0，a<b 返回 -1。\"\"\"\n-    if a > b:\n+    na = int(a[1:])\n+    nb = int(b[1:])\n+    if na > nb:\n         return 1\n-    if a < b:\n+    if na < nb:\n         return -1\n     return 0\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import compare_builds\n\ndef test_small_equal():\n    assert compare_builds(\"v7\", \"v7\") == 0\n\ndef test_small_order():\n    assert compare_builds(\"v8\", \"v7\") == 1\n\ndef test_multidigit():\n    assert compare_builds(\"v100\", \"v99\") == 1\n"
+}

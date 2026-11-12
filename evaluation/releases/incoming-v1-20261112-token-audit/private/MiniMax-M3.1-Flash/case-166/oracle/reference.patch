@@ -1,0 +1,17 @@
+--- a/target.py
++++ b/target.py
+@@ -2,8 +2,12 @@
+ 
+ 
+ def cache_key(*parts):
+-    """由多个片段构造缓存键。"""
++    """由多个片段构造缓存键（使用带转义的分隔符，保证可逆）。"""
+     for part in parts:
+         if not isinstance(part, (str, int)):
+             raise TypeError("cache key parts must be str or int")
+-    return "".join(str(part) for part in parts)
++    escaped = []
++    for part in parts:
++        text = str(part).replace("\\", "\\\\").replace("|", "\\|")
++        escaped.append(text)
++    return "|".join(escaped)

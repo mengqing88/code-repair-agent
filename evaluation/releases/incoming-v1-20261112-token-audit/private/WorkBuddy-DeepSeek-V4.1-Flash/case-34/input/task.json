@@ -1,0 +1,10 @@
+{
+  "case_id": "case-34",
+  "title": "续期判断把到期当天的会员也算作已过期",
+  "report": "会员在到期当天就被标记为需要续期并停用，而约定是到期当天仍然有效。",
+  "contract": "needs_renewal(expires_on, today) 接收两个 datetime.date。仅当 expires_on 严格早于 today 时返回 True；expires_on 等于 today 时返回 False；晚于 today 时返回 False。返回 bool。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

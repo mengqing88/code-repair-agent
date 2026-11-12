@@ -1,0 +1,10 @@
+{
+  "case_id": "case-67",
+  "title": "时区换算符号写反",
+  "report": "is_event_live(start, end, now_local, tz_hours)：start/end 为 UTC 秒级时间戳，now_local 为本地时间戳。应 now_utc = now_local - tz_hours*3600 后判断 [start,end] 包含。当前实现符号写反。",
+  "contract": "均为整数秒。返回 bool：start <= now_local - tz_hours*3600 <= end。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

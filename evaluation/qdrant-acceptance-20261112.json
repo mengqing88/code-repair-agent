@@ -1,0 +1,44 @@
+{
+  "created_at": "2026-11-12T07:54:31.057190+00:00",
+  "status": "passed",
+  "scope": "real local Docker Qdrant; synthetic vectors; not production relevance/merge quality",
+  "container": "repair-qdrant-0f3ee006c401",
+  "image": {
+    "tag": "qdrant/qdrant:v1.16.2",
+    "id": "sha256:dab6de32f7b2cc599985a7c764db3e8b062f70508fb85ca074aa856f829bf335",
+    "digests": [
+      "qdrant/qdrant@sha256:dab6de32f7b2cc599985a7c764db3e8b062f70508fb85ca074aa856f829bf335"
+    ]
+  },
+  "server": {
+    "title": "qdrant - vector search engine",
+    "version": "1.16.2",
+    "commit": "d2834de0b51be23a7b22b023e424cbb9456d0e75"
+  },
+  "checks": {
+    "real_http_filters_and_namespace": true,
+    "upsert_revision": true,
+    "dimension_mismatch_rejected": true,
+    "persistent_merge_delete_and_threshold_restore": true,
+    "real_restart_persistence": true,
+    "real_outage_save_and_sqlite_fallback": true,
+    "outage_write_reindexed_after_restart": true,
+    "load_recall_at_least_0_95": true
+  },
+  "outage_probe_seconds": 4.179499099998793,
+  "load": {
+    "points": 10000,
+    "dimension": 64,
+    "queries": 100,
+    "seed": 20261112,
+    "batch_sync_seconds": 3.4462294000004476,
+    "query_p50_seconds": 0.0988588999989588,
+    "query_p95_seconds": 0.1277642149992971,
+    "mean_recall_at_10_vs_exact": 1.0,
+    "scope": "synthetic index-only probe, 2 CPU/1GiB; excludes SQLite/embedding; no production SLO"
+  },
+  "cleanup": {
+    "container_removed": true,
+    "anonymous_volumes_removed": true
+  }
+}

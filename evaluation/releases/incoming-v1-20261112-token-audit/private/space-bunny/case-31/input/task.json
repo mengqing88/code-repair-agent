@@ -1,0 +1,10 @@
+{
+  "case_id": "case-31",
+  "title": "阶梯折扣按档位分段计费",
+  "report": "促销结算时只用了最高一档折扣率去乘全部数量，导致跨档订单被整体打折。\n例如单价 100 分、档位 [(1, 0.0), (5, 0.2)]、数量 10 时，\n期望前 4 件原价、后 6 件打 8 折共 880 分，实际得到 800 分。",
+  "contract": "apply_tiered_discount(unit_price, quantity, tiers) -> int，返回折后总价（单位：分）。\ntiers 为 (起始数量, 折扣率) 列表，折扣率是 float（0.1 表示减 10%），按起始数量升序分段：\n起始数量为 q 的一档覆盖数量区间 [q, 下一档起始数量-1]，最后一档覆盖到无穷。\n各档按 (单价 * 该档件数 * (1-折扣率)) 累加，最后一次性四舍五入到整数分（ROUND_HALF_UP）。\n输入约束：unit_price 与 quantity 为非负 int（bool 不算 int），单价单位为分；\nquantity 为 0 返回 0；tiers 不能为空，第一档起始数量必须为 1，档位起始数量必须唯一且 >= 1；\n违反类型约束抛 TypeError，违反取值约束抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

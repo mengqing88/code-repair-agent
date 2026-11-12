@@ -1,0 +1,10 @@
+{
+  "case_id": "case-57",
+  "title": "分隔符位于字符串末尾时尾部的空字段被丢弃",
+  "report": "解析“a;b;”本应得到三个字段（末尾一个空字段），实际只得到两个，列数与表头不一致导致导入失败。",
+  "contract": "parse_fields(text, sep=';') 把文本按 sep 切分为字段列表。空字符串返回 []；非空字符串的字段数等于 sep 出现次数加一，末尾分隔符照常产生一个空字段。parse_fields(';') 返回 ['', '']。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

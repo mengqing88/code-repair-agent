@@ -1,0 +1,15 @@
+--- a/target.py
++++ b/target.py
+@@ -3,10 +3,7 @@
+         self.rules = list(rules)
+ 
+     def allowed(self, role):
+-        decision = None
+         for name, allow in self.rules:
+             if name == role:
+-                decision = allow
+-        if decision is None:
+-            return False
+-        return decision
++                return allow
++        return False

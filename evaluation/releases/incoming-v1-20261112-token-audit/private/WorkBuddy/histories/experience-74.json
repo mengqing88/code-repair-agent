@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "哨兵值保留原值",
+    "None 覆盖语义"
+  ],
+  "before_source": "def overlay(base, over):\n    r = dict(base)\n    for k, v in over.items():\n        r[k] = v\n    return r\n",
+  "dataset_experience_id": "WorkBuddy::experience-74",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "哨兵值（None）需被识别为“保留原值”，不能直接赋值。",
+  "experience_id": "experience-74",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "主题覆盖：传入 None 意为“不修改”，却被写入为值 None。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,9 @@\n def overlay(base, over):\n     r = dict(base)\n     for k, v in over.items():\n-        r[k] = v\n+        if v is None:\n+            if k not in base:\n+                r.pop(k, None)\n+        else:\n+            r[k] = v\n     return r\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import overlay\n\ndef test_a():\n    assert overlay({'a':1,'b':2}, {'a':None,'b':3}) == {'a':1,'b':3}\n\ndef test_b():\n    assert overlay({'x':10}, {'x':None}) == {'x':10}\n\ndef test_c():\n    assert overlay({'p':1,'q':2}, {'p':None,'q':None}) == {'p':1,'q':2}\n"
+}

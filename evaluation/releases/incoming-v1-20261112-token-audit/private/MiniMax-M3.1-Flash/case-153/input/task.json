@@ -1,0 +1,10 @@
+{
+  "case_id": "case-153",
+  "title": "半开区间重叠判断把相邻区间判为重叠",
+  "report": "排班系统中前一个班次 9:00-12:00 与后一个班次 12:00-15:00 被判定为冲突，导致大量本可衔接的班次无法通过排班校验。",
+  "contract": "ranges_overlap(start, end, other_start, other_end) 判断两个半开区间 [start, end) 与 [other_start, other_end) 是否重叠。重叠当且仅当 start < other_end 且 other_start < end。两个区间首尾相接（end == other_start 或 other_end == start）不算重叠；任一区间为空（start == end）时不算重叠。返回 bool。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

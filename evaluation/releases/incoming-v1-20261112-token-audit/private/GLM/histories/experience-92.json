@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "闭区间长度/重叠计算少 1",
+    "差值与计数混用",
+    "边界含端点的区间运算"
+  ],
+  "before_source": "def overlap_hours(a_start, a_end, b_start, b_end):\n    \"\"\"两个闭区间小时段的重叠小时数（含首尾），无重叠返回 0。输入为整数小时。\"\"\"\n    start = max(a_start, b_start)\n    end = min(a_end, b_end)\n    if end < start:\n        return 0\n    return end - start\n",
+  "dataset_experience_id": "GLM::experience-92",
+  "dataset_id": "GLM",
+  "diagnosis": "闭区间天数差值需要 (end - start).days + 1；差值只给出间隔数。修复原则：先判断区间有效，再对差值 +1 转换为闭区间计数。",
+  "experience_id": "experience-92",
+  "normalization_notes": [],
+  "original_report": "排班统计：统计两名员工同时值班的天数时，首尾相邻的那一天没有被计入。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,4 +4,4 @@\n     end = min(a_end, b_end)\n     if end < start:\n         return 0\n-    return end - start\n+    return end - start + 1\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import overlap_hours\n\ndef test_disjoint():\n    assert overlap_hours(1, 5, 8, 10) == 0\n\ndef test_same_slot():\n    assert overlap_hours(9, 12, 9, 12) == 4\n\ndef test_partial():\n    assert overlap_hours(9, 12, 11, 14) == 2\n"
+}

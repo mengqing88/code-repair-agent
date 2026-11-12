@@ -1,0 +1,14 @@
+--- a/target.py
++++ b/target.py
+@@ -2,5 +2,10 @@
+ 
+ 
+ def is_leap_year(year):
+-    """判断是否为闰年。"""
++    """判断是否为闰年（公历规则）。"""
++    year = abs(year)
++    if year % 400 == 0:
++        return True
++    if year % 100 == 0:
++        return False
+     return year % 4 == 0

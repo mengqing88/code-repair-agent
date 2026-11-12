@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -6,6 +6,8 @@
+             self.state = 'partially_refunded'
+         elif self.state == 'paid' and action == 'refund':
+             self.state = 'refunded'
++        elif self.state == 'partially_refunded' and action == 'refund':
++            self.state = 'refunded'
+         else:
+             raise ValueError('invalid transition')
+         return self.state

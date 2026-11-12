@@ -1,0 +1,10 @@
+{
+  "case_id": "case-184",
+  "title": "支付回调的状态守卫与重复入账",
+  "report": "支付回调在订单已 paid 后，用新的 event_id 再次请求仍会成功并再次累加金额，出现一笔订单被扣两次款；连续重试会持续累加。已 paid 的订单再调用 cancel 会被正确拒绝，但随后的新 event_id 付款依旧被接受。预期：除 pending 外的任何状态都不得接受付款回调，重复回调（相同 id 由幂等集合拦截，不同 id 由状态守卫拦截）必须返回 False 且完全不改变状态与累计金额。",
+  "contract": "OrderProcessor() 初始 state='pending'、total_charged=0。apply_payment(event_id, amount_cents) -> bool：按以下顺序判定——(1) event_id 已在已处理集合中则返回 False 且不改变任何状态；(2) amount_cents <= 0 抛 ValueError；(3) 仅当 state == 'pending' 时接受付款：state 置 'paid'、total_charged += amount_cents、记录 event_id、返回 True；其它状态（paid / cancelled）一律返回 False，且不记录 event_id、不改变 state 与 total_charged。cancel() -> bool：仅 pending -> cancelled 返回 True，否则返回 False 且不改变状态。event_id 为任意可哈希值，amount_cents 约定为正整数。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

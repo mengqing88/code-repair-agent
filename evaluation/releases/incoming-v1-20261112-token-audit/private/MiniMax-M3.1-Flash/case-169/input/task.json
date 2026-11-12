@@ -1,0 +1,10 @@
+{
+  "case_id": "case-169",
+  "title": "区间求和时右端点被重复计入",
+  "report": "统计某个闭区间的订单金额时，区间右端点那天的订单被算了两遍，月度汇总比实际多出一笔。",
+  "contract": "sum_in_range(rows, start, end) 统计 rows 中满足 start <= \"day\" <= end 的记录金额之和，返回 int。rows 为 dict 列表，每条含 \"day\"（形如 \"2024-03-05\" 的字符串）与 \"amount\"（整数分）。规则：区间两端都包含（闭区间）；只统计 day 落在区间内的记录；start > end 时返回 0；不修改入参。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

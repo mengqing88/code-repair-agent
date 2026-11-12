@@ -1,0 +1,10 @@
+{
+  "case_id": "case-113",
+  "title": "会话活跃时间未刷新",
+  "report": "touch() 是空实现，用户持续操作也会话在创建 ttl 秒后过期，活跃时间没有被刷新。",
+  "contract": "SessionManager(ttl)：create(id, now) 创建；touch(id, now) 刷新最后活跃时间；is_expired(id, now) 当 now - 最后活跃时间 > ttl 返回 True。now 由调用方注入。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

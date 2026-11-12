@@ -1,0 +1,13 @@
+--- a/target.py
++++ b/target.py
+@@ -1,8 +1,9 @@
+ def merge_intervals(intervals):
+     """合并重叠或相接的 [start, end) 区间，返回按 start 升序的元组列表。
+     输入顺序任意。"""
++    ordered = sorted(intervals)
+     merged = []
+-    for start, end in intervals:
++    for start, end in ordered:
+         if merged and start <= merged[-1][1]:
+             merged[-1][1] = max(merged[-1][1], end)
+         else:

@@ -1,0 +1,12 @@
+--- a/target.py
++++ b/target.py
+@@ -3,7 +3,8 @@
+     def __init__(self):
+         self.store = {}
+     def set(self, key, value, ttl):
+-        self.store[key] = (value, time.time() + ttl)
++        expiry = None if ttl <= 0 else time.time() + ttl
++        self.store[key] = (value, expiry)
+     def get(self, key):
+         if key not in self.store:
+             return None

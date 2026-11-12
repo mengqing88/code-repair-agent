@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "多关键字排序",
+    "排序 key 缺少后续关键字",
+    "同分条目顺序不稳定"
+  ],
+  "before_source": "def sort_candidates(candidates):\n    \"\"\"按评分降序、投递时间升序排列候选人。\"\"\"\n    return sorted(candidates, key=lambda item: -item[\"score\"])\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-165",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "排序键只包含了第一个关键字（评分），没有把第二关键字（投递时间）放进 key 里，导致同分条目之间的相对顺序退化为输入顺序。修复原则：多关键字排序必须把全部关键字放进同一个元组 key，元组按位置依次比较。",
+  "experience_id": "experience-165",
+  "normalization_notes": [],
+  "original_report": "候选人的推荐列表按评分排序后，同分候选人之间的顺序被打乱，运营发现结果每次刷新都不一样。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n def sort_candidates(candidates):\n     \"\"\"按评分降序、投递时间升序排列候选人。\"\"\"\n-    return sorted(candidates, key=lambda item: -item[\"score\"])\n+    return sorted(candidates, key=lambda item: (-item[\"score\"], item[\"submitted_at\"]))\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import sort_candidates\n\n\ndef test_equal_score_is_ordered_by_submission_time():\n    items = [\n        {\"name\": \"a\", \"score\": 5, \"submitted_at\": 30},\n        {\"name\": \"b\", \"score\": 5, \"submitted_at\": 10},\n    ]\n    assert [item[\"name\"] for item in sort_candidates(items)] == [\"b\", \"a\"]\n\n\ndef test_higher_score_comes_first():\n    items = [\n        {\"name\": \"a\", \"score\": 1, \"submitted_at\": 10},\n        {\"name\": \"b\", \"score\": 9, \"submitted_at\": 20},\n    ]\n    assert [item[\"name\"] for item in sort_candidates(items)] == [\"b\", \"a\"]\n\n\ndef test_empty_input_returns_empty_list():\n    assert sort_candidates([]) == []\n"
+}

@@ -1,0 +1,3741 @@
+{
+  "created_at": "2026-11-12T08:02:41.922578+00:00",
+  "status": "passed",
+  "device": "cpu",
+  "torch_threads": 2,
+  "packages": {
+    "torch": "2.6.0+cpu",
+    "sentence-transformers": "3.4.1",
+    "transformers": "4.48.3"
+  },
+  "model_load_seconds": 10.402284699997836,
+  "cross_encoder_first_pair_seconds": 4.153770800003258,
+  "models": [
+    {
+      "repository": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+      "files": [
+        {
+          "name": "1_Pooling/config.json",
+          "sha256": "4be450dde3b0273bb9787637cfbd28fe04a7ba6ab9d36ac48e92b11e350ffc23"
+        },
+        {
+          "name": "config.json",
+          "sha256": "6300193cb75e01cf80c96decef7187dfb33094d97cc1490b7ead6ff134476e4e"
+        },
+        {
+          "name": "config_sentence_transformers.json",
+          "sha256": "b8c64b5cece00d8424b4896ea75b512b6008576088497609dfeb6bd63e6d36b8"
+        },
+        {
+          "name": "model.safetensors",
+          "sha256": "eaa086f0ffee582aeb45b36e34cdd1fe2d6de2bef61f8a559a1bbc9bd955917b"
+        },
+        {
+          "name": "modules.json",
+          "sha256": "8f4b264b80206c830bebbdcae377e137925650a433b689343a63bdc9b3145460"
+        },
+        {
+          "name": "README.md",
+          "sha256": "1e98ea05b0de579fcaad3d625b62ea55647142ed674d5f5ebf1440e4bbbb6f23"
+        },
+        {
+          "name": "sentence_bert_config.json",
+          "sha256": "70f4448f31320443fe3557cacea5abf2dcc4915dda8c80646bec9f3bb0aa5a1f"
+        },
+        {
+          "name": "sentencepiece.bpe.model",
+          "sha256": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865"
+        },
+        {
+          "name": "special_tokens_map.json",
+          "sha256": "378eb3bf733eb16e65792d7e3fda5b8a4631387ca04d2015199c4d4f22ae554d"
+        },
+        {
+          "name": "tokenizer.json",
+          "sha256": "2c3387be76557bd40970cec13153b3bbf80407865484b209e655e5e4729076b8"
+        },
+        {
+          "name": "tokenizer_config.json",
+          "sha256": "5036ea374ffedd706e3bef33e2e0d6953cb868ef8a490e76e32ba0faa37a6b9b"
+        },
+        {
+          "name": "unigram.json",
+          "sha256": "71b44701d7efd054205115acfa6ef126c5d2f84bd3affe0c59e48163674d19a6"
+        }
+      ]
+    },
+    {
+      "repository": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+      "revision": "1427fd652930e4ba29e8149678df786c240d8825",
+      "files": [
+        {
+          "name": "config.json",
+          "sha256": "cc2cfe51aa3fd759d21d21acf5dfd6994aa67a3c9210636d22e143699d336c77"
+        },
+        {
+          "name": "model.safetensors",
+          "sha256": "5daeca2481a76b5976a2bdc32f0a78532b6716da4f8cd3ff59460ef8d2f359b4"
+        },
+        {
+          "name": "README.md",
+          "sha256": "474736a65d6393a060119a8dc304563af67af4d8d86ccfee4a05dd0df107fc11"
+        },
+        {
+          "name": "sentencepiece.bpe.model",
+          "sha256": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865"
+        },
+        {
+          "name": "special_tokens_map.json",
+          "sha256": "378eb3bf733eb16e65792d7e3fda5b8a4631387ca04d2015199c4d4f22ae554d"
+        },
+        {
+          "name": "tokenizer.json",
+          "sha256": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626"
+        },
+        {
+          "name": "tokenizer_config.json",
+          "sha256": "e7fbfbfa6347b4e414c1cee50d142e2c2f9a895dad68b068ae83a8b564c3837e"
+        }
+      ]
+    }
+  ],
+  "synthetic_retrieval": {
+    "queries": 30,
+    "documents": 30,
+    "strategies": {
+      "keyword": {
+        "metrics": {
+          "mrr": 0.5583333333333333,
+          "recall@1": 0.4666666666666667,
+          "precision@1": 0.4666666666666667,
+          "mrr@1": 0.4666666666666667,
+          "recall@3": 0.6333333333333333,
+          "precision@3": 0.21111111111111105,
+          "mrr@3": 0.55,
+          "recall@5": 0.6666666666666666,
+          "precision@5": 0.13333333333333336,
+          "mrr@5": 0.5583333333333333,
+          "recall@10": 0.6666666666666666,
+          "precision@10": 0.06666666666666668,
+          "mrr@10": 0.5583333333333333
+        },
+        "p50_seconds": 0.03227510000033362,
+        "p95_seconds": 0.03442291500159626,
+        "details": [
+          {
+            "case_id": "case-01",
+            "ranked_ids": [
+              "experience-01",
+              "experience-26",
+              "experience-08"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-02",
+            "ranked_ids": [
+              "experience-01"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-03",
+            "ranked_ids": [
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-04",
+            "ranked_ids": [
+              "experience-25",
+              "experience-04",
+              "experience-11",
+              "experience-23",
+              "experience-13",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-05",
+            "ranked_ids": [
+              "experience-27",
+              "experience-05",
+              "experience-17",
+              "experience-23",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-06",
+            "ranked_ids": [
+              "experience-11",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-07",
+            "ranked_ids": [
+              "experience-07",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-08",
+            "ranked_ids": [
+              "experience-19",
+              "experience-27",
+              "experience-02",
+              "experience-11",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-09",
+            "ranked_ids": [
+              "experience-09",
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-10",
+            "ranked_ids": [
+              "experience-09",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-11",
+            "ranked_ids": [
+              "experience-23",
+              "experience-03",
+              "experience-29",
+              "experience-11",
+              "experience-17",
+              "experience-05",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 0.25,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.25,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.25
+            }
+          },
+          {
+            "case_id": "case-12",
+            "ranked_ids": [
+              "experience-19",
+              "experience-23",
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-13",
+            "ranked_ids": [
+              "experience-13",
+              "experience-15",
+              "experience-03",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-14",
+            "ranked_ids": [
+              "experience-11",
+              "experience-19",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-02",
+              "experience-17",
+              "experience-05",
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-15",
+            "ranked_ids": [
+              "experience-15",
+              "experience-03",
+              "experience-13",
+              "experience-25",
+              "experience-09",
+              "experience-23",
+              "experience-19",
+              "experience-29",
+              "experience-07",
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-16",
+            "ranked_ids": [
+              "experience-27",
+              "experience-05",
+              "experience-07",
+              "experience-17",
+              "experience-23",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-17",
+            "ranked_ids": [
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-18",
+            "ranked_ids": [
+              "experience-13",
+              "experience-18",
+              "experience-27",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-07",
+              "experience-25",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-19",
+            "ranked_ids": [
+              "experience-19",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-20",
+            "ranked_ids": [
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-21",
+            "ranked_ids": [
+              "experience-21",
+              "experience-25",
+              "experience-02",
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-22",
+            "ranked_ids": [
+              "experience-22"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-23",
+            "ranked_ids": [
+              "experience-23",
+              "experience-13",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-24",
+            "ranked_ids": [
+              "experience-11",
+              "experience-24",
+              "experience-21",
+              "experience-02",
+              "experience-15",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-25",
+            "ranked_ids": [
+              "experience-25",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-26",
+            "ranked_ids": [
+              "experience-09",
+              "experience-13",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-27",
+            "ranked_ids": [
+              "experience-27",
+              "experience-11",
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-28",
+            "ranked_ids": [
+              "experience-15",
+              "experience-28",
+              "experience-02",
+              "experience-19",
+              "experience-21",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-29",
+            "ranked_ids": [
+              "experience-29",
+              "experience-05",
+              "experience-09",
+              "experience-02",
+              "experience-11",
+              "experience-19",
+              "experience-17",
+              "experience-23",
+              "experience-27",
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-30",
+            "ranked_ids": [
+              "experience-19",
+              "experience-07",
+              "experience-05",
+              "experience-29",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          }
+        ]
+      },
+      "vector": {
+        "metrics": {
+          "mrr": 0.8372222222222222,
+          "recall@1": 0.7666666666666667,
+          "precision@1": 0.7666666666666667,
+          "mrr@1": 0.7666666666666667,
+          "recall@3": 0.9,
+          "precision@3": 0.29999999999999993,
+          "mrr@3": 0.8222222222222222,
+          "recall@5": 0.9666666666666667,
+          "precision@5": 0.1933333333333334,
+          "mrr@5": 0.8372222222222222,
+          "recall@10": 0.9666666666666667,
+          "precision@10": 0.0966666666666667,
+          "mrr@10": 0.8372222222222222
+        },
+        "p50_seconds": 0.03749774999960209,
+        "p95_seconds": 0.03885898999833444,
+        "details": [
+          {
+            "case_id": "case-01",
+            "ranked_ids": [
+              "experience-26",
+              "experience-24",
+              "experience-01",
+              "experience-12",
+              "experience-14",
+              "experience-05",
+              "experience-29",
+              "experience-10",
+              "experience-16",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            }
+          },
+          {
+            "case_id": "case-02",
+            "ranked_ids": [
+              "experience-14",
+              "experience-12",
+              "experience-24",
+              "experience-01",
+              "experience-02",
+              "experience-26",
+              "experience-15",
+              "experience-05",
+              "experience-03",
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 0.2,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.2,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.2
+            }
+          },
+          {
+            "case_id": "case-03",
+            "ranked_ids": [
+              "experience-03",
+              "experience-26",
+              "experience-13",
+              "experience-29",
+              "experience-15",
+              "experience-12",
+              "experience-30",
+              "experience-04",
+              "experience-02",
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-04",
+            "ranked_ids": [
+              "experience-04",
+              "experience-05",
+              "experience-24",
+              "experience-10",
+              "experience-18",
+              "experience-08",
+              "experience-25",
+              "experience-12",
+              "experience-22",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-05",
+            "ranked_ids": [
+              "experience-05",
+              "experience-24",
+              "experience-29",
+              "experience-12",
+              "experience-04",
+              "experience-11",
+              "experience-26",
+              "experience-25",
+              "experience-01",
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-06",
+            "ranked_ids": [
+              "experience-14",
+              "experience-06",
+              "experience-12",
+              "experience-23",
+              "experience-17",
+              "experience-02",
+              "experience-29",
+              "experience-26",
+              "experience-30",
+              "experience-01"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-07",
+            "ranked_ids": [
+              "experience-26",
+              "experience-01",
+              "experience-05",
+              "experience-30",
+              "experience-23",
+              "experience-14",
+              "experience-12",
+              "experience-24",
+              "experience-13",
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            }
+          },
+          {
+            "case_id": "case-08",
+            "ranked_ids": [
+              "experience-08",
+              "experience-19",
+              "experience-04",
+              "experience-10",
+              "experience-18",
+              "experience-27",
+              "experience-22",
+              "experience-28",
+              "experience-25",
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-09",
+            "ranked_ids": [
+              "experience-09",
+              "experience-10",
+              "experience-20",
+              "experience-30",
+              "experience-27",
+              "experience-22",
+              "experience-21",
+              "experience-12",
+              "experience-25",
+              "experience-26"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-10",
+            "ranked_ids": [
+              "experience-10",
+              "experience-21",
+              "experience-09",
+              "experience-22",
+              "experience-23",
+              "experience-19",
+              "experience-30",
+              "experience-24",
+              "experience-25",
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-11",
+            "ranked_ids": [
+              "experience-11",
+              "experience-24",
+              "experience-29",
+              "experience-23",
+              "experience-12",
+              "experience-10",
+              "experience-03",
+              "experience-05",
+              "experience-26",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-12",
+            "ranked_ids": [
+              "experience-12",
+              "experience-24",
+              "experience-02",
+              "experience-14",
+              "experience-04",
+              "experience-10",
+              "experience-11",
+              "experience-18",
+              "experience-05",
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-13",
+            "ranked_ids": [
+              "experience-04",
+              "experience-03",
+              "experience-13",
+              "experience-16",
+              "experience-26",
+              "experience-29",
+              "experience-24",
+              "experience-15",
+              "experience-12",
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            }
+          },
+          {
+            "case_id": "case-14",
+            "ranked_ids": [
+              "experience-14",
+              "experience-23",
+              "experience-05",
+              "experience-11",
+              "experience-07",
+              "experience-04",
+              "experience-06",
+              "experience-24",
+              "experience-12",
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-15",
+            "ranked_ids": [
+              "experience-15",
+              "experience-03",
+              "experience-06",
+              "experience-26",
+              "experience-01",
+              "experience-14",
+              "experience-23",
+              "experience-29",
+              "experience-13",
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-16",
+            "ranked_ids": [
+              "experience-29",
+              "experience-05",
+              "experience-12",
+              "experience-16",
+              "experience-24",
+              "experience-07",
+              "experience-30",
+              "experience-08",
+              "experience-17",
+              "experience-04"
+            ],
+            "metrics": {
+              "mrr": 0.25,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.25,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.25
+            }
+          },
+          {
+            "case_id": "case-17",
+            "ranked_ids": [
+              "experience-17",
+              "experience-07",
+              "experience-14",
+              "experience-29",
+              "experience-05",
+              "experience-15",
+              "experience-12",
+              "experience-24",
+              "experience-06",
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-18",
+            "ranked_ids": [
+              "experience-18",
+              "experience-12",
+              "experience-23",
+              "experience-28",
+              "experience-30",
+              "experience-27",
+              "experience-22",
+              "experience-02",
+              "experience-25",
+              "experience-29"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-19",
+            "ranked_ids": [
+              "experience-19",
+              "experience-04",
+              "experience-10",
+              "experience-08",
+              "experience-21",
+              "experience-22",
+              "experience-25",
+              "experience-20",
+              "experience-24",
+              "experience-05"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-20",
+            "ranked_ids": [
+              "experience-20",
+              "experience-09",
+              "experience-30",
+              "experience-29",
+              "experience-10",
+              "experience-27",
+              "experience-21",
+              "experience-26",
+              "experience-05",
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-21",
+            "ranked_ids": [
+              "experience-21",
+              "experience-09",
+              "experience-10",
+              "experience-28",
+              "experience-25",
+              "experience-30",
+              "experience-01",
+              "experience-18",
+              "experience-20",
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-22",
+            "ranked_ids": [
+              "experience-22",
+              "experience-18",
+              "experience-11",
+              "experience-25",
+              "experience-10",
+              "experience-30",
+              "experience-21",
+              "experience-24",
+              "experience-20",
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-23",
+            "ranked_ids": [
+              "experience-23",
+              "experience-05",
+              "experience-14",
+              "experience-24",
+              "experience-20",
+              "experience-01",
+              "experience-30",
+              "experience-11",
+              "experience-15",
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-24",
+            "ranked_ids": [
+              "experience-24",
+              "experience-11",
+              "experience-19",
+              "experience-28",
+              "experience-10",
+              "experience-22",
+              "experience-08",
+              "experience-04",
+              "experience-20",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-25",
+            "ranked_ids": [
+              "experience-25",
+              "experience-18",
+              "experience-10",
+              "experience-30",
+              "experience-04",
+              "experience-05",
+              "experience-21",
+              "experience-22",
+              "experience-19",
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-26",
+            "ranked_ids": [
+              "experience-26",
+              "experience-01",
+              "experience-02",
+              "experience-30",
+              "experience-20",
+              "experience-17",
+              "experience-24",
+              "experience-03",
+              "experience-09",
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-27",
+            "ranked_ids": [
+              "experience-27",
+              "experience-08",
+              "experience-11",
+              "experience-04",
+              "experience-22",
+              "experience-20",
+              "experience-05",
+              "experience-24",
+              "experience-10",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-28",
+            "ranked_ids": [
+              "experience-28",
+              "experience-18",
+              "experience-10",
+              "experience-30",
+              "experience-07",
+              "experience-21",
+              "experience-24",
+              "experience-27",
+              "experience-08",
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-29",
+            "ranked_ids": [
+              "experience-04",
+              "experience-29",
+              "experience-05",
+              "experience-26",
+              "experience-06",
+              "experience-03",
+              "experience-15",
+              "experience-20",
+              "experience-01",
+              "experience-09"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-30",
+            "ranked_ids": [
+              "experience-30",
+              "experience-07",
+              "experience-06",
+              "experience-17",
+              "experience-05",
+              "experience-12",
+              "experience-24",
+              "experience-26",
+              "experience-29",
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          }
+        ]
+      },
+      "hybrid": {
+        "metrics": {
+          "mrr": 0.7469841269841269,
+          "recall@1": 0.6333333333333333,
+          "precision@1": 0.6333333333333333,
+          "mrr@1": 0.6333333333333333,
+          "recall@3": 0.8333333333333334,
+          "precision@3": 0.2777777777777777,
+          "mrr@3": 0.7222222222222221,
+          "recall@5": 0.9,
+          "precision@5": 0.18000000000000008,
+          "mrr@5": 0.7355555555555554,
+          "recall@10": 1.0,
+          "precision@10": 0.10000000000000005,
+          "mrr@10": 0.7469841269841269
+        },
+        "p50_seconds": 0.03372250000029453,
+        "p95_seconds": 0.03876491500031989,
+        "details": [
+          {
+            "case_id": "case-01",
+            "ranked_ids": [
+              "experience-26",
+              "experience-01",
+              "experience-24",
+              "experience-12",
+              "experience-14",
+              "experience-08",
+              "experience-05",
+              "experience-29",
+              "experience-10",
+              "experience-16"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-02",
+            "ranked_ids": [
+              "experience-01",
+              "experience-14",
+              "experience-12",
+              "experience-24",
+              "experience-02",
+              "experience-26",
+              "experience-15",
+              "experience-05",
+              "experience-03",
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 0.2,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.2,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.2
+            }
+          },
+          {
+            "case_id": "case-03",
+            "ranked_ids": [
+              "experience-03",
+              "experience-26",
+              "experience-13",
+              "experience-29",
+              "experience-15",
+              "experience-12",
+              "experience-30",
+              "experience-04",
+              "experience-02",
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-04",
+            "ranked_ids": [
+              "experience-04",
+              "experience-25",
+              "experience-03",
+              "experience-11",
+              "experience-23",
+              "experience-13",
+              "experience-05",
+              "experience-24",
+              "experience-10",
+              "experience-18"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-05",
+            "ranked_ids": [
+              "experience-05",
+              "experience-25",
+              "experience-07",
+              "experience-23",
+              "experience-24",
+              "experience-03",
+              "experience-27",
+              "experience-17",
+              "experience-29",
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-06",
+            "ranked_ids": [
+              "experience-17",
+              "experience-23",
+              "experience-11",
+              "experience-05",
+              "experience-07",
+              "experience-03",
+              "experience-13",
+              "experience-21",
+              "experience-14",
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 0.1,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.1
+            }
+          },
+          {
+            "case_id": "case-07",
+            "ranked_ids": [
+              "experience-05",
+              "experience-07",
+              "experience-23",
+              "experience-13",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-26",
+              "experience-01",
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-08",
+            "ranked_ids": [
+              "experience-19",
+              "experience-08",
+              "experience-27",
+              "experience-11",
+              "experience-25",
+              "experience-29",
+              "experience-07",
+              "experience-02",
+              "experience-04",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-09",
+            "ranked_ids": [
+              "experience-09",
+              "experience-17",
+              "experience-10",
+              "experience-20",
+              "experience-30",
+              "experience-27",
+              "experience-22",
+              "experience-21",
+              "experience-12",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-10",
+            "ranked_ids": [
+              "experience-09",
+              "experience-21",
+              "experience-10",
+              "experience-22",
+              "experience-23",
+              "experience-19",
+              "experience-30",
+              "experience-24",
+              "experience-25",
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            }
+          },
+          {
+            "case_id": "case-11",
+            "ranked_ids": [
+              "experience-11",
+              "experience-29",
+              "experience-23",
+              "experience-03",
+              "experience-05",
+              "experience-25",
+              "experience-27",
+              "experience-07",
+              "experience-17",
+              "experience-24"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-12",
+            "ranked_ids": [
+              "experience-12",
+              "experience-23",
+              "experience-13",
+              "experience-19",
+              "experience-24",
+              "experience-02",
+              "experience-14",
+              "experience-04",
+              "experience-10",
+              "experience-11"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-13",
+            "ranked_ids": [
+              "experience-03",
+              "experience-13",
+              "experience-15",
+              "experience-04",
+              "experience-16",
+              "experience-26",
+              "experience-25",
+              "experience-29",
+              "experience-24",
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-14",
+            "ranked_ids": [
+              "experience-23",
+              "experience-11",
+              "experience-07",
+              "experience-05",
+              "experience-13",
+              "experience-02",
+              "experience-14",
+              "experience-03",
+              "experience-17",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 0.14285714285714285,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.14285714285714285
+            }
+          },
+          {
+            "case_id": "case-15",
+            "ranked_ids": [
+              "experience-15",
+              "experience-03",
+              "experience-13",
+              "experience-23",
+              "experience-29",
+              "experience-09",
+              "experience-17",
+              "experience-07",
+              "experience-06",
+              "experience-26"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-16",
+            "ranked_ids": [
+              "experience-05",
+              "experience-07",
+              "experience-17",
+              "experience-27",
+              "experience-29",
+              "experience-23",
+              "experience-13",
+              "experience-03",
+              "experience-12",
+              "experience-16"
+            ],
+            "metrics": {
+              "mrr": 0.1,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.1
+            }
+          },
+          {
+            "case_id": "case-17",
+            "ranked_ids": [
+              "experience-17",
+              "experience-07",
+              "experience-05",
+              "experience-23",
+              "experience-03",
+              "experience-13",
+              "experience-14",
+              "experience-27",
+              "experience-29",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-18",
+            "ranked_ids": [
+              "experience-18",
+              "experience-27",
+              "experience-23",
+              "experience-17",
+              "experience-25",
+              "experience-05",
+              "experience-13",
+              "experience-07",
+              "experience-03",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-19",
+            "ranked_ids": [
+              "experience-19",
+              "experience-25",
+              "experience-03",
+              "experience-04",
+              "experience-29",
+              "experience-10",
+              "experience-08",
+              "experience-21",
+              "experience-22",
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-20",
+            "ranked_ids": [
+              "experience-20",
+              "experience-13",
+              "experience-09",
+              "experience-30",
+              "experience-29",
+              "experience-10",
+              "experience-27",
+              "experience-21",
+              "experience-26",
+              "experience-05"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-21",
+            "ranked_ids": [
+              "experience-21",
+              "experience-25",
+              "experience-02",
+              "experience-15",
+              "experience-09",
+              "experience-10",
+              "experience-28",
+              "experience-30",
+              "experience-01",
+              "experience-18"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-22",
+            "ranked_ids": [
+              "experience-22",
+              "experience-18",
+              "experience-11",
+              "experience-25",
+              "experience-10",
+              "experience-30",
+              "experience-21",
+              "experience-24",
+              "experience-20",
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-23",
+            "ranked_ids": [
+              "experience-23",
+              "experience-13",
+              "experience-25",
+              "experience-05",
+              "experience-14",
+              "experience-24",
+              "experience-20",
+              "experience-01",
+              "experience-30",
+              "experience-11"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-24",
+            "ranked_ids": [
+              "experience-24",
+              "experience-11",
+              "experience-25",
+              "experience-21",
+              "experience-05",
+              "experience-13",
+              "experience-27",
+              "experience-23",
+              "experience-02",
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-25",
+            "ranked_ids": [
+              "experience-25",
+              "experience-05",
+              "experience-23",
+              "experience-21",
+              "experience-27",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-18",
+              "experience-10"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-26",
+            "ranked_ids": [
+              "experience-09",
+              "experience-03",
+              "experience-26",
+              "experience-15",
+              "experience-13",
+              "experience-25",
+              "experience-01",
+              "experience-02",
+              "experience-30",
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            }
+          },
+          {
+            "case_id": "case-27",
+            "ranked_ids": [
+              "experience-27",
+              "experience-11",
+              "experience-13",
+              "experience-08",
+              "experience-04",
+              "experience-22",
+              "experience-20",
+              "experience-05",
+              "experience-24",
+              "experience-10"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-28",
+            "ranked_ids": [
+              "experience-28",
+              "experience-21",
+              "experience-15",
+              "experience-07",
+              "experience-25",
+              "experience-17",
+              "experience-19",
+              "experience-29",
+              "experience-02",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-29",
+            "ranked_ids": [
+              "experience-29",
+              "experience-05",
+              "experience-09",
+              "experience-03",
+              "experience-23",
+              "experience-02",
+              "experience-13",
+              "experience-17",
+              "experience-11",
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-30",
+            "ranked_ids": [
+              "experience-07",
+              "experience-05",
+              "experience-17",
+              "experience-29",
+              "experience-30",
+              "experience-25",
+              "experience-03",
+              "experience-15",
+              "experience-19",
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 0.2,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.2,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.2
+            }
+          }
+        ]
+      },
+      "hybrid+cross_encoder": {
+        "metrics": {
+          "mrr": 0.961111111111111,
+          "recall@1": 0.9333333333333333,
+          "precision@1": 0.9333333333333333,
+          "mrr@1": 0.9333333333333333,
+          "recall@3": 1.0,
+          "precision@3": 0.3333333333333333,
+          "mrr@3": 0.961111111111111,
+          "recall@5": 1.0,
+          "precision@5": 0.2000000000000001,
+          "mrr@5": 0.961111111111111,
+          "recall@10": 1.0,
+          "precision@10": 0.10000000000000005,
+          "mrr@10": 0.961111111111111
+        },
+        "p50_seconds": 0.8243940499996825,
+        "p95_seconds": 0.9236644550004711,
+        "details": [
+          {
+            "case_id": "case-01",
+            "ranked_ids": [
+              "experience-01",
+              "experience-26",
+              "experience-05",
+              "experience-08",
+              "experience-29",
+              "experience-10",
+              "experience-14",
+              "experience-12",
+              "experience-24",
+              "experience-16"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-02",
+            "ranked_ids": [
+              "experience-02",
+              "experience-15",
+              "experience-12",
+              "experience-14",
+              "experience-30",
+              "experience-03",
+              "experience-24",
+              "experience-01",
+              "experience-26",
+              "experience-05"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-03",
+            "ranked_ids": [
+              "experience-03",
+              "experience-15",
+              "experience-13",
+              "experience-29",
+              "experience-04",
+              "experience-30",
+              "experience-14",
+              "experience-26",
+              "experience-12",
+              "experience-02"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-04",
+            "ranked_ids": [
+              "experience-04",
+              "experience-18",
+              "experience-05",
+              "experience-24",
+              "experience-25",
+              "experience-10",
+              "experience-03",
+              "experience-13",
+              "experience-11",
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-05",
+            "ranked_ids": [
+              "experience-05",
+              "experience-24",
+              "experience-12",
+              "experience-29",
+              "experience-27",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-23",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-06",
+            "ranked_ids": [
+              "experience-06",
+              "experience-14",
+              "experience-17",
+              "experience-23",
+              "experience-05",
+              "experience-21",
+              "experience-03",
+              "experience-13",
+              "experience-11",
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-07",
+            "ranked_ids": [
+              "experience-01",
+              "experience-26",
+              "experience-07",
+              "experience-17",
+              "experience-05",
+              "experience-03",
+              "experience-23",
+              "experience-13",
+              "experience-25",
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 0.3333333333333333,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.3333333333333333,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.3333333333333333,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.3333333333333333
+            }
+          },
+          {
+            "case_id": "case-08",
+            "ranked_ids": [
+              "experience-08",
+              "experience-19",
+              "experience-04",
+              "experience-11",
+              "experience-03",
+              "experience-29",
+              "experience-25",
+              "experience-27",
+              "experience-07",
+              "experience-02"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-09",
+            "ranked_ids": [
+              "experience-09",
+              "experience-20",
+              "experience-30",
+              "experience-10",
+              "experience-22",
+              "experience-12",
+              "experience-17",
+              "experience-21",
+              "experience-27",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-10",
+            "ranked_ids": [
+              "experience-10",
+              "experience-22",
+              "experience-09",
+              "experience-21",
+              "experience-24",
+              "experience-30",
+              "experience-20",
+              "experience-23",
+              "experience-25",
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-11",
+            "ranked_ids": [
+              "experience-11",
+              "experience-17",
+              "experience-29",
+              "experience-24",
+              "experience-23",
+              "experience-03",
+              "experience-07",
+              "experience-05",
+              "experience-25",
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-12",
+            "ranked_ids": [
+              "experience-12",
+              "experience-14",
+              "experience-04",
+              "experience-10",
+              "experience-24",
+              "experience-02",
+              "experience-11",
+              "experience-13",
+              "experience-23",
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-13",
+            "ranked_ids": [
+              "experience-13",
+              "experience-04",
+              "experience-26",
+              "experience-16",
+              "experience-03",
+              "experience-24",
+              "experience-15",
+              "experience-12",
+              "experience-29",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-14",
+            "ranked_ids": [
+              "experience-14",
+              "experience-05",
+              "experience-02",
+              "experience-07",
+              "experience-23",
+              "experience-13",
+              "experience-25",
+              "experience-11",
+              "experience-17",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-15",
+            "ranked_ids": [
+              "experience-15",
+              "experience-26",
+              "experience-13",
+              "experience-06",
+              "experience-03",
+              "experience-23",
+              "experience-29",
+              "experience-09",
+              "experience-07",
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-16",
+            "ranked_ids": [
+              "experience-16",
+              "experience-12",
+              "experience-07",
+              "experience-29",
+              "experience-05",
+              "experience-23",
+              "experience-17",
+              "experience-03",
+              "experience-13",
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-17",
+            "ranked_ids": [
+              "experience-17",
+              "experience-14",
+              "experience-29",
+              "experience-07",
+              "experience-05",
+              "experience-23",
+              "experience-25",
+              "experience-03",
+              "experience-13",
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-18",
+            "ranked_ids": [
+              "experience-18",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-25",
+              "experience-07",
+              "experience-21",
+              "experience-27",
+              "experience-03",
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-19",
+            "ranked_ids": [
+              "experience-19",
+              "experience-04",
+              "experience-21",
+              "experience-08",
+              "experience-10",
+              "experience-22",
+              "experience-07",
+              "experience-29",
+              "experience-03",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-20",
+            "ranked_ids": [
+              "experience-20",
+              "experience-30",
+              "experience-10",
+              "experience-26",
+              "experience-05",
+              "experience-09",
+              "experience-29",
+              "experience-13",
+              "experience-21",
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-21",
+            "ranked_ids": [
+              "experience-21",
+              "experience-10",
+              "experience-09",
+              "experience-30",
+              "experience-18",
+              "experience-28",
+              "experience-01",
+              "experience-15",
+              "experience-02",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-22",
+            "ranked_ids": [
+              "experience-22",
+              "experience-10",
+              "experience-24",
+              "experience-30",
+              "experience-12",
+              "experience-18",
+              "experience-20",
+              "experience-11",
+              "experience-21",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-23",
+            "ranked_ids": [
+              "experience-30",
+              "experience-23",
+              "experience-14",
+              "experience-24",
+              "experience-05",
+              "experience-20",
+              "experience-01",
+              "experience-11",
+              "experience-13",
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            }
+          },
+          {
+            "case_id": "case-24",
+            "ranked_ids": [
+              "experience-24",
+              "experience-11",
+              "experience-05",
+              "experience-13",
+              "experience-27",
+              "experience-23",
+              "experience-02",
+              "experience-25",
+              "experience-17",
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-25",
+            "ranked_ids": [
+              "experience-25",
+              "experience-10",
+              "experience-18",
+              "experience-17",
+              "experience-21",
+              "experience-23",
+              "experience-05",
+              "experience-07",
+              "experience-27",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-26",
+            "ranked_ids": [
+              "experience-26",
+              "experience-01",
+              "experience-30",
+              "experience-20",
+              "experience-15",
+              "experience-02",
+              "experience-25",
+              "experience-13",
+              "experience-09",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-27",
+            "ranked_ids": [
+              "experience-27",
+              "experience-04",
+              "experience-20",
+              "experience-22",
+              "experience-10",
+              "experience-24",
+              "experience-08",
+              "experience-05",
+              "experience-11",
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-28",
+            "ranked_ids": [
+              "experience-28",
+              "experience-25",
+              "experience-19",
+              "experience-21",
+              "experience-15",
+              "experience-17",
+              "experience-29",
+              "experience-07",
+              "experience-02",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-29",
+            "ranked_ids": [
+              "experience-29",
+              "experience-05",
+              "experience-11",
+              "experience-13",
+              "experience-02",
+              "experience-23",
+              "experience-17",
+              "experience-03",
+              "experience-09",
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          },
+          {
+            "case_id": "case-30",
+            "ranked_ids": [
+              "experience-30",
+              "experience-06",
+              "experience-05",
+              "experience-07",
+              "experience-29",
+              "experience-25",
+              "experience-17",
+              "experience-15",
+              "experience-19",
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            }
+          }
+        ]
+      }
+    },
+    "labels": "author assigned, not independent",
+    "role": "development diagnostic, never frozen test score"
+  },
+  "public_merge_diagnostic": {
+    "documents": 3,
+    "exact_copy_positive_pairs": 3,
+    "distinct_issue_negative_pairs": 3,
+    "threshold": 0.97,
+    "links": [
+      {
+        "outcome": "accepted",
+        "duplicate_case_id": "markupsafe-310:original",
+        "canonical_case_id": "markupsafe-310:exact-copy",
+        "scope_hash": "45938a8843f453e6c81c14b064a5465b52fa6eaea0eaf625ee621b78c0fc894f",
+        "similarity": 0.9999999999999999
+      },
+      {
+        "outcome": "accepted",
+        "duplicate_case_id": "markupsafe-417:original",
+        "canonical_case_id": "markupsafe-417:exact-copy",
+        "scope_hash": "45938a8843f453e6c81c14b064a5465b52fa6eaea0eaf625ee621b78c0fc894f",
+        "similarity": 0.9999999999999999
+      },
+      {
+        "outcome": "accepted",
+        "duplicate_case_id": "markupsafe-117:original",
+        "canonical_case_id": "markupsafe-117:exact-copy",
+        "scope_hash": "45938a8843f453e6c81c14b064a5465b52fa6eaea0eaf625ee621b78c0fc894f",
+        "similarity": 0.9999999999999998
+      }
+    ],
+    "observed_false_merge_links": 0,
+    "cosine_matrix": [
+      [
+        0.9999999403953552,
+        0.6088794469833374,
+        0.4947195053100586
+      ],
+      [
+        0.6088794469833374,
+        1.0000001192092896,
+        0.3810427188873291
+      ],
+      [
+        0.4947195053100586,
+        0.3810427188873291,
+        1.0000001192092896
+      ]
+    ],
+    "positive_basis": "byte-identical text",
+    "negative_basis": "different upstream fixes; engineering proxy, not independent production semantic labels",
+    "production_false_merge_rate": null,
+    "production_status": "Unmeasured: independent representative private-corpus labels are absent"
+  },
+  "quality_acceptance": "diagnostic_only_pending_independent_corpus",
+  "limitations": [
+    "Authored 30-query synthetic labels and three public issues do not establish production quality",
+    "Single CPU run; precomputed embedding time excluded from per-query timings",
+    "Model/corpus defaults remain unchanged; do not enable solely because loading succeeded"
+  ]
+}

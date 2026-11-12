@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -12,6 +12,6 @@
+     def total(self):
+         amount = decimal.Decimal('0')
+         for name, unit_price, quantity in self.lines:
+-            amount = decimal.Decimal(str(unit_price)) * quantity
++            amount += decimal.Decimal(str(unit_price)) * quantity
+         return amount.quantize(decimal.Decimal('0.01'),
+                                rounding=decimal.ROUND_HALF_UP)

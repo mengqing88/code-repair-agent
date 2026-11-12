@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,5 @@
+ def dense_ranks(scores):
+     """稠密排名：同分并列，下一个不同分数名次 +1（无空洞）。"""
+-    ordered = sorted(scores, reverse=True)
+-    return [ordered.index(s) + 1 for s in scores]
++    ordered = sorted(set(scores), reverse=True)
++    rank_of = {s: i + 1 for i, s in enumerate(ordered)}
++    return [rank_of[s] for s in scores]

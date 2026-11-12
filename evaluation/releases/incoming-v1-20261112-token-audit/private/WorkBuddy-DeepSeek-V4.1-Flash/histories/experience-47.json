@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "分页",
+    "零基页码",
+    "越界页"
+  ],
+  "before_source": "def top_players(players, size):\n    start = 1\n    return players[start:start + size]\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-47",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "零基索引被当成基于 1 的编号，起点多减了一个单位。修复原则：明确页码/偏移的基数后，起点 = 编号 × 页长，不再额外加减。",
+  "experience_id": "experience-47",
+  "normalization_notes": [],
+  "original_report": "排行榜取前十名时返回的却是从第二名开始的十个元素。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n def top_players(players, size):\n-    start = 1\n+    start = 0\n     return players[start:start + size]\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert top_players([9, 8, 7], 2) == [9, 8]\n\n\ndef test_experience_2():\n    assert top_players([], 3) == []\n\n\ndef test_experience_3():\n    assert top_players([5], 5) == [5]\n"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-197",
+  "title": "不区分大小写的响应头查找",
+  "report": "HTTP 客户端读取响应头时，服务端返回 Content-Type，用 'content-type' 查询却取不到值；全大写或全小写的查询同样落空，导致下游解析失败。预期：header 名按不区分大小写匹配，命中时返回对应值。",
+  "contract": "get_header(headers: dict[str, str], name: str) -> str | None。按不区分大小写的方式匹配 header 名；命中返回对应的值（原样，不做 strip），未命中返回 None；不修改 headers；若存在多个仅大小写不同的键，返回按字典插入顺序第一个匹配项的值。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

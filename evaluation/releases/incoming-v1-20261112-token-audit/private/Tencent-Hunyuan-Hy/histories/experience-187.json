@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "排序结果的顺序或方向与契约不符",
+    "缺陷表现为排序参数（reverse / key / 次关键字）配置错误",
+    "修复应只调整排序参数，不改动数据来源"
+  ],
+  "before_source": "# 商品价格展示：按价格从低到高排序。\n\n\ndef cheapest_first(prices):\n    \"\"\"返回价格升序的新列表。\"\"\"\n    return sorted(prices, reverse=True)\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-187",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "排序参数（方向、key、是否稳定）必须逐条对照契约；reverse=True 与使用取负的 key 都会翻转方向，混用或误设会让结果与契约相反。修复原则是只改动排序参数本身，不重写比较逻辑。",
+  "experience_id": "experience-187",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】商品价格列表场景：页面要求按价格从低到高展示，实际却按从高到低展示。预期：返回升序排列的新列表。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,4 +3,4 @@\n \n def cheapest_first(prices):\n     \"\"\"返回价格升序的新列表。\"\"\"\n-    return sorted(prices, reverse=True)\n+    return sorted(prices, reverse=False)\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import cheapest_first\n\n\ndef test_single_price():\n    assert cheapest_first([5]) == [5]\n\n\ndef test_empty_prices():\n    assert cheapest_first([]) == []\n\n\ndef test_ascending_order():\n    assert cheapest_first([3, 1, 2]) == [1, 2, 3]\n"
+}

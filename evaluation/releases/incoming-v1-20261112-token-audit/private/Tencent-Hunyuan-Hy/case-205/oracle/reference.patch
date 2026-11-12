@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -4,7 +4,7 @@
+ def last_index_of(items, target):
+     """未出现返回 -1。"""
+     result = -1
+-    for i in range(len(items) - 1):
++    for i in range(len(items)):
+         if items[i] == target:
+             result = i
+     return result

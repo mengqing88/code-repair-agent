@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "可变默认参数",
+    "实例隔离",
+    "drain 后重置"
+  ],
+  "before_source": "def report_lines(rows, buffer=[]):\n    for row in rows:\n        buffer.append(row)\n    return buffer\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-59",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "列表在函数定义时只创建一次，被所有调用共享。修复原则：可变容器必须在每次调用或每个实例创建时新建，默认值只作为“未提供”的标记。",
+  "experience_id": "experience-59",
+  "normalization_notes": [],
+  "original_report": "连续生成两张报表时，第二张报表混入了第一张的行。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,8 @@\n-def report_lines(rows, buffer=[]):\n+def report_lines(rows, buffer=None):\n+    if buffer is None:\n+        buffer = []\n+    else:\n+        buffer = list(buffer)\n     for row in rows:\n         buffer.append(row)\n     return buffer\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\ndef _second_report_isolated():\n    report_lines([5])\n    return report_lines([6])\n\n\ndef test_experience_1():\n    assert report_lines([]) == []\n\n\ndef test_experience_2():\n    assert report_lines([3], [0]) == [0, 3]\n\n\ndef test_experience_3():\n    assert _second_report_isolated() == [6]\n"
+}

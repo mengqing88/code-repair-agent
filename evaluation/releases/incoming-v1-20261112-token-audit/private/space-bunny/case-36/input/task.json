@@ -1,0 +1,10 @@
+{
+  "case_id": "case-36",
+  "title": "缓存键只取前缀导致不同用户串数据",
+  "report": "缓存键只用了用户 ID 的前两个字符，导致 id 前缀相同的两个用户共用一个缓存条目，\nA 用户读到了 B 用户的数据。",
+  "contract": "UserCache 类：__init__ 无参数，初始化空的内部存储。\nset(user_id, value) -> None，缓存一个值。\nget(user_id, default=None) -> 命中返回缓存值，未命中返回 default。\nuser_id 为任意非空 str；两个不同的 user_id 必须对应两个互不干扰的缓存条目。\n对同一 user_id 重复 set 后，get 返回最后一次写入的值。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

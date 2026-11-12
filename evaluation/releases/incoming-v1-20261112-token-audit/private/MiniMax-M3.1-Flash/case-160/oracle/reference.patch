@@ -1,0 +1,15 @@
+--- a/target.py
++++ b/target.py
+@@ -20,9 +20,11 @@
+         return None
+ 
+     def remember(self, request_id, response):
+-        """记录 request_id 对应的响应。"""
++        """记录 request_id 对应的响应；首次写入的响应不可被覆盖。"""
+         if not request_id:
+             raise ValueError("request_id must not be empty")
++        if request_id in self._records and self._records[request_id]["response"] is not None:
++            return
+         self._records[request_id] = {"response": response, "seen_at": time.time()}
+         if len(self._records) > self.capacity:
+             oldest = min(self._records, key=lambda key: self._records[key]["seen_at"])

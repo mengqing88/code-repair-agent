@@ -1,0 +1,10 @@
+{
+  "case_id": "case-83",
+  "title": "排序缺失次级键",
+  "report": "rank_students(students)：students 为 (name, score) 列表，按 score 降序排序；同分时按 name 升序。当前实现仅按 score 排序，并列时未处理 name 次序。",
+  "contract": "返回按 (score 降序, name 升序) 排序的列表，保持稳定。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

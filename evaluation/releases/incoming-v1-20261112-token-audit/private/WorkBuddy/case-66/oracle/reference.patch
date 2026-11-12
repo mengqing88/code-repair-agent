@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,4 @@
+ import datetime
+ 
+ def is_subscription_active(start, end, today):
+-    return start <= today < end
++    return start <= today <= end

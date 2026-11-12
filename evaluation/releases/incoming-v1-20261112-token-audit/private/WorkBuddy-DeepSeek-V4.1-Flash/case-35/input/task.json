@@ -1,0 +1,10 @@
+{
+  "case_id": "case-35",
+  "title": "配置合并只在顶层覆盖，嵌套字典被整段替换",
+  "report": "用户只改了主题字号，结果主题下的配色方案与暗色开关全部丢失，因为嵌套字典被整体替换而不是逐键合并。",
+  "contract": "merge_config(*layers) 依次接收 dict，后面的层优先级更高。同一键在两侧都是 dict 时递归合并，其余情况后者直接替换前者。None 层被跳过。返回新 dict，且不得修改任何输入参数。无参数时返回 {}。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

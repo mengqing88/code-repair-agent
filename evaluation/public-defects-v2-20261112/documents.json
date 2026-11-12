@@ -1,0 +1,50 @@
+[
+  {
+    "case_id": "markupsafe-310",
+    "original_report": "Strip HTML tags and comments containing newline characters",
+    "diagnosis": "The tag and comment regular expressions omit DOTALL, so dots do not match newlines.",
+    "source": "https://github.com/pallets/markupsafe/pull/311",
+    "retrieval_scope": {
+      "repository_id": "public:markupsafe",
+      "file_paths": [
+        "src/markupsafe/__init__.py"
+      ],
+      "dependency_versions": {}
+    },
+    "applicable_conditions": [
+      "Strip HTML tags and comments containing newline characters"
+    ]
+  },
+  {
+    "case_id": "markupsafe-417",
+    "original_report": "Collapse whitespace introduced by removing HTML comments",
+    "diagnosis": "Whitespace is collapsed before removing tags; removing comments introduces adjacent whitespace that is never normalized.",
+    "source": "https://github.com/pallets/markupsafe/pull/418",
+    "retrieval_scope": {
+      "repository_id": "public:markupsafe",
+      "file_paths": [
+        "src/markupsafe/__init__.py"
+      ],
+      "dependency_versions": {}
+    },
+    "applicable_conditions": [
+      "Collapse whitespace introduced by removing HTML comments"
+    ]
+  },
+  {
+    "case_id": "markupsafe-117",
+    "original_report": "Decode HTML5 named character references in Markup.unescape",
+    "diagnosis": "The hand-maintained entity mapping lacks HTML5 names; delegate entity decoding to the standard library html.unescape.",
+    "source": "https://github.com/pallets/markupsafe/pull/117",
+    "retrieval_scope": {
+      "repository_id": "public:markupsafe",
+      "file_paths": [
+        "src/markupsafe/__init__.py"
+      ],
+      "dependency_versions": {}
+    },
+    "applicable_conditions": [
+      "Decode HTML5 named character references in Markup.unescape"
+    ]
+  }
+]

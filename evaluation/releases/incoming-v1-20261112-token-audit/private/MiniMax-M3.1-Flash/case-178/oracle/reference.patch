@@ -1,0 +1,14 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,10 @@
+ 
+ def dedupe_keep_order(items):
+     """去重并保持首次出现的顺序。"""
+-    return sorted(set(items))
++    seen = set()
++    result = []
++    for item in items:
++        if item not in seen:
++            seen.add(item)
++            result.append(item)
++    return result

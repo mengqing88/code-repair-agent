@@ -1,0 +1,16 @@
+--- a/target.py
++++ b/target.py
+@@ -1,9 +1,10 @@
+ import decimal
+ 
+ def stack_discounts(price, rates):
+-    base = decimal.Decimal(str(price))
+-    total = base
++    total = decimal.Decimal(str(price))
+     for rate in rates:
+-        total = base * (1 - decimal.Decimal(str(rate)))
++        total = total * (1 - decimal.Decimal(str(rate)))
++        if total < 0:
++            total = decimal.Decimal('0')
+     return total.quantize(decimal.Decimal('0.01'),
+                           rounding=decimal.ROUND_HALF_UP)

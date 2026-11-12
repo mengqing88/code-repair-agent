@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "幂等操作忽略重复",
+    "终态重复动作报错"
+  ],
+  "before_source": "class Payment:\n    def __init__(self):\n        self.state = 'init'\n    def authorize(self):\n        if self.state == 'init':\n            self.state = 'authorized'\n        elif self.state == 'authorized':\n            raise ValueError('already authorized')\n        else:\n            raise ValueError('invalid')\n        return self.state\n",
+  "dataset_experience_id": "WorkBuddy::experience-76",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "对已处于终态的幂等操作应忽略而非报错。",
+  "experience_id": "experience-76",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "支付授权接口：已授权订单重复授权应幂等，却抛错。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -5,7 +5,7 @@\n         if self.state == 'init':\n             self.state = 'authorized'\n         elif self.state == 'authorized':\n-            raise ValueError('already authorized')\n+            pass\n         else:\n             raise ValueError('invalid')\n         return self.state\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import Payment\n\ndef test_a():\n    p = Payment(); p.authorize()\n    assert p.authorize() == 'authorized'\n\ndef test_b():\n    p = Payment(); p.authorize(); p.authorize()\n    assert p.authorize() == 'authorized'\n\ndef test_c():\n    p = Payment(); p.authorize()\n    assert p.authorize() == 'authorized'\n"
+}

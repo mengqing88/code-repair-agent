@@ -1,0 +1,10 @@
+{
+  "case_id": "case-33",
+  "title": "配置合并只做浅层覆盖",
+  "report": "平台配置与租户配置合并时，租户配置里的一个嵌套字段会整块覆盖平台配置，\n导致平台默认的同级字段（如 timeout）丢失。",
+  "contract": "merge_configs(base, override) -> dict，返回合并后的新字典。\n合并规则：若两侧同名键的值都是 dict，则递归合并；\n否则 override 的值直接替换 base 的值（列表整体替换，不拼接）；\noverride 中不存在的键保持 base 的值；base 中不存在的键取 override 的值。\n空 dict 作为 override 时该键保留 base 的子树；空 dict 作为 base 时取 override 的子树。\n不得修改传入的两个字典（返回全新对象）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-109",
+  "title": "分转金额显示缺零",
+  "report": "把整数分格式化为两位小数金额时直接用 float 除法转字符串，'10.10' 变成 '10.1'，末尾零丢失。",
+  "contract": "cents_to_display(cents)：非负整数分。返回固定两位小数的金额字符串，如 1010 -> '10.10'，5 -> '0.05'，100 -> '1.00'。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

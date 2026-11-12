@@ -1,0 +1,10 @@
+{
+  "case_id": "case-155",
+  "title": "配置优先级用真值判断，空串和 0 被当成未设置",
+  "report": "运维把某个开关显式配置成空字符串或 0 时，程序没有采用这个配置，而是回退到了默认值，导致关闭开关、禁用功能的操作不生效。",
+  "contract": "resolve_setting(key, overrides, defaults) 返回生效的配置值。规则：只要 overrides 中存在该 key（无论其值是空字符串、0、False 还是 None 之外的其他值），就返回 overrides[key]；仅当 key 不在 overrides 中时返回 defaults.get(key)；两个字典都没有该 key 时返回 None。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-52",
+  "title": "手工偏移推算 ISO 周，周日被并入下一周",
+  "report": "周报统计里周日的订单被算进下一周，上周业绩少了一天；跨年周也取错了 ISO 年份。",
+  "contract": "iso_week_key(day) 接收 datetime.date，返回 (iso_year, iso_week)，必须遵循 ISO 8601：周一为一周第一天，周日是最后一天，跨年周使用 ISO 年份。2024-03-03（周日）-> (2024, 9)；2024-03-04（周一）-> (2024, 10)；2024-12-30 -> (2025, 1)。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

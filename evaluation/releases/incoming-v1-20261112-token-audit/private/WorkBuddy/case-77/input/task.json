@@ -1,0 +1,10 @@
+{
+  "case_id": "case-77",
+  "title": "部分退款后不能全额退款",
+  "report": "Refund.transition(action)：'paid' 经 'partial_refund' 到 'partially_refunded'，再经 'refund' 到 'refunded'（全额）。当前实现从 'partially_refunded' 执行 'refund' 抛 ValueError。",
+  "contract": "状态：paid->partially_refunded(partial_refund)；partially_refunded->refunded(refund)；paid->refunded(refund)。非法转换抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-206",
+  "title": "最低价的极值初值",
+  "report": "比价模块对全为正数的价格列表返回 0，因为初始 best 被设为 0 且没有任何价格比它更小；只有一个价格时同样返回 0；含 0 或负数时结果碰巧正确，掩盖了问题。预期：返回列表中的真实最小值。",
+  "contract": "lowest_price(prices: list[int]) -> int。返回 prices 中的最小值；prices 非空，元素为整数（可为 0 或负数）；空列表抛 ValueError；不修改 prices。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

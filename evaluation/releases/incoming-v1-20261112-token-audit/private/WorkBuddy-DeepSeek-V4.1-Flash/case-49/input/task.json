@@ -1,0 +1,10 @@
+{
+  "case_id": "case-49",
+  "title": "解析带引号字段时忽略引号语义，字段内分隔符被切开",
+  "report": "地址字段“上海市, 浦东新区”被拆成两列，后续字段整体右移，订单号与金额错位。",
+  "contract": "parse_line(line, sep=',') 按 RFC4180 的引号规则解析一行文本为字段列表：双引号包裹的字段内部出现的 sep 属于字段内容；引号内的连续两个双引号表示一个字面量双引号；引号本身不进入结果。空字符串返回 []。未加引号的分隔符才切分字段。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

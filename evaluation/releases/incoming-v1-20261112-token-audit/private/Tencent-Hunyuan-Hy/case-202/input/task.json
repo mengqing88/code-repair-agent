@@ -1,0 +1,10 @@
+{
+  "case_id": "case-202",
+  "title": "一次性迭代器被消费两次",
+  "report": "报表汇总传入生成器/迭代器时，total 计算正确但 count 恒为 0，因为第一次遍历已经把迭代器消费完，第二次遍历没有任何元素；传入 list 时正常，问题只在流式输入下暴露。预期：无论传入列表还是一次性迭代器，条数与总和都对应全部记录。",
+  "contract": "summarize(records) -> dict。records 为任意可迭代对象，可以是一次性迭代器或生成器；返回 {'total': 所有元素之和, 'count': 元素个数}，两者必须基于**同一批全部元素**；空输入返回 {'total': 0, 'count': 0}。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

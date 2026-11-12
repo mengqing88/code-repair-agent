@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -1,5 +1,5 @@
+-from datetime import date, timedelta
++from datetime import date
+ 
+ def iso_week_key(day):
+-    shifted = day + timedelta(days=1)
+-    return shifted.isocalendar()[0], shifted.isocalendar()[1]
++    iso = day.isocalendar()
++    return iso[0], iso[1]

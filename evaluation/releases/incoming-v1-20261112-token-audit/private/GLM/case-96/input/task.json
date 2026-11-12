@@ -1,0 +1,10 @@
+{
+  "case_id": "case-96",
+  "title": "分组键被错误大小写归一化",
+  "report": "分组时把 team 键统一转成了大写，导致 'sales' 和 'Sales' 被合并到同一组，且返回的键不是原始字符串。",
+  "contract": "group_by_team(members) 中 members 为 [{'name': str, 'team': str}]。返回 dict：键为 team 的原始字符串（大小写敏感，不同大小写视为不同组），值为按输入顺序排列的成员名列表。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-119",
+  "title": "缓存键拼接歧义冲突",
+  "report": "缓存键用冒号拼接 user_id 与 region，字段值本身含冒号时不同二元组生成了相同的键，出现缓存串读。",
+  "contract": "make_cache_key(user_id, region)：不同的 (user_id, region) 二元组必须生成不同的键；相同的二元组生成相同的键；返回 str。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

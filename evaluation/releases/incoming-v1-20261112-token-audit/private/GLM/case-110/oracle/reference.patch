@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -17,4 +17,6 @@
+             indeg[nxt] -= 1
+             if indeg[nxt] == 0:
+                 ready.append(nxt)
++    if len(order) != len(nodes):
++        raise ValueError("cycle detected")
+     return order

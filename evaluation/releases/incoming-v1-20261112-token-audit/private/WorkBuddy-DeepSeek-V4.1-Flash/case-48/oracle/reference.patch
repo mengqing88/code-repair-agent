@@ -1,0 +1,18 @@
+--- a/target.py
++++ b/target.py
+@@ -4,8 +4,11 @@
+     total = sum(shares)
+     if total <= 0:
+         raise ValueError('total must be positive')
+-    result = []
+-    for share in shares:
+-        exact = decimal.Decimal(share) * 100 / total
+-        result.append(int(exact))
++    exact = [decimal.Decimal(share) * 100 / total for share in shares]
++    result = [int(value) for value in exact]
++    shortfall = 100 - sum(result)
++    order = sorted(range(len(exact)),
++                   key=lambda i: (-(exact[i] - int(exact[i])), i))
++    for index in order[:shortfall]:
++        result[index] += 1
+     return result

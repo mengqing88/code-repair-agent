@@ -1,0 +1,10 @@
+{
+  "case_id": "case-66",
+  "title": "订阅有效期末日包含错误",
+  "report": "is_subscription_active(start, end, today)：起止日期均包含。当前实现用 today < end 排除末日，导致在 end 当天判定为已失效。",
+  "contract": "start,end,today 为 datetime.date。返回 bool：start <= today <= end 为 True，否则 False。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

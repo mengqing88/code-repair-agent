@@ -1,2 +1,5 @@
 * text eol=lf
 *.patch -whitespace
+# Preserve already hashed fixture bytes, including upstream newline/whitespace style.
+releases/** -text -whitespace
+public-defects-v2-20261112/** -text -whitespace

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-43",
+  "title": "金额求和使用浮点累加与默认银行家舍入",
+  "report": "购物车合计 0.1 + 0.2 得到 0.30000000000000004，月末对账出现分位差异；0.285 也被舍成 0.28 而不是 0.29。",
+  "contract": "sum_money(values, places=2) 接收 Decimal、int 或 str 组成的序列。每个元素先转成 Decimal 再累加（禁止 float 参与，遇到 float 抛 TypeError）。结果量化为 places 位小数，使用 ROUND_HALF_UP。返回 Decimal。空序列返回 Decimal('0.00')。places 必须是非负 int，否则抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

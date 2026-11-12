@@ -1,0 +1,10 @@
+{
+  "case_id": "case-201",
+  "title": "权限校验的量词误用",
+  "report": "接口鉴权要求用户同时具备 required 列表中的所有权限，但当前实现只检查了「任一权限存在」：只拥有 read 的用户也能通过需要 read+write+admin 的校验，出现越权访问。预期：required 中每一项都在用户权限集合中才返回 True。",
+  "contract": "has_access(user_perms, required) -> bool。user_perms 为权限集合（list / set / tuple），required 为权限名列表；仅当 required 中**每个**元素都存在于 user_perms 时返回 True；required 为空列表时返回 True；不修改入参。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

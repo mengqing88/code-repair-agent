@@ -1,0 +1,10 @@
+{
+  "case_id": "case-199",
+  "title": "总页数的向上取整",
+  "report": "列表分页的总页数计算错误：11 条数据每页 5 条本应 3 页却算出 2 页，最后一页的数据永远展示不出来；少于 1 页时甚至算出 0 页。预期：页数按向上取整计算，只要有余数就额外加一页。",
+  "contract": "page_count(total_items: int, page_size: int) -> int。返回容纳 total_items 条记录所需的页数，即 ceil(total_items / page_size)；total_items >= 0、page_size > 0；total_items == 0 时返回 0；page_size <= 0 时抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

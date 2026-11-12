@@ -1,0 +1,41 @@
+{
+  "id": "markupsafe-310",
+  "issue": 310,
+  "pr": 311,
+  "base": "0e366be90424816156802b41997b37b5dadd0851",
+  "fixed": "e49d257126d09937b1bf5e2b2173238df729fb13",
+  "date": "2022-06-13",
+  "title": "Strip HTML tags and comments containing newline characters",
+  "diagnosis": "The tag and comment regular expressions omit DOTALL, so dots do not match newlines.",
+  "test": "from markupsafe import Markup\nassert Markup(\"text<!-- hidden\\ncomment --><meta content='a\\nb'>\").striptags() == 'text'\n",
+  "repository": "https://github.com/pallets/markupsafe",
+  "license": "BSD-3-Clause",
+  "issue_url": "https://github.com/pallets/markupsafe/issues/310",
+  "patch_url": "https://github.com/pallets/markupsafe/pull/311",
+  "extraction": "Unmodified upstream Python package snapshots; authored minimal regression script",
+  "independent_review": "pending",
+  "observed_sha256": {
+    "after/LICENSE.rst": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea",
+    "after/markupsafe/__init__.py": "3884cac0ab0c109faffa843ea854d7c8bcdc37bfd0cf862438d38da7fac1ebdd",
+    "after/markupsafe/_native.py": "191f3a42fa3f19c80a98aade0355a660df6e775ece170930c3c13e7e25bee7bb",
+    "after/probe.py": "065b67c8fea7507fe6556cebd537767eb816d1b87401816d0ee530f917f90757",
+    "before/LICENSE.rst": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea",
+    "before/markupsafe/__init__.py": "7d5d1cb5b172187e8b3907f4353b1ba0b7550fa25061dda447d779c5593ed335",
+    "before/markupsafe/_native.py": "191f3a42fa3f19c80a98aade0355a660df6e775ece170930c3c13e7e25bee7bb",
+    "before/probe.py": "065b67c8fea7507fe6556cebd537767eb816d1b87401816d0ee530f917f90757",
+    "upstream-python.patch": "8e4ccaa6ce99147ec5ffed875989a9e3f6269b61832f371f7f68e9b7a7f92f15"
+  },
+  "execution": {
+    "before": {
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/probe/probe.py\", line 2, in <module>\n    assert Markup(\"text<!-- hidden\\ncomment --><meta content='a\\nb'>\").striptags() == 'text'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    "after": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "passed": true
+}

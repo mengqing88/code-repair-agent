@@ -1,0 +1,10 @@
+{
+  "case_id": "case-182",
+  "title": "半开日期区间重叠天数",
+  "report": "排期系统统计两段占用日期的重叠天数时结果总是多 1 天：[1,5) 与 [3,8) 应重叠 2 天却返回 3；[1,10) 与 [3,6) 应 3 天却返回 4；仅端点相接的 [1,5) 与 [5,9) 应返回 0 却返回 1。预期：按半开区间 [start, end) 计算，端点相接不算重叠。",
+  "contract": "overlap_days(a_start, a_end, b_start, b_end) -> int，四个参数均为整数天序号。区间语义为半开 [start, end)；重叠天数 = max(0, min(a_end,b_end) - max(a_start,b_start))，返回非负整数。start == end 为空区间，重叠天数恒为 0；两个区间仅端点相接时重叠天数为 0。任一区间 start > end 时抛 ValueError；其它输入均为合法整数，不做额外校验。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -10,4 +10,4 @@
+         self.last_seen = now
+ 
+     def is_expired(self, now, ttl):
+-        return now - self.created_at > ttl
++        return now - self.last_seen > ttl

@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -1,2 +1,4 @@
+ def is_open(open_hour, close_hour, current_hour):
+-    return open_hour <= current_hour <= close_hour
++    if close_hour >= open_hour:
++        return open_hour <= current_hour <= close_hour
++    return current_hour >= open_hour or current_hour <= close_hour

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-31",
+  "title": "金额折扣阶梯的档位上界使用了闭区间",
+  "report": "订单金额恰好等于 200 时，折扣率取成了 5% 而不是约定的 8%，该档位的订单长期少减 3 个百分点。",
+  "contract": "discounted(amount) 接收 int 或 float，且 amount >= 0。档位定义为半开区间：amount < 100 返回 0.0；100 <= amount < 200 返回 0.05；200 <= amount < 500 返回 0.08；amount >= 500 返回 0.12。因此边界值 100、200、500 分别归入更高的那一档。返回 float。amount 为负数时抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

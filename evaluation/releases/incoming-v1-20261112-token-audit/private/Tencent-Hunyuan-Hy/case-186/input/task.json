@@ -1,0 +1,10 @@
+{
+  "case_id": "case-186",
+  "title": "分组求和的累加器重置",
+  "report": "订单日报按类别汇总金额时发现：同一类别出现多笔时，结果只等于最后一笔的金额，前面的记录全部丢失；类别记录不连续（中间穿插其它类别）时同样只保留最后一次出现的值。预期：同一类别无论出现几次、是否连续，都应累加上所有金额。",
+  "contract": "totals_by_category(records) -> dict[str, int]。records 为 (category: str, amount_cents: int) 序列，amount_cents 为非负整数。返回每个 category 的金额总和；同一 category 可多次出现且可不连续；空输入返回 {}；不修改 records；返回值为新字典。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

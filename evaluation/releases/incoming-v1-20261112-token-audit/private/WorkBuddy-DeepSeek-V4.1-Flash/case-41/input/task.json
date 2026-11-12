@@ -1,0 +1,10 @@
+{
+  "case_id": "case-41",
+  "title": "TTL 缓存从未检查过期时刻，过期条目仍被返回",
+  "report": "配置改过一次之后，缓存里的旧值早已超过 TTL，读取时仍然返回旧值，线上行为与配置不一致。",
+  "contract": "TTLCache() 维护带过期时间的条目。put(key, value, ttl) 中 ttl 为该条目的失效时刻（逻辑时间，int）。get(key, now)：键不存在返回 None；now 严格小于 ttl 时返回对应值；now 大于等于 ttl 视为过期，同时从缓存中删除该条目并返回 None。size() 返回当前保存的条目数（含尚未被 get 清理的过期条目）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

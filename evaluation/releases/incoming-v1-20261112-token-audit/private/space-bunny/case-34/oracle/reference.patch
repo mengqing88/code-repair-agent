@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -8,7 +8,7 @@
+         self.charge_count = 0
+ 
+     def charge(self, request_id, amount):
+-        key = amount
++        key = request_id
+         if key in self._results:
+             return dict(self._results[key])
+         self.charge_count += 1

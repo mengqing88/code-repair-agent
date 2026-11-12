@@ -1,0 +1,10 @@
+{
+  "case_id": "case-78",
+  "title": "任务重复启动未幂等",
+  "report": "Task.start()：'pending' 经 start 到 'running'；'running' 或 'done' 再次 start 应为幂等 no-op（保持原状）。当前实现在非 pending 时抛 RuntimeError。",
+  "contract": "start(): pending->running；running 时 no-op（保持 running）；done 时 no-op（保持 done）。不抛异常。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

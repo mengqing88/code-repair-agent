@@ -1,0 +1,13 @@
+--- a/target.py
++++ b/target.py
+@@ -4,7 +4,7 @@
+     errors = []
+     for i, (uid, age) in enumerate(rows):
+         if uid == "":
+-            return [(i, "empty id")]
+-        if not (0 <= age <= 150):
+-            return [(i, "bad age")]
++            errors.append((i, "empty id"))
++        elif not (0 <= age <= 150):
++            errors.append((i, "bad age"))
+     return errors

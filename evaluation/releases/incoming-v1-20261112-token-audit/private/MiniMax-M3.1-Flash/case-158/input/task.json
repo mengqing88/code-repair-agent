@@ -1,0 +1,10 @@
+{
+  "case_id": "case-158",
+  "title": "账单分期按月份数平均分摊，忽略了各月实际天数",
+  "report": "账单分期在包含 2 月（28 天）的月份里，每期金额与合同约定的按实际天数分摊结果不一致，冬季账单比夏季账单每期少扣了钱。",
+  "contract": "split_bill(total_cents, days_of_months) 将总额按各月天数比例分摊，返回整数列表（单位：分）。规则：days_of_months 必须是非空列表且每项为正整数（否则抛出 ValueError）；返回长度等于 len(days_of_months)；使用最大余数法分摊（先向下取整，剩余分按小数部分从大到小补，余数相同时按下标从小到大补）；各元素之和严格等于 total_cents；total_cents 为非负整数。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

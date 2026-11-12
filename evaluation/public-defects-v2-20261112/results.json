@@ -1,0 +1,61 @@
+{
+  "created_at": "2026-11-12T08:00:25.268127+00:00",
+  "status": "passed",
+  "cases": [
+    {
+      "id": "markupsafe-310",
+      "passed": true,
+      "execution": {
+        "before": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"/probe/probe.py\", line 2, in <module>\n    assert Markup(\"text<!-- hidden\\ncomment --><meta content='a\\nb'>\").striptags() == 'text'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+        },
+        "after": {
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "id": "markupsafe-417",
+      "passed": true,
+      "execution": {
+        "before": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"/probe/probe.py\", line 2, in <module>\n    assert Markup('a <!-- hidden --> b').striptags() == 'a b'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+        },
+        "after": {
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "id": "markupsafe-117",
+      "passed": true,
+      "execution": {
+        "before": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"/probe/probe.py\", line 2, in <module>\n    assert Markup('&NotEqualTilde;').unescape() == '\\u2242\\u0338'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+        },
+        "after": {
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    }
+  ],
+  "formal_eligible": false,
+  "scope": "3 public historical defects, one BSD-licensed library, pure-Python path",
+  "limitations": [
+    "Authored minimal probes; upstream full suites and C extension not tested",
+    "Independent human review pending",
+    "Public defects are not private production usage data"
+  ]
+}

@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -2,7 +2,7 @@
+     if max_retries < 0:
+         raise ValueError('max_retries must be non-negative')
+     error = None
+-    for _ in range(max_retries):
++    for _ in range(max_retries + 1):
+         try:
+             return make_call()
+         except Exception as exc:

@@ -1,0 +1,10 @@
+{
+  "case_id": "case-46",
+  "title": "分组时在循环内新建容器，前序元素被覆盖",
+  "report": "按仓库分组库存明细时，每个仓库下只剩最后一条记录，同组的其他记录全部丢失。",
+  "contract": "group_by_warehouse(rows) 接收 dict 列表，每项含 'warehouse' 与 'sku'。返回 dict：键为仓库名，值为该仓库下全部 sku 的列表，组内保持输入顺序，组的外键顺序为首次出现顺序。空输入返回 {}。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

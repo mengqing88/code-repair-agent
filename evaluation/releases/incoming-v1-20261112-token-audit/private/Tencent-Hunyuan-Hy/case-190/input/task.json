@@ -1,0 +1,10 @@
+{
+  "case_id": "case-190",
+  "title": "库存预警的阈值边界",
+  "report": "库存预警规则为「库存低于或等于安全阈值即需补货」，但当前实现在库存恰好等于阈值时不报警，导致临界库存被漏掉；安全阈值为 0 且库存为 0 时同样漏报。预期：stock <= safety_stock 时返回 True。",
+  "contract": "needs_restock(stock, safety_stock) -> bool。stock 与 safety_stock 均为非负整数；当 stock <= safety_stock 时返回 True，否则返回 False；任一参数为负数时抛 ValueError；相等（含双方均为 0）视为需要补货。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

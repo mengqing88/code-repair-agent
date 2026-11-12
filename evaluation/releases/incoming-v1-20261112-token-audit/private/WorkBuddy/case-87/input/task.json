@@ -1,0 +1,10 @@
+{
+  "case_id": "case-87",
+  "title": "缓存键规范化导致冲突",
+  "report": "Cache 以 str(key) 作为字典键，导致元组 ('a',) 与字符串 'a'（及 \"('a',)\"）相互覆盖。契约要求以 key 本身（保持类型）为键。",
+  "contract": "set/get 以传入的 key（可为任意可哈希对象）为键，不同类型/不同值的 key 互不干扰。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

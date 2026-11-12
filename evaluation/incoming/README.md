@@ -1,6 +1,6 @@
 # Incoming 候选评测集
 
-按根目录《评测要求.md》v1.0 整理，当前状态为**结构与执行自检通过的合成候选集**，不是已经独立复核、划分并冻结的正式评测集。
+按根目录《评测要求.md》v1.0 整理，当前状态为**结构与执行自检通过、已做分组划分和候选冻结的合成集**；独立人工复核与正式准入仍未完成。后续治理说明见 [RAG_VALIDATION.md](../RAG_VALIDATION.md)。
 
 ## 来源与产物
 
@@ -16,7 +16,7 @@
 
 目录名只是本地来源标识，不认证生成模型、模型版本或材料的使用权限。原始来源保持不变；任务 ID 和经验 ID 在索引中增加来源前缀，如 `WorkBuddy::case-61`，避免不同来源重名。近重复题即使有不同 ID 也仍需另行审核。
 
-当前可用输出是 [normalized-candidate-v1/index.json](normalized-candidate-v1/index.json)。它包含逐题基线/补丁后结果、退出码、测试计数、输出尾部、环境、来源文件 SHA-256 和正式准入阻塞项；同目录的 `history_cases/<来源>/` 保存规范化经验副本，`relevance.json` 保存带来源前缀的相关性映射。正常完成后临时 JUnit 文件会清理，报告没有归档完整原始 JUnit 或全部进程日志。
+较早输出是 [normalized-candidate-v1/index.json](normalized-candidate-v1/index.json)，最新串行自检是 [normalized-candidate-v2/index.json](normalized-candidate-v2/index.json)。索引包含逐题基线/补丁后结果、退出码、测试计数、输出尾部、环境、来源文件 SHA-256 和当时正式准入阻塞项；同目录的 `history_cases/<来源>/` 保存规范化经验副本，`relevance.json` 保存带来源前缀的相关性映射。正常完成后临时 JUnit 文件会清理，报告没有归档完整原始 JUnit 或全部进程日志。
 
 [normalized/index.json](normalized/index.json) 是首次失败的历史记录，`status=validation_failed`，保留供排查，不能作为当前通过结果。输出目录不会被覆盖。目录内 `.gitattributes` 禁止 Git 自动转换换行符，避免检出时改变已记录的来源及证据字节哈希。
 
@@ -65,6 +65,6 @@
 
 只将当前单题的 `sample_repo/<case_id>/` 复制到受限任务工作区；**不要把整个 incoming、oracles、参考补丁、标签或评测报告交给待测 Agent**。读取权限必须由评测运行器限制，不能只依靠提示词。规范化历史经验不会自动导入正式记忆库；知识库语料应在防泄漏审核后独立冻结。
 
-当前 `formal_eligible=false`。尚缺可核验的来源时间/使用权限、独立人工复核、相关性独立标注、开发/验证/冻结测试划分及跨来源近重复缺陷家族审查；工具参数语义、澄清/拒绝/暂停、恶意输入与故障注入等覆盖也未补全。不能把这些合成类比样例描述为真实 Issue 集，或虚构审核者与划分结果。
+当前 `formal_eligible=false`。后续 `dataset_governance.py` 已核对原始来源字节，按规范化 AST 相似候选与作者相关性关系划成 100 个泄漏组，对任务和经验一起分配开发/验证/测试（126/19/17），并保存不可覆盖的哈希候选快照与 324 条独立审核模板。AST 分组仍需人审，不能当作已确认的语义缺陷家族。尚缺可核验的来源时间/使用权限、独立人工复核、跨组相关性独立标注及代表性；工具参数语义、澄清/拒绝/暂停、恶意输入与故障注入等覆盖也未补全。不能把这些合成类比样例描述为真实 Issue 集，或虚构审核者。
 
 旧 `evaluation/run_benchmark.py` 仍固定读取原 30 题布局，**没有自动接入这里的 162 题**。本次新增的是候选集整理和自检入口；真实 Agent 对照及正式评测接入尚未执行。

@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -3,4 +3,4 @@
+ 
+ def sort_by_score(rows):
+     """rows: [(name, score_str)]，返回排序后的新列表。"""
+-    return sorted(rows, key=lambda r: r[1])
++    return sorted(rows, key=lambda r: int(r[1]))

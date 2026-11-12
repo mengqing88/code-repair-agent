@@ -1,0 +1,10 @@
+{
+  "case_id": "case-207",
+  "title": "折扣与优惠券的叠加顺序",
+  "report": "促销规则为「先按会员折扣打折，再扣减优惠券固定金额」，但实现里先把券额从原价扣掉再打折，相当于优惠券也被打了一次折，实付金额偏高；券额较大时连截断到 0 的行为都不一致。预期：折后金额减去券额，再截断到不低于 0。",
+  "contract": "final_price(price, discount_bp, coupon) -> int，单位为分。先计算折后金额 discounted = (price * discount_bp + 50) // 100（四舍五入到分），再减去 coupon，最后把结果截断到 >= 0；price、coupon 为非负整数，discount_bp 为 0..100 的百分点。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

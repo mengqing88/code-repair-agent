@@ -1,0 +1,10 @@
+{
+  "case_id": "case-192",
+  "title": "浮点金额的精确相等比较",
+  "report": "对账模块把 0.1+0.2 与 0.3 判为不相等、把 10 个 0.1 的累加和与 1.0 判为不相等，产生了大量误报；相差 1e-12 的两笔金额也被判为不一致。预期：两金额之差的绝对值不超过 1e-9 即视为相等。",
+  "contract": "amounts_match(a: float, b: float) -> bool。当 abs(a - b) <= 1e-9 时返回 True，否则返回 False；输入为有限浮点数；不做四舍五入、不抛异常、不修改输入。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

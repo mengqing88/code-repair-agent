@@ -1,0 +1,10 @@
+{
+  "case_id": "case-92",
+  "title": "日期区间重叠天数（闭区间）",
+  "report": "两个日期闭区间重叠时，返回的重叠天数比实际少 1 天（首尾只算了一天）。",
+  "contract": "overlap_days(a_start, a_end, b_start, b_end) 输入四个 datetime.date，保证 a_start<=a_end、b_start<=b_end。区间为闭区间（含首尾两天）。返回重叠天数，无重叠返回 0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

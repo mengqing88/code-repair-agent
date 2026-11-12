@@ -4,7 +4,9 @@
 
 这是一套自行编写的 Python 合成样例，用于检查检索、补丁应用和验收流程。它不是公开基准或真实生产缺陷集，也不能据此宣称实际 Agent 达到了 Top-5 82%、16/30→22/30、回归通过率 96%。
 
-另有 [incoming 候选集说明](incoming/README.md)：6 个来源、162 个合成任务及 162 条历史经验已经完成结构与执行自检，规范化结果位于 `incoming/normalized-candidate-v1/`。该候选集尚未独立复核、划分和冻结，`formal_eligible=false`；本页原 30 题评测器不会自动读取这些新增样例，参考补丁通过数不计为 Agent 成绩。
+另有 [incoming 候选集说明](incoming/README.md)：6 个来源、162 个合成任务及 162 条历史经验已经完成结构与执行自检，最新规范化索引位于 `incoming/normalized-candidate-v2/`。后续已按近重复候选族分组划分并冻结到 `releases/incoming-v1-20261112-token-audit/`；独立人工复核、许可与跨组相关性仍待补，`formal_eligible=false`。原 30 题评测器不会自动读取这 162 题，参考补丁通过数不计为 Agent 成绩。
+
+评测治理及真实服务的入口、结果与限制见 [RAG_VALIDATION.md](RAG_VALIDATION.md)：包含冻结校验、单题安全导出、独立审阅包、3 个 BSD 许可公开历史缺陷、真实 Qdrant 重启/停服/1 万向量负载，以及真实多语言 Cross-Encoder 的开发诊断。服务验收通过和正式评测准入分别记录，不以小样本指标宣称生产误合并率或修复率。
 
 ## 数据组成
 

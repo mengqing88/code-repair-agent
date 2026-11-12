@@ -1,0 +1,10 @@
+{
+  "case_id": "case-193",
+  "title": "三源配置的优先级顺序",
+  "report": "配置加载优先级规定为 defaults < env < user，但当前实现把 user 放在 env 之前展开，导致用户在页面上显式设置的值被环境变量覆盖；同一键三处都有值时生效的是 env 的值。预期：user 优先级最高，同名键最终取 user 的值。",
+  "contract": "resolve(defaults: dict, env: dict, user: dict) -> dict。按优先级 defaults < env < user 合并：同名键取优先级最高的值；返回新字典，不修改三个入参；三个入参均为 dict，键为字符串，值为任意标量。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

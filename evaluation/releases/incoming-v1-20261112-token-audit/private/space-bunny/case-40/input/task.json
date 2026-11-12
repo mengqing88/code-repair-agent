@@ -1,0 +1,10 @@
+{
+  "case_id": "case-40",
+  "title": "空字符串环境变量错误地覆盖了默认配置",
+  "report": "环境变量里存在空字符串（例如 CI 未设置该变量但写成了 KEY=）时，\n它把配置文件中的真实默认值覆盖成了空值，服务启动后连不上数据库。",
+  "contract": "resolve_config(defaults, file_values, env_values) -> dict，按 env > file > defaults 的优先级合并。\n三个参数都是 dict[str, str]。\n覆盖规则：某个键在更高优先级层中的值为空字符串（\"\"）时视为“未提供”，\n应继续向下一层取值；只有非空字符串才算有效覆盖。\n结果中不得出现值为空字符串的条目：若所有层都没有该键的非空值，则该键不出现在结果中。\n三个入参不得被修改。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

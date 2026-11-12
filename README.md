@@ -102,6 +102,8 @@ MCP 服务在修复 worker 所在主机运行，不受 Docker 代码执行容器
 
 ## 本地检查
 
+评测集去重/划分/冻结、独立审核材料、公开真实缺陷、真实 Qdrant 和 Cross-Encoder 的命令与实测边界见 [评测与知识库验收](evaluation/RAG_VALIDATION.md)。当前工程及真实本机服务验收有证据，正式基准独立审核和生产语料效果仍分别待验收。
+
 在仓库根目录安装 Python 开发依赖并运行测试：
 
 ```powershell

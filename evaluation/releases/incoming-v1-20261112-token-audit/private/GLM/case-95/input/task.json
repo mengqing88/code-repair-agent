@@ -1,0 +1,10 @@
+{
+  "case_id": "case-95",
+  "title": "多字段排序键顺序错误",
+  "report": "按 (dept 升序, salary 降序) 排序时结果不对：最终顺序实际由最后一个键决定，主要键没有生效。",
+  "contract": "sort_records(records, keys) 中 records 为 dict 列表，keys 形如 ('dept', '-salary')：约定从左到右优先级递减（最左为主键），前缀 '-' 表示降序。返回新列表，不修改入参。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

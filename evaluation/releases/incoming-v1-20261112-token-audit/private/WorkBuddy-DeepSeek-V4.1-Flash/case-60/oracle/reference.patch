@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -7,6 +7,8 @@
+     def reserve(self, quantity):
+         if quantity <= 0:
+             raise ValueError('quantity must be positive')
++        if quantity > self.stock:
++            return False
+         self.stock -= quantity
+         return True
+ 

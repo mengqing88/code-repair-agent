@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "多层配置",
+    "递归合并",
+    "输入不可变"
+  ],
+  "before_source": "def apply_patch(record, changes):\n    result = record.copy()\n    result.update(changes)\n    return result\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-35",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "更新函数对每个键一律整体赋值，没有区分“双方都是嵌套结构”的情况。修复原则：合并以键为单位，只有两侧都是 dict 时才下钻递归，否则整体替换；并保证不修改入参。",
+  "experience_id": "experience-35",
+  "normalization_notes": [],
+  "original_report": "客户档案更新时，嵌套的地址字段被整段覆盖，未提交的子字段被清空。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,9 @@\n def apply_patch(record, changes):\n     result = record.copy()\n-    result.update(changes)\n+    for key, value in changes.items():\n+        if isinstance(result.get(key), dict) and isinstance(value, dict):\n+            result[key] = apply_patch(result[key], value)\n+        else:\n+            result[key] = value\n     return result\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert apply_patch({'phone': '1'}, {'email': 'a'}) == {'phone': '1', 'email': 'a'}\n\n\ndef test_experience_2():\n    assert apply_patch({'address': {'city': 'A'}}, {'address': {'zip': '2'}}) == {'address': {'city': 'A', 'zip': '2'}}\n\n\ndef test_experience_3():\n    assert apply_patch({'phone': '1'}, {}) == {'phone': '1'}\n"
+}

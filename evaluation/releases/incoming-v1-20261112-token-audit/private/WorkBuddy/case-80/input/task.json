@@ -1,0 +1,10 @@
+{
+  "case_id": "case-80",
+  "title": "流程阶段跳过约束缺失",
+  "report": "Workflow.step(name)：阶段必须按顺序 init->validate->execute->done。当前实现不校验顺序，允许从 init 直接跳到 execute/done。",
+  "contract": "step(name)：仅允许前一阶段完成后进入下一阶段；重复当前阶段为幂等（保持）。非法跳变抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

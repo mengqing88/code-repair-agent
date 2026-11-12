@@ -1,0 +1,10 @@
+{
+  "case_id": "case-118",
+  "title": "Top-K 并列词未按字典序",
+  "report": "统计词频取 Top-K 时，出现次数相同的词没有按字典序排列，顺序取决于首次出现的先后。",
+  "contract": "top_words(text, k)：text 按空白拆分成词并计数。返回出现次数最多的前 k 个词；次数相同的词按字典序升序排列。k 不超过不同词数。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

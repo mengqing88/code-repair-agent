@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -16,7 +16,7 @@
+         self._entries[key] = value
+         self._usage[key] = self._usage.get(key, 0) + 1
+         while len(self._entries) > self.capacity:
+-            victim = max(self._usage, key=lambda item: self._usage[item])
++            victim = min(self._usage, key=lambda item: self._usage[item])
+             del self._entries[victim]
+             del self._usage[victim]
+ 

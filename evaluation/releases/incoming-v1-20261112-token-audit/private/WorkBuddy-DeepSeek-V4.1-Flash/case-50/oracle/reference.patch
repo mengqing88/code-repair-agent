@@ -1,0 +1,15 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,11 @@
+ def parse_version(text):
+     if not text:
+         raise ValueError('empty version')
+-    return tuple(text.split('.'))
++    parts = []
++    for chunk in text.split('.'):
++        if not chunk.isdigit():
++            raise ValueError('non-numeric version segment')
++        parts.append(int(chunk))
++    while len(parts) > 1 and parts[-1] == 0:
++        parts.pop()
++    return tuple(parts)

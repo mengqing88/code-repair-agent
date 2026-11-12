@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "分组",
+    "同组累加",
+    "首次出现顺序"
+  ],
+  "before_source": "def monthly_totals(orders):\n    totals = {}\n    for month, amount in orders:\n        bucket = 0\n        bucket = bucket + amount\n        totals[month] = bucket\n    return totals\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-46",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "循环内每次都重建容器并整体赋值，覆盖了之前累积的内容。修复原则：分组容器必须在循环外初始化，首次遇到组时创建、之后追加，不要在每次迭代中重置。",
+  "experience_id": "experience-46",
+  "normalization_notes": [],
+  "original_report": "按月份汇总销售额时每个月只剩最后一笔订单。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,8 +1,6 @@\n def monthly_totals(orders):\n     totals = {}\n     for month, amount in orders:\n-        bucket = 0\n-        bucket = bucket + amount\n-        totals[month] = bucket\n+        totals[month] = totals.get(month, 0) + amount\n     return totals\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert monthly_totals([('1', 5), ('1', 3)]) == {'1': 8}\n\n\ndef test_experience_2():\n    assert monthly_totals([]) == {}\n\n\ndef test_experience_3():\n    assert monthly_totals([('1', 5), ('2', 3)]) == {'1': 5, '2': 3}\n"
+}

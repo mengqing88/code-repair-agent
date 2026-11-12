@@ -1,0 +1,10 @@
+{
+  "case_id": "case-44",
+  "title": "满减门槛按折后净额判断，放弃了对原价的判定",
+  "report": "订单原价 320 元、优惠后 160 元，本该享受满 200 减 30，实际没有减免，因为门槛用了折后金额判断。",
+  "contract": "apply_coupon(original, coupon) 中 original 为 Decimal 或 str 表示的原价，coupon 为 (min_amount, reduction) 二元组。门槛必须用 original 判断：original >= min_amount 时减免 reduction，否则不减。减免后不得为负，负数结果返回 Decimal('0.00')。返回 Decimal，保留两位小数（ROUND_HALF_UP）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

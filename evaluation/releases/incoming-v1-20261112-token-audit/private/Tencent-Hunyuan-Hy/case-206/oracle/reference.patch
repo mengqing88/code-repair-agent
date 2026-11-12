@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -4,7 +4,7 @@
+ def lowest_price(prices):
+     if not prices:
+         raise ValueError("prices must not be empty")
+-    best = 0
++    best = prices[0]
+     for p in prices:
+         if p < best:
+             best = p

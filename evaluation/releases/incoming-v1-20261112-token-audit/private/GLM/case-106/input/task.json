@@ -1,0 +1,10 @@
+{
+  "case_id": "case-106",
+  "title": "路径规范化未处理父目录",
+  "report": "路径规范化没有处理 '..'：父目录段被原样保留在结果里，且未弹出上一级。",
+  "contract": "normalize_path(path)：path 为以 '/' 开头的绝对路径。'.' 忽略；'..' 弹出上一级（根目录的 '..' 忽略）；空段与多余斜杠忽略；去掉末尾斜杠；根目录返回 '/'。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

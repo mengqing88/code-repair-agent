@@ -1,0 +1,10 @@
+{
+  "case_id": "case-53",
+  "title": "金额舍入先移位再取整，缺少正确的舍入模式",
+  "report": "价格 1.005 按两位小数显示应为 1.01，界面显示 1.00；2.675 显示 2.67。",
+  "contract": "round_half_up(value, places=2) 接收 str 或 int（float 抛 TypeError），返回 Decimal，采用 ROUND_HALF_UP（远离零方向进位）。round_half_up('1.005') == Decimal('1.01')；round_half_up('-1.005') == Decimal('-1.01')；round_half_up('2.675') == Decimal('2.68')。places 必须为非负 int，否则抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "列表配置拼接",
+    "覆盖与追加混淆"
+  ],
+  "before_source": "def combine(base, over):\n    r = dict(base)\n    for k, v in over.items():\n        r[k] = v\n    return r\n",
+  "dataset_experience_id": "WorkBuddy::experience-73",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "列表类配置通常需拼接而非替换。",
+  "experience_id": "experience-73",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "插件列表应从配置文件与命令行追加合并，却整体覆盖。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,8 @@\n def combine(base, over):\n     r = dict(base)\n     for k, v in over.items():\n-        r[k] = v\n+        if k in r and isinstance(r[k], list) and isinstance(v, list):\n+            r[k] = r[k] + v\n+        else:\n+            r[k] = v\n     return r\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import combine\n\ndef test_a():\n    assert combine({'a':[1,2]}, {'a':[3,4]}) == {'a':[1,2,3,4]}\n\ndef test_b():\n    assert combine({'tags':['x']}, {'tags':['y','z']}) == {'tags':['x','y','z']}\n\ndef test_c():\n    assert combine({'a':[1],'b':1}, {'a':[2],'b':2}) == {'a':[1,2],'b':2}\n"
+}

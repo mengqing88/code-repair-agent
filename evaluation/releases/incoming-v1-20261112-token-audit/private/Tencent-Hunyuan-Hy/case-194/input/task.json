@@ -1,0 +1,10 @@
+{
+  "case_id": "case-194",
+  "title": "显式零值被默认值吞掉",
+  "report": "限流配置允许把阈值显式设为 0（表示关闭限流），但当前实现读取配置时用了「取不到就用默认」的短路写法，显式 0 被替换成默认阈值 100，配置完全不生效；带其它配置项时同样如此。预期：只有键缺失或值为 None 时才使用默认值 100，显式 0 必须原样返回。",
+  "contract": "effective_limit(config: dict) -> int。读取 config['limit']：键不存在或值为 None 时返回默认 100；显式 0 是合法值，必须返回 0；其它非负整数原样返回；不修改 config。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

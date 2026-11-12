@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -11,5 +11,5 @@
+ 
+     if a_start <= b_end and b_start <= a_end:
+         # 错误：把区间当成闭区间 [start, end]，重叠天数多算了 1。
+-        return min(a_end, b_end) - max(a_start, b_start) + 1
++        return min(a_end, b_end) - max(a_start, b_start)
+     return 0

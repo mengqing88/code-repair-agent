@@ -1,0 +1,27 @@
+--- a/target.py
++++ b/target.py
+@@ -1,4 +1,23 @@
+ def parse_line(line, sep=','):
+     if not line:
+         return []
+-    return [field.strip('"') for field in line.split(sep)]
++    fields = []
++    current = []
++    in_quotes = False
++    index = 0
++    while index < len(line):
++        char = line[index]
++        if char == '"':
++            if in_quotes and index + 1 < len(line) and line[index + 1] == '"':
++                current.append('"')
++                index += 2
++                continue
++            in_quotes = not in_quotes
++        elif char == sep and not in_quotes:
++            fields.append(''.join(current))
++            current = []
++        else:
++            current.append(char)
++        index += 1
++    fields.append(''.join(current))
++    return fields

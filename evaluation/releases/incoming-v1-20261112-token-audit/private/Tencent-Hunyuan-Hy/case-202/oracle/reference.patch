@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -3,6 +3,7 @@
+ 
+ def summarize(records):
+     """records 为可迭代对象，可能是一次性迭代器。"""
++    records = list(records)
+     total = sum(x for x in records)
+     count = sum(1 for x in records)
+     return {"total": total, "count": count}

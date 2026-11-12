@@ -1,0 +1,10 @@
+--- a/target.py
++++ b/target.py
+@@ -1,5 +1,5 @@
+ def get_config(file_cfg, env_cfg):
+-    result = dict(env_cfg)
+-    for k, v in file_cfg.items():
++    result = dict(file_cfg)
++    for k, v in env_cfg.items():
+         result[k] = v
+     return result

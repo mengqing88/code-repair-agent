@@ -1,0 +1,10 @@
+{
+  "case_id": "case-72",
+  "title": "环境变量优先级写反",
+  "report": "get_config(file_cfg, env_cfg)：环境变量应覆盖文件配置（env 优先级更高）。当前实现文件配置覆盖环境变量。",
+  "contract": "输入为 dict。对每个键：若 env_cfg 存在该键则采用 env_cfg 的值，否则采用 file_cfg 的值。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

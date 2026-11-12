@@ -1,0 +1,10 @@
+{
+  "case_id": "case-62",
+  "title": "汇率换算方向用反",
+  "report": "convert(amount, rate, direction)：direction='to_usd' 应除以 rate，'to_local' 应乘以 rate。当前实现方向写反，导致两种换算结果互换。",
+  "contract": "amount>=0，rate>0。direction 为 'to_usd' 时返回 amount/rate；'to_local' 时返回 amount*rate。返回 float。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

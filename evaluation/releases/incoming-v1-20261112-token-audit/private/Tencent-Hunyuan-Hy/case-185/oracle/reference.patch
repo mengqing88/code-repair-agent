@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -9,7 +9,7 @@
+     @staticmethod
+     def _make_key(key_parts):
+         # 错误：直接拼接，缺少分隔符，不同组合会产生相同字符串。
+-        return "".join(key_parts)
++        return "\x1f".join(key_parts)
+ 
+     def put(self, key_parts, value):
+         self._data[self._make_key(key_parts)] = value

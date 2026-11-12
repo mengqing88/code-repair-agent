@@ -1,0 +1,10 @@
+{
+  "case_id": "case-82",
+  "title": "分桶边界归属错误",
+  "report": "bucket(value, edges)：edges 为升序边界，返回所属桶下标；value 恰在内部边界上时归属“上一桶”（即 [edges[i], edges[i+1]) 半开区间，边界归下一桶）。当前实现用 <= 上界，使边界误归上一桶。",
+  "contract": "edges 长度>=2 升序；返回 i 使 edges[i] <= value < edges[i+1]；若 value>=edges[-1] 返回 len(edges)-2；若 value<edges[0] 返回 -1。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

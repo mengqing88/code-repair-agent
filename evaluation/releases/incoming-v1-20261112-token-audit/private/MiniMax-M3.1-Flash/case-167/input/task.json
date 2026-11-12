@@ -1,0 +1,10 @@
+{
+  "case_id": "case-167",
+  "title": "缓存淘汰策略错误地淘汰了最久未使用的条目",
+  "report": "缓存容量满后，被淘汰的不是最久没访问的条目，而是刚被访问过的那个，导致热点数据反复被重建。",
+  "contract": "LruCache 实现最近最少使用淘汰。接口：put(key, value) 写入；get(key) 读取，命中时把该条目标记为最近使用，未命中返回 None；超过 capacity 时淘汰最久未使用的条目。规则：capacity 必须为正整数（否则抛出 ValueError）；get 命中会更新使用顺序；淘汰发生在 put 之后，容量不超过 capacity；key 必须是字符串。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

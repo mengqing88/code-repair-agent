@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "配置合并中的列表",
+    "列表被整体覆盖",
+    "需要按索引逐元素合并"
+  ],
+  "before_source": "def merge_routes(base, override):\n    \"\"\"合并网关路由配置。\"\"\"\n    result = dict(base)\n    for key, value in override.items():\n        if value is None:\n            continue\n        if isinstance(value, dict) and isinstance(result.get(key), dict):\n            result[key] = merge_routes(result[key], value)\n        else:\n            result[key] = value\n    return result\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-179",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "配置合并只对 dict 做了递归合并，list 被当作普通值整体覆盖。修复原则：list 需要按索引逐元素合并——同位置的元素若都是 dict 则递归合并，超出部分按各自长度补齐，元素类型不同才整体取 override。",
+  "experience_id": "experience-179",
+  "normalization_notes": [],
+  "original_report": "覆盖网关路由配置时，只改了第一条路由的超时时间，结果第二条路由被整条丢掉，网关把流量打到了错误的出口。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,8 +4,21 @@\n     for key, value in override.items():\n         if value is None:\n             continue\n-        if isinstance(value, dict) and isinstance(result.get(key), dict):\n-            result[key] = merge_routes(result[key], value)\n+        current = result.get(key)\n+        if isinstance(value, dict) and isinstance(current, dict):\n+            result[key] = merge_routes(current, value)\n+        elif isinstance(value, list) and isinstance(current, list):\n+            merged = []\n+            for index in range(max(len(value), len(current))):\n+                if index >= len(value):\n+                    merged.append(current[index])\n+                elif index >= len(current):\n+                    merged.append(value[index])\n+                elif isinstance(value[index], dict) and isinstance(current[index], dict):\n+                    merged.append(merge_routes(current[index], value[index]))\n+                else:\n+                    merged.append(value[index])\n+            result[key] = merged\n         else:\n             result[key] = value\n     return result\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import merge_routes\n\n\ndef test_list_items_are_merged_by_index():\n    result = merge_routes(\n        {\"routes\": [{\"path\": \"/a\", \"timeout\": 10}, {\"path\": \"/b\"}]},\n        {\"routes\": [{\"timeout\": 99}]},\n    )\n    assert result == {\"routes\": [{\"path\": \"/a\", \"timeout\": 99}, {\"path\": \"/b\"}]}\n\n\ndef test_longer_base_list_is_preserved():\n    result = merge_routes({\"routes\": [{\"path\": \"/a\"}, {\"path\": \"/b\"}]}, {\"routes\": []})\n    assert result == {\"routes\": [{\"path\": \"/a\"}, {\"path\": \"/b\"}]}\n\n\ndef test_scalar_override_wins():\n    assert merge_routes({\"a\": 1}, {\"a\": 2}) == {\"a\": 2}\n"
+}

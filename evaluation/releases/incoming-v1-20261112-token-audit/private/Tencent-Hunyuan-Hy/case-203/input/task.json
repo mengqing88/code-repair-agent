@@ -1,0 +1,10 @@
+{
+  "case_id": "case-203",
+  "title": "滑动过期会话的时间基准",
+  "report": "会话采用「滑动过期」：每次请求都应把过期时间从最后活跃时刻重新起算，但当前实现始终以创建时刻为基准，用户持续活跃仍会在创建后固定 ttl 到期。预期：以 last_seen 为基准，now - last_seen 严格大于 ttl 才算过期（相等不算）。",
+  "contract": "Session(created_at: int)；touch(now: int) 把 last_seen 更新为 now 且不修改 created_at；is_expired(now, ttl) -> bool：仅当 now - last_seen > ttl 时返回 True；now、ttl 为非负整数且 ttl > 0；相等边界（差值 == ttl）返回 False。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

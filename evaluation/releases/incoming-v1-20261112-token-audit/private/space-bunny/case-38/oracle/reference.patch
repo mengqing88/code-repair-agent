@@ -1,0 +1,14 @@
+--- a/target.py
++++ b/target.py
+@@ -11,6 +11,8 @@
+             raise TypeError("prices must be ints")
+         if price < 0:
+             raise ValueError("prices must be non-negative")
+-    subtotal = sum(prices)
+-    tax = Decimal(subtotal) * Decimal(str(rate))
+-    return int(tax.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
++    total = 0
++    for price in prices:
++        tax = Decimal(price) * Decimal(str(rate))
++        total += int(tax.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
++    return total

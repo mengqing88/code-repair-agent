@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -9,6 +9,4 @@
+     for row in rows:
+         if start <= row["day"] <= end:
+             total += row["amount"]
+-        if row["day"] == end:
+-            total += row["amount"]
+     return total

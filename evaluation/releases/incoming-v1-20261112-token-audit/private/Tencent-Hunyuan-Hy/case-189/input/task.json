@@ -1,0 +1,10 @@
+{
+  "case_id": "case-189",
+  "title": "无效记录的循环控制流",
+  "report": "结算脚本汇总有效金额时需要跳过非正数记录，但遇到第一条无效记录就结束了整个遍历，后面的有效金额全部未被计入；无效记录出现在开头时结果直接变成 0。预期：跳过所有 <= 0 的记录，继续处理后续所有正数金额。",
+  "contract": "sum_valid(orders) -> int。orders 为整数列表；遍历**全部**元素，累加所有 amount > 0 的值；amount <= 0 的记录被跳过但不影响后续元素；空输入返回 0；不修改 orders。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

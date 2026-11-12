@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -6,4 +6,4 @@
+     end = min(a_end, b_end)
+     if end < start:
+         return 0
+-    return (end - start).days
++    return (end - start).days + 1

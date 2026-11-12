@@ -1,0 +1,10 @@
+{
+  "case_id": "case-76",
+  "title": "订单重复支付未幂等",
+  "report": "Order.transition(action)：'created' 经 'pay' 变为 'paid'；'paid' 再次 'pay' 应幂等保持 'paid'。当前实现对已支付订单再次 pay 抛出 ValueError。",
+  "contract": "状态机：created->paid(pay)；paid->shipped(ship)。pay 在 paid 上幂等（返回 'paid'）；非法转换抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

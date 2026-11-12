@@ -1,0 +1,10 @@
+{
+  "case_id": "case-33",
+  "title": "时长格式化直接拆分总秒数，缺少分钟级进位",
+  "report": "把 3599 秒格式化为时长时输出 59:59，而不是按约定先四舍五入到分钟再输出 1:00。",
+  "contract": "format_duration(total_seconds) 接收 int 且 total_seconds >= 0。先把总秒数四舍五入（ROUND_HALF_UP）到整数分钟数 m，返回字符串 'M:00'，其中 M 为 m（不补零）。因此输出永远是整分钟：0 -> '0:00'；29 -> '0:00'；30 -> '1:00'；89 -> '1:00'；90 -> '2:00'；3599 -> '60:00'。负值抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

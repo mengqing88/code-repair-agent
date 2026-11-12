@@ -1,0 +1,10 @@
+{
+  "case_id": "case-36",
+  "title": "分层配置查找在首层缺少该键时直接返回空",
+  "report": "环境变量里没配超时时间，配置文件里明明写了 30，最终读到的却是 None，后续用 None 运算抛出异常。",
+  "contract": "resolve(layers, key) 按 layers 从前到后的优先级查找。返回第一个包含 key 的层中的值；某层缺少该键时必须继续查下一层。所有层都缺少该键时返回 None。None 层被跳过。layers 为空序列时返回 None。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

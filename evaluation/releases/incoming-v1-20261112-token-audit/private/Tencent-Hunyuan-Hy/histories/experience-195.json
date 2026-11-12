@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "循环内批量创建闭包/回调",
+    "缺陷表现为所有回调都返回最后一次迭代的值",
+    "修复应在闭包创建时绑定当轮值"
+  ],
+  "before_source": "# 错误码处理器注册表：每个处理器返回自己的错误码。\n\n\ndef make_handlers(codes):\n    handlers = {}\n    for code in codes:\n        handlers[code] = lambda: code\n    return handlers\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-195",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "循环体内创建的闭包捕获的是变量本身而非当轮的值，调用时变量已指向最后一次迭代；要「冻结」当轮值，应在创建闭包时用默认参数把值绑定进去。修复原则是只改闭包创建处，不重写注册流程。",
+  "experience_id": "experience-195",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】错误码处理器注册场景：为码 1 和码 2 分别注册处理器，调用时两个处理器都返回 2。预期：每个处理器返回自己注册时对应的错误码。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,5 +4,5 @@\n def make_handlers(codes):\n     handlers = {}\n     for code in codes:\n-        handlers[code] = lambda: code\n+        handlers[code] = lambda code=code: code\n     return handlers\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import make_handlers\n\n\ndef test_single_handler():\n    assert make_handlers([7])[7]() == 7\n\n\ndef test_empty_codes():\n    assert make_handlers([]) == {}\n\n\ndef test_each_handler_keeps_own_code():\n    hs = make_handlers([1, 2])\n    assert hs[1]() == 1\n    assert hs[2]() == 2\n"
+}

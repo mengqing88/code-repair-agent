@@ -1,0 +1,10 @@
+{
+  "case_id": "case-91",
+  "title": "阶梯折扣阈值边界",
+  "report": "金额恰好等于阶梯阈值（如 500、1000）时没有享受对应档位的折扣，只享受了更低档位。",
+  "contract": "tiered_discount(amount) 输入非负数 amount（元）。阶梯：amount>=1000 打 8 折；amount>=500 打 9 折；amount>=200 打 95 折；否则原价。阈值恰好达到时适用该档。返回 round(amount*rate, 2) 的 float。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

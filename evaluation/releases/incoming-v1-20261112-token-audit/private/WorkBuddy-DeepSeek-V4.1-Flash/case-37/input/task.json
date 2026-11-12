@@ -1,0 +1,10 @@
+{
+  "case_id": "case-37",
+  "title": "重试次数被当成总调用次数，少发一次请求",
+  "report": "配置 3 次重试的下单接口在全部失败时只发出了 3 次请求，按约定应为 4 次（首次 + 3 次重试）。",
+  "contract": "run_with_retry(make_call, max_retries) 中 make_call 为零参可调用对象。总调用次数为 max_retries + 1。任一次调用成功则立即返回其结果；全部失败时抛出最后一次捕获的异常。max_retries 为 0 表示只调用一次。max_retries 为负数时抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -15,7 +15,7 @@
+         if amount_cents <= 0:
+             raise ValueError("amount_cents must be positive")
+         # 错误：只排除了 cancelled，paid 状态下的新事件仍会被重复入账。
+-        if self.state != "cancelled":
++        if self.state == "pending":
+             self.state = "paid"
+             self.total_charged += amount_cents
+             self._seen_events.add(event_id)

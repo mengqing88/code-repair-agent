@@ -1,0 +1,10 @@
+{
+  "case_id": "case-38",
+  "title": "税额在汇总后舍入而不是逐项舍入",
+  "report": "每件商品税额按分向上取整后合计，与对总额一次性取整的结果相差几分钱，\n导致批量订单的税额合计与逐单核销对不上。",
+  "contract": "tax_total(prices, rate) -> int，返回税前金额合计的税额，单位：分。\nprices 是非空或空的可迭代 int 列表（单位：分），rate 是 float 折扣/税率（如 0.075 表示 7.5%）。\n计算规则：每件商品单独计算 price * rate，使用 ROUND_HALF_UP 舍入到整数分，再求和；\n不得先对税前总额计算税额再舍入。\nprices 为空返回 0；rate 为 0 返回 0。\n输入含非 int 价格时抛 TypeError；含负价格时抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

@@ -1,0 +1,16 @@
+--- a/target.py
++++ b/target.py
+@@ -4,8 +4,10 @@
+ 
+ def resolve_config(defaults, file_values, env_values):
+     """Merge defaults, file values and environment values by priority."""
+-    merged = dict(defaults)
+-    for layer in (file_values, env_values):
++    merged = {}
++    for layer in (defaults, file_values, env_values):
+         for key, value in layer.items():
++            if value == "":
++                continue
+             merged[key] = value
+-    return merged
++    return {key: value for key, value in merged.items() if value != ""}

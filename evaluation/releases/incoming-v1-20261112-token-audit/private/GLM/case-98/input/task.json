@@ -1,0 +1,10 @@
+{
+  "case_id": "case-98",
+  "title": "优惠券叠加计算顺序",
+  "report": "结算时百分比折扣和固定优惠的叠加顺序与规则不符：先减了固定额再按比例打折，导致实付金额错误。",
+  "contract": "checkout_price(price, pct_off, flat_off)：price>0；pct_off 为 0-100 的折扣百分比；flat_off 为固定减免金额（元）。规则：先按百分比打折，再减固定减免；结果不低于 0。返回 float。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

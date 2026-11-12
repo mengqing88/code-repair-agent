@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "ISO 周",
+    "周日归属",
+    "跨年 ISO 年份"
+  ],
+  "before_source": "from datetime import date, timedelta\n\ndef fiscal_quarter(day):\n    shifted = day + timedelta(days=1)\n    return (shifted.month - 1) // 3 + 1\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-52",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "用日期加一天的偏移推算归属期间，偏移方向与边界定义不一致。修复原则：期间归属直接使用标准库提供的日历字段，不要手工拼接偏移量。",
+  "experience_id": "experience-52",
+  "normalization_notes": [],
+  "original_report": "按财季统计收入时，财季最后一天的入账被算进了下一季。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,6 +1,5 @@\n-from datetime import date, timedelta\n+from datetime import date\n \n def fiscal_quarter(day):\n-    shifted = day + timedelta(days=1)\n-    return (shifted.month - 1) // 3 + 1\n+    return (day.month - 1) // 3 + 1\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert fiscal_quarter(date(2024, 1, 15)) == 1\n\n\ndef test_experience_2():\n    assert fiscal_quarter(date(2024, 3, 31)) == 1\n\n\ndef test_experience_3():\n    assert fiscal_quarter(date(2024, 7, 1)) == 3\n"
+}

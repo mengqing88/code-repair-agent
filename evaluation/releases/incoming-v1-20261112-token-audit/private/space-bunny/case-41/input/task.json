@@ -1,0 +1,10 @@
+{
+  "case_id": "case-41",
+  "title": "CSV 解析未处理引号内的逗号",
+  "report": "导入商品 CSV 时，名称里带逗号的字段（例如 \"T恤,夏季款\"）被拆成多列，\n导致列错位、数据写错字段。",
+  "contract": "parse_row(line) -> list[str]，解析一行 CSV，返回字段列表。\n规则：字段可用双引号包裹；被双引号包裹的字段内部的逗号不是分隔符；\n一对双引号表示一个字面双引号（如 \"\"）；引号外的双引号按普通字符处理。\n字段内容不做 strip，保留原始空格；空行返回 []。\n引号未闭合时抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

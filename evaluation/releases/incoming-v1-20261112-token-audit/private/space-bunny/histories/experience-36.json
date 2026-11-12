@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "缓存键",
+    "键截断",
+    "键冲突",
+    "命名空间"
+  ],
+  "before_source": "\n\"\"\"Store inventory cache.\"\"\"\n\n\nclass InventoryCache:\n    def __init__(self):\n        self._data = {}\n\n    def _key(self, store_id):\n        return \"store:\" + store_id[:3]\n\n    def put(self, store_id, stock):\n        self._data[self._key(store_id)] = stock\n\n    def take(self, store_id, default=None):\n        return self._data.get(self._key(store_id), default)\n",
+  "dataset_experience_id": "space-bunny::experience-36",
+  "dataset_id": "space-bunny",
+  "diagnosis": "缓存键是对 id 做了截断（只取前缀），使不同实体映射到同一个键。修复原则：缓存键必须由完整且唯一的实体标识构成，不得截断；并注意不同实体的键不能共享同一命名空间前缀后仍相互覆盖。",
+  "experience_id": "experience-36",
+  "normalization_notes": [],
+  "original_report": "两个门店编号开头相同的城市共用一条缓存记录，\n其中一个城市读到的是另一个城市的库存。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -7,7 +7,7 @@\n         self._data = {}\n \n     def _key(self, store_id):\n-        return \"store:\" + store_id[:3]\n+        return \"store:\" + store_id\n \n     def put(self, store_id, stock):\n         self._data[self._key(store_id)] = stock\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "\nfrom target import InventoryCache\n\n\ndef test_put_and_take_roundtrip():\n    cache = InventoryCache()\n    cache.put(\"SH001\", 5)\n    assert cache.take(\"SH001\") == 5\n\n\ndef test_missing_store_returns_default():\n    cache = InventoryCache()\n    assert cache.take(\"SH999\", 0) == 0\n\n\ndef test_stores_with_common_prefix_do_not_collide():\n    cache = InventoryCache()\n    cache.put(\"SH001\", 5)\n    cache.put(\"SH002\", 7)\n    assert cache.take(\"SH001\") == 5\n    assert cache.take(\"SH002\") == 7\n"
+}

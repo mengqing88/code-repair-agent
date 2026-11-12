@@ -1,0 +1,3937 @@
+{
+  "blockers": [
+    "No independent human approval records",
+    "Synthetic source permission/provenance needs review",
+    "AST families require semantic review",
+    "Not a representative production benchmark"
+  ],
+  "content_sha256": "7f145849d1a76aa906adcbbc0f32713eb66720824a2a098782262e7e425a09f9",
+  "counts": {
+    "families": 100,
+    "history_splits": {
+      "development": 126,
+      "test": 17,
+      "validation": 19
+    },
+    "records": 324,
+    "task_splits": {
+      "development": 126,
+      "test": 17,
+      "validation": 19
+    }
+  },
+  "created_at": "2026-11-12T07:57:13.340136+00:00",
+  "files": [
+    {
+      "path": "assignments.json",
+      "sha256": "01edd032c1de76024d84b0f57b0ea10a5279b000638525f6763a5d7e4d289018"
+    },
+    {
+      "path": "execution-evidence.json",
+      "sha256": "d329c23233649cd6d2006ac63878f016523719f62f0f515d36bc1a235ff76f31"
+    },
+    {
+      "path": "near-duplicate-candidates.json",
+      "sha256": "630637b69f9960a02ca34f17bfed4c3d1b2670e58239ec22639aaf08273d2aea"
+    },
+    {
+      "path": "private/GLM/case-100/input/target.py",
+      "sha256": "8b178cc660c153974ca5e4d953b74690b3e04388791eb1a0d0fb40363f02f43c"
+    },
+    {
+      "path": "private/GLM/case-100/input/task.json",
+      "sha256": "cdfd98e4af68a7b75b36689c6ee4de5c72e33ef379747fd140a15315b5ea296f"
+    },
+    {
+      "path": "private/GLM/case-100/input/test_existing.py",
+      "sha256": "e708b128cf8d015f3d4f3632de8e8c726cba616ae7366617f273445a23a8d428"
+    },
+    {
+      "path": "private/GLM/case-100/oracle/reference.patch",
+      "sha256": "d5846f33b29a3214080757992c40bca07c1719451f0357790fda130c3b9fa225"
+    },
+    {
+      "path": "private/GLM/case-100/oracle/test_acceptance.py",
+      "sha256": "a9f99bbfa39050197a1c6f0072b66bacbb7a6f7890d183325deb977daabd7979"
+    },
+    {
+      "path": "private/GLM/case-101/input/target.py",
+      "sha256": "f5d505677da3f14c7b90d6d7805a3bedc1926b91ee8a9988c8237124ee4aeae5"
+    },
+    {
+      "path": "private/GLM/case-101/input/task.json",
+      "sha256": "24db5ea18f6aee17a8a7fa479deff47d5fa7fdfc5ea4f6385a1c4821998de44f"
+    },
+    {
+      "path": "private/GLM/case-101/input/test_existing.py",
+      "sha256": "8d0fcca4de72a0b7aea257d057cee4a95a9d9b34796d18b4149a870592467b4d"
+    },
+    {
+      "path": "private/GLM/case-101/oracle/reference.patch",
+      "sha256": "dfb811ee1ec83aeace48dda1345a77c7bcf1a904ea29887ca6af9cb1953dfa3e"
+    },
+    {
+      "path": "private/GLM/case-101/oracle/test_acceptance.py",
+      "sha256": "18395a8308894ee3271f28b96d230eb7960331e8accc668432b959acb72abd28"
+    },
+    {
+      "path": "private/GLM/case-102/input/target.py",
+      "sha256": "714c8d17d5ef96ea9b5d3638929d921050a304fd140bcd2c37d293dbc7568a8d"
+    },
+    {
+      "path": "private/GLM/case-102/input/task.json",
+      "sha256": "9b1c108295d9a7d60d6f88ba1ca8d4edf6d8fa171f271a5788bc4b862a7ecbc4"
+    },
+    {
+      "path": "private/GLM/case-102/input/test_existing.py",
+      "sha256": "eb769292e22aad0172267c0f5da170b5a56d6df378d027d2e4eadf2f97cd68d0"
+    },
+    {
+      "path": "private/GLM/case-102/oracle/reference.patch",
+      "sha256": "1a88a96f4f51d0cf1eb7b2a5202245747705bbc2cd121df61a0f9fb6dbc28e89"
+    },
+    {
+      "path": "private/GLM/case-102/oracle/test_acceptance.py",
+      "sha256": "bc8770a25c7320d19e4675dd65dc9b3521973742a8ce5865d8a94cb2761d2337"
+    },
+    {
+      "path": "private/GLM/case-103/input/target.py",
+      "sha256": "d0393ae39fbe5563d76acea30d6827278e2634585a2e529fadc43331585d7a5a"
+    },
+    {
+      "path": "private/GLM/case-103/input/task.json",
+      "sha256": "d239ca76b4aecaedec83a3f1271818c6e3a17ff6dd43162aa235467399120b40"
+    },
+    {
+      "path": "private/GLM/case-103/input/test_existing.py",
+      "sha256": "9000a782b3b6416f25c97af172c24382afce759d8c0ec9c7b95cc4990f01a1a3"
+    },
+    {
+      "path": "private/GLM/case-103/oracle/reference.patch",
+      "sha256": "88f364090efa8cee5ccf39a150696555c40f68c80fc19b0492232df8e1632290"
+    },
+    {
+      "path": "private/GLM/case-103/oracle/test_acceptance.py",
+      "sha256": "9cf8dace0d1135b7e5ea6b794407f265943c58fccc1f1900b135da578768bce9"
+    },
+    {
+      "path": "private/GLM/case-104/input/target.py",
+      "sha256": "f6ddecfffdb8de2d44871cd992df7990af4be8eabf5021ac5b2f5c0ba28a2f43"
+    },
+    {
+      "path": "private/GLM/case-104/input/task.json",
+      "sha256": "164d7e2dd7199a7ca64c62cefca47bcdcc7edb734dc9887bca48ef8616d62dce"
+    },
+    {
+      "path": "private/GLM/case-104/input/test_existing.py",
+      "sha256": "7611091ef853ab11cc5c757e05f2cad451d18279d065e8c475ede24b136ab116"
+    },
+    {
+      "path": "private/GLM/case-104/oracle/reference.patch",
+      "sha256": "aff7993258c3c75d725cbb8184de38d3716ab64d820e28771be18ae6d3f60bc8"
+    },
+    {
+      "path": "private/GLM/case-104/oracle/test_acceptance.py",
+      "sha256": "8edd036297ff4795bfd8bc461c4f28547e331d88a9cae89e7af61f98f50ad237"
+    },
+    {
+      "path": "private/GLM/case-105/input/target.py",
+      "sha256": "ef6f3c2345ad7df63d8fe1d36d095b1a3467a6490bcf634a366203feba0cda5f"
+    },
+    {
+      "path": "private/GLM/case-105/input/task.json",
+      "sha256": "1410b21971eb842f78bc8eb04b7c3eb06609bb0a49981c97316729178c1442fc"
+    },
+    {
+      "path": "private/GLM/case-105/input/test_existing.py",
+      "sha256": "c56dac812b475eb582aa1b13dd907abc502745f3014c372a5368b80126f95f65"
+    },
+    {
+      "path": "private/GLM/case-105/oracle/reference.patch",
+      "sha256": "cbc19ded57ee2bbb9bdda57f0a9e593cb0f0ab3c5a94fb8586f8f225daeed36a"
+    },
+    {
+      "path": "private/GLM/case-105/oracle/test_acceptance.py",
+      "sha256": "c78701a45c86fe0d2d07e2322d04e95493955fb7ddda71ad2c7e6521cb6df73d"
+    },
+    {
+      "path": "private/GLM/case-106/input/target.py",
+      "sha256": "d455a26264767ccacd1a339a4589555e9416562d79fbd29a42bb4b676754d6a6"
+    },
+    {
+      "path": "private/GLM/case-106/input/task.json",
+      "sha256": "da6c467ba2d1c7e9f6779942cc72dba30edf6c6bc4ee32d5a147834b6d975796"
+    },
+    {
+      "path": "private/GLM/case-106/input/test_existing.py",
+      "sha256": "cc072078c35467be783b5ffb6f320e5850003d5999c176a8859a298ea68e759e"
+    },
+    {
+      "path": "private/GLM/case-106/oracle/reference.patch",
+      "sha256": "73ef1af84e6e0390dad024abea61dce1e5c9ff02f7975a19d00e560438b558d8"
+    },
+    {
+      "path": "private/GLM/case-106/oracle/test_acceptance.py",
+      "sha256": "3e5a18f52efeb068f571b64699becb0181d37573d51747db0c930f66add428ad"
+    },
+    {
+      "path": "private/GLM/case-107/input/target.py",
+      "sha256": "adcbf69623d3d6911fd47e25896820d33c5d110a6c05a003a04f41a16d4f250a"
+    },
+    {
+      "path": "private/GLM/case-107/input/task.json",
+      "sha256": "40616d680befbfd3ce6854cc101f60cd98e747c6415a715da4bd7e8aca3c89fe"
+    },
+    {
+      "path": "private/GLM/case-107/input/test_existing.py",
+      "sha256": "36e735ec3e4546edd9d719d66ceb22fcd45e375e7efeaad62f905e62a4fa06d0"
+    },
+    {
+      "path": "private/GLM/case-107/oracle/reference.patch",
+      "sha256": "e12ea12e546f879761f7d1e48fef2deafa9722b584be12c0e703fadddbaaee28"
+    },
+    {
+      "path": "private/GLM/case-107/oracle/test_acceptance.py",
+      "sha256": "dd11063ff35b2712519cb1b4cbe7991bd0d3901aeac9e27aa8947ef21bb865a8"
+    },
+    {
+      "path": "private/GLM/case-108/input/target.py",
+      "sha256": "7593f8885b107e5bea88f7c0d196c65be6f7eab1a6be6ea4a83156a2e9a579d5"
+    },
+    {
+      "path": "private/GLM/case-108/input/task.json",
+      "sha256": "70adea6b89f1b3e74854da2aa647f4db33f31ef6879890bcbedba1ab091e23c0"
+    },
+    {
+      "path": "private/GLM/case-108/input/test_existing.py",
+      "sha256": "10889213c22ba248d338182b82aa8d4043015089e681aecaea6680f7f24b7bfa"
+    },
+    {
+      "path": "private/GLM/case-108/oracle/reference.patch",
+      "sha256": "dddb98fa17552bc66336517812d33fb73d5fc1b367da2eaf2af64fedc41131c1"
+    },
+    {
+      "path": "private/GLM/case-108/oracle/test_acceptance.py",
+      "sha256": "5520b1658d8ca7556138b8a9322a43ac8496a5677214338d44c58625265f094d"
+    },
+    {
+      "path": "private/GLM/case-109/input/target.py",
+      "sha256": "b58e7efb6f4ff3deb5565f4a94c8fe0b1bf24bb4f98e5839e4a3b35fde6b83f0"
+    },
+    {
+      "path": "private/GLM/case-109/input/task.json",
+      "sha256": "ea253ddc4a02dfa33565ad415de4d580ddff686bd90c547b1c5e221872947fe9"
+    },
+    {
+      "path": "private/GLM/case-109/input/test_existing.py",
+      "sha256": "e750b48f4577d79248e59cb5f0e45442776f7105341c6937c811f64ab7a8d393"
+    },
+    {
+      "path": "private/GLM/case-109/oracle/reference.patch",
+      "sha256": "8f5f53a16f8a2394194bdfc18b4ab5a1471ccd9e0e24ea392b7b69c2770788b7"
+    },
+    {
+      "path": "private/GLM/case-109/oracle/test_acceptance.py",
+      "sha256": "2d1b8224145b4a450986aaa0d6a5965888ed21e4ab4d589e188fdd60d7acb683"
+    },
+    {
+      "path": "private/GLM/case-110/input/target.py",
+      "sha256": "60aa6751de6f4caad7704ba905b0025c90f715c6967e596d3bce1f0b9b14b5b5"
+    },
+    {
+      "path": "private/GLM/case-110/input/task.json",
+      "sha256": "3636bd3deb76801d13da7cddc0b4e4f9f5c8bb70e22c912a3050f612d7a0915b"
+    },
+    {
+      "path": "private/GLM/case-110/input/test_existing.py",
+      "sha256": "7a2175efc8471296f3615a7f39dffce57acdc950f17ed7912ffb2d891fb39dc3"
+    },
+    {
+      "path": "private/GLM/case-110/oracle/reference.patch",
+      "sha256": "666c72f0089f9c04757a0992e2944641ed5aebbb1b15e41535dc6ef7bb99715d"
+    },
+    {
+      "path": "private/GLM/case-110/oracle/test_acceptance.py",
+      "sha256": "777382c91ec74436d91038f4bdbe5941e89924dd54cd1c7617f559714b6d0c18"
+    },
+    {
+      "path": "private/GLM/case-111/input/target.py",
+      "sha256": "15ef3921987f340b99a1bc85fdb0e2e6fd0019fb53efd7ebde8b5dbe7c8278fc"
+    },
+    {
+      "path": "private/GLM/case-111/input/task.json",
+      "sha256": "fb9e8a2b84c33c784ced147ec2e3d94b1578c013cff5213e21735923715caa90"
+    },
+    {
+      "path": "private/GLM/case-111/input/test_existing.py",
+      "sha256": "33146272c24f8220c4794b5bae2ce1a3c70de9f603c276630821c15f097599ad"
+    },
+    {
+      "path": "private/GLM/case-111/oracle/reference.patch",
+      "sha256": "8d24f93835d6f08dfc17918d5f9fbed705c262e571ef0be760ad062183778e97"
+    },
+    {
+      "path": "private/GLM/case-111/oracle/test_acceptance.py",
+      "sha256": "d2ac17e72bf04f416d5843b30b8d2b62efe705219c415be644b88fc5e258c526"
+    },
+    {
+      "path": "private/GLM/case-112/input/target.py",
+      "sha256": "fba025e8a866c3bfc5df37de0d2ac7679f8623584af27d25801a43abef6e6fb1"
+    },
+    {
+      "path": "private/GLM/case-112/input/task.json",
+      "sha256": "8a0d965caab646e398de911122812d10a50aa50abf19619105b9a8234cf226bf"
+    },
+    {
+      "path": "private/GLM/case-112/input/test_existing.py",
+      "sha256": "47c211443a76db1f64643ae438c8c1a9da037b0de2fc205b8b823d598d089dd2"
+    },
+    {
+      "path": "private/GLM/case-112/oracle/reference.patch",
+      "sha256": "cd7f83054e8a73ca70f7bf154ead141ed8ab5aa623a70a70769809c595035812"
+    },
+    {
+      "path": "private/GLM/case-112/oracle/test_acceptance.py",
+      "sha256": "1b7d3828fdccaa1ae9c2d8a30c0a8d7dbc76ac64ec6dfcbaf98752ff257fef22"
+    },
+    {
+      "path": "private/GLM/case-113/input/target.py",
+      "sha256": "fd6889fe978befd4d60296a30bc883bb50a658211a824824f2c3520b5cf62471"
+    },
+    {
+      "path": "private/GLM/case-113/input/task.json",
+      "sha256": "a299dea531d926935d9f261f46d9c35772eb4c6650c87b66607b94cb71dfc17b"
+    },
+    {
+      "path": "private/GLM/case-113/input/test_existing.py",
+      "sha256": "104f65f6e4713e1c61a48a13c2d1d6914f58f0ea976e2977d51bd112785a7a65"
+    },
+    {
+      "path": "private/GLM/case-113/oracle/reference.patch",
+      "sha256": "213cf6e4cd0e064c51a368894313bf8d4fe6764d4a1cbdf6a86638b17586bde1"
+    },
+    {
+      "path": "private/GLM/case-113/oracle/test_acceptance.py",
+      "sha256": "30e9d0b05eb0c072e4a90ddcaf43492cf98ad66a6e61c630b52b2c057bd5d1aa"
+    },
+    {
+      "path": "private/GLM/case-114/input/target.py",
+      "sha256": "6413a2babccd0cac76c1b6d2b45c9848f363a6cb3f08af84d22636a7a4298991"
+    },
+    {
+      "path": "private/GLM/case-114/input/task.json",
+      "sha256": "54d327eba310f31de9fde95161defde2976f2ff840f089a93808d797319493f4"
+    },
+    {
+      "path": "private/GLM/case-114/input/test_existing.py",
+      "sha256": "bc15bbe1dd1fc073b89933cc68386c4a3f65d145223b2cfd49c6785431d1ac7e"
+    },
+    {
+      "path": "private/GLM/case-114/oracle/reference.patch",
+      "sha256": "01a8463091ba6b1413f2c5faf82c040d491dd4c092bd1ecbe24683497741597d"
+    },
+    {
+      "path": "private/GLM/case-114/oracle/test_acceptance.py",
+      "sha256": "fff1dfe7768a19216e90a6539ed146a83be2f5f2fad8321f0e0e3cfe80a8e3fd"
+    },
+    {
+      "path": "private/GLM/case-115/input/target.py",
+      "sha256": "2356665365a0332b719991334d38aa453536bd730c0ac8de672ed001b7c947ed"
+    },
+    {
+      "path": "private/GLM/case-115/input/task.json",
+      "sha256": "f9a38fbd4e847052b111fd5abbbbe2e252087bbbe377a46ffcd86d2e0e7ef2b1"
+    },
+    {
+      "path": "private/GLM/case-115/input/test_existing.py",
+      "sha256": "5315557d0ea36cc3e74403c73333d15254dab20c857f326793d861e0ac819889"
+    },
+    {
+      "path": "private/GLM/case-115/oracle/reference.patch",
+      "sha256": "b44d89792a3c97a6ea35bbabd10560de54b7f76d8e3e98d2e54528747ea1173b"
+    },
+    {
+      "path": "private/GLM/case-115/oracle/test_acceptance.py",
+      "sha256": "1e9ccdde9cd8b16133491c238c7322944c8ca8546ec46e921bfb6d3e146bfdb2"
+    },
+    {
+      "path": "private/GLM/case-116/input/target.py",
+      "sha256": "82a07d71a0af06d5310dc32807942fcdf144827c0b291c9242606d267ccd0f79"
+    },
+    {
+      "path": "private/GLM/case-116/input/task.json",
+      "sha256": "988977dd06f8f1c0867136e22a9ee75bde56ce679a278c8f3a705ff8726a9073"
+    },
+    {
+      "path": "private/GLM/case-116/input/test_existing.py",
+      "sha256": "9b203d9515272ce161a7044e5c09aa2d0498c1190ad025fc77092b8c5dee11bc"
+    },
+    {
+      "path": "private/GLM/case-116/oracle/reference.patch",
+      "sha256": "ce2ac266a49a95f1be6d12d54367074b2b541bfe2d0141173e0269e078f89e7b"
+    },
+    {
+      "path": "private/GLM/case-116/oracle/test_acceptance.py",
+      "sha256": "e9c564cfbcc5fc037792a135b831b6b655c2c6b0520c76f28a86d183c308786b"
+    },
+    {
+      "path": "private/GLM/case-117/input/target.py",
+      "sha256": "ca9daa3cabb16ddccc427b2693880be6d713ac09d6b0b5494cb9734601a8c061"
+    },
+    {
+      "path": "private/GLM/case-117/input/task.json",
+      "sha256": "e22169a0ec748fcdb2a2142cd8712b84f5e7b68fcc138df9e8f6efe257b989d5"
+    },
+    {
+      "path": "private/GLM/case-117/input/test_existing.py",
+      "sha256": "aaf46708a00f4a9610418305c46bd8c334f0f8e4c84910dc2f5ccccf65b17cea"
+    },
+    {
+      "path": "private/GLM/case-117/oracle/reference.patch",
+      "sha256": "8db1c27f7424a03abd7ac3954cfa8029f098e580e6c03cdec85f5660360e818a"
+    },
+    {
+      "path": "private/GLM/case-117/oracle/test_acceptance.py",
+      "sha256": "354ab1ee271dca619e1086af46e1669bd6689b77433822e5fcbc7a70320e3894"
+    },
+    {
+      "path": "private/GLM/case-118/input/target.py",
+      "sha256": "7c3d7427979d0856b04fd39bc527fb04477d18490e0c201d8beade9df2dd13e3"
+    },
+    {
+      "path": "private/GLM/case-118/input/task.json",
+      "sha256": "b2daa387dc1708133177137e6facaf46fac1d3728397c2562074809721c2dd8d"
+    },
+    {
+      "path": "private/GLM/case-118/input/test_existing.py",
+      "sha256": "64a9b27d25fe1bcb6a40c8a8b9501c71e93c170bb9b25e2ac1daeb63e38047dd"
+    },
+    {
+      "path": "private/GLM/case-118/oracle/reference.patch",
+      "sha256": "fdebd3c507312afb71a32535b2eb8d3612aa411f1c93e093a3af6a11ae1e8661"
+    },
+    {
+      "path": "private/GLM/case-118/oracle/test_acceptance.py",
+      "sha256": "9583a8ddeae4bb6ae95436ab5b70e0672aaa91282f0edfe9e07159a529f4ab39"
+    },
+    {
+      "path": "private/GLM/case-119/input/target.py",
+      "sha256": "098ac4bd8370d1a4787e8ad9f19925e2d4b8f41126b777e4b2e87f5fb8d4780e"
+    },
+    {
+      "path": "private/GLM/case-119/input/task.json",
+      "sha256": "6673ca33854ada851d32639882a465b57473fef4a0c4204392a4292656b7d672"
+    },
+    {
+      "path": "private/GLM/case-119/input/test_existing.py",
+      "sha256": "7e8ed60973c5d80fce040f24676064f350d6bee85ee9e0aa55743707948411c2"
+    },
+    {
+      "path": "private/GLM/case-119/oracle/reference.patch",
+      "sha256": "707b1c002b78582724cc30516de54bf7e39e4b677e07f6b6c37dc8394344ce89"
+    },
+    {
+      "path": "private/GLM/case-119/oracle/test_acceptance.py",
+      "sha256": "329c865997e403db21795f68691a72836607ef11e31b24b9cc2c41cfb28ea308"
+    },
+    {
+      "path": "private/GLM/case-120/input/target.py",
+      "sha256": "7fbd91869b7d09c4d1438bfa01fabf01fbfdc0d67f3652ed47672e64baf0a0dd"
+    },
+    {
+      "path": "private/GLM/case-120/input/task.json",
+      "sha256": "872b8112be6e5d652ff46dccae92dc363d22628d02bba371f495f208c0932057"
+    },
+    {
+      "path": "private/GLM/case-120/input/test_existing.py",
+      "sha256": "da727a6ed1d2c522715d125c0176c291fa9254e80aecc079f37aa10a08efd4e2"
+    },
+    {
+      "path": "private/GLM/case-120/oracle/reference.patch",
+      "sha256": "31844752a2a8579ff1101773aa3e2170ebf9435c07fc3e74f6e5057d60596160"
+    },
+    {
+      "path": "private/GLM/case-120/oracle/test_acceptance.py",
+      "sha256": "c06a73096f2f98c967ae34519963a871e43b991f928415e0f43c646ba20aa2d3"
+    },
+    {
+      "path": "private/GLM/case-91/input/target.py",
+      "sha256": "d5757f5d33bc29b2b36ed52e0688378002da567d89f345697c8bc1c385b01378"
+    },
+    {
+      "path": "private/GLM/case-91/input/task.json",
+      "sha256": "629cbbe09d8e94d6b847c7ce5f77a6aebeb65a7c0bd640033764d94fe14313f6"
+    },
+    {
+      "path": "private/GLM/case-91/input/test_existing.py",
+      "sha256": "21a500b04e8f98aca17fe7f16c7439b7aa8f2a5bdf811f10caf0f5d7bb4ebccb"
+    },
+    {
+      "path": "private/GLM/case-91/oracle/reference.patch",
+      "sha256": "72f29991b437882d5679ac5e97f3017d641f7e5f690f63bff0d2cafdd840f1c5"
+    },
+    {
+      "path": "private/GLM/case-91/oracle/test_acceptance.py",
+      "sha256": "7023d5b7eee7d4517f1752cdc24df7533102ba35924c59786118d1692d78d216"
+    },
+    {
+      "path": "private/GLM/case-92/input/target.py",
+      "sha256": "2a2e56b19fba19b05a63124bea83787f783a575f2d50e362e35ce2c17c1555ad"
+    },
+    {
+      "path": "private/GLM/case-92/input/task.json",
+      "sha256": "b98ce424340cc5742c786616daa372b651cdf2cb8c185a57621b7f8110b09c68"
+    },
+    {
+      "path": "private/GLM/case-92/input/test_existing.py",
+      "sha256": "651014c7fea430448f7940e18fdf441dbc0f58821f1015dc9f7f6b0e7efb84b7"
+    },
+    {
+      "path": "private/GLM/case-92/oracle/reference.patch",
+      "sha256": "b417944a2ef417a6910db6ffb11c762c9dcb793972616a4c6e2e611d460ca3d9"
+    },
+    {
+      "path": "private/GLM/case-92/oracle/test_acceptance.py",
+      "sha256": "94d8e9a4ae1f4cdc5e0eb7e70e053ee1f2b9bffb2ccac8d4c66337a328a19eab"
+    },
+    {
+      "path": "private/GLM/case-93/input/target.py",
+      "sha256": "b16c0474a30d00e3a813273b1aebdbb279e246be64a6f0d9c6e3550079c0d07f"
+    },
+    {
+      "path": "private/GLM/case-93/input/task.json",
+      "sha256": "2fedc02ac9bd95eb44c70babadedec30d5de9342afd1fc2c7e7691d96d3921ed"
+    },
+    {
+      "path": "private/GLM/case-93/input/test_existing.py",
+      "sha256": "dd6234fb1fc3ea721fe1b7fadf9cc15b04d43cda69b39d7b85709804ee4fcf87"
+    },
+    {
+      "path": "private/GLM/case-93/oracle/reference.patch",
+      "sha256": "c3634f4821bf1ffacf8ad2871d5536c67332f5409b46e4ff4f442cdf19a7799b"
+    },
+    {
+      "path": "private/GLM/case-93/oracle/test_acceptance.py",
+      "sha256": "6e3cdeb9de5767623964b65c6ed77b8d7d7f4a80e98acdb250c8e14147edf311"
+    },
+    {
+      "path": "private/GLM/case-94/input/target.py",
+      "sha256": "a93b714ab9a8ef470c0bd18d8d616c52b9c1395f89a82827f6ff690ed78fa4f1"
+    },
+    {
+      "path": "private/GLM/case-94/input/task.json",
+      "sha256": "641d6e3df729b88a33c90e12b907b8295f84d7173b77678d8d349b24a5b63f17"
+    },
+    {
+      "path": "private/GLM/case-94/input/test_existing.py",
+      "sha256": "7de4f035df09538d33fb63f813525c6ca1a14700298715bcd5554f5c8a80dd44"
+    },
+    {
+      "path": "private/GLM/case-94/oracle/reference.patch",
+      "sha256": "286e567c2409bd7564d22abe79512b7005c4f96ac7554f5d106955694a9d19ff"
+    },
+    {
+      "path": "private/GLM/case-94/oracle/test_acceptance.py",
+      "sha256": "bf88a06279f21594a9c5c3b8bb9fbe00a0c4f9c319dfa2fd2d879b1d899f9f88"
+    },
+    {
+      "path": "private/GLM/case-95/input/target.py",
+      "sha256": "12c5685b2e637c0ada8513b42f8162ec37f5502ced3d8313f5d0e58105cbeb2c"
+    },
+    {
+      "path": "private/GLM/case-95/input/task.json",
+      "sha256": "dfccebe11bf6718696ab348fcfdd3c31cc4299fb2b5de39f70511ca0fadd54de"
+    },
+    {
+      "path": "private/GLM/case-95/input/test_existing.py",
+      "sha256": "0a6f20c621e743fadb73aa157621441cf293c221475cb6639eb71fb82be5f777"
+    },
+    {
+      "path": "private/GLM/case-95/oracle/reference.patch",
+      "sha256": "2aba396154d023aec6def7a12974c5a8f1cbbf1e3e5698a760304bb4fce29a94"
+    },
+    {
+      "path": "private/GLM/case-95/oracle/test_acceptance.py",
+      "sha256": "b74df903976a15bca31671c6f58defe7c74f81d7827577dc2b4ff7ca2e94d801"
+    },
+    {
+      "path": "private/GLM/case-96/input/target.py",
+      "sha256": "90f995d7bf68d4a5e109d5d354c847a70ff4028218baa749e943a541b1e3f678"
+    },
+    {
+      "path": "private/GLM/case-96/input/task.json",
+      "sha256": "e95de7e55f80ce24978fe15202ba51588b5c6c82b94e990a9fb4100f098b170a"
+    },
+    {
+      "path": "private/GLM/case-96/input/test_existing.py",
+      "sha256": "ad321cca9c3e972fc7bf578dfdb43a38916e054783ef63f478d46fede1c445d1"
+    },
+    {
+      "path": "private/GLM/case-96/oracle/reference.patch",
+      "sha256": "282ba8934221758eba5a9fca154ac588f3e38cc0c039db990a2aa9130236577f"
+    },
+    {
+      "path": "private/GLM/case-96/oracle/test_acceptance.py",
+      "sha256": "27610506b970eb3b6329ff23aa5d1ad5af1fd17a4882752b56df3590ed39f3ab"
+    },
+    {
+      "path": "private/GLM/case-97/input/target.py",
+      "sha256": "ff4853c62f53209e1131e78922df01394e67a348d440799113b3e1cae6b495c8"
+    },
+    {
+      "path": "private/GLM/case-97/input/task.json",
+      "sha256": "24ca7fd3b7bc7b4bca41ed4a192c5bfa3c81a7fea5db293282bcc526e7474703"
+    },
+    {
+      "path": "private/GLM/case-97/input/test_existing.py",
+      "sha256": "08b9df392070a17462d239e31a707df6519bd3c9ef747f261f4d5bc70a4a8727"
+    },
+    {
+      "path": "private/GLM/case-97/oracle/reference.patch",
+      "sha256": "b6a841cc4a120bd7285787f2c6faae03ed152c0d30770843c749d153d4275990"
+    },
+    {
+      "path": "private/GLM/case-97/oracle/test_acceptance.py",
+      "sha256": "b58e1030a39b9eb1f3110cbd79cf1bbdae1ec49c423db25e6638d2433680adbc"
+    },
+    {
+      "path": "private/GLM/case-98/input/target.py",
+      "sha256": "82f584d1e68c9cf13242c6a4b1bc0df471ad9cdeddc92aa73ad9e3cf12e82aea"
+    },
+    {
+      "path": "private/GLM/case-98/input/task.json",
+      "sha256": "72038c787cced5c98a5d68384c109ef54a952947b9f97272efbbfc63b7c1dfad"
+    },
+    {
+      "path": "private/GLM/case-98/input/test_existing.py",
+      "sha256": "c16e129f3541001719c2cce2aa4bb6a8b29d9d847903ae56cf9ea1c5e2b42fdf"
+    },
+    {
+      "path": "private/GLM/case-98/oracle/reference.patch",
+      "sha256": "76fea9d643a17205f3f8e451484853350b6ca31d6f42bb9e4ac1f9b40b6139e1"
+    },
+    {
+      "path": "private/GLM/case-98/oracle/test_acceptance.py",
+      "sha256": "057a7a3154d30d6e021ecd7060a453e4d6430646c38fdfd8b20d4d792111a95a"
+    },
+    {
+      "path": "private/GLM/case-99/input/target.py",
+      "sha256": "41fbcedb8521ca6bbd36350fe6f7c76d24a5414ae4fb8b4a47f1fe7d6e965661"
+    },
+    {
+      "path": "private/GLM/case-99/input/task.json",
+      "sha256": "cfda54e21359a75986429ce0a05192fc3a1b47d3e7d266facb6347cd20a253ca"
+    },
+    {
+      "path": "private/GLM/case-99/input/test_existing.py",
+      "sha256": "5c280fc0c659513acd6b3e6860e6464911c1f15241abe0ec1098598477a93e66"
+    },
+    {
+      "path": "private/GLM/case-99/oracle/reference.patch",
+      "sha256": "3b066c355047ce79b950dc1b3a937099a4d3c1715081a7ec51c33bb8f5d45981"
+    },
+    {
+      "path": "private/GLM/case-99/oracle/test_acceptance.py",
+      "sha256": "e431b8050958e8d92dd1bb389ac0dbfe2653a3ae23314d8e7b8a763c6ef2d9ee"
+    },
+    {
+      "path": "private/GLM/histories/experience-100.json",
+      "sha256": "7a714add4efa5d2b62e35d273df1a65398e481ed3a8bd8fa7539b8f4bf13611f"
+    },
+    {
+      "path": "private/GLM/histories/experience-101.json",
+      "sha256": "76d0e459d0a688180b81126714f75069a8a534d86b282b6f33a32d588ed86e70"
+    },
+    {
+      "path": "private/GLM/histories/experience-102.json",
+      "sha256": "7e7f1c99cdd61ec85916d66c2789cd3e7377077d049e9eddf6e754b1b47bbc31"
+    },
+    {
+      "path": "private/GLM/histories/experience-103.json",
+      "sha256": "464533f129ff1022860342ae6f8e81671fea0a434620a8b5af671dc7a288877e"
+    },
+    {
+      "path": "private/GLM/histories/experience-104.json",
+      "sha256": "2a334d61b027b7bea12b22e2d0ce2033cdf2db439e847a1e5079b1f3c24c8adb"
+    },
+    {
+      "path": "private/GLM/histories/experience-105.json",
+      "sha256": "8e30279ac0f15339d4e47647ae8134c54fcaecfd795e03775e9dc3ecaa7bdea7"
+    },
+    {
+      "path": "private/GLM/histories/experience-106.json",
+      "sha256": "97b2ffe23d712eeea6d3c2a63c9008223fb99c0e72964cf78ed57cf33eba7b81"
+    },
+    {
+      "path": "private/GLM/histories/experience-107.json",
+      "sha256": "c1d7b73a7a687176a4539ba41b3a8062697e51cc163bacb14f07f0ae4cdf0d5c"
+    },
+    {
+      "path": "private/GLM/histories/experience-108.json",
+      "sha256": "21d104c3696456a7e9046c55d7823de70ba3568f310395845733563fffd5fca1"
+    },
+    {
+      "path": "private/GLM/histories/experience-109.json",
+      "sha256": "3dae2a2f2a3bd3a732d213698679ab41dd587e9d95fea162873e7562615cd8c1"
+    },
+    {
+      "path": "private/GLM/histories/experience-110.json",
+      "sha256": "b9361e4dd074c9a68631743278e36c9cf30a5fcd0ad62ecaa57083502acadd9d"
+    },
+    {
+      "path": "private/GLM/histories/experience-111.json",
+      "sha256": "adca31615a5e6043066a0704b883b9c07ebdccbc8820d2a3e1271b60096a67f4"
+    },
+    {
+      "path": "private/GLM/histories/experience-112.json",
+      "sha256": "a3c406acaa21c4f9e0bcd1651cae54e833802fb4e39912e67d39b24e825ba2c0"
+    },
+    {
+      "path": "private/GLM/histories/experience-113.json",
+      "sha256": "adcbbc957bf34a7c299addf88d54a79930d57df1032074f8fcc3db29b28ffc15"
+    },
+    {
+      "path": "private/GLM/histories/experience-114.json",
+      "sha256": "c58928b280461584298750f727e1f9139e626712ee3582db65c634aafd817a94"
+    },
+    {
+      "path": "private/GLM/histories/experience-115.json",
+      "sha256": "40c49186397623956286227a5902af64222d8d7e4b0fceb4d577c4c16092ebcf"
+    },
+    {
+      "path": "private/GLM/histories/experience-116.json",
+      "sha256": "a49fe403745bf2a80e4d4081f7719ac8a2bdcf4833baaa7f288da30d53f81a61"
+    },
+    {
+      "path": "private/GLM/histories/experience-117.json",
+      "sha256": "1c252c8a6936d8a87f1a74c361ed387bbae5678bdb0f890edbea0c561b520004"
+    },
+    {
+      "path": "private/GLM/histories/experience-118.json",
+      "sha256": "70ca6f434e05838c60713bb40ed069a1671cf4158cce5337ce5c4edc1bbbd7b0"
+    },
+    {
+      "path": "private/GLM/histories/experience-119.json",
+      "sha256": "78fb04e737a540d6c858c8de5962faeae212a337c3123f7a24f3d28b15829fb4"
+    },
+    {
+      "path": "private/GLM/histories/experience-120.json",
+      "sha256": "2106bf84be8a3c02b22da7c7a1f6748ce31cefbce0ad49d03f60c82e6c5763d3"
+    },
+    {
+      "path": "private/GLM/histories/experience-91.json",
+      "sha256": "e63bebedecd6778964e4d3216d3409f3b08398d1ca8e439d028b7acb29db38cb"
+    },
+    {
+      "path": "private/GLM/histories/experience-92.json",
+      "sha256": "e31274a57a738842d412f3b01425cc26641b6ca75245d59afe9b9e112b61e4c0"
+    },
+    {
+      "path": "private/GLM/histories/experience-93.json",
+      "sha256": "c29640dd2b754e88e61de88cbdc518f7d53bc479c2202304caa53d6943dd0eeb"
+    },
+    {
+      "path": "private/GLM/histories/experience-94.json",
+      "sha256": "2e94ca0d602f2541ac96ca1a1c3cabc99297e45a6a5cbea0c3b73631dc387c20"
+    },
+    {
+      "path": "private/GLM/histories/experience-95.json",
+      "sha256": "8d30e37e58c2e24afc514ce49cf0fd4979b7c47f66e3efe15ea00d46fbcb8fa7"
+    },
+    {
+      "path": "private/GLM/histories/experience-96.json",
+      "sha256": "bf6295b82e04af7c2a7052863ec65025b78d384ad9803711c422acad7ac3da1a"
+    },
+    {
+      "path": "private/GLM/histories/experience-97.json",
+      "sha256": "ce8d229b6019867bcbfcdc7620d1455a2efe3b40a8bc7b8bb9027fbc9a594e9e"
+    },
+    {
+      "path": "private/GLM/histories/experience-98.json",
+      "sha256": "868a028a190150e39f5a2f2b3419f4fd804e5aa1b15b1f82fc8e2ba0e4462842"
+    },
+    {
+      "path": "private/GLM/histories/experience-99.json",
+      "sha256": "6d97c2a945674d2e2ad06d5200bfb7b4da6757f7e4a88fd0751f77eeaca1619f"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-151/input/target.py",
+      "sha256": "adbdbc9c34e7d296e408330ac82881f46ef48da602f436222357d996746a77ba"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-151/input/task.json",
+      "sha256": "f27e3714e86d99fd8d96ca942da5371f9707be98c825d33cf0db74367459bc0c"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-151/input/test_existing.py",
+      "sha256": "8d84ff39b23e066e6b74db0c6bca38e5319d9b28842f73b2d16a77d263fe9bc4"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-151/oracle/reference.patch",
+      "sha256": "86b97638ddc2f077d12f6797f0c2d164d8ff4d40aac44f368182f280b3a5569e"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-151/oracle/test_acceptance.py",
+      "sha256": "362c9a4d14f5bb23cc3f756226fd7b9b4c7be6c024b0fbe7bc2eed77614032d0"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-152/input/target.py",
+      "sha256": "beaaecab63e1991247656c6da8b9f2333683d445bf3f892124ab5f868fc17df8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-152/input/task.json",
+      "sha256": "4e776fcb84f472d90d8079a6987d01684970b60500db3226cc941b2cad7e739a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-152/input/test_existing.py",
+      "sha256": "df17b5377771a54d51d5c045411aadd5f45117da321c136ad50c105e8fb9c08a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-152/oracle/reference.patch",
+      "sha256": "084814b2660c2edcec012bda33b1e879c659271330f76054456087732120674f"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-152/oracle/test_acceptance.py",
+      "sha256": "a2ebc4bcec6e7b38bae887ed1716ff58f1d70d872decc8bc8297605a4e7cfef7"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-153/input/target.py",
+      "sha256": "25b87e072b15bbfb42d97ae6e448eb8dffbaf3913ca734d6e719d3666cf0800e"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-153/input/task.json",
+      "sha256": "9d9e73f48207bf5085ca651698019d92b24469ac8463f5e4a5f3576349162dba"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-153/input/test_existing.py",
+      "sha256": "d24eca30e0ce5b2806985d5106285138027d5441d5f956a6f04fadfef4757149"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-153/oracle/reference.patch",
+      "sha256": "0398fe49fed292760204857ee57633791bd61574d4a8a8766700865cc22f6f7d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-153/oracle/test_acceptance.py",
+      "sha256": "fcf64e1293863b391372fd1c68fa40c0ebb563bf0ae4c3b385ef233aba917c56"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-154/input/target.py",
+      "sha256": "5e8dcb26d2e40cb4e0e67eacf3610616523fc3e8838990f81652111a0eb19e1d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-154/input/task.json",
+      "sha256": "ff7d88ed6c56896a469140eba1b3f29a54393bf97117a3291cfa338754c98d1d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-154/input/test_existing.py",
+      "sha256": "7c68ca5ee70a3e6644f069fc2c5c03a828ec045748060dcf7d1fb50bd53d193a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-154/oracle/reference.patch",
+      "sha256": "4909b5ce52fdd0617a1a4e66a11bdeedb35f5b693ffc18f4a5dac52c2c440cd6"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-154/oracle/test_acceptance.py",
+      "sha256": "d44cb31b87c0f198555ed6acffce1d9ff7771126891439e05025ad13e2852198"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-155/input/target.py",
+      "sha256": "7d0ba855a50903e8ced500d7116d86ef115490a21faa2400d722d45dc1fd26cf"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-155/input/task.json",
+      "sha256": "66d171bd2b4680a85c585ff775924ca075ac11b8bba990d34eeb658ff79ff45c"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-155/input/test_existing.py",
+      "sha256": "241026a1059de3bd66b3688a9867ef0879edd47cfbe45e8eaedc2e1ac7318fde"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-155/oracle/reference.patch",
+      "sha256": "cd3c8944298ff1ae29bf07bbb6d895b9b22aaaca214bf87c8c2ee711d2107f3b"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-155/oracle/test_acceptance.py",
+      "sha256": "0b203f057bae110576d90315ec5bec2550398e724a1e444aff3eaaf2e905b301"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-156/input/target.py",
+      "sha256": "60775f239c2d780927214cd495595789b8199e7f6ecfb24e8e44c2345703d012"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-156/input/task.json",
+      "sha256": "4300c2ab25fcaf3996cd5f943895bf49edcd64cdd424d2eef58928261794dd05"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-156/input/test_existing.py",
+      "sha256": "4caff2ea6d5689bec2d2d6e08beabf93496e10e7cc004c53b3d9ba466074b64e"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-156/oracle/reference.patch",
+      "sha256": "8ad10daf82a3937ccded9f0ca789c47ebcd4dfce43bbba326d53edb9072e5933"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-156/oracle/test_acceptance.py",
+      "sha256": "88f7b8c9bd57e4335342dae05bd9e44c5fe476852cc4a5d79caf1456ab032531"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-157/input/target.py",
+      "sha256": "459983417db653556fa784fb001f79feaa2bff79b15205abcbeb5bb7fa4c7e86"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-157/input/task.json",
+      "sha256": "5b80a5303e2f61f60f6348718fad6c80b10d267f2984d5987a94036c3a769ddd"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-157/input/test_existing.py",
+      "sha256": "ac06a0b73de0876ec1f130c25fcc70ee11290a9d68b9e675da38c16b9cb217c9"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-157/oracle/reference.patch",
+      "sha256": "55c8dd285fce4aca63114e526702fcdf1b6f167adbb36cf3469f334fa48ba0bd"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-157/oracle/test_acceptance.py",
+      "sha256": "49d41f2bab92a3b4cb1d15e927fe114ed261eaa4956386176617880960e1e498"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-158/input/target.py",
+      "sha256": "a03badeab4c53bf6e49237df34273d1f1f1050eae2a1b57539fc4e2c1cad0de8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-158/input/task.json",
+      "sha256": "6fde16c24224c1f48579cd74ab713091c47cb35164b0e65ca5e39402b8215a5e"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-158/input/test_existing.py",
+      "sha256": "00d96c085970d8ecd294a329eb1187a4cda7ecd42acbf512b69f392d9ef8eec9"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-158/oracle/reference.patch",
+      "sha256": "2f3b1001231fb18ffd0eabbd0cf111e95de1ed73e91ad2ed97c455aed5ddb082"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-158/oracle/test_acceptance.py",
+      "sha256": "1b9eb7d2615cb2da74e39699657962a61fd522826e452c1845241c08b4688487"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-159/input/target.py",
+      "sha256": "d212b187b66db5364fd2efbca8d3ca6e127c6cd88a9fb62e2576fc14716c9912"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-159/input/task.json",
+      "sha256": "f1c3b4f3456998d8ae2583809d35d07dce2432a8a7a82fe9585326224cbf9e0f"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-159/input/test_existing.py",
+      "sha256": "4162b1e013d70ae7b0f45b7778411a23218b02be2ccafcd3336df6637fc69aca"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-159/oracle/reference.patch",
+      "sha256": "81f6298e21ee5ba99d638536d54ecf6b5985accf62e1b1f699d6fb119f116d03"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-159/oracle/test_acceptance.py",
+      "sha256": "4f3e41cc75257b0e47e36b8ec40f68668d202681b90094caa98438c26179891d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-160/input/target.py",
+      "sha256": "2c6d07aba18b46714c1885363b56e5d7545be768d3d37b9b46ed3636312bec95"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-160/input/task.json",
+      "sha256": "59c48cc7321c6088a089ff2c568734442207177a1d2b090d07b0949aaecaa5d4"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-160/input/test_existing.py",
+      "sha256": "b5ea40330a75893098ef7f3c55d456748a5cf57c5494d1b49a1ce877805a024b"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-160/oracle/reference.patch",
+      "sha256": "c03e93bb03877c93b071e314607dac371334d4acfd16762f99216d193edd684f"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-160/oracle/test_acceptance.py",
+      "sha256": "9729089f7975a4d18f3cbb4d2a82b8b697d103315f35fa0aa8d33bb074a0e8d8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-161/input/target.py",
+      "sha256": "cffb783a58b05db22a061c9098de3b0c4a50d7af06d51bafeace8a661719a7b7"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-161/input/task.json",
+      "sha256": "80aa0b5340ec8bff5c0a2af763a7af57547cbd24a040b21a7b6393d53c7bf83a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-161/input/test_existing.py",
+      "sha256": "db1f5d61b08d8e379adc53e1c7ea1025486406ef598e31c7844a6939fa6d8420"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-161/oracle/reference.patch",
+      "sha256": "ec2389bddad425bb45956880febcc2859882e7d6f0206e87e87e12735ce8ccf1"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-161/oracle/test_acceptance.py",
+      "sha256": "b87ad4a6e2f308cec4f15c40a9005795dc29d692700f020a1693d6c46d1472ad"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-162/input/target.py",
+      "sha256": "e66313a190f7976743aef49c39b2a14e0ec6804d05cdf7079ce858357e5b564f"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-162/input/task.json",
+      "sha256": "8baf942446c7ef66d49dff81fc78a9310d8786c8f716e4a740116cb600844f54"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-162/input/test_existing.py",
+      "sha256": "567fb9e31ebe159b99eb352ef2e5354b59825d68dc95165623de75bcced3a526"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-162/oracle/reference.patch",
+      "sha256": "273ac6df359cc23322af3cb6bedc11ab08db47d3f39014883ce334713e7bc421"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-162/oracle/test_acceptance.py",
+      "sha256": "1d313bae24c32e42e8322eba55b3edfa8dbaefd89e4604d53bcc7e28579fbdb0"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-163/input/target.py",
+      "sha256": "81a47fcdeeb27eb30d551235a3c7d141c501b33915a8ccfbd45bcfae8996114a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-163/input/task.json",
+      "sha256": "bf09689317b898ae4b27dfd3383c54e4c53c80e9a17078e32ba32857fa4c63f0"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-163/input/test_existing.py",
+      "sha256": "51f4281e6c1cd70b0d0e6e19ed4dd8dadecc4a4b262ff09db22d323501e40437"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-163/oracle/reference.patch",
+      "sha256": "9daf23479edfa4504c8a0fd19732aaf85bc9b2c134c93bbc75525a22c3857c53"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-163/oracle/test_acceptance.py",
+      "sha256": "5156d278eb6c37ccd0698065f9e038d9b6fab6fa543627a46b8b062c1dd9890f"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-164/input/target.py",
+      "sha256": "ad25c312bd70ef8d2651bc49d8b4be3a938fe35e05b7fbd12f15e78615d9f644"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-164/input/task.json",
+      "sha256": "df5073e5e1b6d8e2f578dab7b31b3c76028cc24bff07dba4e6b26328dad383d6"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-164/input/test_existing.py",
+      "sha256": "f91f32991ca27f248b09343bac4725688dc2fab8db43686a0201729bb3e48e31"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-164/oracle/reference.patch",
+      "sha256": "db114053f9ee342cb88bd1c1a710dbc7d8b2fe72e03699af912cf710e7f849f5"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-164/oracle/test_acceptance.py",
+      "sha256": "e8e9da85844388e0a7f797b77f8700a3706cfd6ca06169be382919e164a2416b"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-165/input/target.py",
+      "sha256": "298ea7605e0a30e76d5fef0eea21d26afeb158d9ef2a33ecba28236733e54c84"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-165/input/task.json",
+      "sha256": "22b2ef6f37f09fa51547fb3d6cf8fd24799714654588095b50bfe4f82c69da61"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-165/input/test_existing.py",
+      "sha256": "6699f89bba24b9850891fd3c2cfe0b5f3acb0f84a78b761feb423be92a0803b7"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-165/oracle/reference.patch",
+      "sha256": "9edf284339e93ff9f4bdee9a7d51227f8f4a4a44dc23033cbb21efb0a0e4e719"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-165/oracle/test_acceptance.py",
+      "sha256": "926b889a1e5fe47bdc0f1493ba31036a5e160057ac13105ad8b1b7277547bd99"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-166/input/target.py",
+      "sha256": "109251e3e60387da7080d1449d23d1c31a380fc7902fc3f0eb061655422365b3"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-166/input/task.json",
+      "sha256": "5c265b8b75912af7d78d802ea827dcafb41db3ddaf0b78b14d7689e72f4bccea"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-166/input/test_existing.py",
+      "sha256": "c1dba5b22ba1aab3fab12b13f0f21ae910897102bdb6e109c40b96480c859ea4"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-166/oracle/reference.patch",
+      "sha256": "f3ac9b4c80aa21927c41b9a24a927dccbdc7c834828ea18780737501e6b254bf"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-166/oracle/test_acceptance.py",
+      "sha256": "8403ed82589cd8f25b548f0cac55c3d9acc418ac14c3d30671a9533d1ad4b1f9"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-167/input/target.py",
+      "sha256": "c3c109a5d38eb67ad3590a8e020fc58f125c23d836aa8d2fa8854b2801d5b02d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-167/input/task.json",
+      "sha256": "e15ea6a45ce3638c72bd0038070b27be46e186f9b2559cabd35f9420c531b450"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-167/input/test_existing.py",
+      "sha256": "4dae874d3d1c05605265ed46961cc1db5002fcb85bd7f47f339a9d9670f0294a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-167/oracle/reference.patch",
+      "sha256": "c2179a363fc1eb88efd650f73a48934bf57adb3dd280412753aa859ca5d94761"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-167/oracle/test_acceptance.py",
+      "sha256": "de65d6fe2aaf709d85262bf7e057519b8f4ae05bf3cec5268ebd38401af9bf31"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-168/input/target.py",
+      "sha256": "8b690c4bff8a766219e10b15f2a63e90081974bd931d50e065adead472051e90"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-168/input/task.json",
+      "sha256": "c33908ac6e6b2988ab232f895e26aef3183c7336a0d579c84cefc0233092ac1a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-168/input/test_existing.py",
+      "sha256": "345c5739a5bc562c496f28212e48d15f8da3392592758052d91eb18632d2dbb4"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-168/oracle/reference.patch",
+      "sha256": "8b673f63b3d00149d27baad8dc1971c45c6765acc2df0c0bf198ea2e545f7176"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-168/oracle/test_acceptance.py",
+      "sha256": "1c290d7ed3b97da10f13f0409207f23a1970d55924bf065b1000079cee7e8211"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-169/input/target.py",
+      "sha256": "dbb3b2cc3b8e6ca1535fdfe18e5987904af0441e79c02c2a54e6a0a0d066b3e2"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-169/input/task.json",
+      "sha256": "846ffc9df82ca5ad624f40c4f4098b56b90ce9e81748b284a7f464829e7ba679"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-169/input/test_existing.py",
+      "sha256": "380b6e1fa58cdac777aaedca244c4dd534c111883b7fd675c65f29742f003e57"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-169/oracle/reference.patch",
+      "sha256": "e37f30d29e4b34e8b091db5db40bebefc68b19c6e604eedd50f00e7af413c608"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-169/oracle/test_acceptance.py",
+      "sha256": "0cf90310da0340c2b16ec6323e7391e94408e5a48c688e5804415c4bb349c921"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-170/input/target.py",
+      "sha256": "d3c6374b96c735dcce13a83a5fe14a4b3a1ddc78abc59190ac9aafa36cb19243"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-170/input/task.json",
+      "sha256": "fa9992838a00132b2cc92f96b7c3732c1b35e3793d2911bb4f8eb9cee07836c7"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-170/input/test_existing.py",
+      "sha256": "b0ef2257ca0bbffaef0ed44eac810039ca1cb10e3b44fa23a9c184f4495021ae"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-170/oracle/reference.patch",
+      "sha256": "9b2ab8cdd32fca8186411f485f13b4a415234527dc970d2b1337593c2d86412f"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-170/oracle/test_acceptance.py",
+      "sha256": "c2f51085f8916c2d53b6b0a9a101b4a088ff970d17ab70b088c84f1f31fe8471"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-171/input/target.py",
+      "sha256": "c6b3609126e127c149d94c1a34d8dd1e9870b8eab5175bd90b16c08b4d6f09e8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-171/input/task.json",
+      "sha256": "5ee11579555ac06acc49f523e4aa18c25c9a3bcecde72c4eea2563be1cba66d8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-171/input/test_existing.py",
+      "sha256": "c312528beba9dd3892e0d1cf1fef5e83b7faed7280a060460cd947d514466726"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-171/oracle/reference.patch",
+      "sha256": "56a7cc8ed16c9867b24cd6b339535456cd77cd8752b8823e7a12605a6973db72"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-171/oracle/test_acceptance.py",
+      "sha256": "ed3e1c67a61cccccc391a6c82a741f3d48ec43fc62bda6124085920a565f0ef6"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-172/input/target.py",
+      "sha256": "deaf929988427fb96f6b69ad94600a7348330591432bf71d47b8eada1acd273c"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-172/input/task.json",
+      "sha256": "8a027e4563a5037506200cef64e1cbdbd7be340e2b0ddd8a5b9bc9e324a73f7d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-172/input/test_existing.py",
+      "sha256": "7e89b919dced50fa922ff70efad27b9cfd05d075bd9d339927e41b61d705b649"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-172/oracle/reference.patch",
+      "sha256": "297a9deba413014c34583438dddcb5577a7f75cd96e1b7ea7d2eb9f8b4a15776"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-172/oracle/test_acceptance.py",
+      "sha256": "1ff7c3414b7a575001e6807acbb5e359ab6bef1c56b9e36aef26821d631a4306"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-173/input/target.py",
+      "sha256": "cc0b6d203b49d235cfd3fdf43e248792a15393b76e172bcf44eea2e70c5dc934"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-173/input/task.json",
+      "sha256": "d2b5611c1fca3df85f798afe29e6a91ab5cf10a4bce52d5644861c35de2ef6e8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-173/input/test_existing.py",
+      "sha256": "8c1f9029ea56752a2ad2727dba9b477c0df660668443e3bdabebacb1db86713b"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-173/oracle/reference.patch",
+      "sha256": "279b13f65b9fcb5ff62f76db80d621364adb34690de3fd6a4a4d5807ac4ed4d7"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-173/oracle/test_acceptance.py",
+      "sha256": "259bd7c30d5577c4e716b713e094629bd97e72a0a92ca501d0c5206b9cea7e7e"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-174/input/target.py",
+      "sha256": "0483c5c03fdc5fc770abbdbe87f6079449de1d0503e2b2d83a3ea45a3e71e758"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-174/input/task.json",
+      "sha256": "860048d8f36fd2a11e6226cc74ebcda78dff240f6840e4f9feaabebc60db77b2"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-174/input/test_existing.py",
+      "sha256": "e3535d14015a09bd9626212667909ba4960f55a3356e4521c886a110c9d62d3a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-174/oracle/reference.patch",
+      "sha256": "30533127409e2e03acac67ec68c3e77ed45704e8bbc0dfa382d42e6b834e2f3e"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-174/oracle/test_acceptance.py",
+      "sha256": "b611e2fdbd59a6ddf1929941d8df703674bc168214f4a9b80f501f561f00b8e6"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-175/input/target.py",
+      "sha256": "50159c46770058b561164b7cb13ddf1eb1114bd114cc2d19ee3cd8b78083f2c2"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-175/input/task.json",
+      "sha256": "642ba1fdd3edee85fc3bc72d599f170f3a8eb23b173f4db52c2176fa4481486d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-175/input/test_existing.py",
+      "sha256": "dcdf6b156999f52a33102c24b35770c070c3771a2963e6510facd913b692b3e9"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-175/oracle/reference.patch",
+      "sha256": "bd261d1c1a585f5eece6b1bf858a9178c9077f947133f4b8093c65d0b5c04e45"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-175/oracle/test_acceptance.py",
+      "sha256": "437e74365bb2ed2a9e4e0cec8e32e681fae299e1e02aea41d58d5d5798e60af9"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-176/input/target.py",
+      "sha256": "e7b4a586d3f92cce456b589f519a93da5f91c4fa869d7eb6643a14511a80d065"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-176/input/task.json",
+      "sha256": "4a009e8731d09a228fb4b2496a555120ec9a30b0d05dae34abc7743d1d8b7d60"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-176/input/test_existing.py",
+      "sha256": "defeb3b9ba76c3982597f5f50b34b5e64aecf8b7d9fe1694e77869a81abbe7df"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-176/oracle/reference.patch",
+      "sha256": "d07591e4d87ae9eb842a1039187d76a16eda4e72ebdcc355ce785ce6b62f4d8c"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-176/oracle/test_acceptance.py",
+      "sha256": "0a4cbbd28db2530ee397f0937bb8ac891d0b17a7da0121f796c07a411d9c3b34"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-177/input/target.py",
+      "sha256": "8b021b8ffbc46b1b823deae097bbfa7df0c38bb00f892a322bec3a1569c64d99"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-177/input/task.json",
+      "sha256": "d1974a4072332dde5a5dfbf2bf1e0bcf6f490f5404ffe9adaeccf2b676c4a8f1"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-177/input/test_existing.py",
+      "sha256": "c711a6043d260427aa666117086c58dc889f9bce24d1c1b5c5b8fb4c2f8bc94d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-177/oracle/reference.patch",
+      "sha256": "74342327fe056a346f5db7b97e51423e004b753b00fb452275adb7d4ab80f305"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-177/oracle/test_acceptance.py",
+      "sha256": "3249b4bbd57377f0394080f3c848f874c112d29e0f851f53bb48dab26de88238"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-178/input/target.py",
+      "sha256": "e2d8e678b79e5d3d26e00d26492806f8b102453f3a7734d202bad411eb49bf18"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-178/input/task.json",
+      "sha256": "2ba1aa6da11b530a51b4cff9b0aff9074bde3fbd6ff04482e143bc9b4cf286d7"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-178/input/test_existing.py",
+      "sha256": "7c6f0aa5528d9ba4f3e8d95e5b89de01ac287f5d03d1086f9f308b1499730c30"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-178/oracle/reference.patch",
+      "sha256": "5b83dc325c8efa80534ff721a7f44f2c0b668cf8b763e5d0aa24ea5232a6c9a4"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-178/oracle/test_acceptance.py",
+      "sha256": "cbd1b07f3cd4e2b517fb5fb184063d7d05f2423037483191496d21b658e4f3e6"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-179/input/target.py",
+      "sha256": "fc803615946871698108801285807aa13ae1519754ceb76d3fff8fa49f930fe8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-179/input/task.json",
+      "sha256": "6f6f57daadf347e270272f210edfc10ad04052d96ccbd9c28a7bd444d5164d46"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-179/input/test_existing.py",
+      "sha256": "d8efd9778203f8845e4040feb450ad733695b4a1674e7a01180eddf4ffd89d66"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-179/oracle/reference.patch",
+      "sha256": "647c6a2d1be3bba1ad53ac2debfa52e487aada9e417ee7570d1434e3a5011685"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-179/oracle/test_acceptance.py",
+      "sha256": "fd3766a2536581e405ada415aaf42e768db1e119a867a23e4c53c848759cc885"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-180/input/target.py",
+      "sha256": "6e6b2b88f2d8f7b40dd55565275a50ae1a6095ae9eca3b5e827337692bd36205"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-180/input/task.json",
+      "sha256": "be7d449976ff89ef7f3bfe94acba314d1d6962a4d4bf4b6b208ebd337a89be39"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-180/input/test_existing.py",
+      "sha256": "8be9509e249c2369624913c608b7ba624560e99d54f10f339ab9484d9d934c4c"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-180/oracle/reference.patch",
+      "sha256": "be9f7fe046fcd347e1be42fcae367d324c6b9ec7e7b4ebbe7e286c0701aa5ec5"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/case-180/oracle/test_acceptance.py",
+      "sha256": "5892120a53844ec04dd262622654fd06578a4fa14d0ec8475d4a2089732d0577"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-151.json",
+      "sha256": "65ccdce8248c2ad3394eb21de6c9cbdf2f0b6fe43da3d13ad49ded041943eb32"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-152.json",
+      "sha256": "5e9d46440016755ddd40bface4d891e0899c3a962d9086dda197c687f951c896"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-153.json",
+      "sha256": "2b55817fc4679f936f2edd0e5f964d8ac18edf289fa98d08b971f3bf49fba592"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-154.json",
+      "sha256": "68ec93193ca335cfdacc3d8bd254a93a03a97dddb92516322842965225f2e82b"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-155.json",
+      "sha256": "8677657fab0175c83821f722f9c0cf709dc98d45e0406c6dcda8d9ad73817f43"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-156.json",
+      "sha256": "bcac857c5c6ca48e927c6d14a9b73a99735ef8c75aea0b505871cfd987bddc07"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-157.json",
+      "sha256": "d1349a9ea850317569dfc8d3d892836a452f5ca95db9a98857cae69659e0fa0a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-158.json",
+      "sha256": "d4926cb7869acd35237b8f11ec692259a7b5c4e617cbdc26457a1484149d0af8"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-159.json",
+      "sha256": "844b1e30a51e0a677c4bdaee1fda938cde7c4f8d46d80d2b05b10b8b2882458d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-160.json",
+      "sha256": "b95373bc81f8690b6d665f60947a5073f16eabdb4f5befae3480e0b4b35cc419"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-161.json",
+      "sha256": "217bcbf5e112e8daecc994e38514ad0bbac67dc22238d2ff84b791e24e063a4d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-162.json",
+      "sha256": "a6c417441e5fe44f1ca00885975057593711c1fb8c335dca985edcc7eb3ffd35"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-163.json",
+      "sha256": "5930ffc41b6c7ed9d71dd21617ba107fa0b7ef3fb5f914d38816f21942e76f43"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-164.json",
+      "sha256": "52840d9bbfe2013a5c84418d4a1c9d584d231ddc199d4cce3372448a63f500f4"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-165.json",
+      "sha256": "f2226eadd9e5ea10ee40a5b16290c584055e810ab86109b9a6c45ecd76235336"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-166.json",
+      "sha256": "f261c92e0ac5dfb45f37ce4a9affcdb32f1947bcaf61b63cafec0e4468c6fb1c"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-167.json",
+      "sha256": "edb05d4464ae3f2d77045f623a3e982510c0de2b02773871794b668e8e297c2a"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-168.json",
+      "sha256": "61c0463068a740d832f3422d7a0c68ca697bae3217af7625f473a03b909e864b"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-169.json",
+      "sha256": "85cb604108ee7c36fba9631533c90ff7b55507d9fa1142e522e0eed86f270121"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-170.json",
+      "sha256": "6218bd35936631d8c1fe6f856492a98147640b466b4b6ffa699ed8c2a1526bed"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-171.json",
+      "sha256": "9cfd992059a70ca7666a318bdbcd4ee4c04f18f8213a070b294f02153096d32d"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-172.json",
+      "sha256": "19247f98bf2043e453683c4c20bbf593036211f44784b6b6ceb321dfa5051a33"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-173.json",
+      "sha256": "bb4f7ba82c6cdece3316011142f0ee7d6029ee69f65e17b6c7fce9aac6e3a8b0"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-174.json",
+      "sha256": "ded4ce336e5d02d05284999cb91c26c0b199a831c3c70aa6bda538602e50d2fe"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-175.json",
+      "sha256": "d6f6970a841c67b88d004eddb702fd1ee11336e2faedd822001408018ca1dce2"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-176.json",
+      "sha256": "a034b27d505d6d0690516b10fa5e895dd4fef4c13bf0db28cd60caae32a9c765"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-177.json",
+      "sha256": "40df4274002964d1ae9ee06003b77f2aae1dccb4921264f1b1b1590683447ca2"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-178.json",
+      "sha256": "e6356744556d09f786b489e77529e107cf67181c7b93014df5752f0d19216528"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-179.json",
+      "sha256": "35d2774fb8a04ef83051a4f6a6897e5ed218326be5438d371e27a4483793bd11"
+    },
+    {
+      "path": "private/MiniMax-M3.1-Flash/histories/experience-180.json",
+      "sha256": "df564f31da2fd1cf2a1926115257c06b8e49872e4e170aa84a6d0bc58b3ac637"
+    },
+    {
+      "path": "private/space-bunny/case-31/input/target.py",
+      "sha256": "3b5eab3cd0de6e447173d9ed01ed83a4b2245d1c71ff2e7dd3c1b1831665df05"
+    },
+    {
+      "path": "private/space-bunny/case-31/input/task.json",
+      "sha256": "bf0341f56017bca467ea345690a840ec227cbe7e391f5afff52e712fa412054b"
+    },
+    {
+      "path": "private/space-bunny/case-31/input/test_existing.py",
+      "sha256": "fe5ac16d2a356d431a2839dc0136aeb743e1fbd42400e56c2ff330609cf739f0"
+    },
+    {
+      "path": "private/space-bunny/case-31/oracle/reference.patch",
+      "sha256": "a107965902e1afe31aad71c865859478d53bb4aa91ed094e342fad14ca60da46"
+    },
+    {
+      "path": "private/space-bunny/case-31/oracle/test_acceptance.py",
+      "sha256": "198405c147db2d5848828ea8e9f4f8224e5081a5e1f148156c5c0c4c39c81eca"
+    },
+    {
+      "path": "private/space-bunny/case-32/input/target.py",
+      "sha256": "065e263e3d9babba4bff6eaab7b172ba70896d7b0083425cf42ccb4bfd7ec436"
+    },
+    {
+      "path": "private/space-bunny/case-32/input/task.json",
+      "sha256": "4e28850d3cdf8f33991bb879528742b0e8e03d4e714f7b393808761845784168"
+    },
+    {
+      "path": "private/space-bunny/case-32/input/test_existing.py",
+      "sha256": "4c91608da8124d65fd551bf9d36d56860ed04fd6a67fb8e290fe98a27b1e5a81"
+    },
+    {
+      "path": "private/space-bunny/case-32/oracle/reference.patch",
+      "sha256": "d9861cb3d16d93a44ea395f6394f9a7e74cd5a83385c8dba5f46d7eba017c916"
+    },
+    {
+      "path": "private/space-bunny/case-32/oracle/test_acceptance.py",
+      "sha256": "6727c200f80b0ce22cc23a2aa3d9f2164e65b072465b58898b0f5ea1c8ad404c"
+    },
+    {
+      "path": "private/space-bunny/case-33/input/target.py",
+      "sha256": "5e84ffcc6c361a10c26dde352ba813e27e78c84210a7c18c28b2878ddfe9b64e"
+    },
+    {
+      "path": "private/space-bunny/case-33/input/task.json",
+      "sha256": "5b7b92a4121f750fad429f8ed3ee169775e26394181364307b4ec2fafb38763a"
+    },
+    {
+      "path": "private/space-bunny/case-33/input/test_existing.py",
+      "sha256": "de8522ca28b848bcecd82fa2a3aa44727fbeefbd118076c19aa2e3e3f9981676"
+    },
+    {
+      "path": "private/space-bunny/case-33/oracle/reference.patch",
+      "sha256": "9c218cfd4b194f9a56d3f4b604c91cd46593d34cfcd1e5f38fdde3147c5ec81e"
+    },
+    {
+      "path": "private/space-bunny/case-33/oracle/test_acceptance.py",
+      "sha256": "df335fe1a32b5f471e299be403e9c1c3e383001e0d0c4eff4a0220f17057fc13"
+    },
+    {
+      "path": "private/space-bunny/case-34/input/target.py",
+      "sha256": "313e1ffb2050fd0d71c80f00b4cd9210f076d465c192c8d9545fa3eac2839957"
+    },
+    {
+      "path": "private/space-bunny/case-34/input/task.json",
+      "sha256": "271261e7d0f0fb22acae6c2d87b6f5d49c81b677cad38ebe84a5e110e1b53832"
+    },
+    {
+      "path": "private/space-bunny/case-34/input/test_existing.py",
+      "sha256": "dca37eb4d32a809c6bacda9115ab2b25e8aedd5258e6696ee9ba905a4ae2e0e3"
+    },
+    {
+      "path": "private/space-bunny/case-34/oracle/reference.patch",
+      "sha256": "16f0630aeb6be1368afe6c0f0b368aa0e00f3c2f901a1d2b9763f926d4b5757a"
+    },
+    {
+      "path": "private/space-bunny/case-34/oracle/test_acceptance.py",
+      "sha256": "942448472d1ff939052053d808b70535545ae80e572209347f6543c019d12031"
+    },
+    {
+      "path": "private/space-bunny/case-35/input/target.py",
+      "sha256": "4840e40cc207ee6be5fe5ceccc0064411bef9639241a14e00be636a57ed9a1ef"
+    },
+    {
+      "path": "private/space-bunny/case-35/input/task.json",
+      "sha256": "0fffcab185e577ed30595da00300e9081f42a39a6d4532b4dd413150eea3a778"
+    },
+    {
+      "path": "private/space-bunny/case-35/input/test_existing.py",
+      "sha256": "4628abac311a3f9d92a85e45a9a730674c8ebf2b5eaa358f7b2b7b2573c2bec5"
+    },
+    {
+      "path": "private/space-bunny/case-35/oracle/reference.patch",
+      "sha256": "ff1b90e06cefa3a477cdd4155ff80535c1b2735d0fd5474928aeca01132dd30f"
+    },
+    {
+      "path": "private/space-bunny/case-35/oracle/test_acceptance.py",
+      "sha256": "2589980aa11edd9a3a5e6784eceb774a77019cb8dd2a97da0bd5d1b4f4d5e3ea"
+    },
+    {
+      "path": "private/space-bunny/case-36/input/target.py",
+      "sha256": "23472baff3934fb0de0ebe04502e99d4066e344a06a35f170bdf65c68476a45f"
+    },
+    {
+      "path": "private/space-bunny/case-36/input/task.json",
+      "sha256": "2e013ecfaa7e2caf55ed550d6ad45dbe4544c99d08f5abbdb4d75d731fc98ef3"
+    },
+    {
+      "path": "private/space-bunny/case-36/input/test_existing.py",
+      "sha256": "316613b12cb7f91a4aea0eef53765e21defea60e5984baa0df127a5e6ed98d27"
+    },
+    {
+      "path": "private/space-bunny/case-36/oracle/reference.patch",
+      "sha256": "7813e4944b27b907238f7aa1b384de238d69e7f1a08f5ebd33ebad7137aed635"
+    },
+    {
+      "path": "private/space-bunny/case-36/oracle/test_acceptance.py",
+      "sha256": "ff3449b7f3eba8992d66a1106428156d0a31c9bf619264ac65a392ef9d041ad6"
+    },
+    {
+      "path": "private/space-bunny/case-37/input/target.py",
+      "sha256": "dd504cafc9bf5e94c56fec7055920af7dcfd22cfd16ef4ad746d2745f04222e2"
+    },
+    {
+      "path": "private/space-bunny/case-37/input/task.json",
+      "sha256": "05f8889b172287fdf3eda55d4e84bb1da32f4d1e906c1e3cb3195f736b9e6491"
+    },
+    {
+      "path": "private/space-bunny/case-37/input/test_existing.py",
+      "sha256": "61249034898fe56c1273b6b9184b22479802990acc6a95bb4e6b2677145d57c1"
+    },
+    {
+      "path": "private/space-bunny/case-37/oracle/reference.patch",
+      "sha256": "cfd36dac0817bc4bafa72dc2cc047d639c8ead4e54fedaa505ab024717c10d50"
+    },
+    {
+      "path": "private/space-bunny/case-37/oracle/test_acceptance.py",
+      "sha256": "3236874190fdc49d8771851e1d50f5f2da004aee3a214668e748d6f9b3937606"
+    },
+    {
+      "path": "private/space-bunny/case-38/input/target.py",
+      "sha256": "f4c745c52e30fdf810c06b359170c0c2ada148fb466bf0666a2f3a8f1b01e9fe"
+    },
+    {
+      "path": "private/space-bunny/case-38/input/task.json",
+      "sha256": "efc80764cc9ef643e71159fca082768a506cfcdea08863dcb52d64d537895adb"
+    },
+    {
+      "path": "private/space-bunny/case-38/input/test_existing.py",
+      "sha256": "6e3f01100ea58b9f35810a45d5795e2104087432fb285ad57f983dd174f30f88"
+    },
+    {
+      "path": "private/space-bunny/case-38/oracle/reference.patch",
+      "sha256": "f770613f6a17da1f2999708ef48a9c0cd7e5acc28cc699a69d94b4c983f0b6cc"
+    },
+    {
+      "path": "private/space-bunny/case-38/oracle/test_acceptance.py",
+      "sha256": "d45819c75d7179d04bd04b82e745499f50b3815ac505e429b9dc39c0d3c453eb"
+    },
+    {
+      "path": "private/space-bunny/case-39/input/target.py",
+      "sha256": "2a92ea63e2f5553c415174c5b435d34684cea49ac6f7f1697af125c4f65a0fd3"
+    },
+    {
+      "path": "private/space-bunny/case-39/input/task.json",
+      "sha256": "d861135356cb58cec3775da2a21f947908acbe31c28af2ebbd7d7f450ed7fc67"
+    },
+    {
+      "path": "private/space-bunny/case-39/input/test_existing.py",
+      "sha256": "1905f4795c64644b536be7a4b660006208b508e25946a24d710139614922e88a"
+    },
+    {
+      "path": "private/space-bunny/case-39/oracle/reference.patch",
+      "sha256": "f7d2b016f15b879121ae9a54f1ac89b5d49f56d4862c355413433a4b36586dfc"
+    },
+    {
+      "path": "private/space-bunny/case-39/oracle/test_acceptance.py",
+      "sha256": "7cb69238198a2a84a6b2a02f280ca5d1f2b508564ef3b33b615cc1d1b204c5b4"
+    },
+    {
+      "path": "private/space-bunny/case-40/input/target.py",
+      "sha256": "90aedb3375a17b84288f915b5b5573c6b27a3ce017b3a5a6d6eb73917135de5f"
+    },
+    {
+      "path": "private/space-bunny/case-40/input/task.json",
+      "sha256": "607f118b790577c9b8642bc0bb9df54a9abfc3fa202131a14081950fcbb3fe76"
+    },
+    {
+      "path": "private/space-bunny/case-40/input/test_existing.py",
+      "sha256": "1fa96e9749f8eb141f149bcdb10fc75ab6fc5aa8b3291d6dd5d9f30b2469edaa"
+    },
+    {
+      "path": "private/space-bunny/case-40/oracle/reference.patch",
+      "sha256": "2baa0c274b68d65a84731646315f615726010b5277c069afd4bd8a4f5a08710e"
+    },
+    {
+      "path": "private/space-bunny/case-40/oracle/test_acceptance.py",
+      "sha256": "a0e5b4e60231c8fe34b92ca7636547cb5c9b7f9f4dfdc6a04219d84a76b840d8"
+    },
+    {
+      "path": "private/space-bunny/case-41/input/target.py",
+      "sha256": "c0b96162205d4b18bbfd2c60729537d8cbe6cf0cebf95104de1beeca51f855bc"
+    },
+    {
+      "path": "private/space-bunny/case-41/input/task.json",
+      "sha256": "18a3b16db2092b4f922622bdc159dbb89d747ba006ef9a25d3fbfa911003199f"
+    },
+    {
+      "path": "private/space-bunny/case-41/input/test_existing.py",
+      "sha256": "235f1690519ded57552f5d849731a778f348f0b25a0a32b3dfa0693ee26d8803"
+    },
+    {
+      "path": "private/space-bunny/case-41/oracle/reference.patch",
+      "sha256": "252ec750d153259091a9735040a0142aa84eafcbea810ab1db3cf1c78c4dbe9e"
+    },
+    {
+      "path": "private/space-bunny/case-41/oracle/test_acceptance.py",
+      "sha256": "614e647642c5b4c9d7a42a29c03a2118f1908f1b411a2a82e66c56bc59ecd711"
+    },
+    {
+      "path": "private/space-bunny/case-42/input/target.py",
+      "sha256": "2c374f2147b297b189116952da1ee7c7c98a022d5e1644a50846ea0d093e7226"
+    },
+    {
+      "path": "private/space-bunny/case-42/input/task.json",
+      "sha256": "159badd401f4753b3b330308547ebb1ed5c59951f9d832048827d57c1e7a46d8"
+    },
+    {
+      "path": "private/space-bunny/case-42/input/test_existing.py",
+      "sha256": "d459b008d973a1eaeb4b73c9fe4f1839c9f24d15a1ddc3505a212dc826d4a45e"
+    },
+    {
+      "path": "private/space-bunny/case-42/oracle/reference.patch",
+      "sha256": "91038ed6ba3e870f39c2e919e9e4c85cc5add7853fe0c563b16efb4f8876666b"
+    },
+    {
+      "path": "private/space-bunny/case-42/oracle/test_acceptance.py",
+      "sha256": "4d1ee17d75d70e1b1930c5fde2061562495d878decb15365b5ff1084146e5f8d"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-31.json",
+      "sha256": "ff939d131c535b0753ec0630700f071a0536022a041ce0ef5d7de3697f7ad423"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-32.json",
+      "sha256": "10c2b0f5e2f25a49b09e3c555cb3bc86929b9bdec2b591f5f20f656ca387568e"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-33.json",
+      "sha256": "ad3170f427802001a37af576702b309da192f622cfcbbd23840e7aea4f3ac003"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-34.json",
+      "sha256": "fe10a7270b3b54b69d3999c7fcd06fd98899d43f0578fc543a502531bf07a87f"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-35.json",
+      "sha256": "2dc725fb7a0ddd61ab7324b656e44aa1dd771e07fa59d59341a2a55f63a78841"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-36.json",
+      "sha256": "9283233c7b0791edc637776935a339a8958c2e6e5d9a4b201e11d28dfde91c10"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-37.json",
+      "sha256": "ad161f28ee650f622242680f496b7cb800f59ac31a778671a5503348151d521b"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-38.json",
+      "sha256": "d41e9afd43303b12dbb275a2dec3df859feb9bc46399bc29783b54d6cb6cfa19"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-39.json",
+      "sha256": "ad8622e612fcb95c55e67ae5274e88ea850abc551b5251612e8b38b657f22c7e"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-40.json",
+      "sha256": "b1430aa0d1ce0ef4c1339a07f402336ab9b49e10e52d0cf94d7c15ab270984c2"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-41.json",
+      "sha256": "e64570110e00e5266bccab2ba6abc3ee3b174a2f232b5e2e5e1335fd6479994c"
+    },
+    {
+      "path": "private/space-bunny/histories/experience-42.json",
+      "sha256": "ca7694ef2bd532813ee4253f0f9ba2fd7a0de1a7f0c7076200440508d2251a8c"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-181/input/target.py",
+      "sha256": "d3c6de19000a8c8655c1d7d6edd898c001a14f3f11eeabe079ac7164f1b0f6ba"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-181/input/task.json",
+      "sha256": "fb4857d7b0daad8600d7be7a902634f103fdb88767c769e72b115a4de405ff6b"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-181/input/test_existing.py",
+      "sha256": "50eff38122470a244d0f358924aef3a0528354113a655887d2e3baf245eb55b7"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-181/oracle/reference.patch",
+      "sha256": "d5f2c7962789e53dcfd7688261aca4e37e7fb1b32a725d07533999fc1ff8e843"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-181/oracle/test_acceptance.py",
+      "sha256": "0f4484bac0873336541866b61628b0f5315b5714e6d46f3277582eef726606a4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-182/input/target.py",
+      "sha256": "708018ea15b1233725558fb7708e16dae4a2a13433b17a6e15d301efc19c9c28"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-182/input/task.json",
+      "sha256": "4a444d850f89e311d3401350249123ac01248697552c0e43b8ff6b67b8c1a4ea"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-182/input/test_existing.py",
+      "sha256": "2074edfdaa5d2979b353d2eadf6489288eab760af31aa816e3a04a995288c433"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-182/oracle/reference.patch",
+      "sha256": "3d06b042dfdc797f31d2f3053e4f43745144e540ade5ad6a523e519348fe29fd"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-182/oracle/test_acceptance.py",
+      "sha256": "6c23ad30986ab39de0056f920e5eeb3a2b63ee6993d1d910e541ff8062914c46"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-183/input/target.py",
+      "sha256": "c4723d263efbb2cc62bf1af49dead85687f708b99a9d8f42c26f13b3657467ab"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-183/input/task.json",
+      "sha256": "68eb0047efd95a41de082e70183bc508794b44f9d4f201115861c746871f95d4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-183/input/test_existing.py",
+      "sha256": "befe092d5a6f9812bbd88d49e1d1423117482971a6f7d319a38c1a9340036181"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-183/oracle/reference.patch",
+      "sha256": "dcf1824925c701758f052c82a176d80f4960b8dc8f190ff40a8e397df2a44130"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-183/oracle/test_acceptance.py",
+      "sha256": "8830bf7d1dd24791efce7bfa1dc85f8f7771bd9c022bd4756cb06346cd65c19b"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-184/input/target.py",
+      "sha256": "6f9a1a7e17ce81b7f4e8326ae4e0a02e11df418687aabef125b4248b36f94cea"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-184/input/task.json",
+      "sha256": "199925a68f50f1ad98aec5347e1be2a243d1ecc7e0d788e47f32d1c16d1975cd"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-184/input/test_existing.py",
+      "sha256": "41f9d503c343670b42557d62fcb8227f4a810d6a048890c7742e2de8da572aab"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-184/oracle/reference.patch",
+      "sha256": "390c178c43cc535067e146ed4eacf6ef68c3e5df2aacffdc48b4a20e4eb62096"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-184/oracle/test_acceptance.py",
+      "sha256": "e9da5b12a816798e74a303274090025d76a8f8dfb0b409177f0dc6e59ece0233"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-185/input/target.py",
+      "sha256": "2df8a2cd968c6994384fad9a6c25df3cb3c863028f67e72e6f9e5ee10334fe95"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-185/input/task.json",
+      "sha256": "bd55162ba2b745974766470397b8353731ac3ee1331b2cc8952cd9a2b67658ed"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-185/input/test_existing.py",
+      "sha256": "e95eae9411bdae0fbfafb7eb6c71d86cee1c8f5a7d40bc818de8449a636a441e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-185/oracle/reference.patch",
+      "sha256": "10cd3730750c13681193c0be113933a6c334d797111110d353af2c0d8fbf9918"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-185/oracle/test_acceptance.py",
+      "sha256": "ce49026fb283f83526adc815292e31ee61494a49f6db3d492a6d5af0da6e2e6b"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-186/input/target.py",
+      "sha256": "17e8076edfa8afb68fba41a17756df5016da61c1415a1be7224b983e93494c69"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-186/input/task.json",
+      "sha256": "288c54269fc0b0c01cce19d566a4e6fd6add3f51123c3a0a3485f549e426c66d"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-186/input/test_existing.py",
+      "sha256": "9ddef2540d52b86c7c7a5dbcced49b48f44b1888c0232cca389ae6573b393122"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-186/oracle/reference.patch",
+      "sha256": "968190b7b90e3e2c1311f2004cdc0f65921c1ed0ebd76ca36ebef5439cbd6739"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-186/oracle/test_acceptance.py",
+      "sha256": "37fcde10616a603640004b019681847f5072d7e8c1be6a90f76314a625a131c2"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-187/input/target.py",
+      "sha256": "c6b4685dbb347d310bf032c88cf015e679c0b6cadcbc5bb1aee6a388a92cc76a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-187/input/task.json",
+      "sha256": "304af8fb8032622ba84d8102e8df61010d94b4b9df5e648d2750b4f7d125074a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-187/input/test_existing.py",
+      "sha256": "2e861921404de1851cf3c56786dd39b3d0cd0f946a8cb35d1aa186db4abbfec4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-187/oracle/reference.patch",
+      "sha256": "d8642b70b72649dfebb134a0f7be7011616f7cce7cf307c81318774be0ff5932"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-187/oracle/test_acceptance.py",
+      "sha256": "3de9eac28f848c8af5beff6fcb842a65d9c15e0c061982189291bb65d0d68a78"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-188/input/target.py",
+      "sha256": "d7e51e4bc0c4202304bc6914ea84e1affc58c59cca63d4245c8adcc9723d0bc8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-188/input/task.json",
+      "sha256": "be5903ba977ee79e0209b567a10b76a7a0a82c22384b8aff5c57597d41ea2084"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-188/input/test_existing.py",
+      "sha256": "b6cc33011792c51486ebb13cf3acffea3c422701b1c163387fe97d8b8b5fb519"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-188/oracle/reference.patch",
+      "sha256": "18e1ecfea71b471513609755185bad2cc880222e3e2b62f9f5ada55635e0040a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-188/oracle/test_acceptance.py",
+      "sha256": "258687bdfe96d8ac74b29ec85c78aaaa6f43c97473ad188f9d2cc8b3ca68f1b9"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-189/input/target.py",
+      "sha256": "ff68d8a692ec9ede8ee182ab537b1fabe13cad28f162d84d91c22dec98a97da1"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-189/input/task.json",
+      "sha256": "c870aa4900560c3367c0be9e795543369599049bdf4820786f1d29b6b994f9e8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-189/input/test_existing.py",
+      "sha256": "8cdad417a3250bdfecba619ef4af806fbd511784d70022cd90b0a6111208e117"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-189/oracle/reference.patch",
+      "sha256": "864fab00a3df054f39067e229aebce1de8067b3ea9a2141e1dbac82500f3ce68"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-189/oracle/test_acceptance.py",
+      "sha256": "3b793764da4f5cf766a2b93c9e84fe450f4e5c457a088a0dd46bb7fe51d5100e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-190/input/target.py",
+      "sha256": "deb5e3cf3a8ae7a7e3c8e9bbecff07f362924beaecf8d6956dc685b023f9418b"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-190/input/task.json",
+      "sha256": "aa036e54d4d8ee17063edce6fd41797a6b341ca142a8f199a01c4b66cad5d7d7"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-190/input/test_existing.py",
+      "sha256": "f729bb0c13068fd1235ca44c341ead10dd6792e9ca84b2ebe5167e1105f6141f"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-190/oracle/reference.patch",
+      "sha256": "518ff8e22cbcce5bce28d8ced848e16b0c3e4e2e0224af6983b6110d7aa55492"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-190/oracle/test_acceptance.py",
+      "sha256": "b76991b8fbb81dbeda5b0e49943a26e2f5df1b1ab831344fca2dfc42140ad8ce"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-191/input/target.py",
+      "sha256": "aca7a5542b74911bdb94f53fb4ae1cf3df9c6767f2023b351c3ec1fe3d9dd078"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-191/input/task.json",
+      "sha256": "3c8f9efbaf04d1b516b589302393bd6cc1cefa7908df2eccb8dfc7bb7607eb3d"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-191/input/test_existing.py",
+      "sha256": "ae1f00b988c14cc3633dca0c6fb44090a2f366332b08688b1af78532194bc8c4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-191/oracle/reference.patch",
+      "sha256": "c7ab3d2ace09a392ff5cf550a3d357f777a7537a0f9fcf6e30bcdadd1320d857"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-191/oracle/test_acceptance.py",
+      "sha256": "cf75a038027f1e624d8e9ad437bfa4f94abfbd080de20951661e3b88885ad5a8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-192/input/target.py",
+      "sha256": "ff637d8efdd33f3dac06d28d530e16c5e8d4debb412cfc41c17073c221eaf891"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-192/input/task.json",
+      "sha256": "0e95420360f579fc21e4fb4eab722156d4df500087ee08b2c943ee4cb40e86fe"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-192/input/test_existing.py",
+      "sha256": "98aa7837b6bbed08385f0fb82b4536cc1e9bfd990c6ed2b2c514d27c1faada3e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-192/oracle/reference.patch",
+      "sha256": "72feb408a2e179436d5b1874fbc3519e610ed2cbbfce034e1476cc535d0f7f32"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-192/oracle/test_acceptance.py",
+      "sha256": "208184c98d9ea6cca23d8eda994f46244595b92eac8458b9b9d6f951a289b98e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-193/input/target.py",
+      "sha256": "456655ce16c4b6dc1897519fb1105f4b05c62d2492a4ca61d8453eb19783df39"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-193/input/task.json",
+      "sha256": "14928ff38cc0f37e43243774767b6b2e8363e9c2439e025e899816cc16087ee9"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-193/input/test_existing.py",
+      "sha256": "4e99fc857e1b17fbc01711f80de082ae91e28ebf45a910a70c1fbba3fbb85d75"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-193/oracle/reference.patch",
+      "sha256": "9ed9baadae5d4742ee557665c712e1b5e0eab6b3b18445022c64a379d12d9287"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-193/oracle/test_acceptance.py",
+      "sha256": "0780688ceecbfd5b53996e34352fceea1070dc0a560574eac56c0f586145f4b8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-194/input/target.py",
+      "sha256": "b29920ac113000c3938d41984886f8fa40e480a93edf08f9c7c80caacc86abb8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-194/input/task.json",
+      "sha256": "e29a497c17a19b3255cb226b894a8c88e660de5ef451c0141bb771c26f6333bf"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-194/input/test_existing.py",
+      "sha256": "5d94d025030e7359327ffafdea09f0d88a5b910120c5bea1dd187c0cc77eec90"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-194/oracle/reference.patch",
+      "sha256": "00860b7e7160bdc76dcf6bd49ed6520c3ba6139d46a02c64a5e7c9091e1e48af"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-194/oracle/test_acceptance.py",
+      "sha256": "71f0139087c87b91f33c06fc80349ff375793dbb01fb88f1fd2496ce2d9c570a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-195/input/target.py",
+      "sha256": "a610bea536ce93c2083a1d815e10081486d65d606d80495307b606ce3920a347"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-195/input/task.json",
+      "sha256": "394254e4c6df697bb395e28d8545911819b98668b2a630c6d38063944b7e5b73"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-195/input/test_existing.py",
+      "sha256": "b5a78500511cf284b7a033ede6b836e1dfc2e6b49f4f098f9bc8a2c8bbe73b2f"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-195/oracle/reference.patch",
+      "sha256": "2e85f237c1827c514a3d8b10990b59644d67dd89707b6d4ad5bffc61d7259806"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-195/oracle/test_acceptance.py",
+      "sha256": "a03647d41c82969b46172994f81186d07041ee59e3a261c96593ab7102b8320c"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-196/input/target.py",
+      "sha256": "082881753191c7c533e212d94dad1e95b2f73fe95c9964c1a3d60fa9632a2ded"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-196/input/task.json",
+      "sha256": "19f0c2ce1f788e503f5f301cc278659861b15177b4a1a377ad5b35dcf76ecbba"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-196/input/test_existing.py",
+      "sha256": "f357713636313c82d945b7bcaec012660ba02e500b2373a9ddd642a7f234fabd"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-196/oracle/reference.patch",
+      "sha256": "4bbc22d2fa0233fa049e1661e321a02dfb6a3cfd8b536688101775997e776cc6"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-196/oracle/test_acceptance.py",
+      "sha256": "44c7da624c3776bdb8921cab55beed28d48d3beac3af22ed7fca362a52d0a7be"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-197/input/target.py",
+      "sha256": "ced242675c448795f1dd5230d0a0097e8aac0a35372153986d19ec21dffe9021"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-197/input/task.json",
+      "sha256": "ea69379710f066de6e1d70fc7ce62ef9a58df1df044f1d888b065e0936dca625"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-197/input/test_existing.py",
+      "sha256": "e18cef3b5ddd7e4053c608ab1824388a99d6c55a5bfdf875f865d285bf02ed36"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-197/oracle/reference.patch",
+      "sha256": "df5bbf88aad207a7e73d5657f4b4d75239edc081b5c9b0aa80acfb7376b2a67e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-197/oracle/test_acceptance.py",
+      "sha256": "3c97eb1a35acf37d32d5d215069261571da6eb8dca94a317f110e5827af886b0"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-198/input/target.py",
+      "sha256": "446aa62855f7044150fe4bd0fb909ab96c4d554b4cd2f5f2f3886d8b5b6d71d1"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-198/input/task.json",
+      "sha256": "05397846fb9b3f448ae9763fdf7eea8d6cc295ae55aa43a802831d4bc4d23800"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-198/input/test_existing.py",
+      "sha256": "f8f77b955e7a21c5a2052bb51293f8f3fa4657e7f8bd749f41b43eacbf7f046b"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-198/oracle/reference.patch",
+      "sha256": "e7d789f8b40c318def34d09a2117c3bf797136c74d97a9ea8c458d3bbedecad4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-198/oracle/test_acceptance.py",
+      "sha256": "09f45020f4ca3487961dfb1a2ee52a16d70ed7a7a4518be2e7f08e0ca792e72f"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-199/input/target.py",
+      "sha256": "dc38360e4fba3b72a37d7dcda016ecf5f4248a513a7238501c3e589b11afff8e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-199/input/task.json",
+      "sha256": "3ae4088da315d31b158e3f759c92e4bc2980750347f379d804a708bd2182ada8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-199/input/test_existing.py",
+      "sha256": "40d48a7f7c3c321a1ee15d6e855a74c922b757adefde9e49315487cc232af4b6"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-199/oracle/reference.patch",
+      "sha256": "4d77673884095328cbccd9d7fe12b2cb6b52e5176a5a82e26055bbd6781a9e41"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-199/oracle/test_acceptance.py",
+      "sha256": "cd381feba8095acc79e1b9ab99d3645e73e4cfd442ba8ec14d762560384ef32a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-200/input/target.py",
+      "sha256": "b76f1c83df03421be7505919a7dd72285f33b4b6c9d070a72c705b12feacc3d8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-200/input/task.json",
+      "sha256": "893e390d02cbd890310d4ef81c88691a6d6ba036abe66e684ea07843a0089f3a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-200/input/test_existing.py",
+      "sha256": "c2d6fbc503bb69a08331295ae49526490076d9e5906608b9cb41795c8fd9714e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-200/oracle/reference.patch",
+      "sha256": "528fda300c2cb83de923d57e89bee13760551ea040e48c8bbc35896bf75b00a1"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-200/oracle/test_acceptance.py",
+      "sha256": "b574a5b0aee7de44dd9d762098661d04327043046975826886bedb8423629814"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-201/input/target.py",
+      "sha256": "4567dc41728a428bf3870219ac095313a5bfc4ef3828a882ab51607ec4263860"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-201/input/task.json",
+      "sha256": "fa3624883135116d39533b20e548d8350d540d72dc209a3a142ea68d05533607"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-201/input/test_existing.py",
+      "sha256": "612c1629d377c4de3f02d1bfe336b0bfa8b4248930fe6eb3a392affd4dcf4707"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-201/oracle/reference.patch",
+      "sha256": "4f898a64dd72d85e65765d7915b9005f8aa71f6ed6d4f3daa2195d1f2444f9f8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-201/oracle/test_acceptance.py",
+      "sha256": "d57265aca3bb9d11cc26a726d8948b055a446256e14b9fe2e8e760f6b89048a6"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-202/input/target.py",
+      "sha256": "c39cf4f7b0b774f142f21920cbfc06d6ba4c4432ae5e29823570d5d01318e752"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-202/input/task.json",
+      "sha256": "e732ed9622a8776c1e47678242bdf87d36007ecf44c85af0807251021da695f4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-202/input/test_existing.py",
+      "sha256": "0bbcfc4524caa171df4b8e25ef505cbcc53a9e08786ede6ac0ad07ad1474e8be"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-202/oracle/reference.patch",
+      "sha256": "13b970db504f4b1cd37d30cba9f0fa6463e3d8042a368ded6bb3b075258739da"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-202/oracle/test_acceptance.py",
+      "sha256": "67a9ad030795ff7130f2a67f17b9ec5a52e1e7ed6b2a8de1af0d2991e1f84e9a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-203/input/target.py",
+      "sha256": "0167a710091fd15aa6e9570bee7cb0a23306b6480d41eff89695383112c77bca"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-203/input/task.json",
+      "sha256": "902efe43ebf2d4084de1cff2f2ad7b26279bb5bdb45dfc9f6e2cd7c0c02d7966"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-203/input/test_existing.py",
+      "sha256": "676fa65aed3f648c6427860c740dcb66ade46ccc82adb33ec4e6fa1ada7f2aa8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-203/oracle/reference.patch",
+      "sha256": "763d3cad0bf5e1b1f5286bb668591ce69f04c8530bb0bb6b5273832dab943160"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-203/oracle/test_acceptance.py",
+      "sha256": "857fd83d22ec8ec6275c67581635b1e95e28960ae6e51d4d358776f73fe33142"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-204/input/target.py",
+      "sha256": "efadcff0fd8dfc3ccf13b38ebb36a4a86d05247937e60dc439b00ab6d8a1cc67"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-204/input/task.json",
+      "sha256": "bc7280de005620a9d69ae06e04199b803dfde674b058c457831effe42d5940ff"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-204/input/test_existing.py",
+      "sha256": "7e2aebd47f46ed7103a6d531e2af90a125ec6a2729863d774afc5e954e1cfc2c"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-204/oracle/reference.patch",
+      "sha256": "d8ad3decd4925c2106d314ede3804dec932e1d05e1443f1998438a9c126ca9d4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-204/oracle/test_acceptance.py",
+      "sha256": "9bbbfeef4a1d04bbff5c225c6472f5e4de0583921a1852896a7a2ab972085495"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-205/input/target.py",
+      "sha256": "d8d701a085b01266fc292660ffdc98a5e23af13901056d082c19f04caf1a4b9a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-205/input/task.json",
+      "sha256": "3fdd5f2230348a2302229d20a8c76ed779501cb25888ffbc3d6a21c148a75da8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-205/input/test_existing.py",
+      "sha256": "127780861fc2829c7d06a8f07d82baa5b786ff66928425cdc91091e22238817c"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-205/oracle/reference.patch",
+      "sha256": "4ea3adb92bfaf8beadcabab6c635f6e2e2df51bd97d6cdaf6cdcae5d1cfe3dd4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-205/oracle/test_acceptance.py",
+      "sha256": "cf214df3a06960ba6eb7a80fd0e9793c1d959a53dac3ddd625a3b16edf538b99"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-206/input/target.py",
+      "sha256": "008f8955e2b65ee49b6abc8448e84a7c60fe8723ca6ddd71c7a023ecfe7ef9fc"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-206/input/task.json",
+      "sha256": "b56c33cab13dad37216efd1521fbc83eb69e4506e85bcc56a4915c0339aeb2fb"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-206/input/test_existing.py",
+      "sha256": "0c644b0b368fb613890b441aa3f17a1f91d2bd5f12d768d2ab6d88a1903c1fa4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-206/oracle/reference.patch",
+      "sha256": "14a0cc306133157e113270df7f53941419c38c1c66c1dae70fa2311294d8f3b0"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-206/oracle/test_acceptance.py",
+      "sha256": "ce9a6777661c7a7e71c5916a60f555e646a090610cba4173264556c5709138eb"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-207/input/target.py",
+      "sha256": "3e34aed5b55bfd2309a59fc60e6e4de0b7d80ff3dda71e1a7b2f355dc7ad7749"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-207/input/task.json",
+      "sha256": "79c64e4e726200d4d81cc34019753dcaa1d89bbcb8099d4048f45820d72769b5"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-207/input/test_existing.py",
+      "sha256": "b695ad4830cf4d0cebc24162760058f9f27ae844874d71c28cf46b5ab67e7b25"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-207/oracle/reference.patch",
+      "sha256": "2b060fb00857d1fce28b122a72a4f07039eb9ba9c0ada9a1d169b25a6b1f79ce"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-207/oracle/test_acceptance.py",
+      "sha256": "9829a3b8a83d8b172a4052fb667cf74dfe3830d6c04ef20a2ebc3e0bf5d51825"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-208/input/target.py",
+      "sha256": "d4ed045d54d529bc880bffcf77621b92ea8d8b12791ee80137f3f7b2de93dd2f"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-208/input/task.json",
+      "sha256": "35d805ebbff346709193d00870e0e4698f4376c6c77a4f18acb4905309eb11ce"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-208/input/test_existing.py",
+      "sha256": "c425d856e229822a0c3346babae58c17de412bc8cee46bf8f922a6009fc363ee"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-208/oracle/reference.patch",
+      "sha256": "51d6c8921ff4261e93b29c76a6f429b744265e42a9d0854a57f9a30b402fe975"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-208/oracle/test_acceptance.py",
+      "sha256": "64a8351f72b7759b6fbe7662d7295a38ce2ac5449e529fe7b3634acd131064e4"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-209/input/target.py",
+      "sha256": "d1efb5a890f1b0095b5061250d6dbbf124ed64ad7d3c8a741a7322dae645a26a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-209/input/task.json",
+      "sha256": "61327de11cfeacd9fa71d61d05edebb01f6479deaa29392e17592bbc3417f406"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-209/input/test_existing.py",
+      "sha256": "dbbeee984e7472281ef8a6a0b83866f3c655c85cdf4b4e16514991f650a80bdc"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-209/oracle/reference.patch",
+      "sha256": "6f47bf1f0d027ea52de87b54669147b8a1094a5525aa0064729c46248ec64823"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-209/oracle/test_acceptance.py",
+      "sha256": "b7a6ace25333678e6ac400cbb85ae1638a8d35d90a7fc83f92c3c0bd27f8da9a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-210/input/target.py",
+      "sha256": "75b29f634ac3963f5dd91ef86bf6a8e117b32f0ca596d062026cb6bda0d16497"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-210/input/task.json",
+      "sha256": "b77079cb8854e909c72d32f8bad3fa23273a413c9520065f71e2a7688cd443a9"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-210/input/test_existing.py",
+      "sha256": "b915f4fe1fb15d849e6034b11539b4c8498a33263dcf0031cff43720eb343125"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-210/oracle/reference.patch",
+      "sha256": "27a5b62a539aaca67ca912a41e5dd712a9d06c8cda9edab4745d5caed388f349"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/case-210/oracle/test_acceptance.py",
+      "sha256": "6c95729e9f63f4d7d225219eac9d882510aff41df37bcc1dcf191c1be7bd73c6"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-181.json",
+      "sha256": "9631de371e4bdff751b3ba01e3e1ca3c2e4a086043cb230634fd4751e45113e1"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-182.json",
+      "sha256": "30b0c38256e78cd1f21e9b3f66da3675d7cc84a5a65bf1b8ac1c179632fb4a32"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-183.json",
+      "sha256": "6e3bf12fe2e1f6694dca976451d1b645ff043f2a72299806cbdda70ec2b7e286"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-184.json",
+      "sha256": "401794b7cfd7047907711db8c9d557a3cf6acac1b8f28fd2353fea17a5a0fb51"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-185.json",
+      "sha256": "218c103a1826811e67c4c3626235b161067e9ee5051d067b818f63014b40df3e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-186.json",
+      "sha256": "89d750d989ab8fb4ba785e3f2849e3884771d080f8bf9ff83a1ab3beec0f8080"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-187.json",
+      "sha256": "13c25fbb52a2246bac94896cb5f2e39ac1bc83a907380f57363035cc7404c33f"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-188.json",
+      "sha256": "9b27f82e47a5ebc1aba7fa77cd80829c94254306f2f293754c51d09b4466b9ef"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-189.json",
+      "sha256": "f7b92691bcb450bc75007cd495660cf258b2a1f155923c47d14fa477817cd481"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-190.json",
+      "sha256": "9d461d25b41d7317360698417eaa40f4e41bbf702cc9775200aadaa2b4f17261"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-191.json",
+      "sha256": "3c8e6cac149daed37ed8d9d183f337a96b3e051c9f7ee845a5dc74ff141d2c95"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-192.json",
+      "sha256": "154864e6ab8801605dd1ad0af4ceb3a7c170e0e44a1de965d000b892e170509e"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-193.json",
+      "sha256": "59c2bd2e3707d58aee5eb9002510c219bf5c787a4928f53b3153a932896f039a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-194.json",
+      "sha256": "0e9f1e4fe4278466b8ddc0fd41dc25d0bb91a424bb0ed6f943a9a80546c74ac8"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-195.json",
+      "sha256": "d0b81f1f0baa102a493051f9f67aeca910e97a1872c611889f7de8c4eb36f2f3"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-196.json",
+      "sha256": "3414f663669044b92147abf231225134bd4fe5b12a71f8db3cd82b9f5c07386b"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-197.json",
+      "sha256": "7c9a77379eed979c66f28b75f0499c4bf954b3b23b85f8777812a4f6a5ca61e3"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-198.json",
+      "sha256": "73bdd7c7d5508709cd9393701d89b22efc2b1d2cbfd8624a3604cd76f1c62c0a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-199.json",
+      "sha256": "95ecff1f9bbe2f153fd5245c9b3080c16849d453a928a22408db1b1e5decd073"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-200.json",
+      "sha256": "e29dfaeae695e70e2d2e014187147d4158dd487103ccdee865a49853146b6a95"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-201.json",
+      "sha256": "d90c6cd5eddcaa1c30de90f8581f490eec264e7ff69062262a12016f88391dcd"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-202.json",
+      "sha256": "7aeaf86b227aa018428501bcf6a57b02590c4088075563585c9f7ab3829cd98a"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-203.json",
+      "sha256": "cc3f93e4a24b311894113db01354f8ea59a7d2881946c36c6bd03a5f07928f26"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-204.json",
+      "sha256": "59579574e39a53511c74ba834e50bad3591a24a57f1c5904247e55e545703c75"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-205.json",
+      "sha256": "5e6e50a8caa2362001effbcb173f14514ec18c3281a86e4c21664de18b20bf77"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-206.json",
+      "sha256": "022713ee2424d13a5e88e85928b8f3deb33910b39feb4f6e4a917936e0c54ba9"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-207.json",
+      "sha256": "d555107ec3d63c52801ec8937ebaa36a8fa485a433d6d2c1daa1b79faab801b2"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-208.json",
+      "sha256": "d4364344999a39d39c8677ba9c3b47288568c0bb79db1e3f2a726f38c431f200"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-209.json",
+      "sha256": "d46dd4c5354bc4639edd0acb91cec2fb25d7e003fcf160337933609c98ca1d0c"
+    },
+    {
+      "path": "private/Tencent-Hunyuan-Hy/histories/experience-210.json",
+      "sha256": "504055876bf8d78f1d0c50e0bd7aae13812b6f71b374e6943e28460882268c39"
+    },
+    {
+      "path": "private/WorkBuddy/case-61/input/target.py",
+      "sha256": "ed28394b01476c405a4d9342280d349e4f9a2b8247681bd5444e08872a1e0122"
+    },
+    {
+      "path": "private/WorkBuddy/case-61/input/task.json",
+      "sha256": "c73f61632be5210fbd6a3778ed367ca39c801b15ef8e0c978b43573a37dd5535"
+    },
+    {
+      "path": "private/WorkBuddy/case-61/input/test_existing.py",
+      "sha256": "b54d1cb71de9fd5dfe3a8be129fee68269af1246eb770e51667bb80f32c19b9c"
+    },
+    {
+      "path": "private/WorkBuddy/case-61/oracle/reference.patch",
+      "sha256": "a6f4128e827bc4e12af5c0d3c87d377e945497bf7bf077500af5c94be2477c51"
+    },
+    {
+      "path": "private/WorkBuddy/case-61/oracle/test_acceptance.py",
+      "sha256": "77f2bbc796ae01e4e22ff5a43520b1d73867d253e4a3fcfe1649c0ec8f1bd33c"
+    },
+    {
+      "path": "private/WorkBuddy/case-62/input/target.py",
+      "sha256": "2754b8ab9a12f5d16fadaaae185105d9fde5bce6f80b57303dac72157aa511af"
+    },
+    {
+      "path": "private/WorkBuddy/case-62/input/task.json",
+      "sha256": "63e7e3cd40adf98769cdf289f63f39385ce044456472372694eb3f1a75e16b66"
+    },
+    {
+      "path": "private/WorkBuddy/case-62/input/test_existing.py",
+      "sha256": "14dee305192f3874330df5432255f94d6d171ace6d03247b9f5265dfe44d6078"
+    },
+    {
+      "path": "private/WorkBuddy/case-62/oracle/reference.patch",
+      "sha256": "1d97effb17272deffb2493645e26d195297d6d7a660fc4b32ecd921912386eaf"
+    },
+    {
+      "path": "private/WorkBuddy/case-62/oracle/test_acceptance.py",
+      "sha256": "41a31c9b5481fb71d25a49b9d18b925bb0cb6fb07fa4819344202db7530667e9"
+    },
+    {
+      "path": "private/WorkBuddy/case-63/input/target.py",
+      "sha256": "08b5ffc017f45e74939e765ca373687bae04eb5fa828ee518b5fa898288df492"
+    },
+    {
+      "path": "private/WorkBuddy/case-63/input/task.json",
+      "sha256": "85141c2fe57a5fe2d83ad590d2f3acf66dfcdcf334af7bd9c87ea6632438e620"
+    },
+    {
+      "path": "private/WorkBuddy/case-63/input/test_existing.py",
+      "sha256": "01aa98340ee32d5c9d5cba154a78b4d6c268127aac2ff04306a0473128fc9de4"
+    },
+    {
+      "path": "private/WorkBuddy/case-63/oracle/reference.patch",
+      "sha256": "b9964430b10f6a5d8dc70ce89fd65f73874763ff3d7ec2da84482b522005b514"
+    },
+    {
+      "path": "private/WorkBuddy/case-63/oracle/test_acceptance.py",
+      "sha256": "fd1b9cab51c1ad17fad9b39d32da989f313b2eb25b7417f18bab78121bbb8e34"
+    },
+    {
+      "path": "private/WorkBuddy/case-64/input/target.py",
+      "sha256": "9e6cdbc412ada7fc417a10ee7fee41873bf9c45985bf0e50444e83dfbeed9c00"
+    },
+    {
+      "path": "private/WorkBuddy/case-64/input/task.json",
+      "sha256": "739ea980fb6b3770b40ec88111ff80663c65f04880b7f1c37ab6c31753b8b22d"
+    },
+    {
+      "path": "private/WorkBuddy/case-64/input/test_existing.py",
+      "sha256": "1b88295ef2b9380eb9beada3340b8c48ac403f499a8363ac9d14a9c338ffb8cc"
+    },
+    {
+      "path": "private/WorkBuddy/case-64/oracle/reference.patch",
+      "sha256": "e60e6de7305611cfd02faa6971de0815cba12674c80bccf3885fca7d8c889d2c"
+    },
+    {
+      "path": "private/WorkBuddy/case-64/oracle/test_acceptance.py",
+      "sha256": "c07075f354d8eb03f1d379e701f7b0a07eba17c78603a3b3ef9e55930f4ed76f"
+    },
+    {
+      "path": "private/WorkBuddy/case-65/input/target.py",
+      "sha256": "d10a9d2187d09123c1e6784cf7be6e6ef75ea4136941ff90001e1a1cb4c600d2"
+    },
+    {
+      "path": "private/WorkBuddy/case-65/input/task.json",
+      "sha256": "d5a16e02fc80fe2fbead60b89675bd1e67c1e64ca57dcc2a722b90d87c9de393"
+    },
+    {
+      "path": "private/WorkBuddy/case-65/input/test_existing.py",
+      "sha256": "0f2b8a9c6c60512e8dbeee121c07f664c875ac9c5ceba91e455530982777f0e6"
+    },
+    {
+      "path": "private/WorkBuddy/case-65/oracle/reference.patch",
+      "sha256": "234fd663e2d9956bf6bfde80edc05475ea344e33557eecdd879c456706e90f3c"
+    },
+    {
+      "path": "private/WorkBuddy/case-65/oracle/test_acceptance.py",
+      "sha256": "25da064f98da1b6473e2cbbad8ead6ec8020c4fc4cecf0090a0640b13384b5b4"
+    },
+    {
+      "path": "private/WorkBuddy/case-66/input/target.py",
+      "sha256": "71e208a49ac3fc3895a1959f60c095060ebfca6b6682a9fec4e9791c0acc2965"
+    },
+    {
+      "path": "private/WorkBuddy/case-66/input/task.json",
+      "sha256": "a568610f560687a80f0b6bb13eaed9bf8caa5aa1c964d098278ddb0ed7e288fa"
+    },
+    {
+      "path": "private/WorkBuddy/case-66/input/test_existing.py",
+      "sha256": "1b18cf281c91e091a311a2c676af9ed4019ac739192709b1519f7858c967b252"
+    },
+    {
+      "path": "private/WorkBuddy/case-66/oracle/reference.patch",
+      "sha256": "e907fa0d3505c887b81694614a3e49518998cb3d9d221056226d6a9539a111bf"
+    },
+    {
+      "path": "private/WorkBuddy/case-66/oracle/test_acceptance.py",
+      "sha256": "6741c909b85a372cc7c556d922a62d9600c73237eea98f011d538600163ef0ae"
+    },
+    {
+      "path": "private/WorkBuddy/case-67/input/target.py",
+      "sha256": "a0c3b92f2e3c9950b82329d20633052fb004e2f77de11d5b40e97d3954366df8"
+    },
+    {
+      "path": "private/WorkBuddy/case-67/input/task.json",
+      "sha256": "b17e0db7f803be00f7df0bb073b883dd587f4eb5b72523e665da1ed92b3efb50"
+    },
+    {
+      "path": "private/WorkBuddy/case-67/input/test_existing.py",
+      "sha256": "a514920324aabec15c5af982bc0ddf3e8d46f81f51e5154737dc0b436561b27d"
+    },
+    {
+      "path": "private/WorkBuddy/case-67/oracle/reference.patch",
+      "sha256": "62b85faea71cd0934b046e5a793d3f93f11039771c258513275e5305606db883"
+    },
+    {
+      "path": "private/WorkBuddy/case-67/oracle/test_acceptance.py",
+      "sha256": "a206ac8862709186cca0ab21d27e79e7ddf249bc1d8a4728699df38f79e9da13"
+    },
+    {
+      "path": "private/WorkBuddy/case-68/input/target.py",
+      "sha256": "b677d7a9dce9dc8a1e864cf28d6e03ee9f0a11dc21818776d20537482e89b84d"
+    },
+    {
+      "path": "private/WorkBuddy/case-68/input/task.json",
+      "sha256": "af4be4ec7a7440fefb896ebbe9fce0d72dcaf6ce92d5a07f4947d0e431fcf5a1"
+    },
+    {
+      "path": "private/WorkBuddy/case-68/input/test_existing.py",
+      "sha256": "08461f9a70dca046a5155dca4e52acd1e1d37b9a3eb4ea4a04f6f0a94ae2085b"
+    },
+    {
+      "path": "private/WorkBuddy/case-68/oracle/reference.patch",
+      "sha256": "791ea8bf5689c8353f4f62c22c5ab37988f69af01bce3c829ba5465b4b71c8f8"
+    },
+    {
+      "path": "private/WorkBuddy/case-68/oracle/test_acceptance.py",
+      "sha256": "e2aca2941aa778c0a4ac72a8945b5d447d66b37721f9ad419b0f7c51eedcb4f4"
+    },
+    {
+      "path": "private/WorkBuddy/case-69/input/target.py",
+      "sha256": "0663099794ddf621057518651c6dff7d70941613981b5a61756c82b0e16e8694"
+    },
+    {
+      "path": "private/WorkBuddy/case-69/input/task.json",
+      "sha256": "14d850a18308070e52bb2171d3aa2bb1c452bde5a6e4bc52c8001a0ccdbdcfe9"
+    },
+    {
+      "path": "private/WorkBuddy/case-69/input/test_existing.py",
+      "sha256": "987bcc82223c42a94a2b504cd93e74aefbe3f2a0b576cf14918e3d9b6429c5f3"
+    },
+    {
+      "path": "private/WorkBuddy/case-69/oracle/reference.patch",
+      "sha256": "294c185b65d9558769eb8bfe673a11c9b64a9ca86140796712c53542ca02f9f1"
+    },
+    {
+      "path": "private/WorkBuddy/case-69/oracle/test_acceptance.py",
+      "sha256": "71c9c19b95a920c6f1f9bda04986b738e41a774d199d59102b273b1495d807a1"
+    },
+    {
+      "path": "private/WorkBuddy/case-70/input/target.py",
+      "sha256": "3eb4dc3af4946c03cfaac290882c47af1b3b80b9809ce63d5d13676af61b6603"
+    },
+    {
+      "path": "private/WorkBuddy/case-70/input/task.json",
+      "sha256": "88f9714479cda6e8de67e0303992069c434f819ea7823836a1c9c81d72d659dd"
+    },
+    {
+      "path": "private/WorkBuddy/case-70/input/test_existing.py",
+      "sha256": "1c84bbe431d6f31cb60845671282aab792dfce950754dadfd9ee280300d8f3e6"
+    },
+    {
+      "path": "private/WorkBuddy/case-70/oracle/reference.patch",
+      "sha256": "90a953327bf23c289ef55830011ef22c63e561630d58692cc7614e20a5ee4585"
+    },
+    {
+      "path": "private/WorkBuddy/case-70/oracle/test_acceptance.py",
+      "sha256": "4bd78aeb90b3c2b3228782d34562fcae6b9122ad78821448e530c5c269ceb90a"
+    },
+    {
+      "path": "private/WorkBuddy/case-71/input/target.py",
+      "sha256": "6f923468ea8544e513a2a5faf7e240cb52ee4b958f87e593530db3c21db2b587"
+    },
+    {
+      "path": "private/WorkBuddy/case-71/input/task.json",
+      "sha256": "9090e09a6c285b8faf4cf22492d5b141a08ecb40e10509b747e094b61eaa27e0"
+    },
+    {
+      "path": "private/WorkBuddy/case-71/input/test_existing.py",
+      "sha256": "14793a724a88a928ca410193262c59cff0114f41a8569afea36af0143ef02326"
+    },
+    {
+      "path": "private/WorkBuddy/case-71/oracle/reference.patch",
+      "sha256": "6ee8a238567f83ae3233d9a1288c503515510ddbc506785c99baac170faeb1bb"
+    },
+    {
+      "path": "private/WorkBuddy/case-71/oracle/test_acceptance.py",
+      "sha256": "9c4833338428d5ebcb17689417d27ffff7ee1ecbdd67bf6ff2b59279fee04a50"
+    },
+    {
+      "path": "private/WorkBuddy/case-72/input/target.py",
+      "sha256": "cac5e012c1ba9560cb5949485d662bb0d2c1c6a32cf7cc45454fb317f52a516d"
+    },
+    {
+      "path": "private/WorkBuddy/case-72/input/task.json",
+      "sha256": "c76b0b70d66e4ff527d8060aa5e97023e18a2c2e34245f896be86710d40bffe6"
+    },
+    {
+      "path": "private/WorkBuddy/case-72/input/test_existing.py",
+      "sha256": "66265f7eabbf4611582b3daa28df40ecdc4ff3a1ed0a4d74c1159c194ab61559"
+    },
+    {
+      "path": "private/WorkBuddy/case-72/oracle/reference.patch",
+      "sha256": "46dea616fc2469b9951e7fe962f6a495a1782cbc833df3fa843a3b9fb550d02f"
+    },
+    {
+      "path": "private/WorkBuddy/case-72/oracle/test_acceptance.py",
+      "sha256": "0bb0a1f544c10015e6d78aedf593d2a280e2f8c0b5525557dfc0d6d9b69bb705"
+    },
+    {
+      "path": "private/WorkBuddy/case-73/input/target.py",
+      "sha256": "fe72769a32df3c24da8012aa856b76eb0eef0defbdc8767505c0380bcb9d98d3"
+    },
+    {
+      "path": "private/WorkBuddy/case-73/input/task.json",
+      "sha256": "59d9a7a2c3fcdd8f4e03cbf07746297b7d7871452034cfb400f7afe33c3fb217"
+    },
+    {
+      "path": "private/WorkBuddy/case-73/input/test_existing.py",
+      "sha256": "2f02f239317f15a19d58c617040e4059eac26127c3ddc09f885efef8a99fff8a"
+    },
+    {
+      "path": "private/WorkBuddy/case-73/oracle/reference.patch",
+      "sha256": "08f69ee76ceadc9560d582f37f02207f3b1c526f5dfacc5ee6058ea690316393"
+    },
+    {
+      "path": "private/WorkBuddy/case-73/oracle/test_acceptance.py",
+      "sha256": "379625d5312f5d4436826139f23083a6cc7306e93cf69f39defcbb911c97adc8"
+    },
+    {
+      "path": "private/WorkBuddy/case-74/input/target.py",
+      "sha256": "edaa9adf5300944f2f89393dfb6c3a45bb59727edb15c210b5b0d457b2efdf77"
+    },
+    {
+      "path": "private/WorkBuddy/case-74/input/task.json",
+      "sha256": "db13bca49f0a80b2e9fddd622273a8663d18baf3932aa64c9d9e592bd5fce3b9"
+    },
+    {
+      "path": "private/WorkBuddy/case-74/input/test_existing.py",
+      "sha256": "86f7767b5add1bfc57a3a896b6281709fe3b8a16a02fcb8777da4e8688f277d4"
+    },
+    {
+      "path": "private/WorkBuddy/case-74/oracle/reference.patch",
+      "sha256": "6903cba10fea0d8128da4b5c9994daaf51edb205bc51b336f4dc0bb7dd368cd1"
+    },
+    {
+      "path": "private/WorkBuddy/case-74/oracle/test_acceptance.py",
+      "sha256": "2010c49c05b3311358460766595f7aebe0d403e80528e016bd13537a407f4ac5"
+    },
+    {
+      "path": "private/WorkBuddy/case-75/input/target.py",
+      "sha256": "0740a5b84532f8c0845fec87eabd340be1a482643a5e8605b59cf1af113c19ff"
+    },
+    {
+      "path": "private/WorkBuddy/case-75/input/task.json",
+      "sha256": "b613e0254ed4e7de70f7a77b242fea5b4ec8bf8b15f6c14de3f53cff8aabdb14"
+    },
+    {
+      "path": "private/WorkBuddy/case-75/input/test_existing.py",
+      "sha256": "fc3a4f7a3dcb20e2cad2ac67e6747030c89506dd78b3b97b94dac5eef3f62448"
+    },
+    {
+      "path": "private/WorkBuddy/case-75/oracle/reference.patch",
+      "sha256": "879814490cdff7add930c622dae2c32d123d69069e1e73b67656075575135d54"
+    },
+    {
+      "path": "private/WorkBuddy/case-75/oracle/test_acceptance.py",
+      "sha256": "976bd3c251cda6ae746e73bf4f8a7920398f675f95ce9dbfc7c24e62564f63f5"
+    },
+    {
+      "path": "private/WorkBuddy/case-76/input/target.py",
+      "sha256": "ffc0890ec4e8c86961a810523797d9593b2cde2f2ce298dd1b5a980dd8ab0740"
+    },
+    {
+      "path": "private/WorkBuddy/case-76/input/task.json",
+      "sha256": "05c356c49904880a87c90d5d579f152ba146cc6a2e57dcf0cfa3be3440c59847"
+    },
+    {
+      "path": "private/WorkBuddy/case-76/input/test_existing.py",
+      "sha256": "7a83d914387a9df2d3a71d5914e9c5ac020d2fedaf5176ebbd083371dd9a8863"
+    },
+    {
+      "path": "private/WorkBuddy/case-76/oracle/reference.patch",
+      "sha256": "d02bf6794559dfa168b027e7e9997db3b10e7162f525be5be25cd366ec08113b"
+    },
+    {
+      "path": "private/WorkBuddy/case-76/oracle/test_acceptance.py",
+      "sha256": "1939fa78cc1522f76c023db664248defb5c44f553abc16dc8fe2aed6921ce4bc"
+    },
+    {
+      "path": "private/WorkBuddy/case-77/input/target.py",
+      "sha256": "549b83d43399c8a8cde4626052225549abf2c113622950eb1fb11c9cad6aec6b"
+    },
+    {
+      "path": "private/WorkBuddy/case-77/input/task.json",
+      "sha256": "d4ab93c51fe901fda1fd03816a97880c6f391b34fcfaf9c3ec3b77dd7e0b5ce0"
+    },
+    {
+      "path": "private/WorkBuddy/case-77/input/test_existing.py",
+      "sha256": "5538315389601bd2b3638f88baa6eb2a22ba8fae8b1cc1b7f017f025bc12638c"
+    },
+    {
+      "path": "private/WorkBuddy/case-77/oracle/reference.patch",
+      "sha256": "d8ef19acce6914987ea0b0e21236a4456a3a0a59dd34a381a5437665d592e67a"
+    },
+    {
+      "path": "private/WorkBuddy/case-77/oracle/test_acceptance.py",
+      "sha256": "a3193dfd978f40d7f83f3b843052d25bf865c02d03dbd9673f5c9ee2dd306cff"
+    },
+    {
+      "path": "private/WorkBuddy/case-78/input/target.py",
+      "sha256": "0e2214e3624033542b99dae0fdd68741ab41ff6659c725894b46101ccae2f591"
+    },
+    {
+      "path": "private/WorkBuddy/case-78/input/task.json",
+      "sha256": "5851b4af211dc5404c7b205bdc308c0c8d3837e28ca67aa4560cd5159818fbde"
+    },
+    {
+      "path": "private/WorkBuddy/case-78/input/test_existing.py",
+      "sha256": "e9292b3fbf9acf3ef782f97d2f21a70a66f49a87c3f0b5d83df43af6053c1d79"
+    },
+    {
+      "path": "private/WorkBuddy/case-78/oracle/reference.patch",
+      "sha256": "ca99438b246a0e8b96d134a851d9c31c7e6a578f5caea2a8d48a7075e3a76162"
+    },
+    {
+      "path": "private/WorkBuddy/case-78/oracle/test_acceptance.py",
+      "sha256": "f9cc339518158858186f7fab50528209fd6be9145f9eb5a38d7f4d67419798b4"
+    },
+    {
+      "path": "private/WorkBuddy/case-79/input/target.py",
+      "sha256": "2560d7cfc803273b7216ec281bf16eb2dd4f552cbdfc3f14680178d6ba493000"
+    },
+    {
+      "path": "private/WorkBuddy/case-79/input/task.json",
+      "sha256": "c83408ff099da1140573d47d450c8f37b79ffd213cd3e01bf977d81a0852aa09"
+    },
+    {
+      "path": "private/WorkBuddy/case-79/input/test_existing.py",
+      "sha256": "00f8db7cd7b1d169130a302d436e2d615b5acf6f81ac006df29e8180d30bc977"
+    },
+    {
+      "path": "private/WorkBuddy/case-79/oracle/reference.patch",
+      "sha256": "b7e5e87641138aa7a77667eefe9d65603047c6ea8a25347361f34148e05f14d4"
+    },
+    {
+      "path": "private/WorkBuddy/case-79/oracle/test_acceptance.py",
+      "sha256": "5601327d5798c6c093436c1e00cad3aac33f6d599a002dcd9135453cef70dbec"
+    },
+    {
+      "path": "private/WorkBuddy/case-80/input/target.py",
+      "sha256": "c1eae4e43ef8167ab27852179daa4f30e4b0de0fcacb9fab32db487b9451ebab"
+    },
+    {
+      "path": "private/WorkBuddy/case-80/input/task.json",
+      "sha256": "fd21bcd03b10bc27867bef99d0885d9fc5749ec128e00159b664696530159b89"
+    },
+    {
+      "path": "private/WorkBuddy/case-80/input/test_existing.py",
+      "sha256": "dd82891ae1ba905a18afff29bd213ec4033b98f8c657bdf66d1ed5b3bb45f28d"
+    },
+    {
+      "path": "private/WorkBuddy/case-80/oracle/reference.patch",
+      "sha256": "0e492dbe6663575959ed732cecd259c485e644e0c621669d17118617495c68d1"
+    },
+    {
+      "path": "private/WorkBuddy/case-80/oracle/test_acceptance.py",
+      "sha256": "c42d45ee028f49a4975e8843076297155971a1166d2b3200a6c63a474c633180"
+    },
+    {
+      "path": "private/WorkBuddy/case-81/input/target.py",
+      "sha256": "5a61b9cc946c85b74ee17a8496dd1e85e1c2df076cb2d57f32f23a6adc703fc8"
+    },
+    {
+      "path": "private/WorkBuddy/case-81/input/task.json",
+      "sha256": "9e0ea5a6a5392e4d36e0ca52e1abbceda2af1de2727d654e99473c659aea64b8"
+    },
+    {
+      "path": "private/WorkBuddy/case-81/input/test_existing.py",
+      "sha256": "255ce2e39feaff15dd68c37bbbdf25c8970098efbe67778066040a7fbdc58491"
+    },
+    {
+      "path": "private/WorkBuddy/case-81/oracle/reference.patch",
+      "sha256": "a052cb27113916fb801fcb85bd4bd8bc1915b328c07431fe5f17a55147f468d1"
+    },
+    {
+      "path": "private/WorkBuddy/case-81/oracle/test_acceptance.py",
+      "sha256": "dd17eee4df54e13f0b4f1d7722142dd09963968c8289e9bacd1c9055466d9f00"
+    },
+    {
+      "path": "private/WorkBuddy/case-82/input/target.py",
+      "sha256": "ba903c24c67a201d26d69879f9dc1f360f19678fc1a33aa04496f8295269bad4"
+    },
+    {
+      "path": "private/WorkBuddy/case-82/input/task.json",
+      "sha256": "910ab786e1f2e76c79400b70ff1f95b351f32dc2268ce9aa7c54fa040bf17895"
+    },
+    {
+      "path": "private/WorkBuddy/case-82/input/test_existing.py",
+      "sha256": "a02482921839aeef166b7f9db478242c4bc1d1bdf2a68c07ce5f2f262c3756d1"
+    },
+    {
+      "path": "private/WorkBuddy/case-82/oracle/reference.patch",
+      "sha256": "f3f49f458fcaf66829d9571c867864baaeac8805388a1f8b65493a11d5d05a11"
+    },
+    {
+      "path": "private/WorkBuddy/case-82/oracle/test_acceptance.py",
+      "sha256": "c000f8ec3d7d5c5dcf102452250c9232ee1afc73a66983910c04a79e226f3498"
+    },
+    {
+      "path": "private/WorkBuddy/case-83/input/target.py",
+      "sha256": "e9c95abce8dd5e087f4974f14fe44df600c149178b2128da679170835e7688a3"
+    },
+    {
+      "path": "private/WorkBuddy/case-83/input/task.json",
+      "sha256": "daaee341071f8d3dd5eaca2580c18dd7d45fbf3be5f0e9cd3f7f4ae0be659471"
+    },
+    {
+      "path": "private/WorkBuddy/case-83/input/test_existing.py",
+      "sha256": "a6b947f2d71b608e2ad5028b729ce0302f7184b91930c6f2207e193e20c10530"
+    },
+    {
+      "path": "private/WorkBuddy/case-83/oracle/reference.patch",
+      "sha256": "a418e81c1cc5fde917ef2c0fe1a7320999cf674228bfd3f77e595b0dd1b37543"
+    },
+    {
+      "path": "private/WorkBuddy/case-83/oracle/test_acceptance.py",
+      "sha256": "b54b938f74c774f2cfacd34fb206c52346e0c2d57a733089e6101ba5a7e28e21"
+    },
+    {
+      "path": "private/WorkBuddy/case-84/input/target.py",
+      "sha256": "1bcf7940edd7c5c0539d58ee1b011b96cac7c980137d5e20502c36ab834a3455"
+    },
+    {
+      "path": "private/WorkBuddy/case-84/input/task.json",
+      "sha256": "e1464f3fbe3bc37bb9241d6d6281ef9325e691e06afab0a5faf2707dbb0b2291"
+    },
+    {
+      "path": "private/WorkBuddy/case-84/input/test_existing.py",
+      "sha256": "3554c7f128d27cf315454308da823905e78a518d2227f48fb7e415c09666dab6"
+    },
+    {
+      "path": "private/WorkBuddy/case-84/oracle/reference.patch",
+      "sha256": "327fd75f1d577a7930879b0efe23b33a9dc0beeab75a5062fb4c0e277b4f97ae"
+    },
+    {
+      "path": "private/WorkBuddy/case-84/oracle/test_acceptance.py",
+      "sha256": "0caceadc77d9182f0e48d86b9d8e4d98d3fe8ac77a8bad21be32587f70c8e1de"
+    },
+    {
+      "path": "private/WorkBuddy/case-85/input/target.py",
+      "sha256": "2fb29f61ff895305fce49f891bcc3b43c8c114343d30ee5e3606831e8686c4ac"
+    },
+    {
+      "path": "private/WorkBuddy/case-85/input/task.json",
+      "sha256": "bb12132fe27850ac3a03641ec1d80beb12d572a4641ad9cd377ef71648bcd1a3"
+    },
+    {
+      "path": "private/WorkBuddy/case-85/input/test_existing.py",
+      "sha256": "5d7adb1bd1fbf450f3dcb5ee9121d80c96bd7f2dbe67125e7b02902c4d3f04d7"
+    },
+    {
+      "path": "private/WorkBuddy/case-85/oracle/reference.patch",
+      "sha256": "2965205475a0152f76166bf73c2ce805835faa21959634cff08e5a6df5c1284f"
+    },
+    {
+      "path": "private/WorkBuddy/case-85/oracle/test_acceptance.py",
+      "sha256": "b471d5d646d2cb6df5e3a2ebd38e30b36c5013a0776b8d0fbfb312dc148d821f"
+    },
+    {
+      "path": "private/WorkBuddy/case-86/input/target.py",
+      "sha256": "de212195cd799dba6b2441684339edb2b761ac7cf406e5569177343a6605ff92"
+    },
+    {
+      "path": "private/WorkBuddy/case-86/input/task.json",
+      "sha256": "f4905ac3cfc511f3bd976e1d2442d5dbc4c6c054fe6e5f2c9ca37fbb96a9d1a6"
+    },
+    {
+      "path": "private/WorkBuddy/case-86/input/test_existing.py",
+      "sha256": "d6a596df5d5c4131af24515ad3fa997b8855cee3e537a88f11ba41be44097a43"
+    },
+    {
+      "path": "private/WorkBuddy/case-86/oracle/reference.patch",
+      "sha256": "f0213d3649ba6d37ec11d8116515e47588df02253fd798203b2d28b0f912ac07"
+    },
+    {
+      "path": "private/WorkBuddy/case-86/oracle/test_acceptance.py",
+      "sha256": "700405f5fc913b592314672f507c8cb654b15eb19f4977d30fbfdb60d82a7ca8"
+    },
+    {
+      "path": "private/WorkBuddy/case-87/input/target.py",
+      "sha256": "1ed169d6829052a1de3448e97f694680714019b497fab607a297f269960fa6e1"
+    },
+    {
+      "path": "private/WorkBuddy/case-87/input/task.json",
+      "sha256": "d72a0e452a38c0f7d2f8f825b6de28ead91e34c67292365759c8be68a7d3d4e4"
+    },
+    {
+      "path": "private/WorkBuddy/case-87/input/test_existing.py",
+      "sha256": "dee0e1474ed9c28fcf55668de5c44f7ca0c1d60bb1661be804b0da0bd6e55d08"
+    },
+    {
+      "path": "private/WorkBuddy/case-87/oracle/reference.patch",
+      "sha256": "574d47994c8d4d11eb689c94d3cb9b798c228b851f7d434083bf3ee630aea292"
+    },
+    {
+      "path": "private/WorkBuddy/case-87/oracle/test_acceptance.py",
+      "sha256": "9401a506e73ab303cf000d239582cacae8f17a8248b6dd2aaf1df07e83e413c0"
+    },
+    {
+      "path": "private/WorkBuddy/case-88/input/target.py",
+      "sha256": "a101b352829e6e1d550d7595e877d9d2462c0e2a7cb8186a61a7c4f9c8912e04"
+    },
+    {
+      "path": "private/WorkBuddy/case-88/input/task.json",
+      "sha256": "ba553891ce4cade7266d48d57ec813a5c79fef395e9c8dd7709448cef82004fa"
+    },
+    {
+      "path": "private/WorkBuddy/case-88/input/test_existing.py",
+      "sha256": "5f2c8ab92fbd79bfe27df6d44be1312cc65d830e78a70ea0201fa508f50f4768"
+    },
+    {
+      "path": "private/WorkBuddy/case-88/oracle/reference.patch",
+      "sha256": "1ab23a1e80f6b3e4b7eb2cc5cf4377f69edb662837277a72c2489b66d76ba025"
+    },
+    {
+      "path": "private/WorkBuddy/case-88/oracle/test_acceptance.py",
+      "sha256": "de35bb8fbb4c7302c99d5182d1bc3da79a3d693b50a39e1a3639997e7e39ab78"
+    },
+    {
+      "path": "private/WorkBuddy/case-89/input/target.py",
+      "sha256": "3d437a27948e0426a4994902b4e37298feacc0b83c6543a65f77e1f4394f2e86"
+    },
+    {
+      "path": "private/WorkBuddy/case-89/input/task.json",
+      "sha256": "5ce6e3df63f4379e72c38dbdce5fc154f5a00122bc3a7a6f03b697a5cb727b4a"
+    },
+    {
+      "path": "private/WorkBuddy/case-89/input/test_existing.py",
+      "sha256": "5074f3996195458c6d532f826357cb370faec232a62b804706ddc4384e4cd397"
+    },
+    {
+      "path": "private/WorkBuddy/case-89/oracle/reference.patch",
+      "sha256": "705294d5102c1d6b00f1bb64c02de51e250c941002fd7aad40a498082bf1303e"
+    },
+    {
+      "path": "private/WorkBuddy/case-89/oracle/test_acceptance.py",
+      "sha256": "ada8f3fcf42f52a7c8b3a9c91cdd6824aa49b6090919f3c585f8365cfafb712f"
+    },
+    {
+      "path": "private/WorkBuddy/case-90/input/target.py",
+      "sha256": "9dc36a4d3f8d909416e94b6e56da8438eb3305976cbd252cd91db6fc332272ab"
+    },
+    {
+      "path": "private/WorkBuddy/case-90/input/task.json",
+      "sha256": "67466dcae5e246ca2a13c8394b4d952cd0e30566f324a3160f01cebedc00c2d1"
+    },
+    {
+      "path": "private/WorkBuddy/case-90/input/test_existing.py",
+      "sha256": "995fb4efa037390e9be617b425da72ecccaaf97bddc2490c44db6b95b66ee9b7"
+    },
+    {
+      "path": "private/WorkBuddy/case-90/oracle/reference.patch",
+      "sha256": "4bd9a128cbf9dcd84ed8320236ae699d1d78869061b208963912cf615d817f84"
+    },
+    {
+      "path": "private/WorkBuddy/case-90/oracle/test_acceptance.py",
+      "sha256": "fc069a7e0c91a7219125d5bb9d897890c31c783c9cca2327421fcd3fbf1b7ebe"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-61.json",
+      "sha256": "0a13d8206bfbd5fe538766982de9beb092aaf5f05f0d741e543c02f421bfba44"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-62.json",
+      "sha256": "5495ace9e26992165075b54ce5ecd449c3de08462112bbd0be5f68f55024fca8"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-63.json",
+      "sha256": "b8367e86245a0c0f30a545103dac1835c8bcaae41d038ba1e244ed343b6ac563"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-64.json",
+      "sha256": "74474614690984ed7c36c3b19efe0602236e9db4b819d44f73cbb2fe281af25f"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-65.json",
+      "sha256": "1a3e362d41a36b0e81c6a8cf85acd464cfbb304d8371866aaac22cdeea062573"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-66.json",
+      "sha256": "fb3a02dc2cc6828ef5c7b48c1aab8daa9ea7a9b6b468358eed4c0418030f9c10"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-67.json",
+      "sha256": "5b2e6a5d7d2a705c8076d1cd566a6ffa959a46319aaf748ae66574ab1239a6ef"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-68.json",
+      "sha256": "f0a8e6866b332309274a6bcb47265f2a849011abc6cb0b1ae53198bad68cd552"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-69.json",
+      "sha256": "993658d6d82aa470ebf680c12d2c8d3c0fa6af594f387edc1c63fa81007d478d"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-70.json",
+      "sha256": "44d45ad9904932f3d333e99c23177f8088c7be0343e82f9c0912d6cfbc964292"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-71.json",
+      "sha256": "78783d147af9c1633ee7df57135477dbe1b12bfdcea22a5170c533d506b98efe"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-72.json",
+      "sha256": "a787051d18d16589aecf948c618f1603de7773330b9ed0dc37333cc0db899910"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-73.json",
+      "sha256": "ac66521663d0f9095646b83bd04031abc5bc44791a4cf341be2346c16d6f12ff"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-74.json",
+      "sha256": "45ff11c28aa1be8b3cfad309961854fde9015b73b3f9a830a7d422d942ed1a06"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-75.json",
+      "sha256": "626fc664294f946af37a2361170b2a36802d5912bb7bd62de5a85ed2f2a75f8b"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-76.json",
+      "sha256": "22d509e164301ad64f820a81df2cf5e8cf268607e059a8a86a72e1e1e2ff56db"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-77.json",
+      "sha256": "2b6a148a0fb362077ce81368bb9ab73c53a5141041990bdca9e94480e40176a1"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-78.json",
+      "sha256": "31455a6eba4efd22de05c24553478d5f3b40d8fe42d03dad7b1746d4f1fe7d73"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-79.json",
+      "sha256": "6712142a41ecfdaf82393f178a82c921b25c8195142718e741eb1b121c66fc4d"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-80.json",
+      "sha256": "0be0c755d872a74a792987a99a075b8f96a2f1f294769717640e833c00b6d4ba"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-81.json",
+      "sha256": "5e116c16aa4272d40de7f3f30e6e186883108231f717a0188af4b35d87710ef7"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-82.json",
+      "sha256": "cf2466b7e0624baa61458484c1f6e71b0e31cf20b7a5416ff8d2b232890b203e"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-83.json",
+      "sha256": "5538f2442f9506e4e525dc7f7a87589df4c131c1c76160e5be4eeb1ce82bbcec"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-84.json",
+      "sha256": "35f6ef242cd037dccec237e9659456c22bb5768d153aea43ad74780130652048"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-85.json",
+      "sha256": "f33e08bf21fc6398f264c75fca618930e7ca645e13655161bfed739cd27cd906"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-86.json",
+      "sha256": "dfd3abcdd202946cd99549a624df93b44b2da170fc599e7067d706ee274e7b91"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-87.json",
+      "sha256": "99446714d6df5e81847daa127aafd0f97b82ca6dac31e3bfc175549a39f5db0c"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-88.json",
+      "sha256": "eb3dc90ee1cad86527e2ef227138eeef0e8fb431cb22005b07f085b85963eec2"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-89.json",
+      "sha256": "45cb79e12a8f83deab12a9143cf5e3de89b1176ea5ca9c634e71f84fbd776091"
+    },
+    {
+      "path": "private/WorkBuddy/histories/experience-90.json",
+      "sha256": "1d6f12fea548e5b9cf22d32450d06b05a1ce1e1383f23f4bfe1bbda850e32adf"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-31/input/target.py",
+      "sha256": "445e1452a77e2397a0040946966e55731344a4237f1c0f278b493f1c245bf7b0"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-31/input/task.json",
+      "sha256": "86c827704b48811ec5a66edf9f69def429be0ebdc5b1be4a70e760a2533144a6"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-31/input/test_existing.py",
+      "sha256": "6e95fbdfc23cb1e44fecaa7da018e8e10b2b4e412f2110c1ae1a1ffa4e210550"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-31/oracle/reference.patch",
+      "sha256": "d17b4a9d4a5b4d6f8f016319e4e3772d5d7fd19523f39b14330dca11a90698b1"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-31/oracle/test_acceptance.py",
+      "sha256": "965c243477d334466ca6539b0c2cd0c4874dbaf2a3e7b30c407f2e53c43b14dd"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-32/input/target.py",
+      "sha256": "d3a61a4bd48bf5c6a549d330b7c4f36b2b1fba0631f93cf8d7bff4103972c532"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-32/input/task.json",
+      "sha256": "82a5da303c24bf2abc1caf84b0e3dfde5b6624ae295419ed0f54254554ea893a"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-32/input/test_existing.py",
+      "sha256": "c58b81c7a51ddad755a9ad24d5b5e2c0fd31b291baeb3d75dfd672bae51fcd73"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-32/oracle/reference.patch",
+      "sha256": "03418bfc01dfb77609812070e90d5063496f19045ec3eff02b1671f68870fbd8"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-32/oracle/test_acceptance.py",
+      "sha256": "fb5d7780b5873f88ced643275d80cca54c07ae11be297846e63c94b87effb891"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-33/input/target.py",
+      "sha256": "dc536b6ec2a3227f0a7030f89e117a3598250f6a2174733914be18b1e192454c"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-33/input/task.json",
+      "sha256": "31cc3a610f40217963eff050413ee5ab6896e8d15667533d871b6cf6f62d1a45"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-33/input/test_existing.py",
+      "sha256": "907ba370d9e07179f923d8d3ce0279aabe8731663b055e2f08736ea9149d51e6"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-33/oracle/reference.patch",
+      "sha256": "64c90dded918de876b1b49b761a72108a65be36562772fcc43d991c7e0a7c956"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-33/oracle/test_acceptance.py",
+      "sha256": "6e3b050673fe2a362d0bb1dcb37e0398e9a405048101b0e20f113789888efb1f"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-34/input/target.py",
+      "sha256": "ab464d9d7c54cbf00182b5251d643659162d480fa57bbd6bca2caf333287d9a7"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-34/input/task.json",
+      "sha256": "fe5f8ff3f89ac22c725ddfd31cb78b644dea5e75ac26ad341e76fe6880239681"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-34/input/test_existing.py",
+      "sha256": "70befe03773c2051a6c3467276c1a6d3ce64ac038da62fdcb90fad0b406f6e55"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-34/oracle/reference.patch",
+      "sha256": "d6304f432dcdffa8be32384bd41a39415639bc785c1dc23dabee21d69479b391"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-34/oracle/test_acceptance.py",
+      "sha256": "36564426b1289fcf75ebdf0ab20a6de32446c788bfb852810d8574f7d7cb3c8a"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-35/input/target.py",
+      "sha256": "3cacb8d3fc230e138a039a987c449f0f4b92d13c54d68403e65077444d50f4bd"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-35/input/task.json",
+      "sha256": "4f39cc4615efd80ac693ea5c37eab86cc7cdfbbf77a67cfd59938133275c2233"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-35/input/test_existing.py",
+      "sha256": "6b1080b893ea76081a0c09b2e860bcf458a293f16f768279b31c84104d43049c"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-35/oracle/reference.patch",
+      "sha256": "20a1865511c87003324600f7bf849f25e94cb6ed1a82dfa441e6e615c3edef7b"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-35/oracle/test_acceptance.py",
+      "sha256": "f82a01fe87f949582a25d2e965a9970c3f31a2762cd6be71ee3b4fd89c00bd4d"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-36/input/target.py",
+      "sha256": "6f078ef566db1e22953d070bd53687d2a4fc50f847c7a83e622a9a6c4227feff"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-36/input/task.json",
+      "sha256": "2bcff0287fdd23910cdc20e6f8ebc86c5ef5068ab4098fb31b7a3aa2ee0d484c"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-36/input/test_existing.py",
+      "sha256": "6b0f673729088d4850fa68cc6d476fa1e7860b752b542da017b20e80cc8ad3fb"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-36/oracle/reference.patch",
+      "sha256": "d7fce16a8a4c13b31c5ff3385bb1050203138c5edb67b7b49a766506679e43d3"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-36/oracle/test_acceptance.py",
+      "sha256": "a4fcbca564bca73ce515b78b478ea1aefded1ed0364fa633042a051baeba7c6e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-37/input/target.py",
+      "sha256": "ca0a14c84e236695ce18983b02506d78f4bfd2a23a02b20e94f38f142e07d30f"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-37/input/task.json",
+      "sha256": "b0968a5ecb204e5965c4814901477ae882dfe65d19eb79c4e76e7a356eb18e5d"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-37/input/test_existing.py",
+      "sha256": "27874c6b24a67fd04c9ee35ed0c4dc1bafeb8a447f45641937ec26ab83f8cc88"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-37/oracle/reference.patch",
+      "sha256": "df60696a710feb10168a6b7fee322ce18745e5f1833aea5b14eb9bfaf6314cb6"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-37/oracle/test_acceptance.py",
+      "sha256": "9103540113d1ead46444906319b61d8bc6c095e288358139d02a3ded0c0ce69e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-38/input/target.py",
+      "sha256": "43ca4732fd9b3c823f4d3ddcdc825b5df6272f8cc6b8df911983e43444bfafb1"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-38/input/task.json",
+      "sha256": "fa728111e59b0ffca5f4acc402923daffda3eb93a7a87f63aea96a9ebe22bdd2"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-38/input/test_existing.py",
+      "sha256": "558dd4531a8c4f13430dca289a4a19a209c61a8dc6ea040e5f4473940b37837e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-38/oracle/reference.patch",
+      "sha256": "729aa695aea988e6e58aed29e747e1b113affa09d8954c3f1bea46323d46aa33"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-38/oracle/test_acceptance.py",
+      "sha256": "299819bc90e8b9f16393bc2922478c68b53eab5d5421a62be3e4cb84c0803965"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-39/input/target.py",
+      "sha256": "469e90280f3c8fedb04ecd38e49da57bf403d3d8ca7ff0b32a85ddec273c2854"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-39/input/task.json",
+      "sha256": "9a82216bf6af8d3fa3dd56add8cc35771b0f440f14501bf1dcc33bc4c2f5d1f9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-39/input/test_existing.py",
+      "sha256": "9df21aeb05120cf70822ea9b559f2043bc37730db87d3b2a3c688f0737c5caaa"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-39/oracle/reference.patch",
+      "sha256": "e5d3e73caf78e63c1101449437eeef4676d7528c9019dac1a906d8c95427c54b"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-39/oracle/test_acceptance.py",
+      "sha256": "be66792bb9ba4b128a94d5a5d19bf8cd0580bb226b518f5463e8f89799628405"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-40/input/target.py",
+      "sha256": "d454162d4e6a925b50c84baf4a6b9b28b934d2e8aba8eb67ab0d2dab2fe93769"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-40/input/task.json",
+      "sha256": "d056b622eb1d1eab6f2f08b608d72bee1da6f44b8ded9ec621287a4ca35acdab"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-40/input/test_existing.py",
+      "sha256": "2ab2b41cc09625d9465787de50420a8fc873385efe97870ac3b41ed7a510b989"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-40/oracle/reference.patch",
+      "sha256": "9bdca9f0e8e3790d0b78eb5cd9d99cf4f4ad5a776238ae89924f3c0d7f66e126"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-40/oracle/test_acceptance.py",
+      "sha256": "f83f3105f12ba46f6bfcf71c71c5285133f2a12f2945dc688a724f2e1e3319c9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-41/input/target.py",
+      "sha256": "34557cd62e1fb6de2300bc9b32cde0c1c87cb2531c3aa843e2fa7387861640ec"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-41/input/task.json",
+      "sha256": "a357f50b40ff428a48bedf16cda883422ae8ada0f66ec8be7a5d777d220dedde"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-41/input/test_existing.py",
+      "sha256": "8cf0cc52a0e76605d322ab5a9b9d2cdad1d389e74b061104d062c9db97265226"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-41/oracle/reference.patch",
+      "sha256": "b722ebb102e402731dbfa1f57d2e71464b3e02b5e7757c04a9aa90d7b4b83916"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-41/oracle/test_acceptance.py",
+      "sha256": "63c2b67417aa9b727069fa626e273940eeeee27568affe6e48922a07b3aa14ee"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-42/input/target.py",
+      "sha256": "e264ef276d7ad9d96397266a2d67808a148e2ef57aa44bf5a9fbc340320a07ba"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-42/input/task.json",
+      "sha256": "87e86d448b9e9e2a92d5732875e4393b5cd69c6c6510a652d3c059a070f3a25a"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-42/input/test_existing.py",
+      "sha256": "0d9d2e8156446148ff464db30cc9661f772129436dd7945cdc57b892cb64b1ac"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-42/oracle/reference.patch",
+      "sha256": "926162b1066e6913c58d6bbb9720beadc10803b2efab6da966e1058e1855e2e6"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-42/oracle/test_acceptance.py",
+      "sha256": "bd72c1f84daed97eed1763fe15cab91a9ca701eeea4d351cc8ea2b4b0b599dee"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-43/input/target.py",
+      "sha256": "d200356df54d8285e7df00100f4729dacde1efb9aab51503dd4588e574cdebf2"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-43/input/task.json",
+      "sha256": "41a787383c45ebc63645e2e4343b3a74c195965bf3feb4747cf628891c0b3a86"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-43/input/test_existing.py",
+      "sha256": "8252234154961f6010ee8826ab9451026aa4398cc000fe7a0408dff124cef20c"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-43/oracle/reference.patch",
+      "sha256": "86841d6cbf6380b4f9e8e3461c7c6a6157159af800b6d4a360ae7afc2542fd64"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-43/oracle/test_acceptance.py",
+      "sha256": "675e26368ab44601cfa431557b08737bc0d67059e60054eaf14b362682144dc2"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-44/input/target.py",
+      "sha256": "a15859a7003450e2491b47b81e6a5777bf7e5a3bd88bd78c2e8e415a58cefe54"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-44/input/task.json",
+      "sha256": "2ce6e0df0268b0244f8899d5fe0d92a0803a57d24db1ec7c0a66c4168f7dba85"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-44/input/test_existing.py",
+      "sha256": "7b33f81789e6336e854585317b88468d3259dda6a8dd29853becaf5eb9264414"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-44/oracle/reference.patch",
+      "sha256": "03df88b5aca24b7ba7051c24ae9a1719bdbdba3514ef87a9d09142ef65c5b8eb"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-44/oracle/test_acceptance.py",
+      "sha256": "281d1a67e2778b89b59fd107224d9df8f4cab64108a21f437b18b07b6a3a7881"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-45/input/target.py",
+      "sha256": "34f3a06052844e81cbacbbb3ecc4ed63012dfdb42462c88e7df3aed9266a1518"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-45/input/task.json",
+      "sha256": "08caeb1d5184e1aa7c7f17c93a666693bd2736db71145be6ca14977ef0523514"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-45/input/test_existing.py",
+      "sha256": "910c43cf600e9d2cccdcf295a7392c6b8842c5802098e354b8e76aa7a54a1d76"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-45/oracle/reference.patch",
+      "sha256": "9bef8c6db7fed040fcd69f33e8b0eee0992ef01762630c4dfcf4fdce810650b9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-45/oracle/test_acceptance.py",
+      "sha256": "46f8ea78c139cd238d23045d885ec0aa21ba2ebc09d49328ce1d23a8ef07bbc4"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-46/input/target.py",
+      "sha256": "14bcf01526588c36eb71d1194cf247705143e91d733ba6b12fe244ff8b03cbd7"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-46/input/task.json",
+      "sha256": "87796ec90e04b3c6d83a21723c9eb872a677327c99e6de5342fa50901f41363d"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-46/input/test_existing.py",
+      "sha256": "730277d6dfeefe8c01a3558c51c3d3ffa5f3c343f0605af68b5b27f26fdf6afa"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-46/oracle/reference.patch",
+      "sha256": "4dd55d75b5c72b2780ac94c1195eb90de881175dabab535cde4f3089e60e4aa7"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-46/oracle/test_acceptance.py",
+      "sha256": "d7473500b55e19a84363938636c6936d252ad795f9106bd904b76cfd0342cd19"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-47/input/target.py",
+      "sha256": "56a7fbf86892f7c9e0d3c20013da7493504c72ca5c7b81e58d51c2d6d0851263"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-47/input/task.json",
+      "sha256": "2bba9fbcafbb306d8a32f3816880eba712c4a729ae34f172bcc36492d034977f"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-47/input/test_existing.py",
+      "sha256": "4f74bf2fe1c3c0e9982a824e54720c7e20baf96c534fd55df178a080a7809ddf"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-47/oracle/reference.patch",
+      "sha256": "5563030c2f0529d6bf57dd1576517360b1e5ea0d50bd63db8704f7370a65b6d9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-47/oracle/test_acceptance.py",
+      "sha256": "53eea6dad6adc83f7c4b66749abf2e8317011982075cad96b93c651d76b26e1d"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-48/input/target.py",
+      "sha256": "edd4882e76674fd610985a1e638cc2add4fef6d444028b2003492a65df96c9cd"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-48/input/task.json",
+      "sha256": "08d823301bc1fdf9e1371c2990a4744b6b6ac137ff853ec5f0623c5bc4ebf42f"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-48/input/test_existing.py",
+      "sha256": "ec2cdfa7eaf9e7f94694a269d2aca6149fb6bc98ddc8379c6931b0fc4e3297f1"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-48/oracle/reference.patch",
+      "sha256": "8fcd0fa2a3cad36493ab738fe1382428b0661ddbbba49f95741996dd5011dccd"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-48/oracle/test_acceptance.py",
+      "sha256": "b44e802508832dd301ff002d4fa3b1f1d579e5a4e9fba434a9c8931f01bad047"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-49/input/target.py",
+      "sha256": "782f8a4cdbc491605f5ea3f441f1d978dc203fcd3316d4079e8b9f0dac7ddf8a"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-49/input/task.json",
+      "sha256": "5bff556ba225d7123a4d0b4a1f2742fc1a82cc7c8a7741430ffb21a30843abb3"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-49/input/test_existing.py",
+      "sha256": "b333926733e677fe8b5d7d721ce184ca963749a4e805969863e60e69c66f7c49"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-49/oracle/reference.patch",
+      "sha256": "b15c6998e12635e8e6ec8c23bcfc9c45c90f31d8958bb4882aec4cce4e344fc6"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-49/oracle/test_acceptance.py",
+      "sha256": "6f60c0efe883d829bb28eff9897418093ec43a2de46f100e23af7baea3c99bb4"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-50/input/target.py",
+      "sha256": "897f6f44a7dc5fa04ea33ecd1a4b654c36c0d6c90ea56385623dff4ce841f200"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-50/input/task.json",
+      "sha256": "534f83f0bcd9d060de6653c5e9c32fe1f1d0dad9390b1bdf819988288bc7bbbc"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-50/input/test_existing.py",
+      "sha256": "0da70f1ac2c3e23138d0a981c941027d6888344f92b3c32adc0bc26d8090d90e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-50/oracle/reference.patch",
+      "sha256": "f2f1d040225364eb2612c889ffa2197a773690b33c7b7cbccdf1fe723ad4cee9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-50/oracle/test_acceptance.py",
+      "sha256": "3cd80a740ef7162da9d4fd50d377db4610165f84deaf155cbc034571d722fbe1"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-51/input/target.py",
+      "sha256": "c0db88990f4158a814ed5a5db5a65ad93ce48c8cdf22224a7d76b1bfbb54e4a4"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-51/input/task.json",
+      "sha256": "9381a1c6f14acc825da501ec18cd59ab67851b5db7e32fe630d9536720ede9d9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-51/input/test_existing.py",
+      "sha256": "1e255842f4f8acfb0c8514ee9c50c16348bcc97e60cea15ca3bc03ce8dcc4bd4"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-51/oracle/reference.patch",
+      "sha256": "9bc2ce9a04f6e70c7fe2fe5528249ca5c9cd0f85653300c2634c9174c891203f"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-51/oracle/test_acceptance.py",
+      "sha256": "c02ed4e1f4834f280439a4036f652bd1d357776c277c337de729b15c706ec20b"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-52/input/target.py",
+      "sha256": "f1430c19f7fc69cc8a292f50fea37b80d4739002997fd514eeea91e6406d4a8a"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-52/input/task.json",
+      "sha256": "a319ad9147d76bcbb3450ac3b4cc9f8076480c786fbea495c0d73bf7c1ea21b0"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-52/input/test_existing.py",
+      "sha256": "4e68712c54dd034a93c40563512e79143f2966e665155841ea1a259726a63379"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-52/oracle/reference.patch",
+      "sha256": "bb44fe9abb7b2f0698ca14208f7a507a8c2e5965d6dee8f8e1b6850c50ef7c16"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-52/oracle/test_acceptance.py",
+      "sha256": "88b0ac2b37fdf19902478e5baf9d533b1b2638c986dc9db102d89ed2d63a4af3"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-53/input/target.py",
+      "sha256": "7678afd165f8037b22879ed601711990a3af1a484a969b2dbcc212646fd152ca"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-53/input/task.json",
+      "sha256": "ab54cb37ad837a63cea58a173089037f0c67a2cf09867793f3467facaf9bbf59"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-53/input/test_existing.py",
+      "sha256": "85553ec7c5b91324d93c5dbc7a59623343cf71758d34b3d46df475a14b519b7c"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-53/oracle/reference.patch",
+      "sha256": "7cb34b62be6e2a1d8e39ae430ae450216be114dfdf20f7047973810791969017"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-53/oracle/test_acceptance.py",
+      "sha256": "c9189957eb24d9919883f91e0a6ab2aec910dc34cae9516c4d3bcca216338d6e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-54/input/target.py",
+      "sha256": "b5f84943433ae4d7007c34a253eb350e055557c0f73662adca1b781eadd7dad7"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-54/input/task.json",
+      "sha256": "e77636dc8c37f7b5edaad6ad3e7c477dd5b656cc402a1cb2c57ccd60405ea513"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-54/input/test_existing.py",
+      "sha256": "04f87dea7d5b2add5fc7ceb68a7d7ab2c9385fe99ea20a959bfaaf1b582ba0ed"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-54/oracle/reference.patch",
+      "sha256": "6fea2d802bf1e4f92f66d741518dbaa8650a0428ff75417aa0d8f577c0b09f31"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-54/oracle/test_acceptance.py",
+      "sha256": "4b62eec19cab6c5f53e31756c4a0b65da8ae472e014a2ad294ffdcb990d64aef"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-55/input/target.py",
+      "sha256": "997cf28be974fed576b2a60fded400393c35a2f4ef65954ce9962cb957c61125"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-55/input/task.json",
+      "sha256": "b28c191bdc224b55a85dbc5a70ce103e50265b3f002aa0efd6504193726d81f3"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-55/input/test_existing.py",
+      "sha256": "fcea00946b16fb76a89992c729b2b3b5d37cbd0fd1f1e533e6c433fdddc9b801"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-55/oracle/reference.patch",
+      "sha256": "915a6373ae38984995f850b8a509dfe943653c277706f088653195a999f90e44"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-55/oracle/test_acceptance.py",
+      "sha256": "0e7745b8be70b5812c3232dab8157cceb1ad16c57df8154b59e4b2b0f12500eb"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-56/input/target.py",
+      "sha256": "f1c89958204c94538b7757019b9bf7ae0b1dac1b9dd1aebcd0db0894062f02fe"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-56/input/task.json",
+      "sha256": "b507ee3e2b358a136d46765ccddae40286f2e43861bee63e7c1d36cb8f842f11"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-56/input/test_existing.py",
+      "sha256": "948abac7d44ea79975b439396b87f274ab18dded45a0f2cc325e2012dfceaca9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-56/oracle/reference.patch",
+      "sha256": "9d9697d8cd60b42ca3a7a0bf1f7147e6de0ce34cfc69d16d0ece1cad8e1658ca"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-56/oracle/test_acceptance.py",
+      "sha256": "4623c53de664be41d4ccddbf45428053f7f93f222eb3845d6b0ed8c8ea29ab9c"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-57/input/target.py",
+      "sha256": "0b11ca64912d6232b301aea5492e63b08fb21a9f86d02cb2cf8aed2d11e22b53"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-57/input/task.json",
+      "sha256": "5a781a7beed4a39516b6202addba340325e44dc03fb7b1e18fc3bc5bff26ffd9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-57/input/test_existing.py",
+      "sha256": "0ec6513477c03b233ddd679c6e62bcd746dd09c5022c248d7127b131aba5f253"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-57/oracle/reference.patch",
+      "sha256": "e2907bd38702fc92fe8fed223cde90f51da5215e45b831fc7af1ef41c25ac5ef"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-57/oracle/test_acceptance.py",
+      "sha256": "f2d7432aa700fb23faa7007dfc53942968002cf4d64a032974cc0c2428611a95"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-58/input/target.py",
+      "sha256": "15c0476f6c378c58446fa2589b64ac9c5138dada77d98c4c68d6564479aa8178"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-58/input/task.json",
+      "sha256": "834c07d8124c2aaf3261840c98b29c377a2ca9f5f0964618258cc6fed76c7dba"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-58/input/test_existing.py",
+      "sha256": "9eacbda32c8abb62094564d53342d4ef6321cdd859e96f82b2c963982c3d65a1"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-58/oracle/reference.patch",
+      "sha256": "c65f249b16007b2d8bc0287e0923b00160a4857bb258bbd2d2a3382e2bdc995d"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-58/oracle/test_acceptance.py",
+      "sha256": "fa1693eaa57a23c8a4838714766d7db7176e3f382cf2cb69624c0ea1388cc416"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-59/input/target.py",
+      "sha256": "29c590149924494aeb5376c4a973e55da7778d8bc430e8cb6dd94f0104483d23"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-59/input/task.json",
+      "sha256": "93e0b72092a66a051c8a3a98204e4fa6420ee535fc2877a7af1c959027198d4b"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-59/input/test_existing.py",
+      "sha256": "f030a877dc6f3e2657843dc4c8ceff546ec188421f3f00b8e6828d1a65bee068"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-59/oracle/reference.patch",
+      "sha256": "628f961da45719e0b37f2e2ffa9bebf73dea5a53861f8b459a1b111ca22c17ca"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-59/oracle/test_acceptance.py",
+      "sha256": "72df1ef086960aca85babb0efa7438168eb6a59e48c8f5744a4224bdea02c603"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-60/input/target.py",
+      "sha256": "70ebb2cc4d3f0f680383bdd1c4e6bb94e972a9bc167dc3d81d06eb1768b5709b"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-60/input/task.json",
+      "sha256": "72915b05c9da8ab08152f62046ce7e63b0514070afd9df6743d7788b103a85f3"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-60/input/test_existing.py",
+      "sha256": "419e5a55a5d63f65825d97fa4c776c2238dd6533c44f9c3d30eba82166cda73e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-60/oracle/reference.patch",
+      "sha256": "8e82368127e6301d150140e7b5bb1f89799549da98f1f08875ed54dcd05450aa"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/case-60/oracle/test_acceptance.py",
+      "sha256": "c03e7e4007f9ed17b246402ff3927d145d552c031899dc5f8025ca85137003f4"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-31.json",
+      "sha256": "cc0218da2dc9be73206640a902a449c520ce2b5216bfd95d3719720731994eeb"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-32.json",
+      "sha256": "1d8df2b9e09a1da3eb9512fdf5842b03aa725d8527aebcc7c0732165ca773749"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-33.json",
+      "sha256": "dc359d22acc0aff02f1a6dcf1f7b9352eaeadacae875543d7431e0710c5ca664"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-34.json",
+      "sha256": "7843c3903f20fd2c2a9690b7636ccbfa04240836f8a427bb9aca2084b807de31"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-35.json",
+      "sha256": "020b58b6990fca689fcddba1ca45b90889b1931c88e93871d230433c0e11c5a7"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-36.json",
+      "sha256": "d7d17eb25096e0638d9133d9f75fb33483d32401c36a0356a78e00113e1e546c"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-37.json",
+      "sha256": "52261eb6449a91b6cd63b8e300b5a8a9887a9754eadefac0c885ad3266933d6e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-38.json",
+      "sha256": "d062721932bc20d78a6429db0479bbb8be27f762d37d39ad987742268ee02a33"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-39.json",
+      "sha256": "0cd14d79f72722c2656df2b7c10599f0f0583d2105c8d289c010ae3380706236"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-40.json",
+      "sha256": "f6a46a9bf1f40835759dd1293d2fc762d92265a21b3bb474f7fc9e11e5682068"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-41.json",
+      "sha256": "3d39d26a21ba7e91dbcae5bb83b67fe40cf44672da4dfe5ee7890c8c4cb746e9"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-42.json",
+      "sha256": "82d798ef14e06eecad632046f53b10fe8c1c715af4d1f41827e05921d63e87de"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-43.json",
+      "sha256": "1e27f7eed7093a0e33a2ebc39865a15b4ae15997899227259142d5e62a18319f"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-44.json",
+      "sha256": "59c55373a17c5cd11682bbf95aa713d448815e2cae7f8ded1ccfca68863b5e0d"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-45.json",
+      "sha256": "ea7d3b64d5fb6506a8c8ef3624230e67bacad517ecd5b52904dd3b4d6972d907"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-46.json",
+      "sha256": "09d20f3365bdca2750cca7ccb2968b964a0b192885f1e771227849eabb10f9a0"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-47.json",
+      "sha256": "a42b533cb4b4f2da4621eba89e88fca147d5363c51a561a233bd77ab5b40f818"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-48.json",
+      "sha256": "18246def8b1ae8222385778c85ce60d91de263077c24cbc8faece141fa0c8c57"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-49.json",
+      "sha256": "c16c66cb5553c84817f03bfa27f686cc96d4a85b1ae3434f0e35b8344b762d0a"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-50.json",
+      "sha256": "55633cb377b38181ca3ec31624e804d4be8c5e34ad57161e25542cece7884319"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-51.json",
+      "sha256": "bc34c842af1e8ef6e0e23af6d9a257a490b810edfb55109a9d66e8518ab9603b"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-52.json",
+      "sha256": "7f9b33b481c3691ac452658eb769ee4a1a102fa90c9744e6e283923709654dc7"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-53.json",
+      "sha256": "d28c61c96f05f1172738cd7ec79cf33b19073813651744130578c28aec31c810"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-54.json",
+      "sha256": "c5079e297a139592f27a6f6f6b3f50535e609b83203368b7ef2300a43820312e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-55.json",
+      "sha256": "bfbeef305cc3a91cbfb14fabc41a2a891b08bd1f3b1d313a4d9d08d956efc539"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-56.json",
+      "sha256": "224fbe7917bc3c817db4a3ea74c9c6f30d1ad7d0aeb3c2bde6e1e61df2870215"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-57.json",
+      "sha256": "d1f239cb326518ca578eab51dbf65d87f93f6fce6d511b191e369c089dc6114e"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-58.json",
+      "sha256": "0af68410d7afee60f21663b443a830e5243c96b69616dc8bef7c19a28154601f"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-59.json",
+      "sha256": "d84ba00cbb5f34644ab06a188b176d13749014fe9efc7a183a6c738b5503a6d0"
+    },
+    {
+      "path": "private/WorkBuddy-DeepSeek-V4.1-Flash/histories/experience-60.json",
+      "sha256": "bb5f5e6311a2fd56d59566d9ed6d88f5704d3d7059df1691be3da8777ebc0086"
+    },
+    {
+      "path": "protocol.json",
+      "sha256": "50540a15256742eaa3580631dca4d1df951ae97df5b71d1375337774ed9de8a8"
+    },
+    {
+      "path": "review-template.json",
+      "sha256": "4293d04f7f16afc6626cc92fd5c6c0def17f11ffbbf65ab8c8e1939149b30610"
+    }
+  ],
+  "formal_eligible": false,
+  "schema_version": 1,
+  "status": "frozen_candidate_pending_independent_review"
+}

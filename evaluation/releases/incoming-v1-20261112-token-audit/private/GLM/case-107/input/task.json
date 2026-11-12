@@ -1,0 +1,10 @@
+{
+  "case_id": "case-107",
+  "title": "字段解析未去除空白",
+  "report": "解析 '姓名, 部门, 工号' 格式的行时没有去除字段两侧空白，带空格的输入解析出的字段包含多余空格。",
+  "contract": "parse_fields(line)：按逗号拆分为三段，每段去除首尾空白（含空格与制表符），返回 (姓名, 部门, 工号) 三元组字符串。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

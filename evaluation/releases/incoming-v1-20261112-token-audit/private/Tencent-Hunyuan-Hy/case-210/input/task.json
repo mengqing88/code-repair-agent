@@ -1,0 +1,10 @@
+{
+  "case_id": "case-210",
+  "title": "用身份比较代替值比较",
+  "report": "运行模式判断对字面量相同的字符串有时能通过、有时不能：由拼接、编解码等方式动态构造出的同值字符串一律被判为不同模式，导致配置读取不稳定。预期：按值相等判断，与对象身份无关。",
+  "contract": "is_mode(config: dict, expected: str) -> bool。按**值相等**判断 config.get('mode') == expected；键不存在或值为 None 时返回 False；不修改 config；expected 为字符串。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

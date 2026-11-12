@@ -1,0 +1,16 @@
+--- a/target.py
++++ b/target.py
+@@ -1,6 +1,13 @@
+ class Workflow:
++    ORDER = ['init', 'validate', 'execute', 'done']
+     def __init__(self):
+         self.state = 'init'
+     def step(self, name):
++        if name not in self.ORDER:
++            raise ValueError('unknown stage')
++        cur = self.ORDER.index(self.state)
++        nxt = self.ORDER.index(name)
++        if nxt != cur and nxt != cur + 1:
++            raise ValueError('stage skip not allowed')
+         self.state = name
+         return self.state

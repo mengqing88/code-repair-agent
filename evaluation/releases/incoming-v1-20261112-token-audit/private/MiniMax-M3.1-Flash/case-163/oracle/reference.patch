@@ -1,0 +1,13 @@
+--- a/target.py
++++ b/target.py
+@@ -5,4 +5,10 @@
+     """返回该年该月的最后一天。"""
+     if not 1 <= month <= 12:
+         raise ValueError("month must be between 1 and 12")
++    if month == 2:
++        if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
++            return 29
++        return 28
++    if month in (1, 3, 5, 7, 8, 10, 12):
++        return 31
+     return 30

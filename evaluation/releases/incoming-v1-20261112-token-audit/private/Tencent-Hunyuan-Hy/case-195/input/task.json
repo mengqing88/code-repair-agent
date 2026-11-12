@@ -1,0 +1,10 @@
+{
+  "case_id": "case-195",
+  "title": "批量回调的闭包晚绑定",
+  "report": "批量注册回调时，每个回调本应返回自己对应的名字，实际全部返回列表最后一个名字；换成整数序列时全部返回最后一个整数。预期：第 i 个回调稳定返回 names[i]。",
+  "contract": "make_callbacks(names) -> list[callable]。names 为任意对象序列；返回与 names 等长、按下标顺序对应的无参可调用列表，第 i 个可调用对象执行后返回 names[i]；不修改 names；空输入返回 []。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

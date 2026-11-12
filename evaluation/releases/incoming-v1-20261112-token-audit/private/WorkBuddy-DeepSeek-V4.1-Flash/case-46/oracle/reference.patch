@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -1,7 +1,5 @@
+ def group_by_warehouse(rows):
+     groups = {}
+     for row in rows:
+-        bucket = []
+-        bucket.append(row['sku'])
+-        groups[row['warehouse']] = bucket
++        groups.setdefault(row['warehouse'], []).append(row['sku'])
+     return groups

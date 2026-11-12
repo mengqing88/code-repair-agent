@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "二分插入位置 left/right 语义不符",
+    "相等元素重复时的边界",
+    "bisect_left 与 bisect_right 混用"
+  ],
+  "before_source": "def grade_slot(sorted_scores, score):\n    \"\"\"返回插入 score 后仍保持升序的最右侧位置（同分排最后）。\"\"\"\n    lo, hi = 0, len(sorted_scores)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if sorted_scores[mid] < score:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo\n",
+  "dataset_experience_id": "GLM::experience-108",
+  "dataset_id": "GLM",
+  "diagnosis": "bisect_left 与 bisect_right 的差异在相等段的插入位置：`<` 得到最左、`<=` 得到最右。修复原则：根据契约选择与相等元素的比较符。",
+  "experience_id": "experience-108",
+  "normalization_notes": [],
+  "original_report": "成绩表按分数段插入新记录时用了 bisect_left 语义，同分学生没有排在已有同分记录之后，破坏了同分并列的展示顺序。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,7 +3,7 @@\n     lo, hi = 0, len(sorted_scores)\n     while lo < hi:\n         mid = (lo + hi) // 2\n-        if sorted_scores[mid] < score:\n+        if sorted_scores[mid] <= score:\n             lo = mid + 1\n         else:\n             hi = mid\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import grade_slot\n\ndef test_distinct():\n    assert grade_slot([60, 75, 90], 80) == 2\n\ndef test_front_end():\n    assert grade_slot([60, 75], 50) == 0\n    assert grade_slot([60, 75], 99) == 2\n\ndef test_ties():\n    assert grade_slot([70, 70, 85], 70) == 2\n"
+}

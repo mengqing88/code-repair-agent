@@ -1,0 +1,10 @@
+{
+  "case_id": "case-32",
+  "title": "半开区间相交判断把相邻区间判为重叠",
+  "report": "排班时把两个首尾相接的时段（前者结束时间等于后者开始时间）判定为冲突，\n导致同一台设备被重复排单。",
+  "contract": "intervals_overlap(a, b) -> bool，判断两个半开区间 [start, end) 是否相交。\n区间用 dict 表示，键为 'start' 与 'end'，值必须可比较（同一类型）。\n相交定义：a.start < b.end 且 b.start < a.end；仅端点相接不算相交。\n空区间（start >= end）永远不相交。\n若任一区间的 end < start（非法区间），抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

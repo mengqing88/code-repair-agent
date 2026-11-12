@@ -1,0 +1,10 @@
+{
+  "case_id": "case-168",
+  "title": "状态匹配用了前缀比较，相似状态被混淆",
+  "report": "流转规则里 PENDING 和 PENDING_REVIEW 被当成同一个状态，导致待审核的工单无法走到审核通过分支。",
+  "contract": "can_transition(current, target) 返回 bool，判断 current 状态能否直接流转到 target 状态。规则：状态名必须完全相等才算同一状态，不允许前缀或子串匹配；current 与 target 都是字符串；流转白名单为 {PENDING: {PENDING_REVIEW, CANCELLED}, PENDING_REVIEW: {APPROVED, REJECTED}, APPROVED: {CLOSED}, CLOSED: set()}；只有白名单允许的组合返回 True；未知状态一律返回 False。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

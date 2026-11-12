@@ -1,0 +1,10 @@
+{
+  "case_id": "case-73",
+  "title": "列表配置覆盖而非追加",
+  "report": "merge_lists(base, override)：列表类型的值应拼接（base+override），其余值 override 覆盖 base。当前实现直接覆盖，丢失 base 中的列表项。",
+  "contract": "输入为 dict。若两值均为 list 则拼接；否则 override 覆盖（base 无则用 override）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

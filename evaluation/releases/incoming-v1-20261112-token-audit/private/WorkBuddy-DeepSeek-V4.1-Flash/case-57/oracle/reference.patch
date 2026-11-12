@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -1,5 +1,4 @@
+ def parse_fields(text, sep=';'):
+     if not text:
+         return []
+-    parts = text.split(sep)
+-    return [part for part in parts if part != '']
++    return text.split(sep)

@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -3,7 +3,7 @@
+     lo, hi = 0, len(sorted_values)
+     while lo < hi:
+         mid = (lo + hi) // 2
+-        if sorted_values[mid] < target:
++        if sorted_values[mid] <= target:
+             lo = mid + 1
+         else:
+             hi = mid

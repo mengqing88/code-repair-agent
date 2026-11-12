@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "需要判断一组元素是否被另一组完全覆盖",
+    "缺陷表现为包含关系方向写反，真子集情形判断错误",
+    "修复应核对 issubset / issuperset 的语义方向"
+  ],
+  "before_source": "# 标签覆盖：required 中的标签必须全部出现在 provided 中。\n\n\ndef covers(required, provided):\n    return required.issuperset(provided)\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-201",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "集合包含关系有方向：issubset 表示「我是对方的子集」，issuperset 表示「我包含对方」。把方向写反会让包含判断在真子集情形下失败，却因为相等情形通过而难以察觉。修复原则是核对包含方向，并覆盖真子集、相等、不含三种情形。",
+  "experience_id": "experience-201",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】标签覆盖判断场景：required 是 provided 的子集时应返回 True，实际却返回 False，只有两集合相等时才通过。预期：required ⊆ provided 即视为覆盖。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def covers(required, provided):\n-    return required.issuperset(provided)\n+    return required.issubset(provided)\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import covers\n\n\ndef test_equal_sets():\n    assert covers({\"a\", \"b\"}, {\"a\", \"b\"}) is True\n\n\ndef test_proper_subset():\n    assert covers({\"a\"}, {\"a\", \"b\"}) is True\n\n\ndef test_missing_element():\n    assert covers({\"a\", \"c\"}, {\"a\", \"b\"}) is False\n"
+}

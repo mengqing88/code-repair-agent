@@ -1,0 +1,10 @@
+{
+  "case_id": "case-166",
+  "title": "缓存键直接拼接参数，产生了键冲突",
+  "report": "缓存里偶尔取到别的请求的数据：租户 A 的用户 \"ab\" 与租户 B 的用户 \"bc\" 被拼成了同一个缓存键，互相覆盖。",
+  "contract": "cache_key(*parts) 返回缓存键字符串。规则：由所有 part 依次拼接而成，拼接时必须保证不同的 part 序列不会产生相同的键——即结果可逆；part 内的分隔符与转义符必须被转义；parts 为空时返回空字符串；所有 part 必须是字符串或整数（其他类型抛出 TypeError）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

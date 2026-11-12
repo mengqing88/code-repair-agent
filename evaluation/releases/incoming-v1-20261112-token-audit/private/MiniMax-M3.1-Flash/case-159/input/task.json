@@ -1,0 +1,10 @@
+{
+  "case_id": "case-159",
+  "title": "多来源配置合并时 None 值被当作有效取值",
+  "report": "在配置中心把数据库连接串留空（未配置）时，合并结果里出现了一个 None 值，反而把低优先级的兜底配置挡掉了，连接串变成 None。",
+  "contract": "merge_sources(sources) 按列表顺序合并多个配置来源，返回新的扁平字典，且不修改入参。规则：靠前的来源优先级更高；同一 key 出现在多个来源时，取优先级最高的来源（列表中下标最小者）的值；某个来源的值为 None 视为“该来源未提供该 key”，应跳过并让后续来源生效；所有来源都不提供该 key 时该 key 不出现在结果中。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

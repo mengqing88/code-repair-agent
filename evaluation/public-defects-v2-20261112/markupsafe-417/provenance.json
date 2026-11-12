@@ -1,0 +1,41 @@
+{
+  "id": "markupsafe-417",
+  "issue": 417,
+  "pr": 418,
+  "base": "73e6a4886564a554c4a19983d29c97f9fc95457d",
+  "fixed": "0b6bee071fbd8d3171fb1ac4fb669baace808438",
+  "date": "2024-02-02",
+  "title": "Collapse whitespace introduced by removing HTML comments",
+  "diagnosis": "Whitespace is collapsed before removing tags; removing comments introduces adjacent whitespace that is never normalized.",
+  "test": "from markupsafe import Markup\nassert Markup('a <!-- hidden --> b').striptags() == 'a b'\n",
+  "repository": "https://github.com/pallets/markupsafe",
+  "license": "BSD-3-Clause",
+  "issue_url": "https://github.com/pallets/markupsafe/issues/417",
+  "patch_url": "https://github.com/pallets/markupsafe/pull/418",
+  "extraction": "Unmodified upstream Python package snapshots; authored minimal regression script",
+  "independent_review": "pending",
+  "observed_sha256": {
+    "after/LICENSE.rst": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea",
+    "after/markupsafe/__init__.py": "e4f64e21fc01ff76e20f32358fccb814c3c1ec0162edf3a7a05d8f4e1d9fb684",
+    "after/markupsafe/_native.py": "191f3a42fa3f19c80a98aade0355a660df6e775ece170930c3c13e7e25bee7bb",
+    "after/probe.py": "7011dd12940593588629c10884d7d48e3a8d5f2ec88ddcfb014dabdf456b43bb",
+    "before/LICENSE.rst": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea",
+    "before/markupsafe/__init__.py": "4c6edf0f2c9289490c6d1ab1517c2dc185b6f642125e52991b43f034eb89a29b",
+    "before/markupsafe/_native.py": "191f3a42fa3f19c80a98aade0355a660df6e775ece170930c3c13e7e25bee7bb",
+    "before/probe.py": "7011dd12940593588629c10884d7d48e3a8d5f2ec88ddcfb014dabdf456b43bb",
+    "upstream-python.patch": "15033920d3dbd80be9334484a2770c1821a324225bbc1e97c46f82c73476569a"
+  },
+  "execution": {
+    "before": {
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/probe/probe.py\", line 2, in <module>\n    assert Markup('a <!-- hidden --> b').striptags() == 'a b'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    "after": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "passed": true
+}

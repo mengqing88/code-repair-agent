@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "缓存/索引/存储的键由两个及以上可变长字段拼接而成",
+    "缺陷表现为不同输入读到同一条目，或失效/清理操作误伤其它条目",
+    "字段字符集未受限，简单字符串拼接不可逆"
+  ],
+  "before_source": "# 多租户特性开关存储。tenant 与 flag 均为 [a-z0-9_] 字符串。\n\n\nclass FeatureFlagStore:\n    def __init__(self):\n        self._flags = {}\n\n    @staticmethod\n    def _key(tenant, flag):\n        # 错误：直接拼接，不同 (tenant, flag) 组合会映射到同一字符串。\n        return tenant + flag\n\n    def set_flag(self, tenant, flag, enabled):\n        self._flags[FeatureFlagStore._key(tenant, flag)] = bool(enabled)\n\n    def is_enabled(self, tenant, flag):\n        return self._flags.get(FeatureFlagStore._key(tenant, flag), False)\n\n    def clear(self, tenant, flag):\n        self._flags.pop(FeatureFlagStore._key(tenant, flag), None)\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-185",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "由多个可变长字段拼成的复合键必须使用可逆编码：要么使用保证不出现在字段中的分隔符，要么直接使用元组等结构化键。简单字符串拼接不可逆，会让不同输入碰撞，进而互相覆盖、误读或误失效。修复原则是让键编码保持一一对应。",
+  "experience_id": "experience-185",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】多租户特性开关场景：租户 acme 的 dark_mode 开关被另一个租户 acmed 的 ark_mode 配置意外覆盖，两个组合拼接后字符串相同，读取时互相串数据。预期：不同 (tenant, flag) 组合彼此独立。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -8,7 +8,7 @@\n     @staticmethod\n     def _key(tenant, flag):\n         # 错误：直接拼接，不同 (tenant, flag) 组合会映射到同一字符串。\n-        return tenant + flag\n+        return (tenant, flag)\n \n     def set_flag(self, tenant, flag, enabled):\n         self._flags[FeatureFlagStore._key(tenant, flag)] = bool(enabled)\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import FeatureFlagStore\n\n\ndef test_set_and_read():\n    store = FeatureFlagStore()\n    store.set_flag(\"acme\", \"dark_mode\", True)\n    assert store.is_enabled(\"acme\", \"dark_mode\") is True\n\n\ndef test_colliding_pairs_are_independent():\n    store = FeatureFlagStore()\n    store.set_flag(\"acme\", \"dark_mode\", True)\n    store.set_flag(\"acmed\", \"ark_mode\", False)\n    assert store.is_enabled(\"acme\", \"dark_mode\") is True\n    assert store.is_enabled(\"acmed\", \"ark_mode\") is False\n\n\ndef test_unset_flag_defaults_to_false():\n    store = FeatureFlagStore()\n    assert store.is_enabled(\"acme\", \"missing\") is False\n"
+}

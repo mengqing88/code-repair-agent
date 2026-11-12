@@ -1,0 +1,10 @@
+{
+  "case_id": "case-50",
+  "title": "版本号按字符串比较，段位数字没有数值化",
+  "report": "客户端 1.10.0 被判定为低于最低版本 1.9.0，升级提示一直不消失。",
+  "contract": "parse_version(text) 返回 tuple[int, ...]，按点号切分后逐段转为 int。返回前去掉末尾连续的 0（至少保留一段），使 1.0 与 1.0.0 的返回值相等，从而可以按元组字典序比较。空字符串抛 ValueError；任一段含非数字字符抛 ValueError。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

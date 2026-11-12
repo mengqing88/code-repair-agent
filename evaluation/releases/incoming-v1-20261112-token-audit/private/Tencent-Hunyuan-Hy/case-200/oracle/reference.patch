@@ -1,0 +1,8 @@
+--- a/target.py
++++ b/target.py
+@@ -4,4 +4,4 @@
+ def redeem(balance, cost):
+     if balance < 0:
+         balance = 0
+-    return balance - cost
++    return max(0, balance - cost)

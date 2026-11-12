@@ -1,0 +1,42 @@
+{
+  "id": "markupsafe-117",
+  "issue": 117,
+  "pr": 117,
+  "base": "10b931f4456d094303248c7662438dfdea909aba",
+  "fixed": "c35603a9037d3dd679732089ecd1084abc6e8cb7",
+  "date": "2020-04-09",
+  "title": "Decode HTML5 named character references in Markup.unescape",
+  "diagnosis": "The hand-maintained entity mapping lacks HTML5 names; delegate entity decoding to the standard library html.unescape.",
+  "test": "from markupsafe import Markup\nassert Markup('&NotEqualTilde;').unescape() == '\\u2242\\u0338'\n",
+  "repository": "https://github.com/pallets/markupsafe",
+  "license": "BSD-3-Clause",
+  "issue_url": "https://github.com/pallets/markupsafe/issues/117",
+  "patch_url": "https://github.com/pallets/markupsafe/pull/117",
+  "extraction": "Unmodified upstream Python package snapshots; authored minimal regression script",
+  "independent_review": "pending",
+  "observed_sha256": {
+    "after/LICENSE.rst": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea",
+    "after/markupsafe/__init__.py": "85035c061f757ab2cbc8c1e57e4262f719fae0ec8f642d1f886bf78a28c9df4a",
+    "after/markupsafe/_native.py": "d49f8614e026044188af2aaff925cf86bc186ffd7558fff85c85a000a71018fe",
+    "after/probe.py": "21b5a2715b842ca553d0c5cd1d1abee57e9b9796db4bfde3f2e52a3f37e394b3",
+    "before/LICENSE.rst": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea",
+    "before/markupsafe/__init__.py": "2709119b85060920f3449bce104e0a7be4c60fd56bed2dd77147a66f5b04f1c0",
+    "before/markupsafe/_constants.py": "5d91996feef86150150309b8b30d58bb43d63320ff917c711e1a845ed27bafc1",
+    "before/markupsafe/_native.py": "d49f8614e026044188af2aaff925cf86bc186ffd7558fff85c85a000a71018fe",
+    "before/probe.py": "21b5a2715b842ca553d0c5cd1d1abee57e9b9796db4bfde3f2e52a3f37e394b3",
+    "upstream-python.patch": "b503844dc62cc891664dc978d31b26a05f946fb1b60cc032dbd5a6138ff105c2"
+  },
+  "execution": {
+    "before": {
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/probe/probe.py\", line 2, in <module>\n    assert Markup('&NotEqualTilde;').unescape() == '\\u2242\\u0338'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    "after": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "passed": true
+}

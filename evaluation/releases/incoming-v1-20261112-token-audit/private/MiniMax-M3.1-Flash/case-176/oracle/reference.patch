@@ -1,0 +1,11 @@
+--- a/target.py
++++ b/target.py
+@@ -9,5 +9,6 @@
+         raise ValueError("discount_percent must be between 0 and 100")
+     if unit_cents < 0:
+         raise ValueError("unit_cents must not be negative")
+-    unit_after_discount = unit_cents - unit_cents * discount_percent // 100
+-    return unit_after_discount * quantity
++    subtotal = unit_cents * quantity
++    discount = subtotal * discount_percent // 100
++    return subtotal - discount

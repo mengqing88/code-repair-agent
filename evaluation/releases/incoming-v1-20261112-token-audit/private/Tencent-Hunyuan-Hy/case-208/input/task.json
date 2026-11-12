@@ -1,0 +1,10 @@
+{
+  "case_id": "case-208",
+  "title": "首尾空白只清理了一侧",
+  "report": "表单归一化只去掉了开头的空白，结尾空格、制表符和换行都保留下来，导致 'abc  ' 与 'abc' 被当成不同值，后续查表与去重失败。预期：首尾空白全部去除，内部空白保持原样。",
+  "contract": "normalize(text: str) -> str。去除字符串**首尾**的所有空白字符（空格、制表、换行等）；保留内部空白与其它字符，不做大小写转换、不做内部压缩；不修改其它内容。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

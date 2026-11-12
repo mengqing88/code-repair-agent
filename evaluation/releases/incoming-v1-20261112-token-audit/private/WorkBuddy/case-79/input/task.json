@@ -1,0 +1,10 @@
+{
+  "case_id": "case-79",
+  "title": "重复请求未去重",
+  "report": "submit(request_id, processor)：相同 request_id 的重复提交应只处理一次，返回首次结果（缓存）。当前实现每次都重新执行 processor，未去重。",
+  "contract": "request_id 为可哈希键；processor 为无参可调用，返回结果。重复 request_id 返回首次结果且 processor 仅被调用一次。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

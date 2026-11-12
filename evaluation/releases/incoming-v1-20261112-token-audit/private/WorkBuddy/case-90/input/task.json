@@ -1,0 +1,10 @@
+{
+  "case_id": "case-90",
+  "title": "缓存键大小写敏感",
+  "report": "ConfigCache 以设置名为键，契约要求大小写不敏感（'Timeout' 与 'timeout' 同一键）。当前实现大小写敏感，导致同名不同写法的项并存。",
+  "contract": "set/get 的 key 为字符串，按小写归一化后作为实际键；大小写不同的同一名称共享缓存。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

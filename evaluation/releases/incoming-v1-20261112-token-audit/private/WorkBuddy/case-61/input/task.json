@@ -1,0 +1,10 @@
+{
+  "case_id": "case-61",
+  "title": "发票税费中间舍入误差",
+  "report": "compute_total(prices, tax_rate) 应返回 sum(prices)*(1+tax_rate) 四舍五入到分。当前实现先对每行含税金额四舍五入再求和，导致累积舍入误差，与一次性求和后舍入的结果不一致。",
+  "contract": "输入 prices: 非负数字列表；tax_rate: [0,1] 浮点。返回 float，四舍五入到 2 位小数，等于 round(sum(prices)*(1+tax_rate), 2)。空列表返回 0.0。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

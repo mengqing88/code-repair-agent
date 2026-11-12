@@ -1,0 +1,114 @@
+{
+  "records_sha256": "27707e3a5e0ff5174d1f15a2093c81aca0ab1eb72fec41d295a7efd0b674a65f",
+  "producer": "project-authored-public-probes",
+  "corpus_kind": "public-diagnostic",
+  "permission_reference": "BSD-3-Clause; see per-case upstream LICENSE.rst and provenance.json",
+  "sampling_description": "Three public issues from MarkupSafe, plus byte-identical text copies; not production sampling",
+  "pairs": [
+    {
+      "left": "markupsafe-310:original",
+      "right": "markupsafe-310:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:original",
+      "right": "markupsafe-417:original",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:original",
+      "right": "markupsafe-417:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:original",
+      "right": "markupsafe-117:original",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:original",
+      "right": "markupsafe-117:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:exact-copy",
+      "right": "markupsafe-417:original",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:exact-copy",
+      "right": "markupsafe-417:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:exact-copy",
+      "right": "markupsafe-117:original",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-310:exact-copy",
+      "right": "markupsafe-117:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-417:original",
+      "right": "markupsafe-417:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-417:original",
+      "right": "markupsafe-117:original",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-417:original",
+      "right": "markupsafe-117:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-417:exact-copy",
+      "right": "markupsafe-117:original",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-417:exact-copy",
+      "right": "markupsafe-117:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    },
+    {
+      "left": "markupsafe-117:original",
+      "right": "markupsafe-117:exact-copy",
+      "duplicate": null,
+      "reviewer": null,
+      "evidence": null
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "TTL 过期判定",
+    "过期条目清除",
+    "边界时刻"
+  ],
+  "before_source": "def spend_token(store, token):\n    if token not in store:\n        return False\n    return True\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-41",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "校验流程只要找到令牌就放行，既没有比较剩余次数也没有在成功后更新记录。修复原则：失效判定必须显式检查状态，并在判定失效时同步清理记录。",
+  "experience_id": "experience-41",
+  "normalization_notes": [],
+  "original_report": "一次性令牌在校验成功之后仍可再次使用，存在重放风险。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,9 @@\n def spend_token(store, token):\n     if token not in store:\n         return False\n+    if store[token] <= 0:\n+        del store[token]\n+        return False\n+    store[token] -= 1\n     return True\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\ndef _empty_spend():\n    return spend_token({}, 't')\n\ndef _drained():\n    store = {'t': 1}\n    spend_token(store, 't')\n    return spend_token(store, 't')\n\n\ndef test_experience_1():\n    assert _empty_spend() is False\n\n\ndef test_experience_2():\n    assert spend_token({'t': 2}, 't') is True\n\n\ndef test_experience_3():\n    assert _drained() is False\n"
+}

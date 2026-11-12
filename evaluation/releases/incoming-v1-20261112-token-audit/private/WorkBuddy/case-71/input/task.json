@@ -1,0 +1,10 @@
+{
+  "case_id": "case-71",
+  "title": "嵌套配置浅合并",
+  "report": "deep_merge(base, override)：两值均为 dict 时应递归合并，否则 override 覆盖。当前实现遇到 dict 直接整体替换，丢失 base 中的兄弟键。",
+  "contract": "输入为 dict。递归合并：均为 dict 则逐键递归；否则 override 覆盖 base（base 无该键则用 override）。",
+  "allowed_paths": [
+    "target.py"
+  ],
+  "existing_test_command": "python -m pytest -q test_existing.py"
+}

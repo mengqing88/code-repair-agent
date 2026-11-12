@@ -1,0 +1,9 @@
+--- a/target.py
++++ b/target.py
+@@ -5,5 +5,5 @@
+     """返回与 names 等长的无参回调列表。"""
+     callbacks = []
+     for name in names:
+-        callbacks.append(lambda: name)
++        callbacks.append(lambda name=name: name)
+     return callbacks
