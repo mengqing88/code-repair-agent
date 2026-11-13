@@ -490,11 +490,13 @@ class KnowledgeBase:
     reranker: object | None = field(default_factory=configured_reranker)
     # duplicate_similarity_threshold：同范围案例自动合并的余弦相似度阈值。
     duplicate_similarity_threshold: float = DEFAULT_DUPLICATE_THRESHOLD
+    # 冻结快照使用固定索引身份，不能跟随每次查询的临时复制路径变化。
+    index_namespace: str | None = None
 
     @property
     def qdrant_namespace(self) -> str:
         """返回由数据库路径哈希生成的 Qdrant 隔离命名空间。"""
-        return QdrantVectorIndex.namespace_for_path(self.path)
+        return self.index_namespace or QdrantVectorIndex.namespace_for_path(self.path)
 
     def _index_qdrant(
         self, case_id: str, outcome: str, revision: int, vector: Sequence[float], document: Mapping[str, object],
@@ -1131,10 +1133,12 @@ class KnowledgeBase:
                     outcome=outcome,
                     filters=normalized_filters,
                 )
-                active_ids = {row["case_id"] for row, _ in candidates}
+                active_revisions = {row["case_id"]: row["revision"] for row, _ in candidates}
                 qdrant_scores = {
-                    item["case_id"]: item["score"] for item in matches if item["case_id"] in active_ids
+                    item["case_id"]: item["score"] for item in matches
+                    if active_revisions.get(item["case_id"]) == item["revision"]
                 }
+                trace("knowledge.qdrant", "completed", details={"matches": len(qdrant_scores)})
                 if qdrant_scores:
                     candidate_ids = set(qdrant_scores)
                     if strategy == "hybrid":
@@ -1195,7 +1199,7 @@ class KnowledgeBase:
         results.sort(key=lambda item: float(item["score"]), reverse=True)
         results = collapse_semantic_duplicates(results, stored_vectors)
         if rerank and self.reranker is not None and results:
-            rerank_count = max(5, min(10, max(limit, 5)))
+            rerank_count = getattr(self.reranker, "candidate_count", 0) or max(5, min(10, max(limit, 5)))
             rerank_candidates = results[:rerank_count]
             try:
                 scores = self.reranker.score(query, [str(item["_rerank_text"]) for item in rerank_candidates])
@@ -1207,6 +1211,9 @@ class KnowledgeBase:
                     key=lambda item: (float(item["rerank_score"]), float(item["score"])), reverse=True,
                 )
                 results = rerank_candidates + results[rerank_count:]
+                trace("knowledge.rerank", "completed", details={"candidates": len(scores),
+                      "backend": getattr(self.reranker, "backend", "custom"),
+                      "provider": getattr(self.reranker, "provider", None)})
             except Exception as error:
                 if isinstance(error, Fault) and error.category == "budget":
                     raise

@@ -1,5 +1,7 @@
 # 代码仓库缺陷修复 Agent
 
+当前本机 RAG 配置（2026-11-13）：已启用多语言 Cross-Encoder 的 ONNX FP32 / DirectML、10 候选、进程内首次加载预热；CPU 备选为 8 线程。Qdrant 配置与冻结快照索引已接通，但 Docker Desktop 故障导致本轮真实服务验收暂缓，当前索引离线时会降级 SQLite。配置模板见 [rag.env.example](rag.env.example)，实际验证、后续命令及冷启动限制见 [RAG 激活记录](evaluation/RAG_ACTIVATION_20261113.md)。使用项目 `.venv` 启动新进程才能获得本轮安装的模型依赖；旧任务不追溯升级配置。
+
 模型/工具升级的契约与行为退化评测入口：`python -m evaluation.upgrade_gate`；预注册、配对重复运行、验收证据与门禁说明见 [evaluation/UPGRADE_EVALUATION.md](evaluation/UPGRADE_EVALUATION.md)。
 
 > 本文主要供在此仓库工作的 AI 智能体了解项目背景、当前实现和协作方式。开始任务前请先阅读；描述功能状态时仍以当前代码和测试为准。

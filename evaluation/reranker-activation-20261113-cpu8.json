@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-13T04:49:36.173029+00:00",
+  "limitations": [
+    "合成数据只验证接线、隔离与模型执行，不证明独立相关性或修复成功率提升",
+    "没有并发、长输入和生产规模性能验收；GPU 可包含 CPU 算子",
+    "计时包含单进程冷启动；实际 Web worker 每次新建进程仍需重新加载"
+  ],
+  "model_load_and_warmup_seconds": 2.102115899993805,
+  "ten_candidate_seconds": 0.042633199991541915,
+  "data": "10 synthetic candidate texts, real local weights",
+  "backend": "onnx",
+  "provider": "CPUExecutionProvider",
+  "configured_candidates": 10,
+  "threads": 8,
+  "providers": [
+    "CPUExecutionProvider"
+  ],
+  "profile_operator_counts": {
+    "CPUExecutionProvider": 1118
+  },
+  "checks": {
+    "ten_finite_scores": true,
+    "expected_candidate_ranked_first": true,
+    "requested_provider_executed": true
+  },
+  "scores": [
+    2.2918500900268555,
+    -9.420223236083984,
+    -8.765670776367188,
+    -9.027534484863281,
+    -9.161341667175293,
+    -8.338802337646484,
+    -9.077139854431152,
+    -9.164497375488281,
+    -9.271249771118164,
+    -8.523211479187012
+  ],
+  "artifacts": {
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\config.json": "cc2cfe51aa3fd759d21d21acf5dfd6994aa67a3c9210636d22e143699d336c77",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\tokenizer_config.json": "e7fbfbfa6347b4e414c1cee50d142e2c2f9a895dad68b068ae83a8b564c3837e",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\special_tokens_map.json": "378eb3bf733eb16e65792d7e3fda5b8a4631387ca04d2015199c4d4f22ae554d",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\sentencepiece.bpe.model": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+    "F:\\项目1\\work\\reranker-speed\\reranker-fp32.onnx": "23acebcbf4304019106e570c0dd77867f1e848a7c4d442aa076be9deb0d854c1"
+  }
+}

@@ -5,13 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import lru_cache
 import hashlib
-import os
 from pathlib import Path
 from threading import Lock
 from typing import Mapping, Sequence
 from uuid import NAMESPACE_URL, uuid5
 
-from dotenv import dotenv_values
+from runtime_config import load_settings, setting
 
 
 class QdrantIndexError(RuntimeError):
@@ -31,21 +30,28 @@ class QdrantVectorIndex:
     @classmethod
     def from_environment(cls, env_path: Path | None = None) -> QdrantVectorIndex | None:
         """从 QDRANT_URL 和可选 QDRANT_API_KEY 创建远端索引；未配置 URL 时返回 None。"""
-        config_path = env_path or Path(__file__).resolve().with_name(".env")
-        settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
-        url = os.getenv("QDRANT_URL") or settings.get("QDRANT_URL")
-        if not isinstance(url, str) or not url.strip():
+        settings = load_settings(env_path)
+        url = setting("QDRANT_URL", settings)
+        if not isinstance(url, str) or not url.strip() or url.strip().lower() in {"off", "disabled"}:
             return None
-        api_key = os.getenv("QDRANT_API_KEY") or settings.get("QDRANT_API_KEY")
+        return _shared_index(url.strip(), setting("QDRANT_API_KEY", settings) or None,
+                             setting("QDRANT_COLLECTION", settings) or "repair_experiences",
+                             float(setting("QDRANT_TIMEOUT_SECONDS", settings) or 3))
+
+    @classmethod
+    def connect(cls, url, api_key, collection, timeout):
+        """连接参数由当前任务配置选择，单次网络请求有明确超时。"""
         try:
             from qdrant_client import QdrantClient
         except ImportError as error:
             raise QdrantIndexError("使用 Qdrant 需要安装 qdrant-client") from error
         try:
-            client = QdrantClient(url=url.strip(), api_key=api_key or None)
+            if not 0 < timeout <= 30:
+                raise ValueError("Qdrant timeout must be in (0, 30]")
+            client = QdrantClient(url=url, api_key=api_key, timeout=timeout)
         except Exception as error:
             raise QdrantIndexError("无法初始化 Qdrant 客户端") from error
-        return cls(client=client)
+        return cls(client=client, collection_name=collection)
 
     @staticmethod
     def point_id(namespace: str, outcome: str, case_id: str) -> str:
@@ -240,7 +246,11 @@ class QdrantVectorIndex:
             close()
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=8)
+def _shared_index(url, api_key, collection, timeout):
+    return QdrantVectorIndex.connect(url, api_key, collection, timeout)
+
+
 def configured_qdrant_index() -> QdrantVectorIndex | None:
     """返回当前进程共享的环境配置客户端，避免每个知识库请求重复建连。"""
     return QdrantVectorIndex.from_environment()
