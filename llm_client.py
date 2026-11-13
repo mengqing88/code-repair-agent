@@ -4,6 +4,8 @@
 import math
 import os
 import sys
+import json
+from functools import lru_cache
 # dataclass：定义不可变的模型调用结果，集中保存回复和用量统计。
 from dataclasses import dataclass
 # Path：表示文件路径；urlsplit：拆分地址，检查 API 地址的协议和主机部分。
@@ -12,11 +14,102 @@ from typing import Mapping, Sequence
 from urllib.parse import urlsplit
 
 # dotenv_values：读取 .env 的键值对，返回字典，不修改当前进程的环境变量。
-from dotenv import dotenv_values
+from runtime_config import load_settings, setting
+from personal_memory import memory_instructions
+from input_protection import protect_input, model_options
 # OpenAI：兼容接口客户端；其他三个类分别表示连接失败、HTTP 错误和请求超时。
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
-from resilience import (Fault, bounded_timeout, call_with_retry, charge_usage,
-                        retry_after_seconds, schema_context, error_info, traced_call)
+from resilience import (Fault, bounded_timeout, call_with_retry, charge_usage, current,
+                        retry_after_seconds, schema_context, error_info, traced_call, trace)
+
+
+DEFAULT_MAX_OUTPUT_TOKENS = 40_960
+
+
+def _trace_required():
+    context = current()
+    return bool(context and context.trace_path)
+
+
+@lru_cache(maxsize=16)
+def _budget_encoding(model):
+    try:
+        import tiktoken
+    except ImportError:
+        return None, "utf8_bytes_fallback"
+    try:
+        return tiktoken.encoding_for_model(model), f"tiktoken:{model}:approximate+20%+512"
+    except KeyError:
+        return tiktoken.get_encoding("cl100k_base"), "tiktoken:cl100k_base:approximate+20%+512"
+
+
+def _estimate_input_tokens(request, *, framing_tokens):
+    serialized = json.dumps({k: v for k, v in request.items() if k != "max_output_tokens"},
+                            ensure_ascii=False, default=str)
+    encoding, method = _budget_encoding(str(request.get("model", "")))
+    if encoding is None:
+        tokens = len(serialized.encode("utf-8"))
+        method = "utf8_bytes_fallback"
+    else:
+        tokens = len(encoding.encode(serialized, disallowed_special=()))
+    margin = math.ceil(tokens * 0.2)
+    return tokens + margin + framing_tokens, method.replace("+512", f"+{framing_tokens}")
+
+
+def limit_request_budget(request, settings):
+    """Bound output using an explicitly approximate tokenizer estimate."""
+    context = current()
+    if context is None:
+        return request
+    context.check()
+    input_ceiling, estimation_method = _estimate_input_tokens(request, framing_tokens=512)
+    used_tokens = context.tokens
+    remaining_tokens = (None if context.max_tokens is None else max(0, context.max_tokens - used_tokens))
+    output_limit = DEFAULT_MAX_OUTPUT_TOKENS
+    limiting_kind = "tokens"
+    if context.max_tokens is not None:
+        output_limit = min(output_limit, context.max_tokens - context.tokens - input_ceiling)
+    if context.max_cost is not None:
+        available = context.max_cost - context.cost
+        input_cost = _estimate_cost_yuan(settings, input_ceiling, 0)
+        output_unit = _estimate_cost_yuan(settings, 0, 1000)
+        if input_cost is not None and output_unit is not None:
+            if available < input_cost:
+                raise Fault("cost_budget_exceeded", "剩余费用不足以覆盖本次输入估算，未发送模型请求", category="budget")
+            if output_unit > 0:
+                cost_limit = int((available - input_cost) * 1000 / output_unit)
+                if cost_limit < output_limit:
+                    limiting_kind = "cost"
+                output_limit = min(output_limit, cost_limit)
+    if output_limit < 16:
+        raise Fault("cost_budget_exceeded" if limiting_kind == "cost" else "token_budget_exceeded",
+                    "剩余预算不足以覆盖输入和最小回复，未发送模型请求", category="budget")
+    request["max_output_tokens"] = output_limit
+    trace("model.budget", "limited", details={"estimation_method": estimation_method,
+        "input_token_estimate": input_ceiling, "reserved_output_tokens": output_limit,
+        "used_tokens": used_tokens, "remaining_tokens": remaining_tokens,
+        "max_output_tokens": output_limit})
+    return request
+
+
+def check_embedding_budget(request, rate):
+    context = current()
+    if context is None:
+        return
+    context.check()
+    ceiling, method = _estimate_input_tokens(request, framing_tokens=128)
+    if context.max_tokens is not None and ceiling > context.max_tokens - context.tokens:
+        raise Fault("token_budget_exceeded", "剩余 Token 不足以覆盖向量输入估算，未发送请求", category="budget")
+    if context.max_cost is not None and rate is not None and ceiling * rate / 1000 > context.max_cost - context.cost:
+        raise Fault("cost_budget_exceeded", "剩余费用不足以覆盖向量输入估算，未发送请求", category="budget")
+    trace("embedding.budget", "limited", details={"estimation_method": method,
+        "input_token_estimate": ceiling, "used_tokens": context.tokens,
+        "remaining_tokens": None if context.max_tokens is None else max(0, context.max_tokens - context.tokens)})
+
+
+def _response_evidence(response):
+    trace("model.response", "observed", details={name: getattr(response, name, None)
+          for name in ("id", "model", "system_fingerprint", "status")})
 
 
 @dataclass(frozen=True)
@@ -50,7 +143,7 @@ def _read_setting(settings: dict[str, str | None], primary: str, fallback: str |
     names = (primary,) if fallback is None else (primary, fallback)
     for name in names:
         # os.getenv() 读取进程环境变量；settings.get() 读取 .env 字典；or 跳过空值并继续回退。
-        value = os.getenv(name) or settings.get(name)
+        value = setting(name, settings)
         if value and value.strip():
             # strip() 去掉配置值两端的空白，返回可以直接交给 SDK 的字符串。
             return value.strip()
@@ -60,7 +153,7 @@ def _read_setting(settings: dict[str, str | None], primary: str, fallback: str |
 def _read_optional_rate(settings: dict[str, str | None], name: str) -> float | None:
     """读取可选的每千 Token 价格；未配置返回 None，配置非法则抛出 ValueError。"""
     # value：从环境变量或 .env 读取价格文字；环境变量优先，便于部署时覆盖本地配置。
-    value = os.getenv(name) or settings.get(name)
+    value = setting(name, settings)
     if value is None or not value.strip():
         return None
     try:
@@ -104,10 +197,10 @@ def _chat_configuration(env_path: Path | None) -> tuple[dict[str, str | None], s
     """读取并校验聊天模型配置；env_path 是可选的 .env 文件路径。"""
     # config_path：默认读取当前模块旁的 .env；传入路径时只读取指定文件。
     config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
-    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
+    settings = load_settings(config_path)
     api_key = _read_setting(settings, "CHAT_API_KEY", "API_KEY")
     base_url = _read_setting(settings, "CHAT_BASE_URL", "BASE_URL").rstrip("/")
-    model = (os.getenv("MODEL") or settings.get("MODEL") or "").strip()
+    model = (setting("MODEL", settings) or "").strip()
     if not api_key:
         raise ValueError("请在 .env 或环境变量中填写 CHAT_API_KEY")
     if not base_url:
@@ -136,11 +229,12 @@ def ask_model_with_tools(
     env_path: Path | None = None,
 ) -> ModelCallResult:
     """调用一轮函数工具模型，并持久记录解析结果与实际用量。"""
-    with traced_call("model.tools", parameters={"input": model_input, "tools": tools}) as call:
+    with traced_call("model.tools", parameters={"input": model_input, "tools": tools},
+                     input_data={"input": model_input, "tools": tools}) as call:
         result = _ask_model_with_tools(model_input, tools, env_path)
         call["result"] = {"text": result.text, "input_tokens": result.input_tokens,
                           "output_tokens": result.output_tokens, "total_tokens": result.total_tokens,
-                          "cost_yuan": result.cost_yuan,
+                          "cost_yuan": result.cost_yuan, "output_items": result.output_items,
                           "tool_calls": [{"call_id": item.call_id, "name": item.name, "arguments": item.arguments}
                                          for item in result.tool_calls]}
         return result
@@ -168,9 +262,9 @@ def _ask_model_with_tools(model_input, tools, env_path=None):
     def send(timeout: float):
         """发送一轮工具调用请求，并沿用普通模型调用的结构化输出设置。"""
         with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
-            options: dict[str, object] = {}
+            options: dict[str, object] = memory_instructions()
             schema = schema_context()
-            structured = (os.getenv("CHAT_STRUCTURED_OUTPUT") or settings.get("CHAT_STRUCTURED_OUTPUT") or "true").lower()
+            structured = (setting("CHAT_STRUCTURED_OUTPUT", settings) or "true").lower()
             if schema and structured != "false":
                 options["text"] = {
                     "format": {
@@ -180,14 +274,12 @@ def _ask_model_with_tools(model_input, tools, env_path=None):
                         "strict": True,
                     }
                 }
-            return client.responses.create(
-                model=model,
-                input=model_input,
-                tools=list(tools),
-                max_output_tokens=4096,
-                store=False,
-                **options,
-            )
+            request = dict(model=model, input=protect_input(model_input, settings=settings),
+                           tools=protect_input(list(tools), settings=settings, schema=True),
+                           max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS, store=False, **model_options(options, settings=settings))
+            request = limit_request_budget(request, settings)
+            trace("model.request", "prepared", input_data=request, required=_trace_required())
+            return client.responses.create(**request)
 
     response = call_with_retry(
         "model.responses.tools",
@@ -198,6 +290,7 @@ def _ask_model_with_tools(model_input, tools, env_path=None):
         endpoint=base_url,
     )
 
+    _response_evidence(response)
     # A rejected/incomplete response can still be billable. Persist observed usage before parsing it.
     usage = getattr(response, "usage", None)
     input_tokens = _usage_value(usage, "input_tokens")
@@ -249,7 +342,7 @@ def _service_fault(error, label):
 
 def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCallResult:
     """调用文字模型，记录回复、用量及协议错误。"""
-    with traced_call("model.generate", parameters={"prompt": prompt}) as call:
+    with traced_call("model.generate", parameters={"prompt": prompt}, input_data={"prompt": prompt}) as call:
         result = _ask_model_with_usage(prompt, env_path)
         call["result"] = {"text": result.text, "input_tokens": result.input_tokens,
                           "output_tokens": result.output_tokens, "total_tokens": result.total_tokens,
@@ -269,17 +362,21 @@ def _ask_model_with_usage(prompt, env_path=None):
     _estimate_cost_yuan(settings, 0, 0)  # Reject invalid pricing before sending a billable request.
     def send(timeout):
         with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
-            options = {}
+            options = memory_instructions()
             schema = schema_context()
-            structured = (os.getenv("CHAT_STRUCTURED_OUTPUT") or settings.get("CHAT_STRUCTURED_OUTPUT") or "true").lower()
+            structured = (setting("CHAT_STRUCTURED_OUTPUT", settings) or "true").lower()
             if schema and structured != "false":
                 options["text"] = {"format": {"type": "json_schema", "name": schema["name"],
                     "schema": schema["schema"], "strict": True}}
-            return client.responses.create(model=model, input=prompt, max_output_tokens=4096,
-                                           store=False, **options)
+            request = dict(model=model, input=protect_input(prompt, settings=settings), max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS,
+                           store=False, **model_options(options, settings=settings))
+            request = limit_request_budget(request, settings)
+            trace("model.request", "prepared", input_data=request, required=_trace_required())
+            return client.responses.create(**request)
 
     response = call_with_retry("model.responses", send, classify=lambda e: _service_fault(e, "模型"),
                                replay_safe=True, parameters={"model": model, "prompt": prompt}, endpoint=base_url)
+    _response_evidence(response)
     # usage：Responses API 返回的 Token 统计对象；旧服务或测试响应没有该字段时使用空对象。
     usage = getattr(response, "usage", None)
     input_tokens = _usage_value(usage, "input_tokens")
@@ -323,7 +420,7 @@ def embed_text(text: str, env_path: Path | None = None) -> list[float]:
 
     # 配置读取规则与 ask_model 一致：进程环境变量优先于 .env，密钥不会写入错误信息。
     config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
-    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
+    settings = load_settings(config_path)
     # api_key：向量服务的密钥；EMBEDDING_API_KEY 优先，API_KEY 只作为旧配置回退。
     api_key = _read_setting(settings, "EMBEDDING_API_KEY", "API_KEY")
     # base_url：向量服务 API 根地址；EMBEDDING_BASE_URL 优先，BASE_URL 只作为旧配置回退。
@@ -344,7 +441,10 @@ def embed_text(text: str, env_path: Path | None = None) -> list[float]:
     rate = _read_optional_rate(settings, "EMBEDDING_PRICE_PER_1K_TOKENS")
     def send(timeout):
         with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
-            return client.embeddings.create(model=model, input=text)
+            request = dict(model=model, input=protect_input(text, settings=settings))
+            check_embedding_budget(request, rate)
+            trace("embedding.request", "prepared", input_data=request, required=_trace_required())
+            return client.embeddings.create(**request)
     response = call_with_retry("model.embeddings", send, classify=lambda e: _service_fault(e, "向量"),
                                replay_safe=True, parameters={"model": model, "text": text}, endpoint=base_url)
     tokens = _usage_value(getattr(response, "usage", None), "total_tokens")
@@ -361,6 +461,8 @@ def embed_text(text: str, env_path: Path | None = None) -> list[float]:
         raise Fault("embedding_protocol", "向量服务返回了非数字 embedding", category="protocol") from None
     if any(not math.isfinite(value) for value in vector):
         raise Fault("embedding_protocol", "向量服务返回了无效数字", category="protocol")
+    trace("embedding.result", "observed", result={"vector": vector, "tokens": tokens, "model": model},
+          required=_trace_required())
     return vector
 
 
@@ -376,7 +478,7 @@ def embed_texts(texts: Sequence[str], env_path: Path | None = None, *, batch_siz
         return []
 
     config_path = env_path if env_path is not None else Path(__file__).resolve().with_name(".env")
-    settings = dotenv_values(config_path, encoding="utf-8-sig", interpolate=False)
+    settings = load_settings(config_path)
     api_key = _read_setting(settings, "EMBEDDING_API_KEY", "API_KEY")
     base_url = _read_setting(settings, "EMBEDDING_BASE_URL", "BASE_URL").rstrip("/")
     model = _read_setting(settings, "EMBEDDING_MODEL")
@@ -397,7 +499,10 @@ def embed_texts(texts: Sequence[str], env_path: Path | None = None, *, batch_siz
 
         def send(timeout):
             with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
-                return client.embeddings.create(model=model, input=batch)
+                request = dict(model=model, input=protect_input(batch, settings=settings))
+                check_embedding_budget(request, rate)
+                trace("embedding.request", "prepared", input_data=request, required=_trace_required())
+                return client.embeddings.create(**request)
 
         response = call_with_retry(
             "model.embeddings.batch", send,
@@ -428,6 +533,9 @@ def embed_texts(texts: Sequence[str], env_path: Path | None = None, *, batch_siz
         if [index for index, _ in indexed] != list(range(len(batch))):
             raise Fault("embedding_protocol", "向量服务返回了重复或缺失的输入索引", category="protocol")
         vectors.extend(vector for _, vector in indexed)
+        trace("embedding.result", "observed", result={"vectors": [v for _, v in indexed],
+                                                       "tokens": tokens, "model": model},
+              required=_trace_required())
     return vectors
 
 

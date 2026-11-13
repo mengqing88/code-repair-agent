@@ -5,7 +5,7 @@ import json
 from semantic_dedup import collapse_semantic_duplicates, merge_similar_cases
 
 
-def make_result(case_id: str, *, path: str = "src/worker.py", version: str = "2.1"):
+def make_result(case_id: str, *, path: str = "src/worker.py", version: str = "2.1", language: str | None = None):
     """创建具有可追溯来源和严格检索范围的候选案例。"""
     document = {
         "task_id": case_id,
@@ -14,6 +14,7 @@ def make_result(case_id: str, *, path: str = "src/worker.py", version: str = "2.
             "repository_id": "repo-a",
             "file_paths": [path],
             "dependency_versions": {"library": version},
+            **({"language": language} if language is not None else {}),
         },
         "original_report": f"failure from {case_id}",
         "diagnosis": f"root cause {case_id}",
@@ -66,3 +67,16 @@ def test_persistent_merge_uses_similarity_threshold_and_outcome():
         ("second", "first"),
     ]
     assert merged[0]["similarity"] >= 0.97
+
+
+def test_language_aliases_share_scope_but_different_languages_do_not_merge():
+    results = [make_result("python-alias", language="py"),
+               make_result("python", language="python"),
+               make_result("typescript", language="typescript")]
+
+    collapsed = collapse_semantic_duplicates(
+        results, {item["case_id"]: [1.0, 0.0] for item in results},
+    )
+
+    assert [item["case_id"] for item in collapsed] == ["python-alias", "typescript"]
+    assert [item["case_id"] for item in collapsed[0]["duplicate_cases"]] == ["python"]

@@ -1,0 +1,97 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-13T17:04:26.106135+00:00",
+  "scope": "real PostgreSQL/pgvector + Docker restart; synthetic cases and fixed embeddings",
+  "limitations": [
+    "No production database or external embedding/model service used",
+    "No production-scale performance, HA or abrupt power-loss testing",
+    "Web knowledge storage remains SQLite; this validates the PostgreSQL adapter"
+  ],
+  "container": "repair-pg-acceptance-cd5245c0490a",
+  "checks": {
+    "dedicated_database_guard": true
+  },
+  "docker_engine": "29.7.2",
+  "image": {
+    "tag": "pgvector/pgvector:pg16",
+    "id": "sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f",
+    "digests": [
+      "pgvector/pgvector@sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f"
+    ]
+  },
+  "pytest": {
+    "exit_code": 0,
+    "output": ".............                                                            [100%]\n13 passed in 7.07s\n",
+    "cases": [
+      {
+        "name": "test_schema_is_idempotent",
+        "status": "passed"
+      },
+      {
+        "name": "test_accepted_and_rejected_round_trip",
+        "status": "passed"
+      },
+      {
+        "name": "test_real_cosine_ordering_and_dimension_filter",
+        "status": "passed"
+      },
+      {
+        "name": "test_metadata_filters_are_strict[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_metadata_filters_are_strict[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_language_filter_excludes_other_and_missing_metadata[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_language_filter_excludes_other_and_missing_metadata[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_upsert_preserves_one_row_and_increments_revision[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_upsert_preserves_one_row_and_increments_revision[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_rejection_failure_rolls_back_review_and_case_together[False]",
+        "status": "passed"
+      },
+      {
+        "name": "test_rejection_failure_rolls_back_review_and_case_together[True]",
+        "status": "passed"
+      },
+      {
+        "name": "test_unaccepted_or_unverified_cases_do_not_write",
+        "status": "passed"
+      },
+      {
+        "name": "test_postgres_snapshot_exports_both_outcomes",
+        "status": "passed"
+      }
+    ]
+  },
+  "reason": "RuntimeError: Real PostgreSQL integration suite did not pass all 11 cases",
+  "failure_diagnostics": {
+    "container_status": "running",
+    "port_bindings": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "1365"
+        }
+      ]
+    },
+    "database_logs_tail": "2026-11-13 17:04:28.736 UTC [1] LOG:  starting PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit\n2026-11-13 17:04:28.737 UTC [1] LOG:  listening on IPv4 address \"0.0.0.0\", port 5432\n2026-11-13 17:04:28.737 UTC [1] LOG:  listening on IPv6 address \"::\", port 5432\n2026-11-13 17:04:28.739 UTC [1] LOG:  listening on Unix socket \"/var/run/postgresql/.s.PGSQL.5432\"\n2026-11-13 17:04:28.742 UTC [64] LOG:  database system was shut down at 2026-11-13 17:04:28 UTC\n2026-11-13 17:04:28.747 UTC [1] LOG:  database system is ready to accept connections\n2026-11-13 17:04:36.032 UTC [212] ERROR:  new row for relation \"repair_failures\" violates check constraint \"inject_failure\"\n2026-11-13 17:04:36.032 UTC [212] DETAIL:  Failing row contains (rollback-probe, {\"source\": {\"path\": \"src/target.py\", \"type\": \"python_file\", \"ret..., [1,0,0], 3, 1, 2026-11-13 17:04:36.029372+00, 2026-11-13 17:04:36.029372+00).\n2026-11-13 17:04:36.032 UTC [212] STATEMENT:  \n\t                    INSERT INTO repair_failures\n\t                        (case_id, document, embedding, dimension, revision, created_at, updated_at)\n\t                    VALUES ($1, $2::jsonb, $3::vector, $4, 1, NOW(), NOW())\n\t                    ON CONFLICT (case_id) DO UPDATE SET\n\t                        document = EXCLUDED.document,\n\t                        embedding = EXCLUDED.embedding,\n\t                        dimension = EXCLUDED.dimension,\n\t                        revision = repair_failures.revision + 1,\n\t                        updated_at = NOW()\n\t                    \n2026-11-13 17:04:36.309 UTC [222] ERROR:  new row for relation \"repair_failures\" violates check constraint \"inject_failure\"\n2026-11-13 17:04:36.309 UTC [222] DETAIL:  Failing row contains (rollback-probe, {\"source\": {\"path\": \"src/target.py\", \"type\": \"python_file\", \"ret..., [1,0,0], 3, 1, 2026-11-13 17:04:36.306801+00, 2026-11-13 17:04:36.306801+00).\n2026-11-13 17:04:36.309 UTC [222] STATEMENT:  \n\t                    INSERT INTO repair_failures\n\t                        (case_id, document, embedding, dimension, revision, created_at, updated_at)\n\t                    VALUES ($1, $2::jsonb, $3::vector, $4, 1, NOW(), NOW())\n\t                    ON CONFLICT (case_id) DO UPDATE SET\n\t                        document = EXCLUDED.document,\n\t                        embedding = EXCLUDED.embedding,\n\t                        dimension = EXCLUDED.dimension,\n\t                        revision = repair_failures.revision + 1,\n\t                        updated_at = NOW()\n\t                    \n"
+  },
+  "cleanup": {
+    "container_removed": true,
+    "anonymous_volumes_removed": true
+  }
+}

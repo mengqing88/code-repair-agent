@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "配置优先级顺序",
+    "高优先级来源覆盖"
+  ],
+  "before_source": "def resolve(file_cfg, cli_cfg):\n    r = dict(cli_cfg)\n    for k, v in file_cfg.items():\n        r[k] = v\n    return r\n",
+  "dataset_experience_id": "WorkBuddy::experience-72",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "优先级高的来源应最后写入（覆盖），顺序写反会得到错误来源。",
+  "experience_id": "experience-72",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "命令行参数应覆盖配置文件，却反被配置文件覆盖。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,5 +1,5 @@\n def resolve(file_cfg, cli_cfg):\n-    r = dict(cli_cfg)\n-    for k, v in file_cfg.items():\n+    r = dict(file_cfg)\n+    for k, v in cli_cfg.items():\n         r[k] = v\n     return r\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import resolve\n\ndef test_a():\n    assert resolve({'a':1}, {'a':2}) == {'a':2}\n\ndef test_b():\n    assert resolve({'timeout':30}, {'timeout':5}) == {'timeout':5}\n\ndef test_c():\n    assert resolve({'x':1}, {'x':9,'y':2}) == {'x':9,'y':2}\n"
+}

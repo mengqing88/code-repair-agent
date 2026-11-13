@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "跨午夜时间区间",
+    "区间翻转处理"
+  ],
+  "before_source": "def parking_open(o, c, t):\n    return o <= t <= c\n",
+  "dataset_experience_id": "WorkBuddy::experience-68",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "跨午夜区间需拆成两段（>=open 或 <=close），不能当作普通闭区间。",
+  "experience_id": "experience-68",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "停车场计费时段 22:00-02:00 跨午夜，简单区间判断导致夜间误判关闭。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,4 @@\n def parking_open(o, c, t):\n-    return o <= t <= c\n+    if c >= o:\n+        return o <= t <= c\n+    return t >= o or t <= c\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import parking_open\n\ndef test_a():\n    assert parking_open(22, 2, 1) is True\n\ndef test_b():\n    assert parking_open(22, 2, 23) is True\n\ndef test_c():\n    assert parking_open(22, 2, 22) is True\n"
+}

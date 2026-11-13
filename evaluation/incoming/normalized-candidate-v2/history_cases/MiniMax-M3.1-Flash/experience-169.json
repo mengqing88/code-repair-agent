@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "日期区间统计",
+    "端点被重复计入",
+    "边界判定重复叠加"
+  ],
+  "before_source": "def daily_revenue(records, business_day):\n    \"\"\"统计某一天的营业额。\"\"\"\n    total = 0\n    for record in records:\n        if record[\"day\"] == business_day:\n            total += record[\"amount\"]\n        if record[\"day\"] == business_day:\n            total += record[\"amount\"]\n    return total\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-169",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "区间过滤已经包含了右端点，但实现里又额外追加了一条“day == end 时再加一次”的分支，导致右端点被重复计数。修复原则：边界只能在一个地方判定——要么用统一的闭区间比较，要么用左闭右开的写法，不要在同一逻辑里叠加第二套端点规则。",
+  "experience_id": "experience-169",
+  "normalization_notes": [],
+  "original_report": "门店日报统计当日营业额时，当天最后一笔订单被重复计入，交班对账总是多出一单。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -4,6 +4,4 @@\n     for record in records:\n         if record[\"day\"] == business_day:\n             total += record[\"amount\"]\n-        if record[\"day\"] == business_day:\n-            total += record[\"amount\"]\n     return total\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import daily_revenue\n\n\ndef test_single_record_is_counted_once():\n    assert daily_revenue([{\"day\": \"2024-03-10\", \"amount\": 100}], \"2024-03-10\") == 100\n\n\ndef test_other_day_is_ignored():\n    assert daily_revenue([{\"day\": \"2024-03-09\", \"amount\": 100}], \"2024-03-10\") == 0\n\n\ndef test_two_records_are_summed_once_each():\n    records = [\n        {\"day\": \"2024-03-10\", \"amount\": 100},\n        {\"day\": \"2024-03-10\", \"amount\": 200},\n    ]\n    assert daily_revenue(records, \"2024-03-10\") == 300\n"
+}

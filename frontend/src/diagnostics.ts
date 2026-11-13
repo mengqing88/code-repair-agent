@@ -4,10 +4,19 @@ export type ClientErrorCode = "component_error" | "browser_error" | "unhandled_r
 type ClientFault = { code: ClientErrorCode; error_id: string; task_id?: string };
 const codes = new Set<ClientErrorCode>(["component_error", "browser_error", "unhandled_rejection", "resource_error",
   "storage_error", "request_timeout", "connection_failed", "response_invalid"]);
-const queueKey = "repair-client-errors";
+let queueKey = "repair-client-errors";
+let diagnosticSession: { userId: string; csrf: string } | null = null;
 let memory: ClientFault[] = [];
 let flushing = false;
 const recent = new Map<ClientErrorCode, { id: string; time: number }>();
+
+export function setDiagnosticSession(userId: string | null, csrf = "") {
+  diagnosticSession = userId ? { userId, csrf } : null;
+  queueKey = `repair-client-errors:${userId || "anonymous"}`;
+  memory = [];
+  recent.clear();
+  if (userId) void flushClientErrors();
+}
 
 function queue(): ClientFault[] {
   try {
@@ -26,18 +35,21 @@ function save(items: ClientFault[]) {
 }
 
 export async function flushClientErrors() {
-  if (flushing) return;
+  if (flushing || !diagnosticSession) return;
+  const session = diagnosticSession;
   flushing = true;
   try {
     for (const item of queue()) {
+      if (diagnosticSession !== session) break;
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 3000);
       try {
         const response = await fetch("/api/client-errors", { method: "POST", signal: controller.signal,
-          headers: { "Content-Type": "application/json" }, body: JSON.stringify(item) });
+          headers: { "Content-Type": "application/json", "X-CSRF-Token": session.csrf, "X-Account-ID": session.userId },
+          credentials: "same-origin", body: JSON.stringify(item) });
         const receipt = await response.json().catch(() => null);
         if (!response.ok || receipt?.recorded !== true || receipt?.error_id !== item.error_id) break;
-        save(queue().filter(candidate => candidate.error_id !== item.error_id));
+        if (diagnosticSession === session) save(queue().filter(candidate => candidate.error_id !== item.error_id));
       } catch { break; }
       finally { clearTimeout(timer); }
     }

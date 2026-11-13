@@ -1,5 +1,7 @@
 # 30 缺陷 RAG 评测集
 
+最新模型只读策略后的服务与运行验收见 [2026-11-14 继续验收记录](COMPLETION_ACCEPTANCE_20261114.md)；保留原失败证据，不以合成冒烟替代正式效果评测。
+
 模型或工具升级的预注册、重复配对及行为退化门禁见 [UPGRADE_EVALUATION.md](UPGRADE_EVALUATION.md)，入口为 `python -m evaluation.upgrade_gate`。它与本页的相同模型 RAG 对照独立。
 
 这是一套自行编写的 Python 合成样例，用于检查检索、补丁应用和验收流程。它不是公开基准或真实生产缺陷集，也不能据此宣称实际 Agent 达到了 Top-5 82%、16/30→22/30、回归通过率 96%。
@@ -50,9 +52,27 @@
 
 `configured-embeddings` 会分别测量 keyword、vector 和 hybrid，输出 Recall@K、MRR、Precision@K；若设置了 `CROSS_ENCODER_MODEL`，还会测量 `hybrid+cross_encoder`。Cross-Encoder 是可选依赖：先运行 `pip install -e ".[rerank]"`。没有配置或模型不可用时，该策略不会被报告为实测。报告另含成功/失败经验分开召回及仓库、文件、依赖范围严格过滤的合成自检。
 
+## 本轮真实 Agent 结果（2026-11-12）
+
+最新有效复跑 `rag-ab-real-20261112-v4` 完成同一批 30 个合成缺陷的 30×2 次真实模型/Docker 运行。原复现阻塞已改善：关闭 RAG 有 28/30、开启 RAG 有 29/30 确认复现；开启组 22/30 完成混合检索，共暴露 110 条经验。但两组均为 **0/30 自动修复成功**，没有任何候选补丁：19/30 与 21/30 在保守 Token 输入预检处停止，另有模型生成的嵌套测试函数没有执行断言而被基线失败门禁拦住。所有候选独立测试均未运行，不能声称达到 96%，也不能据此判断 RAG 带来修复收益。详情见 [复跑报告](AGENT_RAG_AB_RERUN_20261112.md)、[逐题归因](results-agent-ab-rerun-20261112.json) 和 [原始运行/Trace/审计产物](../work/evaluation/rag-ab-real-20261112-v4/)；上一轮复现失败证据仍保留在 [v2 报告](AGENT_RAG_AB_20261112.md) 与 [v2 结果](results-agent-ab-20261112.json)。
+
 ## 实际补丁的对照计分
 
-本次任务只生成评测集，未自动运行真实修复模型。后续对同一批 30 个缺陷分别关闭和开启 RAG，固定模型、提示词、基线、预算、重试次数和环境，并保存 Trace。两组产物分别存到 `work/evaluation/baseline/`、`work/evaluation/rag/`，每个文件为 `case-01.patch` 至 `case-30.patch` 的完整 unified diff。模型信息、参数和 Trace 路径应另存实验记录，评测器仅核验补丁行为，不认证其来源。
+先行小样结果见 [case-11 真实小样报告](AGENT_RAG_AB_SMOKE_20261112.md)：关闭 RAG 和开启 RAG 各运行 1 次。关闭 RAG 的完整流程成功 1/1；开启 RAG 的候选独立验收 1/1，但对抗审查模型超时，完整流程 0/1。该小样只验证链路闭环，不代表 5+5 正式评测或 RAG 收益。
+
+真实 Agent 的配对运行入口为 `run_agent_ab.py`。它运行生产复现、缺陷回归生成、ReAct 修复、验证及独立审查，使用真实模型/Embedding 与 Docker。需要本机模型服务配置、Docker Engine 和已经构建的 runner 镜像；费用单价未配置时报告未知。输出目录必须新建；再次执行 `run` 仅分派未完成槽位，不重跑已失败任务。不要在运行中修改生产 Python 文件、冻结输入、配置或语料。
+
+```powershell
+.venv\Scripts\python.exe -m evaluation.isolated_agent_ab prepare --output work/evaluation/rag-ab-real-20261112-v2
+.venv\Scripts\python.exe -m evaluation.isolated_agent_ab run --output work/evaluation/rag-ab-real-20261112-v2
+.venv\Scripts\python.exe -m evaluation.isolated_agent_ab score --output work/evaluation/rag-ab-real-20261112-v2
+```
+
+`isolated_agent_ab` 先把程序与评测数据复制到同名 `-runtime` 目录，从该快照调用 `run_agent_ab`，避免共享工作区并行修改污染实验；不复制 `.env`，凭据只在子进程内存解析。`prepare` 自检作者样例、构建隔离的 30 条类比语料并注册计划。`run` 在相同模型/模板代码/预算下运行空库与 RAG 两组，固定随机调度、并发 2；模型输入只有单题源码、现有测试和报告契约。每题保存执行清单、状态、实际候选补丁和 Trace；不自动人工接受或发布经验。`score` 才读取隐藏验收，Docker 中运行 3 条既有测试和 3 条隐藏测试，保存 JUnit 与结果。
+
+主指标要求工作流到达 `reviewable`、补丁哈希绑定、清理成功且独立验收通过；这表示可提交人工审核，不等于已经人工接受。次指标独立报告最后模型候选补丁通过数，即使工作流未完成也可用于定位阻塞。空补丁和超时计为失败，回归分母固定为每组 90 条并另报执行覆盖率；保留配对得失、Token、耗时和费用未知的限制。当前实验执行状态及实际结论见根目录 `项目现状与亮点.md` 的当日记录。
+
+如果已有其他入口生成的 Agent 补丁，也可单独计分。同一批 30 个缺陷应分别关闭和开启 RAG，固定模型、提示词、基线、预算、重试次数和环境，并保存 Trace。两组产物分别存到 `work/evaluation/baseline/`、`work/evaluation/rag/`，每个文件为 `case-01.patch` 至 `case-30.patch` 的完整 unified diff。模型信息、参数和 Trace 路径应另存实验记录，以下评测器仅核验补丁行为，不认证其来源。
 
 ```powershell
 .venv\Scripts\python.exe evaluation\run_benchmark.py --baseline-patches work/evaluation/baseline --rag-patches work/evaluation/rag --output work/evaluation/comparison.json

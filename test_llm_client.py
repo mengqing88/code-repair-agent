@@ -17,6 +17,7 @@ from openai import APIStatusError, APITimeoutError
 # ask_model：被测试的模型调用函数；ask_model_with_usage：带用量统计的调用函数；embed_text：向量调用函数。
 from llm_client import ask_model, ask_model_with_tools, ask_model_with_usage, embed_text, embed_texts
 from resilience import execution_scope, Fault
+from input_protection import MODEL_BOUNDARY
 
 
 # patch.dict(目标字典路径, 替换内容, clear=True) 创建临时替换上下文；clear=True 先清空字典。
@@ -30,6 +31,10 @@ class ModelClientTests(unittest.TestCase):
     def setUp(self) -> None:
         """为每个测试创建一份独立的临时配置，仅填写用于测试的假密钥。"""
         # self.directory：TemporaryDirectory() 创建的临时目录管理对象，.name 属性是目录路径字符串。
+        from resilience import Circuit
+        isolated_circuit = patch("resilience._DEFAULT_CIRCUIT", Circuit())
+        isolated_circuit.start()
+        self.addCleanup(isolated_circuit.stop)
         self.directory = tempfile.TemporaryDirectory()
         # addCleanup(清理函数) 将函数登记到当前测试实例，返回 None；测试结束时自动调用。
         # self.directory.cleanup 是方法对象，没有括号表示暂不执行；之后调用 cleanup() 时删除临时目录。
@@ -66,7 +71,7 @@ class ModelClientTests(unittest.TestCase):
             )
             # assert_called_once_with() 检查请求发送了模型、提示词和输出限制。
             client.responses.create.assert_called_once_with(
-                model="test-model", input="测试消息", max_output_tokens=4096, store=False
+                model="test-model", input="测试消息", max_output_tokens=40960, store=False, instructions=MODEL_BOUNDARY + "\n"
             )
 
     def test_usage_result_contains_tokens_and_estimated_cost(self) -> None:
@@ -117,7 +122,8 @@ class ModelClientTests(unittest.TestCase):
 
             client.responses.create.assert_called_once_with(
                 model="test-model", input="读取目标源码", tools=[tool],
-                max_output_tokens=4096, store=False,
+                max_output_tokens=40960, store=False,
+                instructions=MODEL_BOUNDARY + "\n",
             )
             self.assertEqual(result.tool_calls[0].call_id, "call-1")
             self.assertEqual(result.tool_calls[0].name, "read_code")

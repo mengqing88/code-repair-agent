@@ -1,8 +1,10 @@
 """用真实 pytest 子进程验证缺陷专用用例的基线、补丁和失败路径。"""
 
 import json
+import hashlib
 import tempfile
 import unittest
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,6 +14,32 @@ from repair_state import create_initial_state
 from repair_tools import RepairToolbox, apply_patch, create_checkpoint_workspace
 from repair_workflow import build_repair_workflow
 from resilience import Fault
+
+
+@pytest.mark.parametrize("body", [
+    "def test_inner():\n    assert False",
+    "import pytest\ndef test_inner():\n    with pytest.raises(ValueError):\n        int('bad')",
+    "async def test_inner():\n    assert False",
+])
+def test_nested_definitions_require_regeneration(body):
+    prompts = []
+    def model(prompt):
+        prompts.append(prompt)
+        return json.dumps({"test_body": body if len(prompts) == 1 else "assert 1 == 2",
+                           "question": "", "clarification_required": False, "clarification_reasons": []})
+    result = generate_regression_test("返回值应为 2", {}, model_call=model)
+    assert len(prompts) == 2
+    assert "函数体" in prompts[1]
+    assert "assert 1 == 2" in result["test_code"]
+    assert "test_inner" not in result["test_code"]
+
+
+def test_nested_definition_never_accepted_after_corrections_exhausted():
+    with pytest.raises(Fault) as error:
+        generate_regression_test("返回值应为 2", {}, model_call=lambda _: json.dumps({
+            "test_body": "def test_inner():\n    assert False", "question": "",
+            "clarification_required": False, "clarification_reasons": []}))
+    assert error.value.code == "schema_invalid"
 
 
 class DefectValidationTests(unittest.TestCase):
@@ -35,6 +63,15 @@ class DefectValidationTests(unittest.TestCase):
             validation_report_path=self.root / "reports" / "validation.md",
             execution_backend="host",
         )
+        reviewer = patch("adversarial_review.ask_model_with_usage", side_effect=lambda prompt: json.dumps({
+            "summary": "缺陷验证集成测试的独立模型桩", "checks": [
+                {"aspect": aspect, "verdict": "pass",
+                 "path": next(iter(json.loads(prompt.split("\n", 1)[1])["sources"])),
+                 "quote": next(iter(json.loads(prompt.split("\n", 1)[1])["sources"].values()))["patched"],
+                 "reasoning": "仅用于隔离模型服务，真实验证结果由独立 pytest 产生"}
+                for aspect in ("boundary_inputs", "behavior_compatibility", "patch_risk")]}))
+        reviewer.start()
+        self.addCleanup(reviewer.stop)
         self.state = create_initial_state(
             "defect", {"type": "pasted_code"}, "value 应为 2，实际为 1",
             code_text="value = 1\n", remaining_seconds=90, remaining_attempts=0,
@@ -47,7 +84,8 @@ class DefectValidationTests(unittest.TestCase):
     def generated(self, body="from target import value\nassert value == 2"):
         return generate_regression_test(
             self.state["original_report"], self.record,
-            model_call=lambda prompt: json.dumps({"test_body": body, "question": ""}),
+            model_call=lambda prompt: json.dumps({"test_body": body, "question": "",
+                "clarification_required": False, "clarification_reasons": []}),
         )
 
     def prepare(self, body="from target import value\nassert value == 2"):
@@ -178,7 +216,8 @@ class DefectValidationTests(unittest.TestCase):
         ))
         services = self.toolbox.as_repair_services(
             lambda state: {"matched": True, "record": self.record},
-            propose_patch=lambda state: {"diagnosis": "修复", "patch_diff": next(patches), "patch_hash": "candidate"},
+            propose_patch=lambda state: {"diagnosis": "修复", "patch_diff": (candidate := next(patches)),
+                                         "patch_hash": hashlib.sha256(candidate.encode()).hexdigest()},
         )
         with patch("repair_tools.generate_regression_test", return_value=self.generated()) as generate:
             result = build_repair_workflow(services).invoke(self.state)
@@ -226,17 +265,21 @@ class DefectValidationTests(unittest.TestCase):
         ])
         replies = iter((
             json.dumps({"revised_report": "value 应为 2", "steps": "导入 calculator 并打印 value",
-                        "reproduction_code": "from calculator import value\nprint(value)", "question": ""}),
-            json.dumps({"comparison": "matched", "conclusion": "实际输出 1", "evidence": "1", "question": ""}),
+                        "reproduction_code": "from calculator import value\nprint(value)",
+                        "clarification_required": False, "clarification_reasons": [], "question": ""}),
+            json.dumps({"comparison": "matched", "conclusion": "实际输出 1", "evidence": "1",
+                        "clarification_required": False, "clarification_reasons": [], "question": ""}),
         ))
         patch_text = "--- a/calculator.py\n+++ b/calculator.py\n@@ -1,2 +1,2 @@\n from helpers import expected\n-value = expected - 1\n+value = expected\n"
         with (
             patch("reproduction.ask_model", side_effect=lambda prompt: next(replies)),
             patch("defect_regression.ask_model_with_usage", return_value=json.dumps({
                 "test_body": "from calculator import value\nassert value == 2", "question": "",
+                "clarification_required": False, "clarification_reasons": [],
             })),
             patch("repair_workflow.ask_model_with_tools", return_value=ModelCallResult(
-                json.dumps({"diagnosis": "value 赋值错误", "patch_diff": patch_text}),
+                json.dumps({"diagnosis": "value 赋值错误", "patch_diff": patch_text, "question": "",
+                            "clarification_required": False, "clarification_reasons": []}),
                 10, 20, 30, 0.01,
             )),
         ):
@@ -251,7 +294,8 @@ class RegressionGenerationTests(unittest.TestCase):
     def test_prompt_uses_report_and_evidence_and_retains_model_usage(self):
         prompts = []
         response = ModelCallResult(
-            json.dumps({"test_body": "from target import value\nassert value == 2", "question": ""}),
+            json.dumps({"test_body": "from target import value\nassert value == 2", "question": "",
+                        "clarification_required": False, "clarification_reasons": []}),
             10, 20, 30, 0.01,
         )
         result = generate_regression_test(

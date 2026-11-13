@@ -111,7 +111,7 @@ def test_existing_cases_are_merged_on_first_search(tmp_path):
     with sqlite3.connect(path) as connection:
         assert connection.execute(
             "SELECT value FROM knowledge_base_meta WHERE key = 'semantic_merge_version'"
-        ).fetchone()[0] == "same-scope-v1:0.970000"
+        ).fetchone()[0] == "same-scope-language-v2:0.970000"
 
 
 def test_updating_a_canonical_case_rechecks_its_duplicate_links(tmp_path):

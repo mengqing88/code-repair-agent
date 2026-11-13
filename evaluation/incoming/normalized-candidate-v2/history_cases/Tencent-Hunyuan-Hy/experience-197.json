@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "标识符/键/扩展名的匹配需要忽略大小写",
+    "缺陷表现为只有某一种大小写形式能被识别",
+    "修复应在比较前做统一的归一化"
+  ],
+  "before_source": "# 上传文件过滤：扩展名为 .png（不区分大小写）时视为图片。\n\n\ndef is_image(filename):\n    return filename.endswith(\".PNG\")\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-197",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "字符串匹配前必须明确大小写策略；直接用区分大小写的后缀/键比较会漏掉合法变体。修复原则是在比较两侧统一归一化（如 lower()），而不是给每个变体加分支。",
+  "experience_id": "experience-197",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】图片上传过滤场景：用户上传 a.png 被判为非图片，只有 a.PNG 能通过。预期：扩展名不区分大小写。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def is_image(filename):\n-    return filename.endswith(\".PNG\")\n+    return filename.lower().endswith(\".png\")\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import is_image\n\n\ndef test_uppercase_extension():\n    assert is_image(\"a.PNG\") is True\n\n\ndef test_non_image_extension():\n    assert is_image(\"a.txt\") is False\n\n\ndef test_lowercase_extension():\n    assert is_image(\"a.png\") is True\n"
+}

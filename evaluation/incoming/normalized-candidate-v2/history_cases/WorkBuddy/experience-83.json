@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "排序次级键",
+    "并列顺序不确定"
+  ],
+  "before_source": "def leaderboard(players):\n    return sorted(players, key=lambda p: p[1], reverse=True)\n",
+  "dataset_experience_id": "WorkBuddy::experience-83",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "排序需明确次级键（tie-breaker）以保证确定性。",
+  "experience_id": "experience-83",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "排行榜：分数相同未按姓名二级排序，顺序不确定。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n def leaderboard(players):\n-    return sorted(players, key=lambda p: p[1], reverse=True)\n+    return sorted(players, key=lambda p: (-p[1], p[0]))\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import leaderboard\n\ndef test_a():\n    assert leaderboard([('b',80),('a',80)]) == [('a',80),('b',80)]\n\ndef test_b():\n    assert leaderboard([('z',50),('a',50),('m',50)]) == [('a',50),('m',50),('z',50)]\n\ndef test_c():\n    assert leaderboard([('b',90),('a',90),('c',80)]) == [('a',90),('b',90),('c',80)]\n"
+}

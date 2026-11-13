@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "并列名次规则不符（竞争排名 vs 稠密排名）",
+    "名次出现空洞",
+    "去重后建立名次映射"
+  ],
+  "before_source": "def team_rank(volumes):\n    \"\"\"稠密排名：同分并列，下一个不同分数名次 +1。返回与输入等长列表。\"\"\"\n    ordered = sorted(volumes, reverse=True)\n    return [ordered.index(v) + 1 for v in volumes]\n",
+  "dataset_experience_id": "GLM::experience-116",
+  "dataset_id": "GLM",
+  "diagnosis": "竞争排名与稠密排名的差异：稠密排名应基于去重后的有序分数建立名次映射。修复原则：并列名次规则要先明确（standard/dense/ordinal），实现与契约对齐。",
+  "experience_id": "experience-116",
+  "normalization_notes": [],
+  "original_report": "销售排行榜同分团队后续名次跳号（1,1,3），与运营要求的并列后顺延一位（1,1,2）不符。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,5 @@\n def team_rank(volumes):\n     \"\"\"稠密排名：同分并列，下一个不同分数名次 +1。返回与输入等长列表。\"\"\"\n-    ordered = sorted(volumes, reverse=True)\n-    return [ordered.index(v) + 1 for v in volumes]\n+    uniq = sorted(set(volumes), reverse=True)\n+    rank_of = {v: i + 1 for i, v in enumerate(uniq)}\n+    return [rank_of[v] for v in volumes]\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import team_rank\n\ndef test_no_ties():\n    assert team_rank([30, 20, 10]) == [1, 2, 3]\n\ndef test_all_tied():\n    assert team_rank([7, 7]) == [1, 1]\n\ndef test_dense_ranking():\n    assert team_rank([20, 20, 10]) == [1, 1, 2]\n"
+}

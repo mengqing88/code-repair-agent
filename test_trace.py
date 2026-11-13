@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from fastapi.testclient import TestClient
+from test_account_support import TestClient
 
 from llm_client import ModelCallResult, ModelToolCall
 from repair_api import TaskInput, create_app
@@ -38,7 +38,8 @@ def test_react_persists_success_rejection_full_output_and_call_lineage(tmp_path)
     state = workflow_fixture.RepairWorkflowTests().initial_state()
     turns = [tool_turn("read-1", "read_code", '{"path":"target.py"}'),
              tool_turn("invalid-1", "search_code", '{"query":42}'),
-             ModelCallResult(json.dumps({"diagnosis": "root cause", "patch_diff": "diff"}), 1, 1, 2, 0.001)]
+             ModelCallResult(json.dumps({"diagnosis": "root cause", "patch_diff": "diff", "question": "",
+                                         "clarification_required": False, "clarification_reasons": []}), 1, 1, 2, 0.001)]
     path = tmp_path / "trace.jsonl"
     with execution_scope(60, task_id=state["task_id"], trace_path=path):
         with patch("repair_workflow.ask_model_with_tools", side_effect=turns):
@@ -80,7 +81,7 @@ def test_trace_api_paginates_legacy_records_without_losing_early_events(tmp_path
     app = create_app(tmp_path / "data")
     runner = app.state.runner
     with patch.object(runner.pool, "submit", return_value=None):
-        task = runner.create(TaskInput(source_type="pasted_code", code_text="value=1\n", error_report="audit"))
+        task = runner.create(TaskInput(source_type="pasted_code", language="python", code_text="value=1\n", error_report="audit"))
     task_id = task["state"]["task_id"]
     path = runner.store.root / "tasks" / task_id / "trace.jsonl"
     path.write_text("".join(json.dumps({"event": str(i)}) + "\n" for i in range(251)), encoding="utf-8")
@@ -142,7 +143,8 @@ def test_tool_failures_stay_correlated_when_returned_to_model(tmp_path, name, ar
     state = workflow_fixture.RepairWorkflowTests().initial_state()
     path = tmp_path / "trace.jsonl"
     turns = [tool_turn("bad-request", name, arguments),
-             ModelCallResult(json.dumps({"diagnosis": "cause", "patch_diff": "diff"}), 1, 1, 2, 0)]
+             ModelCallResult(json.dumps({"diagnosis": "cause", "patch_diff": "diff", "question": "",
+                                         "clarification_required": False, "clarification_reasons": []}), 1, 1, 2, 0)]
     with execution_scope(60, task_id=state["task_id"], trace_path=path):
         with patch("repair_workflow.ask_model_with_tools", side_effect=turns) as model:
             llm_propose_patch(state, tool_definitions=toolbox.model_tool_definitions(), tool_executor=toolbox.call_model_tool)
@@ -220,9 +222,10 @@ def test_redaction_and_trace_write_failure_never_replay_effect(tmp_path, monkeyp
     blocker.write_text("file")
     effects = []
     with execution_scope(10, task_id="audit", trace_path=blocker / "trace.jsonl") as context:
-        with traced_call("effect"):
-            effects.append(True)
-    assert effects == [True] and context.warnings
+        with pytest.raises(Fault, match="无法持久化 Trace"):
+            with traced_call("effect"):
+                effects.append(True)
+    assert effects == [] and context.warnings
 
 
 def test_concurrent_process_append_and_restart_pagination(tmp_path):

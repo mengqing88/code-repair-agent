@@ -45,7 +45,8 @@ def sensitive_name(name):
 
 
 def redact(value, limit=2000):
-    text = str(value)
+    from input_protection import protect_input
+    text = protect_input(str(value))
     secrets = [value for name, value in os.environ.items()
                if any(part in name.upper() for part in ("API_KEY", "PASSWORD", "SECRET", "TOKEN", "DATABASE_URL", "KNOWLEDGE_DB_URL"))
                and len(value) >= 4]

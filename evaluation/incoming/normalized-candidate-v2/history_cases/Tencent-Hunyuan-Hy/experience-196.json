@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "解析契约要求保留空字段/空列",
+    "缺陷表现为连续分隔符被合并、字段数减少",
+    "修复应显式指定分隔符而非依赖默认空白切分"
+  ],
+  "before_source": "# 定宽列解析：按单个空格切分，连续空格产生的空列要保留。\n\n\ndef columns(line):\n    return line.split()\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-196",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "解析时必须区分「按分隔符切分」与「按空白切分」：str.split() 无参数会合并连续空白并丢弃空字段，而 str.split(' ') 才严格按分隔符切分并保留空位。修复原则是显式传入分隔符，不要依赖默认的空白折叠行为。",
+  "experience_id": "experience-196",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】定宽列解析场景：输入 'a  b' 含连续空格，应解析出三列（中间为空列），实际只得到两列。预期：按单个空格切分并保留空列。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def columns(line):\n-    return line.split()\n+    return line.split(\" \")\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import columns\n\n\ndef test_simple_columns():\n    assert columns(\"a b\") == [\"a\", \"b\"]\n\n\ndef test_single_column():\n    assert columns(\"x\") == [\"x\"]\n\n\ndef test_consecutive_spaces_keep_empty_column():\n    assert columns(\"a  b\") == [\"a\", \"\", \"b\"]\n"
+}

@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "分组聚合",
+    "累加后多余赋值破坏结果",
+    "分组之间数值串扰"
+  ],
+  "before_source": "def stock_by_warehouse(items, warehouse_field):\n    \"\"\"按仓库统计库存。\"\"\"\n    totals = {}\n    current = None\n    running = 0\n    for item in items:\n        warehouse = item[warehouse_field]\n        if warehouse != current:\n            current = warehouse\n            running = 0\n        running += item[\"qty\"]\n        totals[warehouse] = running\n    return totals\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-172",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "聚合时用了一个跨行共享的累加变量，并且只在分组发生变化时清零，于是同一分组再次出现时，之前累计的量被丢弃。修复原则：分组聚合必须以分组键本身为存储位置（用字典的 get/赋值按组累加），不能依赖“上一行的分组”来判断何时清零。",
+  "experience_id": "experience-172",
+  "normalization_notes": [],
+  "original_report": "按仓库分组的库存统计里，某个仓库的总量在它被其他仓库的行隔开后就丢了，盘点表里该仓库的数量只剩最后一批。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,13 +1,7 @@\n def stock_by_warehouse(items, warehouse_field):\n     \"\"\"按仓库统计库存。\"\"\"\n     totals = {}\n-    current = None\n-    running = 0\n     for item in items:\n         warehouse = item[warehouse_field]\n-        if warehouse != current:\n-            current = warehouse\n-            running = 0\n-        running += item[\"qty\"]\n-        totals[warehouse] = running\n+        totals[warehouse] = totals.get(warehouse, 0) + item[\"qty\"]\n     return totals\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import stock_by_warehouse\n\n\ndef test_interrupted_warehouse_is_still_summed():\n    items = [\n        {\"wh\": \"w1\", \"qty\": 3},\n        {\"wh\": \"w2\", \"qty\": 4},\n        {\"wh\": \"w1\", \"qty\": 2},\n    ]\n    assert stock_by_warehouse(items, \"wh\") == {\"w1\": 5, \"w2\": 4}\n\n\ndef test_single_warehouse_total():\n    items = [{\"wh\": \"w1\", \"qty\": 3}, {\"wh\": \"w1\", \"qty\": 4}]\n    assert stock_by_warehouse(items, \"wh\") == {\"w1\": 7}\n\n\ndef test_empty_input_returns_empty_dict():\n    assert stock_by_warehouse([], \"wh\") == {}\n"
+}

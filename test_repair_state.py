@@ -27,7 +27,7 @@ class RepairStateTests(unittest.TestCase):
     """检查状态作为任务数据和真实 LangGraph schema 使用时的行为。"""
 
     def test_default_budget_matches_project_limits(self) -> None:
-        """不传预算时使用项目约定的 10 次、120 秒、20000 Token 和 0.10 元。"""
+        """不传预算时使用项目约定的 10 次、1200 秒、200000 Token 和 0.10 元。"""
         # state：只提供任务必需字段，验证初始化函数会补齐四项默认预算。
         state = create_initial_state("default-budget", {"type": "pasted_code"}, "报告")
 

@@ -48,7 +48,9 @@ def scope_key(document_text: object) -> tuple[object, ...] | None:
     if not isinstance(dependencies, dict):
         dependencies = {}
     normalized_dependencies = tuple(sorted((str(key), str(value)) for key, value in dependencies.items()))
-    return repository, tuple(sorted(set(paths))), normalized_dependencies
+    from language_support import normalize_language
+    language = scope.get("language") or document.get("language") or "auto"
+    return repository, tuple(sorted(set(paths))), normalized_dependencies, normalize_language(language)
 
 
 def scope_fingerprint(scope: tuple[object, ...]) -> str:

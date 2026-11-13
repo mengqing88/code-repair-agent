@@ -21,20 +21,64 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.client.streamable_http import streamable_http_client
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
-from dotenv import dotenv_values
 
 from diagnostics import redact
-from resilience import Fault, current, trace
+from resilience import Fault, call_with_retry, current, digest, error_info, retry_after_seconds, trace
+from runtime_config import active_manifest, load_settings, setting
 
 
 MAX_TOOL_NAME_LENGTH = 64
 MAX_TOOL_DESCRIPTION_LENGTH = 1000
 MAX_TOOL_RESULT_CHARS = 20_000
 MAX_TOOL_ARGUMENT_CHARS = 64_000
+MCP_CLIENT_START_TIMEOUT_SECONDS = 60
+MCP_SERVER_START_TIMEOUT_SECONDS = 15
 
 
 class MCPConfigurationError(ValueError):
     """MCP 服务配置缺失、格式错误或包含未设置的环境变量时抛出。"""
+
+
+class MCPStatusQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    tool: str = Field(pattern=r"^[A-Za-z0-9_-]{1,64}$")
+    argument_map: dict[str, str] = Field(min_length=1)
+    result_pointer: str = Field(pattern=r"^(?:/(?:[^~/]|~[01])*)*$")
+    completed_values: list[str] = Field(min_length=1)
+    not_applied_values: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_status_mapping(self):
+        if (any(not key.strip() or not value.strip() for key, value in self.argument_map.items())
+                or any(not value.strip() for value in (*self.completed_values, *self.not_applied_values))
+                or len(set(self.completed_values)) != len(self.completed_values)
+                or len(set(self.not_applied_values)) != len(self.not_applied_values)
+                or set(self.completed_values) & set(self.not_applied_values)):
+            raise ValueError("状态查询映射和状态值必须非空且不能重叠")
+        return self
+
+
+class MCPToolPolicy(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    access: Literal["read_only", "external_write"]
+    conflict_group: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,64}$")
+    resource_argument: str | None = Field(default=None, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")
+    business_schema: dict[str, Any] | None = None
+    status_query: MCPStatusQuery | None = None
+    max_retries: int | None = Field(default=None, ge=0, le=3)
+
+    @model_validator(mode="after")
+    def validate_policy(self):
+        if self.access == "read_only" and (self.resource_argument or self.status_query):
+            raise ValueError("只读工具不能配置资源锁或结果核对工具")
+        if self.access == "external_write" and self.status_query and not self.resource_argument:
+            raise ValueError("配置结果核对的外部写工具必须声明 resource_argument")
+        if self.max_retries is None:
+            self.max_retries = 2 if self.access == "read_only" else 0
+        if self.access == "external_write" and self.max_retries != 0:
+            raise ValueError("外部写工具必须配置 max_retries=0")
+        return self
 
 
 class MCPServerConfig(BaseModel):
@@ -45,6 +89,7 @@ class MCPServerConfig(BaseModel):
     name: str = Field(pattern=r"^[A-Za-z0-9_-]{1,32}$")
     transport: Literal["stdio", "streamable_http"]
     allow_tools: list[str] = Field(min_length=1)
+    tool_policies: dict[str, MCPToolPolicy] = Field(default_factory=dict)
     command: str | None = None
     args: list[str] = Field(default_factory=list)
     env: dict[str, str] = Field(default_factory=dict)
@@ -61,6 +106,15 @@ class MCPServerConfig(BaseModel):
             re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", item) is None for item in self.required_env
         ):
             raise ValueError("required_env 必须由不重复的环境变量名称组成")
+        if any(name not in self.allow_tools for name in self.tool_policies):
+            raise ValueError("tool_policies 只能声明 allow_tools 中列出的工具")
+        for tool_name, policy in self.tool_policies.items():
+            if policy.status_query:
+                query_tool = policy.status_query.tool
+                query_policy = self.tool_policies.get(query_tool)
+                if (query_tool == tool_name or query_tool not in self.allow_tools or not query_policy
+                        or query_policy.access != "read_only"):
+                    raise ValueError("status_query 必须指向 allowlist 内单独声明的只读工具")
         if self.transport == "stdio":
             if not self.command or not self.command.strip() or self.url or self.headers:
                 raise ValueError("stdio 服务必须提供 command，且不能配置 url 或 headers")
@@ -95,16 +149,23 @@ class MCPToolBinding:
     server_name: str
     tool_name: str
     input_schema: dict[str, Any]
+    policy: MCPToolPolicy
 
 
 class MCPToolClient:
     """以同步接口桥接 stdio/Streamable HTTP MCP 服务，供同步工作流调用。"""
 
-    def __init__(self, config_path: Path | None = None, env_path: Path | None = None):
+    def __init__(self, config_path: Path | None = None, env_path: Path | None = None,
+                 *, operation_store=None, task_id=None, principal="local-user"):
+        self._config_path_explicit = config_path is not None
+        self._frozen_manifest = active_manifest()
         self.config_path = config_path or Path(__file__).resolve().with_name(".mcp.json")
         self.env_path = env_path or Path(__file__).resolve().with_name(".env")
         self._servers: list[MCPServerConfig] | None = None
+        self._input_settings: dict[str, str | None] = {}
         self._bindings: dict[str, MCPToolBinding] = {}
+        self.operation_store, self.task_id = operation_store, task_id or "local"
+        self.principal = principal
         self._definitions: list[dict[str, object]] = []
         self._sessions: dict[str, ClientSession] = {}
         self._stack: AsyncExitStack | None = None
@@ -141,7 +202,7 @@ class MCPToolClient:
             raise MCPConfigurationError("MCP 客户端事件循环无法启动")
         try:
             future = asyncio.run_coroutine_threadsafe(self._open_servers(), self._loop)
-            future.result(timeout=20)
+            future.result(timeout=MCP_CLIENT_START_TIMEOUT_SECONDS)
         except FutureTimeoutError:
             self.close()
             raise MCPConfigurationError("MCP 服务初始化超时") from None
@@ -161,23 +222,32 @@ class MCPToolClient:
         return [dict(item) for item in self._definitions]
 
     def _load_servers(self) -> list[MCPServerConfig]:
-        """从 MCP_SERVERS_CONFIG 或项目 .mcp.json 读取严格校验的服务配置。"""
-        configured_path = os.getenv("MCP_SERVERS_CONFIG")
+        """读取 MCP 配置；缺少 required_env 的服务会被跳过。"""
+        configured_path = (None if self._config_path_explicit or self._frozen_manifest is not None
+                           else os.getenv("MCP_SERVERS_CONFIG"))
         path = Path(configured_path).expanduser() if configured_path else self.config_path
-        if not path.is_file():
+        frozen = self._frozen_manifest
+        if not path.is_file() and frozen is None:
             return []
         try:
-            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+            if frozen is not None:
+                mcp = frozen["tools"]["mcp"]
+                if mcp["unresolved_credentials"]:
+                    raise MCPConfigurationError("MCP 凭据必须配置为环境变量引用")
+                payload = mcp["configuration"]
+            else:
+                payload = json.loads(path.read_text(encoding="utf-8-sig"))
             config = MCPConfigFile.model_validate(payload)
         except (OSError, UnicodeError, json.JSONDecodeError, ValidationError, ValueError):
             raise MCPConfigurationError(f"MCP 配置文件无效：{path}") from None
-        dotenv_values_map = dotenv_values(self.env_path, encoding="utf-8-sig", interpolate=False)
+        dotenv_values_map = load_settings(self.env_path)
+        self._input_settings = dict(dotenv_values_map)
 
         def expand(value: str) -> str:
             """仅展开 ${NAME} 引用，配置内容本身不会作为 shell 命令执行。"""
             def replace(match: re.Match[str]) -> str:
                 key = match.group(1)
-                resolved = os.environ.get(key, dotenv_values_map.get(key))
+                resolved = setting(key, dotenv_values_map)
                 if resolved is None:
                     raise MCPConfigurationError(f"MCP 配置引用的环境变量未设置：{key}")
                 return str(resolved)
@@ -188,7 +258,7 @@ class MCPToolClient:
         for server in config.servers:
             missing = [
                 key for key in server.required_env
-                if not (os.environ.get(key) or dotenv_values_map.get(key) or "").strip()
+                if not (setting(key, dotenv_values_map) or "").strip()
             ]
             if missing:
                 self.warnings.append(
@@ -231,66 +301,136 @@ class MCPToolClient:
         await stack.__aenter__()
         self._stack = stack
         exposed_names: set[str] = set()
-        for server in self._servers or []:
+
+        async def open_server(server: MCPServerConfig) -> None:
+            server_stack = AsyncExitStack()
+            await server_stack.__aenter__()
+
+            async def discard_server_stack() -> None:
+                try:
+                    await server_stack.aclose()
+                except Exception as cleanup_error:
+                    self.warnings.append(
+                        f"MCP 服务 {server.name} 连接资源清理失败（{type(cleanup_error).__name__}）"
+                    )
+
             try:
-                if server.transport == "stdio":
-                    parameters = StdioServerParameters(
-                        command=server.command or "",
-                        args=server.args,
-                        env=server.env or None,
-                        cwd=server.cwd,
-                    )
-                    errlog = open(os.devnull, "w", encoding="utf-8")
-                    stack.callback(errlog.close)
-                    streams = await stack.enter_async_context(stdio_client(parameters, errlog=errlog))
-                else:
-                    client = httpx.AsyncClient(
-                        headers=server.headers,
-                        timeout=httpx.Timeout(30, read=60),
-                    )
-                    await stack.enter_async_context(client)
-                    streams = await stack.enter_async_context(
-                        streamable_http_client(server.url or "", http_client=client)
-                    )
-                session = await stack.enter_async_context(ClientSession(streams[0], streams[1]))
-                await session.initialize()
-                self._sessions[server.name] = session
-                tools = await self._list_tools(session)
-                found = {tool.name: tool for tool in tools}
-                missing = sorted(set(server.allow_tools) - set(found))
-                if missing:
-                    self.warnings.append(f"MCP 服务 {server.name} 未提供配置允许的工具：{', '.join(missing)}")
-                for tool_name in server.allow_tools:
-                    tool = found.get(tool_name)
-                    if tool is None:
-                        continue
-                    input_schema = tool.inputSchema
-                    if not isinstance(input_schema, dict):
-                        self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的参数 Schema 无效，已跳过")
-                        continue
-                    try:
-                        jsonschema.Draft202012Validator.check_schema(input_schema)
-                    except jsonschema.SchemaError:
-                        self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的参数 Schema 无效，已跳过")
-                        continue
-                    model_name = _model_tool_name(server.name, tool_name)
-                    if model_name in exposed_names:
-                        raise MCPConfigurationError("MCP 工具名转换后发生冲突")
-                    exposed_names.add(model_name)
-                    description = (tool.description or tool.title or f"调用 MCP 服务 {server.name} 的工具 {tool_name}").strip()
-                    self._bindings[model_name] = MCPToolBinding(server.name, tool_name, input_schema)
-                    self._definitions.append({
-                        "type": "function",
-                        "name": model_name,
-                        "description": f"MCP 服务 {server.name}：{description[:MAX_TOOL_DESCRIPTION_LENGTH]}",
-                        "parameters": input_schema,
-                    })
+                await asyncio.wait_for(
+                    self._open_server(server, server_stack, exposed_names),
+                    timeout=MCP_SERVER_START_TIMEOUT_SECONDS,
+                )
             except MCPConfigurationError:
+                await discard_server_stack()
+                raise
+            except asyncio.CancelledError:
+                await discard_server_stack()
                 raise
             except Exception as error:
+                await discard_server_stack()
                 self.warnings.append(f"MCP 服务 {server.name} 连接失败，已跳过（{type(error).__name__}）")
                 trace("mcp.connect", "failed", decision="skip_unavailable_server",
                       details={"server": server.name, "error_type": type(error).__name__})
+            else:
+                stack.push_async_callback(server_stack.aclose)
+
+        for server in self._servers or []:
+            await open_server(server)
+        self.warnings.sort()
+
+    async def _open_server(self, server: MCPServerConfig, stack: AsyncExitStack,
+                           exposed_names: set[str]) -> None:
+        """连接单个 MCP 服务并按策略注册工具；资源归调用方的栈关闭。"""
+        if server.transport == "stdio":
+            parameters = StdioServerParameters(
+                command=server.command or "",
+                args=server.args,
+                env=server.env or None,
+                cwd=server.cwd,
+            )
+            errlog = open(os.devnull, "w", encoding="utf-8")
+            stack.callback(errlog.close)
+            streams = await stack.enter_async_context(stdio_client(parameters, errlog=errlog))
+        else:
+            client = httpx.AsyncClient(
+                headers=server.headers,
+                timeout=httpx.Timeout(30, read=60),
+            )
+            await stack.enter_async_context(client)
+            streams = await stack.enter_async_context(
+                streamable_http_client(server.url or "", http_client=client)
+            )
+        session = await stack.enter_async_context(ClientSession(streams[0], streams[1]))
+        await session.initialize()
+        self._sessions[server.name] = session
+        tools = await self._list_tools(session)
+        found = {tool.name: tool for tool in tools}
+        missing = sorted(set(server.allow_tools) - set(found))
+        if missing:
+            self.warnings.append(f"MCP 服务 {server.name} 未提供配置允许的工具：{', '.join(missing)}")
+        for tool_name in server.allow_tools:
+            tool = found.get(tool_name)
+            if tool is None:
+                continue
+            input_schema = tool.inputSchema
+            if not isinstance(input_schema, dict):
+                self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的参数 Schema 无效，已跳过")
+                continue
+            try:
+                jsonschema.Draft202012Validator.check_schema(input_schema)
+            except jsonschema.SchemaError:
+                self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的参数 Schema 无效，已跳过")
+                continue
+            policy = server.tool_policies.get(tool_name)
+            if policy is None:
+                self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 缺少 tool_policies 声明，已跳过")
+                continue
+            if policy.business_schema:
+                try:
+                    jsonschema.Draft202012Validator.check_schema(policy.business_schema)
+                except jsonschema.SchemaError:
+                    self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的本地业务 Schema 无效，已跳过")
+                    continue
+            if policy.resource_argument and policy.resource_argument not in input_schema.get("properties", {}):
+                self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的资源参数不在 Schema 中，已跳过")
+                continue
+            if policy.status_query:
+                query_name = policy.status_query.tool
+                query_tool = found.get(query_name)
+                query_policy = server.tool_policies.get(query_name)
+                query_schema = query_tool.inputSchema if query_tool else None
+                mapping = policy.status_query.argument_map
+                try:
+                    if not isinstance(query_schema, dict):
+                        raise jsonschema.SchemaError("missing query schema")
+                    jsonschema.Draft202012Validator.check_schema(query_schema)
+                    if query_policy and query_policy.business_schema:
+                        jsonschema.Draft202012Validator.check_schema(query_policy.business_schema)
+                except jsonschema.SchemaError:
+                    query_schema = None
+                if (not isinstance(query_schema, dict) or not query_policy
+                        or query_policy.access != "read_only"
+                        or any(query_arg not in query_schema.get("properties", {}) for query_arg in mapping)
+                        or any(write_arg not in input_schema.get("properties", {}) for write_arg in mapping.values())
+                        or not set(query_schema.get("required", [])) <= set(mapping)):
+                    self.warnings.append(
+                        f"MCP 写工具 {server.name}.{tool_name} 的状态查询工具或参数映射无效，已跳过"
+                    )
+                    continue
+            model_name = _model_tool_name(server.name, tool_name)
+            if model_name in exposed_names:
+                raise MCPConfigurationError("MCP 工具名转换后发生冲突")
+            exposed_names.add(model_name)
+            description = (tool.description or tool.title or f"调用 MCP 服务 {server.name} 的工具 {tool_name}").strip()
+            self._bindings[model_name] = MCPToolBinding(server.name, tool_name, input_schema, policy)
+            access = "只读" if policy.access == "read_only" else "外部写操作，仅在任务明确要求时调用"
+            group = f"（互斥组：{policy.conflict_group}，一轮只选一个）" if policy.conflict_group else ""
+            from input_protection import protect_input
+            self._definitions.append(protect_input({
+                "type": "function",
+                "name": model_name,
+                "description": f"MCP 服务 {server.name}〔{access}〕：{description[:MAX_TOOL_DESCRIPTION_LENGTH]} {group}",
+                "parameters": _combined_input_schema(input_schema, policy.business_schema),
+            }, settings=self._input_settings, schema=True))
 
     @staticmethod
     async def _list_tools(session: ClientSession) -> list[Any]:
@@ -316,25 +456,199 @@ class MCPToolClient:
         if not isinstance(arguments, Mapping):
             raise Fault("mcp_arguments_invalid", "MCP 工具参数必须是 JSON 对象", category="validation")
         argument_data = dict(arguments)
+        from input_protection import protect_input, sensitive_tool_path
+        if sensitive_tool_path(argument_data):
+            raise Fault("sensitive_external_path", "外部工具不可访问敏感文件路径", category="permission")
+        if protect_input(argument_data, settings=self._input_settings) != argument_data:
+            raise Fault("sensitive_external_input", "工具参数包含敏感信息，已阻止发送", category="permission")
         if len(json.dumps(argument_data, ensure_ascii=False, default=str)) > MAX_TOOL_ARGUMENT_CHARS:
             raise Fault("mcp_arguments_invalid", "MCP 工具参数超过大小限制", category="validation")
-        try:
-            jsonschema.validate(argument_data, binding.input_schema)
-        except (jsonschema.ValidationError, jsonschema.SchemaError):
-            raise Fault("mcp_arguments_invalid", "MCP 工具参数不符合服务声明的 Schema", category="validation") from None
+        issues = _tool_argument_issues(binding, argument_data)
+        if issues:
+            raise Fault("mcp_arguments_invalid", "MCP 工具参数未通过服务 Schema 或本地业务约束",
+                        category="validation", issues=issues)
         timeout = max(0.05, min(float(timeout_seconds or 30.0), 30.0))
+        if binding.policy.access == "external_write":
+            return self._call_external_write(name, binding, argument_data, timeout)
+        return self._invoke_tool(binding, argument_data, timeout)
+
+    def validate_tool_arguments(self, name, arguments, *, normalize=False):
+        binding = self._bindings.get(name)
+        if binding is None:
+            return {"code": "tool_not_allowed", "category": "permission", "message": "MCP 工具未连接或未加入 allowlist"}
+        issues = _tool_argument_issues(binding, arguments)
+        if issues:
+            return {"code": "tool_arguments_invalid", "category": "validation",
+                    "message": "MCP 工具参数未通过服务 Schema 或本地业务约束", "issues": issues[:20]}
+        return dict(arguments) if normalize else None
+
+    def conflict_group(self, name):
+        binding = self._bindings.get(name)
+        return binding.policy.conflict_group if binding else None
+
+    def is_external_write(self, name):
+        binding = self._bindings.get(name)
+        return bool(binding and binding.policy.access == "external_write")
+
+    def _call_external_write(self, name, binding, arguments, timeout):
+        from tool_context import current_tool_call_id
+        call_id = current_tool_call_id()
+        if not self.operation_store or not call_id:
+            raise Fault("mcp_write_not_journaled", "外部写工具缺少持久操作记录，已拒绝执行", category="permission")
+        resource = arguments.get(binding.policy.resource_argument) if binding.policy.resource_argument else "*"
+        from tool_authorization import ToolAuthorizations
+        authorizations = ToolAuthorizations(self.operation_store)
+        server = next((server.model_dump() for server in (self._servers or [])
+                       if server.name == binding.server_name), {})
+        from input_protection import protect_input
+        key = authorizations.request(self.task_id, self.principal, name, arguments,
+            {"server": server, "schema": binding.input_schema, "policy": binding.policy.model_dump()},
+            protect_input({"server": binding.server_name, "tool": binding.tool_name, "resource": resource,
+             "endpoint": server.get("url") or {"command": server.get("command"), "args": server.get("args", [])}},
+             settings=self._input_settings))
+        endpoint_identity = server.get("url") or {"command": server.get("command"),
+            "args": server.get("args", []), "cwd": server.get("cwd")}
+        resource_key = digest({"endpoint": endpoint_identity, "resource": resource})
+        self.operation_store.acquire_resource(resource_key, key, self.task_id)
+        try:
+            authorizations.consume(key, self.task_id, self.principal)
+            result = self.operation_store.execute(key, self.task_id, name, arguments,
+                lambda: self._invoke_tool(binding, arguments, timeout), lambda: (False, None))
+        except Fault as error:
+            if error.outcome_unknown:
+                reconciliation_fault = None
+                if binding.policy.status_query:
+                    try:
+                        outcome, status_value = self._query_external_status(binding, arguments, timeout)
+                    except Fault as query_error:
+                        outcome, status_value = None, None
+                        reconciliation_fault = query_error
+                    except Exception as query_error:
+                        outcome, status_value = None, None
+                        reconciliation_fault = Fault("mcp_status_query_failed",
+                            "只读状态查询发生未分类错误，外部写操作仍保持未知",
+                            category="execution", causes=[error_info(query_error, operation="mcp.status_query")])
+                    if outcome:
+                        evidence = json.dumps({"source": "configured_status_query",
+                            "tool": binding.policy.status_query.tool, "status": status_value}, ensure_ascii=False)
+                        try:
+                            self.operation_store.resolve_unknown(key, self.task_id, outcome, evidence)
+                        except Fault as resolve_error:
+                            reconciliation_fault = resolve_error
+                        else:
+                            trace("mcp.reconcile", outcome, call_id=call_id, key=key,
+                                  decision="configured_read_only_status_query",
+                                  details={"status_tool": binding.policy.status_query.tool})
+                            if outcome == "completed":
+                                raise Fault("external_operation_confirmed",
+                                    "只读状态查询确认外部写操作已完成；由于没有可信的写入回执，修复流程已停止",
+                                    category="business", next_action="检查外部服务记录；如仍需修复，请新建任务",
+                                    operation_id=key,
+                                    details={"verified_by": binding.policy.status_query.tool,
+                                             "status": status_value}) from None
+                            authorizations.request(self.task_id, self.principal, name, arguments,
+                                {"server": server, "schema": binding.input_schema,
+                                 "policy": binding.policy.model_dump()},
+                                protect_input({"server": binding.server_name, "tool": binding.tool_name,
+                                    "resource": resource, "endpoint": server.get("url") or
+                                    {"command": server.get("command"), "args": server.get("args", [])}},
+                                    settings=self._input_settings))
+                causes = list(error.as_dict().get("causes", []))
+                if reconciliation_fault:
+                    causes.append(error_info(reconciliation_fault, operation="mcp.status_query"))
+                raise Fault("mcp_outcome_unknown", "MCP 外部写操作结果未知；系统已暂停且不会自动重放",
+                            category="unknown", outcome_unknown=True,
+                            next_action="到对应外部服务核对该操作，再明确选择已完成或未执行",
+                            operation_id=key, causes=causes) from None
+            self.operation_store.release_resource(resource_key, key)
+            raise
+        except Exception:
+            self.operation_store.release_resource(resource_key, key)
+            raise
+        self.operation_store.release_resource(resource_key, key)
+        return result
+
+    def _query_external_status(self, binding, arguments, timeout):
+        policy = binding.policy.status_query
+        if policy is None:
+            return None, None
+        from resilience import current
+        context = current()
+        if context:
+            timeout = min(timeout, context.remaining())
+        if timeout < 0.05:
+            raise Fault("mcp_status_query_budget", "剩余时间不足以核对外部操作状态", category="budget")
+        name = _model_tool_name(binding.server_name, policy.tool)
+        query_binding = self._bindings.get(name)
+        if not query_binding or query_binding.policy.access != "read_only":
+            raise Fault("mcp_status_query_unavailable", "配置的只读状态查询工具当前不可用", category="configuration")
+        query_arguments = {query_arg: arguments[write_arg]
+                           for query_arg, write_arg in policy.argument_map.items()}
+        issues = _tool_argument_issues(query_binding, query_arguments)
+        if issues:
+            raise Fault("mcp_status_query_invalid", "映射后的状态查询参数未通过校验",
+                        category="validation", issues=issues)
+        result = self._invoke_tool(query_binding, query_arguments, timeout)
+        if result.get("isError"):
+            raise Fault("mcp_status_query_failed", "只读状态查询返回错误", category="execution")
+        value = _json_pointer(result, policy.result_pointer)
+        if isinstance(value, str):
+            if value in policy.completed_values:
+                return "completed", value
+            if value in policy.not_applied_values:
+                return "not_applied", value
+        return None, value if isinstance(value, str) else None
+
+    def _invoke_tool(self, binding, argument_data, timeout):
+        if binding.policy.access == "external_write":
+            return self._invoke_tool_once(binding, argument_data, timeout)
+
+        def invoke(bounded_timeout):
+            from resilience import current
+            ctx = current()
+            remaining = ctx.remaining() if ctx else bounded_timeout
+            bounded = min(timeout, bounded_timeout, remaining - 0.05)
+            if bounded < 0.05:
+                raise Fault("deadline_exceeded", "MCP 只读工具的时间预算已耗尽", category="budget")
+            return self._invoke_tool_once(binding, argument_data, bounded)
+
+        server = next((item for item in (self._servers or []) if item.name == binding.server_name), None)
+        endpoint = (server.url if server and server.url else
+                    json.dumps({"command": server.command, "args": server.args}, sort_keys=True) if server else binding.server_name)
+        return call_with_retry("mcp.tool.read", invoke,
+            classify=lambda error: _mcp_read_fault(error), replay_safe=True,
+            parameters={"server": binding.server_name, "tool": binding.tool_name,
+                        "arguments_hash": hashlib.sha256(json.dumps(argument_data, sort_keys=True,
+                            ensure_ascii=False, default=str).encode()).hexdigest()},
+            endpoint=endpoint, max_retries=binding.policy.max_retries)
+
+    def _invoke_tool_once(self, binding, argument_data, timeout):
         future = asyncio.run_coroutine_threadsafe(
             self._call_tool(binding, argument_data, timeout), self._loop
         )
         try:
-            result = future.result(timeout=timeout + 1)
+            result = future.result(timeout=timeout + 0.05)
         except FutureTimeoutError:
             future.cancel()
-            raise Fault("mcp_tool_timeout", "MCP 工具调用超时", category="timeout", outcome_unknown=True) from None
+            unknown = binding.policy.access == "external_write"
+            raise Fault("mcp_tool_timeout", "MCP 工具调用超时",
+                        category="unknown" if unknown else "transient",
+                        retryable=not unknown, outcome_unknown=unknown,
+                        next_action="只读调用可重新尝试；外部写操作必须先核对实际结果") from None
         except Exception as error:
-            raise Fault("mcp_tool_failed", "MCP 工具调用失败", category="execution", retryable=False) from error
+            unknown = binding.policy.access == "external_write"
+            if not unknown and _is_mcp_transient(error):
+                raise _mcp_read_fault(error) from error
+            raise Fault("mcp_tool_failed", "MCP 工具调用失败", category="unknown" if unknown else "execution",
+                        retryable=False, outcome_unknown=unknown,
+                        next_action="外部写操作必须先核对服务端状态") from error
         payload = result.model_dump(mode="json", by_alias=True, exclude_none=True)
-        safe_payload = _sanitize(payload)
+        if binding.policy.access == "external_write" and payload.get("isError"):
+            raise Fault("mcp_write_result_unknown", "MCP 写工具返回错误，不能确认是否已产生外部副作用",
+                        category="unknown", outcome_unknown=True,
+                        next_action="核对外部服务状态后再决定下一步")
+        from input_protection import protect_input
+        safe_payload = _sanitize(protect_input(payload, settings=self._input_settings))
         encoded = json.dumps(safe_payload, ensure_ascii=False, default=str)
         if len(encoded) > MAX_TOOL_RESULT_CHARS:
             return {"truncated": True, "preview": encoded[:MAX_TOOL_RESULT_CHARS]}
@@ -387,6 +701,73 @@ def _model_tool_name(server_name: str, tool_name: str) -> str:
         return normalized
     suffix = hashlib.sha256(original.encode("utf-8")).hexdigest()[:10]
     return f"{normalized[:MAX_TOOL_NAME_LENGTH - len(suffix) - 1]}_{suffix}"
+
+
+def _combined_input_schema(service_schema, business_schema):
+    if business_schema is None:
+        return service_schema
+    return {"allOf": [service_schema, business_schema]}
+
+
+def _tool_argument_issues(binding, arguments):
+    issues = []
+    schemas = [(binding.input_schema, "service")]
+    if binding.policy.business_schema is not None:
+        schemas.append((binding.policy.business_schema, "business"))
+    for schema, source in schemas:
+        for error in jsonschema.Draft202012Validator(schema).iter_errors(dict(arguments)):
+            path = list(error.absolute_path)[:12]
+            if error.validator == "required" and isinstance(error.instance, Mapping):
+                missing = [field for field in error.validator_value if field not in error.instance]
+                issues.extend({"path": [*path, field][:12], "type": "required", "source": source,
+                               "message": "缺少必填字段"} for field in missing)
+            elif (error.validator == "additionalProperties" and error.schema.get("additionalProperties") is False
+                  and isinstance(error.instance, Mapping)):
+                allowed = set((error.schema or {}).get("properties", {}))
+                extras = sorted(set(error.instance) - allowed)
+                issues.extend({"path": [*path, field][:12], "type": "additionalProperties",
+                               "source": source, "message": "字段不在工具约束中"} for field in extras)
+            else:
+                issues.append({"path": path, "type": str(error.validator or "schema"), "source": source,
+                               "message": f"违反 {error.validator or 'schema'} 约束"})
+            if len(issues) >= 20:
+                return issues[:20]
+    return issues
+
+
+def _json_pointer(value, pointer):
+    if not pointer:
+        return value
+    current_value = value
+    for raw_part in pointer[1:].split("/"):
+        part = raw_part.replace("~1", "/").replace("~0", "~")
+        if isinstance(current_value, Mapping) and part in current_value:
+            current_value = current_value[part]
+        elif isinstance(current_value, list) and part.isdigit() and int(part) < len(current_value):
+            current_value = current_value[int(part)]
+        else:
+            return None
+    return current_value
+
+
+def _is_mcp_transient(error):
+    if isinstance(error, (httpx.TimeoutException, httpx.TransportError, TimeoutError, ConnectionError)):
+        return True
+    response = getattr(error, "response", None)
+    return getattr(response, "status_code", None) in (429, 500, 502, 503, 504)
+
+
+def _mcp_read_fault(error):
+    if isinstance(error, Fault):
+        return error
+    response = getattr(error, "response", None)
+    status = getattr(response, "status_code", None)
+    retry_after = retry_after_seconds(getattr(response, "headers", None)) if response is not None else None
+    if status is not None:
+        return Fault(f"mcp_http_{status}", "MCP 服务返回 HTTP 错误", category="transient",
+                     retryable=True, retry_after=retry_after, next_action="等待 MCP 服务恢复后自动重试")
+    return Fault("mcp_connection_failed", "MCP 只读工具连接或响应超时", category="transient",
+                 retryable=True, next_action="只读调用将在预算内有限重试")
 
 
 def _sanitize(value: Any, parent_type: str | None = None) -> Any:

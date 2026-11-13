@@ -64,3 +64,96 @@ test("unknown outcomes preserve uncertainty and error references even for HTTP 4
   } }) }));
   await assert.rejects(client.createTask(draft, "key"), error => error.uncertain && error.message.includes("error-reference"));
 });
+
+const streamSource = ts.transpileModule(await readFile(new URL("./src/task-stream.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+function streamClient() {
+  const sources = [], tasks = [], traces = [], states = [];
+  let expired = 0;
+  const client = api(() => {});
+  client.setApiSession({ user: { id: "b".repeat(32) }, csrf_token: "csrf" });
+  class FakeEventSource {
+    readyState = 0;
+    closed = false;
+    handlers = {};
+    constructor(url, options) { this.url = url; this.options = options; sources.push(this); }
+    addEventListener(name, handler) { this.handlers[name] = handler; }
+    close() { this.closed = true; }
+    emit(name, payload) { this.handlers[name]?.({ data: JSON.stringify(payload) }); }
+  }
+  const exports = {};
+  vm.runInNewContext(streamSource, { exports, EventSource: FakeEventSource, require: () => client });
+  const stop = exports.subscribeTask("a".repeat(32), {
+    task: value => tasks.push(value), trace: value => traces.push(value),
+    state: value => states.push(value), expired: () => { expired++; },
+  });
+  return { source: sources[0], stop, tasks, traces, states, expired: () => expired };
+}
+function taskEvent(execution = "running") {
+  return { execution, source_label: "source", config: { test_targets: ["."] },
+    state: { task_id: "a".repeat(32), status: "repairing", elapsed_seconds: 1, attempt_count: 0,
+      remaining_budget: { seconds: 120, tokens: 20000, attempts: 10, cost: 0.1 }, code_evidence: [], case_matches: [] } };
+}
+
+test("SSE uses the signed-in account, handles replay once and closes on completion", () => {
+  const stream = streamClient();
+  assert.equal(stream.source.options.withCredentials, true);
+  assert.match(stream.source.url, /account_id=bbbb/);
+  stream.source.onopen();
+  stream.source.emit("task", taskEvent());
+  const page = { events: [{ operation: "read_code", event: "succeeded" }], next_cursor: 100, has_more: false, skipped_invalid_records: 0 };
+  stream.source.emit("trace", page);
+  stream.source.emit("trace", page);
+  assert.equal(stream.traces.length, 1);
+  stream.source.emit("complete", { task: taskEvent("idle"), next_cursor: 100 });
+  assert.equal(stream.tasks.length, 2);
+  assert.equal(stream.tasks.at(-1).execution, "idle");
+  assert.equal(stream.source.closed, true);
+  assert.equal(stream.states.at(-1), "closed");
+  stream.source.onerror();
+  assert.equal(stream.states.at(-1), "closed");
+});
+
+test("SSE reconnecting allows polling and malformed payload falls back safely", () => {
+  const stream = streamClient();
+  stream.source.onerror();
+  assert.equal(stream.states.at(-1), "reconnecting");
+  assert.equal(stream.source.closed, false);
+  stream.source.onopen();
+  assert.equal(stream.states.at(-1), "live");
+  stream.source.emit("task", { unexpected: "invalid" });
+  assert.equal(stream.tasks.length, 0);
+  assert.equal(stream.states.at(-1), "fallback");
+  assert.equal(stream.source.closed, true);
+});
+
+test("SSE logout and explicit cancellation discard late events", () => {
+  const expired = streamClient();
+  expired.source.emit("stream-error", { status: 401, detail: "expired" });
+  assert.equal(expired.expired(), 1);
+  assert.equal(expired.source.closed, true);
+  expired.source.emit("task", taskEvent());
+  assert.equal(expired.tasks.length, 0);
+  const switched = streamClient();
+  switched.stop();
+  switched.source.emit("task", taskEvent());
+  assert.equal(switched.tasks.length, 0);
+  assert.equal(switched.source.closed, true);
+});
+
+test("knowledge review sends the frozen candidate hash, reason and account authorization", async () => {
+  const calls = [];
+  const candidate = { id: "c".repeat(32), content_hash: "d".repeat(64), status: "published", record: {}, audit: [] };
+  const client = api(async (url, options) => {
+    calls.push({ url, options });
+    return { ok: true, json: async () => url.includes("?status=") ? { candidates: [candidate] } : candidate };
+  });
+  client.setApiSession({ user: { id: "b".repeat(32) }, csrf_token: "review-csrf" });
+  assert.equal((await client.getKnowledgeCandidates()).candidates.length, 1);
+  await client.reviewKnowledgeCandidate(candidate, "approve", "checked independent evidence");
+  assert.equal(calls[0].url, "/api/knowledge/candidates?status=needs_human");
+  assert.equal(calls[1].options.headers["X-CSRF-Token"], "review-csrf");
+  assert.equal(calls[1].options.headers["X-Account-ID"], "b".repeat(32));
+  assert.deepEqual(JSON.parse(calls[1].options.body), { decision: "approve", reason: "checked independent evidence", content_hash: candidate.content_hash });
+});

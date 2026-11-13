@@ -79,6 +79,27 @@ def test_metadata_filters_are_strict(kb, outcome):
 
 
 @pytest.mark.parametrize("outcome", ["accepted", "rejected"])
+def test_language_filter_excludes_other_and_missing_metadata(kb, outcome):
+    save = kb.save_case if outcome == "accepted" else kb.record_rejection
+    for name, language in (("python", "python"), ("typescript", "typescript")):
+        state = case_state(name, outcome=outcome)
+        state["source"]["retrieval_scope"]["language"] = language
+        save(state)
+    legacy = case_state("legacy-language", outcome=outcome)
+    legacy["source"] = {"type": "python_code"}
+    legacy["patch_diff"] = ""
+    save(legacy)
+
+    assert [item["case_id"] for item in kb.search(
+        "database", outcome=outcome, filters={"language": "py"},
+    )] == ["python"]
+    assert [item["case_id"] for item in kb.search(
+        "database", outcome=outcome, filters={"language": "ts"},
+    )] == ["typescript"]
+    assert kb.search("database", outcome=outcome, filters={"language": "rust"}) == []
+
+
+@pytest.mark.parametrize("outcome", ["accepted", "rejected"])
 def test_upsert_preserves_one_row_and_increments_revision(kb, outcome):
     save = kb.save_case if outcome == "accepted" else kb.record_rejection
     state = case_state("same-task", outcome=outcome)

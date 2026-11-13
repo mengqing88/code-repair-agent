@@ -6,6 +6,7 @@ Source code and pytest run in the constrained Docker sandbox by default.
 from __future__ import annotations
 
 import argparse
+import asyncio
 from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager, contextmanager
@@ -16,6 +17,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -27,10 +29,15 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from starlette.concurrency import run_in_threadpool
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+import hmac
+from user_accounts import UserAccounts, SESSION_COOKIE, SESSION_SECONDS, csrf_token
+from personal_memory import PersonalMemory, MemoryInput, memory_scope
+from conversation_memory import Conversations, ChatInput, CandidateInput, conversation_lock
 
 from agent_cli import check_source
 from knowledge_base import KnowledgeBase
@@ -44,14 +51,19 @@ from operation_store import OperationStore
 from docker_executor import cleanup_docker_task, get_execution_backend
 from resilience import (Fault, digest, error_info, trace, execution_scope, current,
                         cleanup_scope, run_process, process_identity, stop_recorded_worker, rollback_error, failure_update,
-                        trace_workflow_end)
+                        trace_workflow_end, traced_call)
 from trace_store import read_trace_page
 from diagnostics import diagnostic_scope, process_evidence, record_error, redact
+from execution_manifest import (SnapshotKnowledge, freeze as freeze_execution_manifest,
+                                task_configuration, verify as verify_execution_manifest)
+from business_scope import require_software_request
+from language_support import (detect_language, detect_project_language, normalize_language, split_command,
+                              validate_execution_commands)
 
 
 class TaskInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    source_type: Literal["python_file", "git_repository", "pasted_code"]
+    source_type: Literal["code_file", "python_file", "git_repository", "pasted_code"]
     path: str = Field(default="", max_length=4096)
     revision: str = Field(default="", max_length=64)
     code_text: str = Field(default="", max_length=1_000_000)
@@ -59,18 +71,23 @@ class TaskInput(BaseModel):
     file_content: str | None = Field(default=None, max_length=1_000_000)
     error_report: str = Field(min_length=1, max_length=100_000)
     test_target: str = Field(default="", max_length=4096)
+    language: str = Field(default="auto", max_length=40)
+    test_command: str = Field(default="", max_length=4096)
+    reproduce_command: str = Field(default="", max_length=4096)
+    regression_command: str = Field(default="", max_length=4096)
+    runtime_seconds: float = Field(default=1200.0, gt=0, le=3600, allow_inf_nan=False)
 
     @model_validator(mode="after")
     def validate_input(self):
         if not self.error_report.strip():
             raise ValueError("错误报告不能为空")
         if self.source_type == "pasted_code" and not self.code_text.strip():
-            raise ValueError("Python 代码不能为空")
+            raise ValueError("代码不能为空")
         if self.source_type != "pasted_code" and not self.path.strip() and self.file_content is None:
             raise ValueError("请提供本地路径或上传文件")
         if self.file_content is not None:
             name = self.file_name
-            if self.source_type != "python_file" or not self.file_content.strip():
+            if self.source_type not in ("code_file", "python_file") or not self.file_content.strip():
                 raise ValueError("只有文件模式可上传非空文件")
             if not name or name in (".", "..") or any(c in name for c in '/\\:'):
                 raise ValueError("上传文件名必须是普通文件名")
@@ -80,6 +97,26 @@ class TaskInput(BaseModel):
                 raise ValueError("不能使用系统保留文件名")
         if self.source_type != "git_repository" and self.revision:
             raise ValueError("固定版本仅适用于 Git 仓库")
+        try:
+            split_command(self.test_command or None)
+            split_command(self.reproduce_command or None)
+            split_command(self.regression_command or None)
+        except ValueError as error:
+            raise ValueError(f"执行命令配置无效：{error}") from error
+        self.language = normalize_language(self.language)
+        if self.language == "auto":
+            if self.source_type == "python_file":
+                self.language = "python"
+            elif self.source_type == "code_file":
+                self.language = detect_language(path=self.file_name or self.path)
+            elif self.source_type == "git_repository" and self.path.strip():
+                self.language = detect_project_language(self.path)
+            elif self.source_type == "pasted_code":
+                self.language = detect_language(path=self.file_name or None, content=self.code_text)
+        try:
+            validate_execution_commands(self.language, self.test_command, self.reproduce_command, self.regression_command)
+        except ValueError as error:
+            raise ValueError(f"{error}；请在任务设置中补充执行命令") from error
         return self
 
 
@@ -90,9 +127,45 @@ class ReviewInput(BaseModel):
     patch_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
+class ClarificationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    answer: str = Field(min_length=1, max_length=4000)
+
+
+class BudgetExtensionInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    seconds: float = Field(default=0.0, ge=0, le=3600)
+    tokens: int = Field(default=0, ge=0, le=200_000)
+    cost: float = Field(default=0.0, ge=0, le=100)
+    attempts: int = Field(default=0, ge=0, le=20)
+    reason: str = Field(min_length=1, max_length=2000)
+    request_id: str = Field(pattern=r"^[A-Za-z0-9_-]{8,128}$")
+
+
+class ToolOutcomeInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    operation_id: str = Field(pattern=r"^[a-f0-9]{64}$")
+    outcome: Literal["completed", "not_applied"]
+    evidence: str = Field(min_length=10, max_length=2000)
+
+
+class ToolAuthorizationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    authorization_id: str = Field(pattern=r"^[a-f0-9]{64}$")
+    decision: Literal["approved", "rejected", "renew"]
+    reason: str = Field(default="", max_length=2000)
+
+
 class KnowledgeImportInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     cases: list[dict] = Field(min_length=1, max_length=100)
+
+
+class KnowledgeReviewInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decision: Literal["approve", "decline"]
+    reason: str = Field(min_length=1, max_length=2000)
+    content_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
 class KnowledgeSearchInput(BaseModel):
@@ -100,6 +173,10 @@ class KnowledgeSearchInput(BaseModel):
     query: str = Field(min_length=1, max_length=20_000)
     limit: int = Field(default=5, ge=1, le=20)
     min_similarity: float = Field(default=0.35, ge=0, le=1)
+    outcome: Literal["accepted", "rejected"] = "accepted"
+    repository_id: str | None = Field(default=None, min_length=1, max_length=128)
+    file_paths: list[str] = Field(default_factory=list, max_length=10)
+    dependency_versions: dict[str, str] = Field(default_factory=dict, max_length=100)
 
 
 class ClientFaultInput(BaseModel):
@@ -108,6 +185,12 @@ class ClientFaultInput(BaseModel):
                   "request_timeout", "connection_failed", "response_invalid"]
     error_id: str = Field(pattern=r"^[a-z0-9-]{8,64}$")
     task_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+
+
+class Credentials(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    username: str = Field(min_length=3, max_length=32, pattern=r"^[A-Za-z0-9_]+$")
+    password: SecretStr = Field(min_length=1, max_length=128)
 
 
 def timestamp():
@@ -129,6 +212,24 @@ class TaskStore(ProgressStore):
                 task_id TEXT PRIMARY KEY, decision TEXT NOT NULL, reason TEXT NOT NULL,
                 patch_hash TEXT NOT NULL, created_at TEXT NOT NULL)""")
             setup_recovery(db)
+            db.execute("""CREATE TABLE IF NOT EXISTS budget_extensions
+                (task_id TEXT NOT NULL, request_id TEXT NOT NULL, parameters TEXT NOT NULL,
+                 actor TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY(task_id,request_id))""")
+        self.accounts = UserAccounts(self.root)
+
+    def get_owned(self, task_id, user_id):
+        # Check ownership before loading a payload or writing task diagnostics.
+        owner = self.accounts.owner(task_id)
+        if owner != user_id:
+            # A missing owner must still distinguish a missing task from a storage outage;
+            # no payload is returned and a foreign owned task never reaches this branch.
+            if owner is None:
+                try:
+                    self.get(task_id)
+                except HTTPException:
+                    pass
+            raise HTTPException(404, "任务不存在")
+        return self.get(task_id)
 
     @contextmanager
     def connect(self):
@@ -150,12 +251,25 @@ class TaskStore(ProgressStore):
         task_id = task["state"]["task_id"]
         saved = db.execute("SELECT payload FROM tasks WHERE id=?", (task_id,)).fetchone()
         previous = json.loads(saved[0]) if saved else None
+        frozen_hash = (previous or {}).get("config", {}).get("execution_manifest_hash")
+        if frozen_hash and (task["config"].get("execution_manifest_hash") != frozen_hash
+                            or task["config"].get("execution_manifest_path") != "execution-manifest.json"):
+            raise Fault("manifest_changed", "不能替换任务已冻结的执行清单", category="validation")
         progress = task.get("progress")
         old = previous.get("progress") if previous else None
         if old:
             owner = progress.get("run_id") if progress and expected_run is _SAME_RUN else expected_run
             if not progress or old["revision"] != progress["revision"] or old["run_id"] != owner:
                 raise Fault("stale_execution", "任务版本或执行身份已变化，拒绝旧数据覆盖", category="conflict")
+            epoch = progress.get("execution_epoch", 0)
+            acquiring = owner is None and progress.get("run_id") is not None
+            if acquiring:
+                high = db.execute("SELECT value FROM execution_epochs WHERE task_id=?", (task_id,)).fetchone()
+                valid_epoch = high is not None and epoch == high[0] and epoch > old.get("execution_epoch", 0)
+            else:
+                valid_epoch = epoch == old.get("execution_epoch", 0)
+            if not valid_epoch:
+                raise Fault("stale_execution", "执行纪元不匹配，拒绝过期写入", category="conflict")
             progress["revision"] += 1
         elif previous and progress:
             raise Fault("checkpoint_version_conflict", "不能直接覆盖旧版任务协议", category="conflict")
@@ -188,19 +302,25 @@ class TaskStore(ProgressStore):
             ))
             self._write(db, task)
 
-    def request_task(self, key, parameters=None):
+    def request_task(self, key, parameters=None, user_id=None):
         with self.connect() as db:
-            row = db.execute("SELECT params_hash, task_id FROM requests WHERE key=?", (key,)).fetchone()
+            row = db.execute("SELECT params_hash, task_id FROM requests WHERE key=?", (f"{user_id}:{key}" if user_id else key,)).fetchone()
+            if row is None and user_id == self.accounts.legacy_owner():
+                legacy = db.execute("SELECT params_hash, task_id FROM requests WHERE key=?", (key,)).fetchone()
+                if legacy and self.accounts.owner(legacy[1]) == user_id:
+                    row = legacy
         if not row:
             return None
         if parameters is not None and row[0] != digest(parameters):
             raise HTTPException(409, "幂等键已用于不同任务参数")
-        return self.get(row[1])
+        return self.get_owned(row[1], user_id) if user_id else self.get(row[1])
 
-    def create_once(self, task, key, parameters):
+    def create_once(self, task, key, parameters, user_id=None):
         with self.connect() as db:
-            db.execute("INSERT INTO requests VALUES (?, ?, ?)", (key, digest(parameters), task["state"]["task_id"]))
+            db.execute("INSERT INTO requests VALUES (?, ?, ?)", (f"{user_id}:{key}" if user_id else key, digest(parameters), task["state"]["task_id"]))
             self._write(db, task)
+            if user_id:
+                db.execute("INSERT INTO task_owners VALUES (?,?)", (task["state"]["task_id"], user_id))
 
     def record_worker(self, task_id, process, token):
         identity = process_identity(process.pid)
@@ -298,41 +418,277 @@ class RepairRunner:
     def __init__(self, root: Path):
         self.store = TaskStore(root)
         self.lock = Lock()
-        self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="repair")
+        self.max_workers = int(os.environ.get("REPAIR_MAX_WORKERS", "2"))
+        if not 1 <= self.max_workers <= 8:
+            raise ValueError("REPAIR_MAX_WORKERS 必须在 1 到 8 之间")
+        self.pool = ThreadPoolExecutor(max_workers=self.max_workers, thread_name_prefix="repair")
         self.knowledge = KnowledgeBase(self.store.root / "knowledge.sqlite3")
         self.operations = OperationStore(self.store.root / "operations.sqlite3")
         self.durable_operations = OperationStore(self.store.path)
         self.execution_backend = get_execution_backend()
+        self.deployment_mode = os.environ.get("REPAIR_DEPLOYMENT_MODE", "local").strip().lower()
+        if self.deployment_mode not in ("local", "untrusted"):
+            raise ValueError("REPAIR_DEPLOYMENT_MODE 必须是 local 或 untrusted")
+        if self.deployment_mode == "untrusted" and self.execution_backend != "docker":
+            raise ValueError("不可信用户模式必须使用 Docker 执行")
         self.worker_mode = "process"
         self.dispatch_stop = Event()
         self.dispatch_thread = None
         self.submitted = set()
         self.submit_lock = Lock()
         self.service_lock = ServiceLock(self.store.root)
+        self.accounts = self.store.accounts
 
-    def create(self, request: TaskInput, key: str | None = None):
+    def knowledge_for_user(self, user_id):
+        return KnowledgeBase(
+            self.accounts.knowledge_path(user_id),
+            embedder=self.knowledge.embedder,
+        )
+
+    def extend_budget(self, task_id, value, principal):
+        parameters = value.model_dump()
+        if not value.reason.strip() or not any(parameters[k] > 0 for k in ("seconds", "tokens", "cost", "attempts")):
+            raise HTTPException(422, "追加预算需要正数额度及理由")
+        with self.lock:
+            task = self.store.get_owned(task_id, principal)
+            with self.store.connect() as db:
+                db.execute("BEGIN IMMEDIATE")
+                previous = db.execute("SELECT parameters FROM budget_extensions WHERE task_id=? AND request_id=?",
+                                      (task_id, value.request_id)).fetchone()
+                if previous:
+                    if json.loads(previous[0]) != parameters:
+                        raise HTTPException(409, "相同追加请求不能更换额度或理由")
+                else:
+                    self.validate_task_identity(task)
+                    state, progress = task["state"], task.get("progress")
+                    if ((state["status"] != "budget_exceeded" and not
+                         (state["status"] == "failed" and state.get("budget_exhausted") == "repair_attempts"))
+                            or task["execution"] != "idle"
+                            or not progress or progress.get("run_id") or progress.get("in_flight")
+                            or progress.get("interrupted") or progress.get("pending_calls")
+                            or task.get("worker_stop_unconfirmed") or task.get("review")
+                            or (state.get("error_info") or {}).get("outcome_unknown")
+                            or self.operations.pending_for_task(task_id)):
+                        raise HTTPException(409, "任务存在运行中或未核实操作，不能直接追加续跑")
+                    remaining = {k: state["remaining_budget"][k] + parameters[k]
+                                 for k in ("seconds", "tokens", "cost", "attempts")}
+                    if any(remaining[k] <= 0 for k in ("seconds", "tokens", "cost")):
+                        raise HTTPException(422, "请补足已耗尽的时间、Token 和费用预算")
+                    if state.get("budget_exhausted") == "repair_attempts" and remaining["attempts"] <= 0:
+                        raise HTTPException(422, "请追加修复尝试次数")
+                    config = task["config"]
+                    if config.get("checkpoint"):
+                        with cleanup_scope():
+                            restore_checkpoint_workspace(Path(config["workspace"]), config["checkpoint"])
+                        progress["workspace_manifest"] = file_manifest(Path(config["workspace"]), source=True)
+                    node = ("prepare_workspace" if not config.get("checkpoint") else
+                            "baseline_reproduction" if not state.get("reproduction") else
+                            "collect_context" if not state.get("code_evidence") else
+                            "retrieve_experience" if state.get("experience_retrieval_pending") else "propose_patch")
+                    state.update(remaining_budget=remaining, status="queued", error_info=None,
+                                 last_error=None, budget_exhausted=None, question=None, patch_diff=None,
+                                 patch_hash=None, validation=None, adversarial_review=None)
+                    progress.update(next_node=node, in_flight=None, committed_state=deepcopy(state), state_hash=digest(state))
+                    task["execution"] = "queued"
+                    db.execute("INSERT INTO budget_extensions VALUES (?,?,?,?,?)",
+                        (task_id, value.request_id, json.dumps(parameters, ensure_ascii=False), principal, timestamp()))
+                    self.store._write(db, task)
+        trace("task.budget_extension", "authorized", task_id=task_id,
+              path=self.store.root / "tasks" / task_id / "trace.jsonl",
+              details={"actor": principal, "request_id": value.request_id, "duplicate": bool(previous),
+                       "grant": {k: parameters[k] for k in ("seconds", "tokens", "cost", "attempts")}})
+        self.submit(task_id, False)
+        return self.store.get(task_id)
+
+    def personal_memory(self, user_id):
+        self.accounts.knowledge_path(user_id)  # Validate the authoritative user identity before building paths.
+        return PersonalMemory(self.store.root / "users" / user_id / "personal_memory.sqlite3")
+
+    def knowledge_reviewer(self, user_id):
+        from knowledge_review import KnowledgeReview
+        def resolve_task(task_id):
+            task = self.store.get_owned(task_id, user_id)
+            with self.store.connect() as db:
+                row = db.execute("SELECT decision,reason,patch_hash,created_at FROM repair_reviews WHERE task_id=?",
+                                 (task_id,)).fetchone()
+            recorded = dict(zip(("decision", "reason", "patch_hash", "created_at"), row)) if row else None
+            if recorded != task.get("review"):
+                return None
+            return task
+        return KnowledgeReview(self.knowledge_for_user(user_id), resolve_task=resolve_task)
+
+    def clarify(self, task_id, answer):
+        answer = redact(answer.strip(), limit=4000)
+        if not answer:
+            raise HTTPException(422, "补充说明不能为空")
+        with self.lock:
+            task = self.store.get(task_id)
+            state, progress = task["state"], task.get("progress")
+            if (not progress or task["execution"] != "idle" or state["status"] != "needs_input"
+                    or (state.get("error_info") or {}).get("outcome_unknown")
+                    or state.get("awaiting_node") not in ("baseline_reproduction", "collect_context", "propose_patch")):
+                raise HTTPException(409, "当前暂停原因不能通过补充说明继续，请先处理错误记录")
+            node = state["awaiting_node"]
+            state.setdefault("clarifications", []).append(answer)
+            state.update(status="queued", question=None, last_error=None, error_info=None, awaiting_node=None)
+            if node == "baseline_reproduction":
+                state.update(reproduction=None, code_evidence=[], case_matches=[], failure_matches=[])
+            task["execution"] = "queued"
+            progress.update(next_node=node, in_flight=None, interrupted=False, committed_state=deepcopy(state),
+                            state_hash=digest(state))
+            self.store.put(task)
+        trace("task.clarification", "accepted", task_id=task_id, details={"node": node})
+        self.submit(task_id, False)
+        return self.store.get(task_id)
+
+    def resolve_tool_outcome(self, task_id, request):
+        evidence = redact(request.evidence.strip(), limit=2000)
+        if len(evidence) < 10:
+            raise HTTPException(422, "请说明你核对了哪个外部记录")
+        with self.lock:
+            task = self.store.get(task_id)
+            state, progress = task["state"], task.get("progress")
+            if not progress or task["execution"] != "idle" or state["status"] != "needs_input":
+                raise HTTPException(409, "任务当前没有待核对的外部操作")
+            pending = {item["operation_id"] for item in self.operations.pending_for_task(task_id)}
+            if request.operation_id not in pending:
+                raise HTTPException(404, "待核对外部操作不存在或已处理")
+            self.operations.resolve_unknown(request.operation_id, task_id, request.outcome, evidence)
+            resolution = {"operation_id": request.operation_id, "outcome": request.outcome,
+                          "evidence": evidence, "created_at": timestamp()}
+            state.setdefault("tool_resolutions", []).append(resolution)
+            if request.outcome == "not_applied":
+                state.update(status="queued", question=None, last_error=None, error_info=None, awaiting_node=None)
+                progress.update(next_node="propose_patch", in_flight=None, interrupted=False,
+                                committed_state=deepcopy(state), state_hash=digest(state))
+                task["execution"] = "queued"
+            else:
+                fault = Fault("external_operation_confirmed", "外部操作已核实为完成，但没有可用返回值；修复流程已停止",
+                              category="business", next_action="检查外部服务记录；如仍需修复，请新建任务")
+                state.update(status="failed", question=None, last_error=str(fault), error_info=error_info(fault))
+                progress.update(next_node="finish", in_flight=None, interrupted=False,
+                                committed_state=deepcopy(state), state_hash=digest(state))
+                task["execution"] = "idle"
+            self.store.put(task)
+        trace("mcp.operation", "manually_resolved", task_id=task_id,
+              details={"operation_id": request.operation_id, "outcome": request.outcome})
+        if request.outcome == "not_applied":
+            self.submit(task_id, False)
+        return self.store.get(task_id)
+
+    def task_with_pending_operations(self, task):
+        from tool_authorization import ToolAuthorizations
+        result = deepcopy(task)
+        result["pending_external_operations"] = self.operations.pending_for_task(task["state"]["task_id"])
+        principal = self.accounts.owner(task["state"]["task_id"]) or task["config"].get("principal", "local-user")
+        result["pending_tool_authorizations"] = (
+            [item for item in ToolAuthorizations(self.operations).pending(task["state"]["task_id"], principal)
+             if item["authorization_id"] == (task["state"].get("error_info") or {}).get("operation_id")]
+            if task["state"].get("awaiting_node") == "tool_authorization" else [])
+        return result
+
+    def authorize_tool(self, task_id, request, principal):
+        from tool_authorization import ToolAuthorizations
+        with self.lock:
+            task = self.store.get_owned(task_id, principal)
+            self.validate_task_identity(task)
+            state, progress = task["state"], task.get("progress")
+            if (not progress or task["execution"] != "idle" or state["status"] != "needs_input"
+                    or state.get("awaiting_node") != "tool_authorization"):
+                raise HTTPException(409, "任务当前没有待授权的操作")
+            if (state.get("error_info") or {}).get("operation_id") != request.authorization_id:
+                raise HTTPException(409, "授权与当前暂停动作不一致")
+            try:
+                authorizations = ToolAuthorizations(self.operations)
+                if request.decision == "renew":
+                    state["error_info"]["operation_id"] = authorizations.renew(request.authorization_id, task_id, principal)
+                else:
+                    authorizations.decide(request.authorization_id, task_id, principal, request.decision, request.reason)
+            except Fault as error:
+                raise HTTPException(409 if error.category == "conflict" else 422, str(error)) from None
+            if request.decision == "renew":
+                next_node, execution = "finish", "idle"
+            elif request.decision == "approved":
+                state.update(status="queued", question=None, last_error=None, error_info=None, awaiting_node=None)
+                next_node, execution = "propose_patch", "queued"
+            else:
+                state.update(status="failed", question=None, awaiting_node=None,
+                             last_error="用户拒绝了外部写操作", error_info=None)
+                next_node, execution = "finish", "idle"
+            task["execution"] = execution
+            progress.update(next_node=next_node, in_flight=None, interrupted=False,
+                            committed_state=deepcopy(state), state_hash=digest(state))
+            self.store.put(task)
+        trace("mcp.authorization", request.decision, task_id=task_id,
+              path=self.store.root / "tasks" / task_id / "trace.jsonl",
+              details={"authorization_id": request.authorization_id, "principal": principal})
+        if request.decision == "approved":
+            self.submit(task_id, False)
+        return self.store.get(task_id)
+
+    def validate_task_identity(self, task):
+        if self.deployment_mode == "untrusted" and (
+                task["config"].get("deployment_mode") != "untrusted"
+                or task["config"].get("execution_backend") != "docker"):
+            raise Fault("deployment_boundary_changed", "不可信用户服务不能执行本地模式旧任务", category="permission")
+        owner = self.accounts.owner(task["state"]["task_id"])
+        principal = task["config"].get("principal", "local-user")
+        if owner is None:
+            if principal != "local-user":
+                raise Fault("permission_denied", "任务缺少可信用户归属", category="permission")
+            return self.knowledge
+        if principal != owner and not (principal == "local-user" and owner == self.accounts.legacy_owner()):
+            raise Fault("permission_denied", "任务用户身份与持久化归属不一致", category="permission")
+        knowledge = self.knowledge_for_user(owner)
+        recorded = task["config"].get("knowledge_path")
+        if recorded and Path(recorded).resolve() != knowledge.path.resolve():
+            raise Fault("permission_denied", "任务长期记忆路径与用户归属不一致", category="permission")
+        return knowledge
+
+    def create(self, request: TaskInput, key: str | None = None, user_id=None):
+        if self.deployment_mode == "untrusted":
+            if request.source_type != "pasted_code" and request.file_content is None:
+                raise HTTPException(403, "不可信用户模式只允许上传或粘贴源码，禁止访问服务端本地路径")
+            if self.execution_backend != "docker":
+                raise HTTPException(403, "不可信用户模式禁止宿主执行")
+        # Scope is checked before user knowledge lookup, source reads, and worker submission.
+        require_software_request(request.error_report, request.test_target, request.code_text,
+                                 request.path, request.file_name, source_type=request.source_type)
         key = key or uuid4().hex
         if not 8 <= len(key) <= 128 or not all(c.isalnum() or c in "-_" for c in key):
             raise HTTPException(422, "幂等键需为 8–128 位字母、数字、连字符或下划线")
         with self.lock:
-            existing = self.store.request_task(key, request.model_dump())
+            if user_id:
+                self.accounts.knowledge_path(user_id)
+            existing = self.store.request_task(key, request.model_dump(), user_id)
             if existing:
                 return existing
-            return self._create(request, key)
+            return self._create(request, key, user_id)
 
-    def _create(self, request, key):
+    def _create(self, request, key, user_id=None):
         task_id = uuid4().hex
         directory = self.store.root / "tasks" / task_id
         input_dir = directory / "input"
         input_dir.mkdir(parents=True)
         source_path = Path(request.path.strip()).expanduser().resolve()
+        if user_id and request.file_content is None and request.source_type != "pasted_code":
+            source_directory = source_path if request.source_type == "git_repository" else source_path.parent
+            if source_directory.is_relative_to(self.store.root) or self.store.root.is_relative_to(source_directory):
+                raise HTTPException(403, "代码来源不能包含服务数据目录；请使用目录外的代码或上传文件")
         if request.file_content is not None:
             source_path = input_dir / request.file_name
             source_path.write_text(request.file_content, encoding="utf-8")
         args = argparse.Namespace(
             python_file=source_path if request.source_type == "python_file" else None,
+            code_file=source_path if request.source_type == "code_file" else None,
             repository=source_path if request.source_type == "git_repository" else None,
             code_text=request.code_text, revision=request.revision.strip() or None,
+            language=request.language,
+            code_name=request.file_name if request.source_type == "pasted_code" else None,
+            test_targets=request.test_target,
+            test_command=request.test_command,
+            reproduce_command=request.reproduce_command,
+            regression_command=request.regression_command,
         )
         try:
             source = check_source(args)
@@ -340,25 +696,47 @@ class RepairRunner:
             error_info(error, operation="task.input")
             raise HTTPException(422, "输入来源校验失败，请检查路径、文件编码或版本参数") from error
         source_root = (source_path if request.source_type == "git_repository" else
-                       source_path.parent if request.source_type == "python_file" else input_dir)
+                       source_path.parent if request.source_type in ("python_file", "code_file") else input_dir)
         state = create_initial_state(task_id, source, request.error_report,
-                                     code_text=request.code_text if request.source_type == "pasted_code" else None)
+                                     code_text=request.code_text if request.source_type == "pasted_code" else None,
+                                     remaining_seconds=request.runtime_seconds)
         task = {
             "state": state, "execution": "queued", "review": None,
             "progress": initial_progress(),
-            "source_label": request.file_name or request.path or "粘贴的 Python 代码",
+            "source_label": request.file_name or request.path or "粘贴的代码",
             "config": {"source_root": str(source_root), "workspace": str(directory / "workspace"),
                        "test_targets": [request.test_target.strip() or "."], "checkpoint": None,
+                       "test_command": list(split_command(request.test_command) if request.test_command else ()),
+                       "reproduce_command": list(split_command(request.reproduce_command) if request.reproduce_command else ()),
+                       "regression_command": list(split_command(request.regression_command) if request.regression_command else ()),
+                       "language": source.get("language", request.language),
                        "execution_backend": self.execution_backend,
+                       "deployment_mode": self.deployment_mode,
                        "effect_keys": {name: uuid4().hex for name in ("apply_patch", "save_case", "reject_patch")},
-                       "principal": "local-user",
+                       "principal": user_id or "local-user",
+                       **({"knowledge_path": str(self.accounts.knowledge_path(user_id)),
+                           "user_memory_snapshot": self.personal_memory(user_id).list()} if user_id else {}),
                        "source_fingerprint": source_fingerprint(source, source_root),
-                       "allowed_paths": [source_path.name] if request.source_type == "python_file" else
-                                        ["target.py"] if request.source_type == "pasted_code" else ["."]},
+                       "allowed_paths": [source_path.name] if request.source_type in ("python_file", "code_file") else
+                                        [str(source.get("file_name", "target.py"))] if request.source_type == "pasted_code" else ["."]},
             "created_at": timestamp(), "updated_at": timestamp(),
         }
-        self.store.create_once(task, key, request.model_dump())
-        trace("task.create", "completed", key=key, task_id=task_id, path=directory / "trace.jsonl")
+        knowledge = self.knowledge_for_user(user_id) if user_id else self.knowledge
+        manifest, manifest_hash = freeze_execution_manifest(task, directory, request.model_dump(), knowledge)
+        try:
+            self.store.create_once(task, key, request.model_dump(), user_id)
+        except sqlite3.IntegrityError:
+            try:
+                existing = self.store.request_task(key, request.model_dump(), user_id)
+            finally:
+                shutil.rmtree(directory, ignore_errors=True)
+            if existing is None:
+                raise
+            return existing
+        from runtime_config import configuration_scope
+        with configuration_scope(manifest):
+            trace("task.create", "completed", key=key, task_id=task_id, path=directory / "trace.jsonl",
+                  details={"manifest_hash": manifest_hash})
         self.submit(task_id, False)
         return self.store.get(task_id)
 
@@ -366,6 +744,8 @@ class RepairRunner:
         with self.submit_lock:
             if task_id in self.submitted:
                 return
+            if len(self.submitted) >= self.max_workers:
+                return  # Remain durably queued; the dispatcher submits when capacity is free.
             task, run_id = self.store.claim(task_id)
             if task is None:
                 return
@@ -388,6 +768,67 @@ class RepairRunner:
             future.add_done_callback(completed)
         else:
             self.submitted.discard(task_id)
+
+    def rerun(self, task_id, principal, key=None):
+        """Create a new execution from the recorded baseline, never reuse review/authorization."""
+        from execution_manifest import write_once
+        from execution_replay import evidence
+        from runtime_config import configuration_scope
+        key = key or uuid4().hex
+        if not 8 <= len(key) <= 128 or not all(c.isalnum() or c in "-_" for c in key):
+            raise HTTPException(422, "幂等键需为 8–128 位字母、数字、连字符或下划线")
+        with self.lock:
+            original = self.store.get_owned(task_id, principal)
+            if original["execution"] != "idle":
+                raise HTTPException(409, "请等待原任务暂停或结束后再重新执行")
+            old_dir = self.store.root / "tasks" / task_id
+            manifest = verify_execution_manifest(original, old_dir, runtime=True)
+            params = {"rerun_of": task_id, "manifest_hash": original["config"]["execution_manifest_hash"]}
+            existing = self.store.request_task(key, params, principal)
+            if existing:
+                return existing
+            if manifest["task"].get("input_was_redacted"):
+                raise HTTPException(409, "原始输入含已脱敏信息，不能声称可原样重新执行")
+            old_config = original["config"]
+            if not old_config.get("checkpoint"):
+                raise HTTPException(409, "原任务未保存源码基线，无法重新执行")
+            new_id = uuid4().hex
+            directory = self.store.root / "tasks" / new_id
+            workspace = directory / "workspace"
+            with configuration_scope(manifest):
+                checkpoint = create_checkpoint_workspace(Path(old_config["workspace"]), workspace,
+                                                          revision=old_config["checkpoint"])
+            actual_baseline = file_manifest(workspace, source=True)
+            expected_baseline = original.get("progress", {}).get("baseline_manifest")
+            if expected_baseline is None or actual_baseline != expected_baseline:
+                raise HTTPException(409, "源码基线与原执行证据不一致")
+            for filename in ("execution-manifest.json", "knowledge.snapshot.sqlite3", "mcp-config.snapshot.json"):
+                with (directory / filename).open("xb") as target:
+                    target.write((old_dir / filename).read_bytes())
+            contract = old_dir / "mcp-tools.snapshot.json"
+            if contract.is_file():
+                with (directory / contract.name).open("xb") as target:
+                    target.write(contract.read_bytes())
+            state = deepcopy(manifest["task"]["initial_state"])
+            state["task_id"] = new_id
+            config = deepcopy(old_config)
+            config.update(source_root=str(workspace), workspace=str(workspace), checkpoint=checkpoint,
+                          effect_keys={name: uuid4().hex for name in ("apply_patch", "save_case", "reject_patch")},
+                          user_memory_snapshot=deepcopy(manifest["task"]["memory"]),
+                          mcp_config_path=str(directory / "mcp-config.snapshot.json"),
+                          rerun_of=task_id, rerun_source_evidence=evidence(original, old_dir))
+            progress = initial_progress()
+            progress.update(next_node="baseline_reproduction", baseline_manifest=actual_baseline,
+                            workspace_manifest=actual_baseline)
+            task = {"state": state, "config": config, "progress": progress, "execution": "queued", "review": None,
+                    "source_label": original["source_label"], "created_at": timestamp(), "updated_at": timestamp()}
+            write_once(directory / "run-origin.json", {**params, "task_id": new_id,
+                "semantics": "相同冻结配置再次调用模型与工具；输出及外部服务状态可能变化；外部写操作需重新授权"})
+            self.store.create_once(task, key, params, principal)
+            with configuration_scope(manifest):
+                trace("task.rerun", "created", task_id=new_id, path=directory / "trace.jsonl", details=params)
+        self.submit(new_id, False)
+        return self.store.get(new_id)
 
     def start_dispatcher(self):
         def dispatch():
@@ -427,35 +868,50 @@ class RepairRunner:
 
     def services(self, task):
         config = task["config"]
-        config["knowledge_path"] = str(self.knowledge.path)
+        knowledge = self.validate_task_identity(task)
+        config["knowledge_path"] = str(knowledge.path)
         workspace = Path(config["workspace"])
+        if config.get("execution_manifest_path"):
+            manifest = verify_execution_manifest(task, workspace.parent)
+            knowledge = SnapshotKnowledge(knowledge, workspace.parent, manifest)
         toolbox = RepairToolbox(
             workspace_root=workspace, source_root=Path(config["source_root"]),
             allowed_paths=tuple(config["allowed_paths"]), test_targets=tuple(config["test_targets"]),
-            checkpoint_revision=config["checkpoint"], knowledge_base=self.knowledge,
+            test_command=tuple(config.get("test_command", ())) or None,
+            reproduce_command=tuple(config.get("reproduce_command", ())) or None,
+            regression_command=tuple(config.get("regression_command", ())) or None,
+            language=str(config.get("language", task["state"]["source"].get("language", "auto"))),
+            checkpoint_revision=config["checkpoint"], knowledge_base=knowledge,
+            retrieval_scope=task["state"]["source"].get("retrieval_scope", {}),
             validation_report_path=workspace.parent / "validation.md",
             execution_backend=get_execution_backend(config.get("execution_backend", "host")),
             task_id=task["state"]["task_id"],
+            principal=self.accounts.owner(task["state"]["task_id"]) or config.get("principal", "local-user"),
         )
 
         def baseline(state):
             # Reproduce exactly the frozen checkpoint, including supporting files and tests.
             record = reproduce(
                 {"type": "git_repository", "path": str(workspace), "revision": config["checkpoint"],
-                 "analysis_paths": config["allowed_paths"] if state["source"]["type"] == "python_file" else []},
+                 "analysis_paths": config["allowed_paths"] if state["source"]["type"] in ("python_file", "code_file") else []},
                 state["original_report"], work_root=workspace.parent / "reproduction",
                 timeout=min(10.0, max(0.1, state["remaining_budget"]["seconds"])),
                 execution_backend=config.get("execution_backend", "host"),
-                task_id=state["task_id"],
+                task_id=state["task_id"], clarifications=state.get("clarifications", []),
+                language=str(config.get("language", "auto")),
+                reproduce_command=tuple(config.get("reproduce_command", ())) or None,
             )
             return {"matched": record.get("status") == "已复现，与报告一致", "record": record,
                     "question": record.get("question") or None}
 
         def context(state):
-            result = toolbox.collect_context_for_state(state)
+            result = toolbox.collect_context_for_state(state, include_experience=False)
             if not result["code_evidence"]:
                 size = 0
-                for path in sorted(workspace.rglob("*.py")):
+                from language_support import is_code_path
+                for path in sorted(workspace.rglob("*")):
+                    if not path.is_file() or not is_code_path(path):
+                        continue
                     relative = path.relative_to(workspace)
                     if any(part.startswith(".") or part in ("work", "node_modules", "__pycache__", "venv")
                            for part in relative.parts):
@@ -483,8 +939,7 @@ class RepairRunner:
             key = keys.setdefault(name, uuid4().hex)
             if name == "apply_patch":
                 key += f":{state['attempt_count']}:{state['patch_hash']}"
-            if config.get("principal", "local-user") != "local-user":
-                raise Fault("permission_denied", "当前任务执行身份不受支持", category="permission")
+            self.validate_task_identity(task)
             if name != "apply_patch" and (not task.get("review") or task["review"]["patch_hash"] != state["patch_hash"]
                     or task["review"]["decision"] != ("accepted" if name == "save_case" else "rejected")):
                 raise Fault("review_required", "该副作用需要与补丁版本一致的人工审核记录", category="permission")
@@ -543,7 +998,7 @@ class RepairRunner:
             if attempt.get("input_hash") != digest(attempt.get("input_state")):
                 return False
             node = attempt["node"]
-            safe = node in ("prepare_workspace", "collect_context", "review_patch")
+            safe = node in ("prepare_workspace", "collect_context", "retrieve_experience", "review_patch")
             safe = safe or (node == "propose_patch" and attempt.get("model_tool_policy") == "read_only")
             safe = safe or (node in ("baseline_reproduction", "validate_patch")
                             and attempt.get("code_execution_started") is False)
@@ -690,6 +1145,12 @@ class RepairRunner:
         trace_workflow_end(task["state"], path=self.store.root / "tasks" / task_id / "trace.jsonl")
 
     def run_inline(self, task_id, reviewing, *, managed=False):
+        task = self.store.get(task_id)
+        self.validate_task_identity(task)
+        with task_configuration(task, self.store.root / "tasks" / task_id), memory_scope(task["config"].get("user_memory_snapshot", ())):
+            return self._run_inline(task_id, reviewing, managed=managed)
+
+    def _run_inline(self, task_id, reviewing, *, managed=False):
         if self.store.get(task_id).get("progress"):
             return self.run_checkpointed_inline(task_id, reviewing, managed=managed)
         task = self.store.get(task_id)
@@ -713,8 +1174,9 @@ class RepairRunner:
                     config["checkpoint"] = create_checkpoint_workspace(
                         Path(config["source_root"]), Path(config["workspace"]),
                         revision=str(source["revision"]) if source["type"] == "git_repository" else None,
-                        source_file=Path(source["path"]) if source["type"] == "python_file" else None,
-                        pasted_code=task["state"]["code_text"])
+                        source_file=Path(source["path"]) if source["type"] in ("python_file", "code_file") else None,
+                        pasted_code=task["state"]["code_text"],
+                        pasted_filename=str(source.get("file_name", "target.py")))
                     task["state"]["remaining_budget"]["seconds"] = context.remaining()
                     self.store.put(task)
                 context.check()
@@ -747,6 +1209,12 @@ class RepairRunner:
 
     def run_checkpointed_inline(self, task_id, reviewing, *, managed=False, run_id=None):
         task = self.store.get(task_id)
+        self.validate_task_identity(task)
+        with task_configuration(task, self.store.root / "tasks" / task_id), memory_scope(task["config"].get("user_memory_snapshot", ())):
+            return self._run_checkpointed_inline(task_id, reviewing, managed=managed, run_id=run_id)
+
+    def _run_checkpointed_inline(self, task_id, reviewing, *, managed=False, run_id=None):
+        task = self.store.get(task_id)
         run_id = run_id or task["progress"]["run_id"]
         if not run_id:
             task, run_id = self.store.claim(task_id)
@@ -778,6 +1246,8 @@ class RepairRunner:
                 self.store.assert_owner(task, run_id)
                 task["progress"]["workspace_manifest"] = file_manifest(Path(task["config"]["workspace"]), source=True)
                 self.store.finish_step(task, node, state, update, next_node_after(node, {**state, **update}), run_id)
+                trace("checkpoint", "committed", result={"state": task["state"],
+                      "next_node": task["progress"]["next_node"]}, details={"node": node})
 
             def request(event, identifier, operation):
                 self.store.assert_owner(task, run_id)
@@ -806,17 +1276,23 @@ class RepairRunner:
                     config["checkpoint"] = create_checkpoint_workspace(
                         Path(config["source_root"]), Path(config["workspace"]),
                         revision=str(source["revision"]) if source["type"] == "git_repository" else None,
-                        source_file=Path(source["path"]) if source["type"] == "python_file" else None,
-                        pasted_code=task["state"]["code_text"])
+                        source_file=Path(source["path"]) if source["type"] in ("python_file", "code_file") else None,
+                        pasted_code=task["state"]["code_text"],
+                        pasted_filename=str(source.get("file_name", "target.py")))
                     if source_fingerprint(source, Path(config["source_root"])) != config["source_fingerprint"]:
                         raise Fault("source_changed", "创建工作区期间输入发生变化", category="conflict")
                     task["progress"]["workspace_manifest"] = file_manifest(Path(config["workspace"]), source=True)
                     task["progress"]["baseline_manifest"] = task["progress"]["workspace_manifest"]
                     self.store.finish_step(task, "prepare_workspace", task["state"], {}, "baseline_reproduction", run_id)
                 context.check()
-                graph = build_repair_workflow(self.services(task), start_node=task["progress"]["next_node"])
-                # Node hooks persist intent/result before LangGraph follows an edge.
-                graph.invoke(task["state"], config={"recursion_limit": 100})
+                from workflow_checkpoint import task_checkpointer
+                from workflow_replay import recording_scope
+                with recording_scope(self.store.root / "tasks" / task_id), \
+                        task_checkpointer(self.store.root / "tasks" / task_id, self.store, task) as (saver, graph_config):
+                    graph = build_repair_workflow(self.services(task), start_node=task["progress"]["next_node"],
+                                                  checkpointer=saver)
+                    # Recovery reconciles effects before a new epoch uses native graph persistence.
+                    graph.invoke(task["state"], config=graph_config, durability="sync")
             except Exception as error:
                 if not self.store.owns(task_id, run_id):
                     raise
@@ -915,7 +1391,7 @@ def create_app(data_root: Path | None = None):
     @app.exception_handler(Fault)
     async def fault_response(request, error):
         status = 409 if error.outcome_unknown else {"transient": 503, "storage": 503, "permission": 403,
-            "business": 409, "validation": 422, "timeout": 504, "budget": 408}.get(error.category, 500)
+            "business": 409, "conflict": 409, "validation": 422, "timeout": 504, "budget": 408}.get(error.category, 500)
         headers = {"Retry-After": str(max(0, int(error.retry_after)))} if error.retry_after is not None else None
         info = error_info(error, operation="http.request")
         return JSONResponse({"detail": info["message"], "error": info}, status_code=status, headers=headers)
@@ -943,60 +1419,294 @@ def create_app(data_root: Path | None = None):
     async def local_origin(request: Request, call_next):
         request_id = uuid4().hex
         match = re.fullmatch(r"/api/tasks/([a-f0-9]{32})(?:/[^/]+)?", request.url.path)
-        task_id = match[1] if match else None
-        path = root / "tasks" / task_id / "errors.jsonl" if task_id else root / "errors.jsonl"
-        with diagnostic_scope(path=path, task_id=task_id, request_id=request_id, operation=f"http.{request.method}"):
+        task_id = None
+        path = root / "errors.jsonl"
+        with diagnostic_scope(path=path, request_id=request_id, operation=f"http.{request.method}"):
             try:
                 if request.headers.get("host", "").split(":")[0] not in ("127.0.0.1", "localhost", "testserver"):
                     raise Fault("local_only", "仅支持本地服务", category="permission")
                 origin = request.headers.get("origin")
                 if origin and urlsplit(origin).netloc not in ("127.0.0.1:5173", "localhost:5173", request.headers.get("host")):
                     raise Fault("origin_denied", "请求来源不受支持", category="permission")
-                response = await call_next(request)
+                public = request.url.path in ("/api/health", "/api/auth/register", "/api/auth/login")
+                if request.url.path.startswith("/api/") and not public:
+                    token = request.cookies.get(SESSION_COOKIE)
+                    user = runner.accounts.session(token)
+                    request.state.user = user
+                    if request.headers.get("X-Account-ID") and request.headers["X-Account-ID"] != user["id"]:
+                        raise Fault("account_changed", "账号已在其他页面切换，请重新登录", category="permission")
+                    path = root / "users" / user["id"] / "errors.jsonl"
+                    if match:
+                        runner.store.get_owned(match[1], user["id"])
+                        task_id = match[1]
+                        path = root / "tasks" / task_id / "errors.jsonl"
+                    if request.method not in ("GET", "HEAD", "OPTIONS") and not hmac.compare_digest(
+                            request.headers.get("X-CSRF-Token", ""), csrf_token(token)):
+                        raise HTTPException(403, "会话校验失败，请刷新页面后重试")
+                with diagnostic_scope(path=path, task_id=task_id):
+                    response = await call_next(request)
             except Fault as error:
                 response = await fault_response(request, error)
+            except StarletteHTTPException as error:
+                response = await http_error_response(request, error)
             except Exception as error:
                 response = await unexpected_error_response(request, error)
             response.headers["X-Request-ID"] = request_id
+            if request.url.path.startswith("/api/"):
+                response.headers["Cache-Control"] = "no-store"
             return response
+
+    def signed_in(user, request):
+        token = runner.accounts.new_session(user["id"], request.cookies.get(SESSION_COOKIE))
+        response = JSONResponse({"user": user, "csrf_token": csrf_token(token)})
+        response.set_cookie(SESSION_COOKIE, token, max_age=SESSION_SECONDS, httponly=True,
+                            secure=request.url.scheme == "https", samesite="strict", path="/")
+        return response
+
+    @app.post("/api/auth/register", status_code=201)
+    def register(value: Credentials, request: Request):
+        runner.accounts.limit("register", request.client.host if request.client else "local", value.username)
+        response = signed_in(runner.accounts.register(value.username, value.password.get_secret_value()), request)
+        response.status_code = 201
+        return response
+
+    @app.post("/api/auth/login")
+    def login(value: Credentials, request: Request):
+        runner.accounts.limit("login", request.client.host if request.client else "local", value.username)
+        return signed_in(runner.accounts.login(value.username, value.password.get_secret_value()), request)
+
+    @app.get("/api/auth/me")
+    def me(request: Request):
+        return {"user": request.state.user, "csrf_token": csrf_token(request.cookies[SESSION_COOKIE])}
+
+    @app.post("/api/auth/logout")
+    def logout(request: Request):
+        runner.accounts.logout(request.cookies[SESSION_COOKIE])
+        response = JSONResponse({"ok": True})
+        response.delete_cookie(SESSION_COOKIE, path="/", httponly=True, samesite="strict")
+        return response
+
+    @app.get("/api/memories")
+    def memories(request: Request):
+        return {"memories": runner.personal_memory(request.state.user["id"]).list()}
+
+    def chats(request):
+        return Conversations(runner.personal_memory(request.state.user["id"]))
+
+    @app.get("/api/conversations")
+    def list_conversations(request: Request):
+        return {"conversations": chats(request).list()}
+
+    @app.post("/api/conversations", status_code=201)
+    def create_conversation(request: Request):
+        return chats(request).create()
+
+    @app.get("/api/conversations/{conversation_id}")
+    def get_conversation(conversation_id: str, request: Request):
+        return chats(request).get(conversation_id)
+
+    @app.get("/api/conversations/{conversation_id}/trace")
+    def conversation_trace(conversation_id: str, request: Request,
+                           cursor: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=1000)):
+        memory = runner.personal_memory(request.state.user["id"])
+        chats(request).get(conversation_id)
+        path = memory.path.with_name(f"conversation-{digest(conversation_id)}.trace.jsonl")
+        try:
+            return read_trace_page(path, cursor=cursor, limit=limit)
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from error
+
+    @app.post("/api/conversations/{conversation_id}/messages")
+    def chat_message(conversation_id: str, value: ChatInput, request: Request):
+        user_id = request.state.user["id"]
+        lock = conversation_lock(user_id, conversation_id)
+        if not lock.acquire(blocking=False):
+            raise HTTPException(409, "该对话正在生成回复，请稍后查询")
+        try:
+            memory = runner.personal_memory(user_id)
+            conversation_hash = digest(conversation_id)
+            trace_path = memory.path.with_name(f"conversation-{conversation_hash}.trace.jsonl")
+            response = None
+            with execution_scope(120, task_id=f"conversation:{conversation_hash}",
+                                 trace_path=trace_path, circuit_path=runner.store.root / "circuits.sqlite3",
+                                 max_tokens=20_000, max_cost=0.10):
+                with traced_call("conversation.message",
+                                 parameters={"conversation_hash": conversation_hash,
+                                             "request_id": value.request_id},
+                                 input_data={"content": value.content}) as call:
+                    response = Conversations(memory).send(conversation_id, value)
+                    call["result"] = {
+                        "reply": next((item["content"] for item in reversed(response["messages"])
+                                        if item["role"] == "assistant"), ""),
+                        "summary": response["summary"],
+                        "pending_candidates": response["candidates"],
+                    }
+            return response
+        finally:
+            lock.release()
+
+    @app.post("/api/conversations/{conversation_id}/candidates/{candidate_id}/accept")
+    def accept_candidate(conversation_id: str, candidate_id: str, value: CandidateInput, request: Request):
+        return chats(request).decide(conversation_id, candidate_id, value)
+
+    @app.post("/api/conversations/{conversation_id}/candidates/{candidate_id}/reject")
+    def reject_candidate(conversation_id: str, candidate_id: str, request: Request):
+        return chats(request).decide(conversation_id, candidate_id)
+
+    @app.post("/api/memories", status_code=201)
+    def add_memory(value: MemoryInput, request: Request):
+        store = runner.personal_memory(request.state.user["id"])
+        identifier = store.save(value)
+        return {"id": identifier, "memories": store.list()}
+
+    @app.put("/api/memories/{memory_id}")
+    def edit_memory(memory_id: str, value: MemoryInput, request: Request):
+        store = runner.personal_memory(request.state.user["id"])
+        store.save(value, memory_id)
+        return {"memories": store.list()}
+
+    @app.delete("/api/memories/{memory_id}")
+    def delete_memory(memory_id: str, request: Request):
+        store = runner.personal_memory(request.state.user["id"])
+        store.delete(memory_id)
+        return {"memories": store.list()}
 
     @app.get("/api/health")
     def health():
         return {"status": "ok"}
 
     @app.post("/api/client-errors", status_code=202)
-    def client_error(request: ClientFaultInput):
+    def client_error(request: ClientFaultInput, http_request: Request):
+        if request.task_id:
+            runner.store.get_owned(request.task_id, http_request.state.user["id"])
         fault = Fault(f"client_{request.code}", "浏览器报告执行或连接故障", category="frontend",
                       next_action="检查浏览器状态及对应请求诊断")
         fault.error_id = request.error_id
-        path = root / "tasks" / request.task_id / "errors.jsonl" if request.task_id else root / "errors.jsonl"
+        path = root / "tasks" / request.task_id / "errors.jsonl" if request.task_id else root / "users" / http_request.state.user["id"] / "errors.jsonl"
         with diagnostic_scope(path=path, task_id=request.task_id, operation=f"frontend.{request.code}"):
             info = error_info(fault)
         return {"error_id": info["error_id"], "recorded": info["diagnostics_persisted"]}
 
     @app.post("/api/tasks", status_code=202)
     def create(request: TaskInput, http_request: Request):
-        return runner.create(request, http_request.headers.get("Idempotency-Key"))
+        return runner.create(request, http_request.headers.get("Idempotency-Key"), http_request.state.user["id"])
 
     @app.get("/api/requests/{key}")
-    def request_status(key: str):
-        task = runner.store.request_task(key)
+    def request_status(key: str, request: Request):
+        task = runner.store.request_task(key, user_id=request.state.user["id"])
         if task is None:
             raise HTTPException(404, "尚无该幂等键对应的任务")
-        return task
+        return runner.task_with_pending_operations(task)
 
     @app.get("/api/tasks/{task_id}/trace")
-    def task_trace(task_id: str, cursor: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=1000)):
-        runner.store.get(task_id)
+    def task_trace(task_id: str, request: Request, cursor: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=1000)):
+        runner.store.get_owned(task_id, request.state.user["id"])
         path = runner.store.root / "tasks" / task_id / "trace.jsonl"
         try:
             return read_trace_page(path, cursor=cursor, limit=limit)
         except ValueError as error:
             raise HTTPException(422, str(error)) from error
 
+    @app.get("/api/tasks/{task_id}/manifest")
+    def task_manifest(task_id: str, request: Request):
+        from execution_replay import evidence
+        task = runner.store.get_owned(task_id, request.state.user["id"])
+        directory = runner.store.root / "tasks" / task_id
+        manifest = verify_execution_manifest(task, directory)
+        return {"manifest": manifest, "sha256": task["config"]["execution_manifest_hash"],
+                "evidence": evidence(task, directory)}
+
+    @app.post("/api/tasks/{task_id}/replay")
+    def task_replay(task_id: str, request: Request):
+        from execution_replay import replay
+        task = runner.store.get_owned(task_id, request.state.user["id"])
+        if task["execution"] != "idle":
+            raise HTTPException(409, "请等待任务暂停或结束后再回放")
+        return replay(task, runner.store.root / "tasks" / task_id)
+
+    @app.post("/api/tasks/{task_id}/rerun", status_code=202)
+    def task_rerun(task_id: str, request: Request):
+        return runner.rerun(task_id, request.state.user["id"], request.headers.get("Idempotency-Key"))
+
+    @app.get("/api/tasks/{task_id}/stream")
+    async def task_stream(task_id: str, request: Request, cursor: int = Query(0, ge=0), account_id: str = ""):
+        """推送任务快照和持久化 Trace；断线后可用字节游标继续读取。"""
+        user_id = request.state.user["id"]
+        await run_in_threadpool(runner.store.get_owned, task_id, user_id)
+        if account_id and account_id != user_id:
+            raise Fault("account_changed", "账号已在其他页面切换，请重新登录", category="permission")
+        last_event_id = request.headers.get("last-event-id", "").strip()
+        if last_event_id:
+            if not re.fullmatch(r"[0-9]{1,20}", last_event_id):
+                raise HTTPException(422, "无效的 SSE 事件游标")
+            cursor = int(last_event_id)
+        path = runner.store.root / "tasks" / task_id / "trace.jsonl"
+        try:
+            await run_in_threadpool(read_trace_page, path, cursor=cursor, limit=100)
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from error
+
+        def read_update(position):
+            # Long-lived connections must also stop after logout/session expiry.
+            user = runner.accounts.session(request.cookies.get(SESSION_COOKIE))
+            if user["id"] != user_id:
+                raise HTTPException(401, "账号已切换，请重新登录")
+            task = runner.task_with_pending_operations(runner.store.get_owned(task_id, user_id))
+            return task, read_trace_page(path, cursor=position, limit=100)
+
+        def event(name, payload, event_id=None):
+            lines = []
+            if event_id is not None:
+                lines.append(f"id: {event_id}")
+            lines.append(f"event: {name}")
+            lines.append("data: " + json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+            return "\n".join(lines) + "\n\n"
+
+        async def generate():
+            position = cursor
+            last_updated = None
+            last_heartbeat = time.monotonic()
+            yield "retry: 2000\n\n"
+            while True:
+                if await request.is_disconnected():
+                    return
+                try:
+                    task, page = await run_in_threadpool(read_update, position)
+                    revision = task.get("updated_at") or digest(task)
+                    if revision != last_updated:
+                        last_updated = revision
+                        yield event("task", task)
+                    if page["next_cursor"] > position:
+                        position = page["next_cursor"]
+                        yield event("trace", page, position)
+                    if page["has_more"]:
+                        continue
+                    if task.get("execution") == "idle":
+                        yield event("complete", {"task": task, "next_cursor": position})
+                        return
+                    if time.monotonic() - last_heartbeat >= 10:
+                        yield ": heartbeat\n\n"
+                        last_heartbeat = time.monotonic()
+                except HTTPException as error:
+                    yield event("stream-error", {"detail": str(error.detail), "status": error.status_code})
+                    return
+                except ValueError as error:
+                    yield event("stream-error", {"detail": str(error), "status": 422})
+                    return
+                except Exception as error:
+                    with diagnostic_scope(path=path.with_name("errors.jsonl"), task_id=task_id):
+                        info = error_info(error, operation="task.stream")
+                    yield event("stream-error", {"detail": info["message"], "status": 503})
+                    return
+                await asyncio.sleep(0.5)
+
+        return StreamingResponse(generate(), media_type="text/event-stream", headers={
+            "Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no",
+        })
+
     @app.get("/api/tasks/{task_id}/errors")
-    def task_errors(task_id: str):
-        runner.store.get(task_id)
+    def task_errors(task_id: str, request: Request):
+        runner.store.get_owned(task_id, request.state.user["id"])
         path = runner.store.root / "tasks" / task_id / "errors.jsonl"
         if not path.exists():
             return {"errors": []}
@@ -1013,29 +1723,108 @@ def create_app(data_root: Path | None = None):
         return {"errors": records, "skipped_invalid_records": skipped}
 
     @app.get("/api/tasks/{task_id}")
-    def get(task_id: str):
-        return runner.store.get(task_id)
+    def get(task_id: str, request: Request):
+        return runner.task_with_pending_operations(runner.store.get_owned(task_id, request.state.user["id"]))
+
+    @app.post("/api/tasks/{task_id}/clarification", status_code=202)
+    def clarify_task(task_id: str, value: ClarificationInput, request: Request):
+        runner.store.get_owned(task_id, request.state.user["id"])
+        return runner.task_with_pending_operations(runner.clarify(task_id, value.answer))
+
+    @app.post("/api/tasks/{task_id}/budget", status_code=202)
+    def extend_task_budget(task_id: str, value: BudgetExtensionInput, request: Request):
+        return runner.task_with_pending_operations(runner.extend_budget(task_id, value, request.state.user["id"]))
+
+    @app.get("/api/failure-regressions")
+    def failure_regressions(request: Request):
+        from failure_regression import FailureRegressions, review_content_hash
+        archive = FailureRegressions(runner.accounts.knowledge_path(request.state.user["id"]))
+        return {"candidates": [{**item, "content_hash": review_content_hash(item)} for item in archive.list()]}
+
+    @app.post("/api/failure-regressions/{candidate_id}/review")
+    def review_failure_regression(candidate_id: str, value: KnowledgeReviewInput, request: Request):
+        from failure_regression import FailureRegressions
+        user_id = request.state.user["id"]
+        try:
+            return FailureRegressions(runner.accounts.knowledge_path(user_id)).decide(
+                candidate_id, **value.model_dump(), actor="user:" + user_id)
+        except KeyError:
+            raise HTTPException(404, "回归候选不存在") from None
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from error
+
+    @app.post("/api/tasks/{task_id}/tool-outcome", status_code=202)
+    def resolve_tool(task_id: str, value: ToolOutcomeInput, request: Request):
+        runner.store.get_owned(task_id, request.state.user["id"])
+        return runner.task_with_pending_operations(runner.resolve_tool_outcome(task_id, value))
 
     @app.post("/api/tasks/{task_id}/review", status_code=202)
-    def review(task_id: str, request: ReviewInput):
+    def review(task_id: str, request: ReviewInput, http_request: Request):
+        runner.store.get_owned(task_id, http_request.state.user["id"])
         return runner.review(task_id, request)
 
+    @app.post("/api/tasks/{task_id}/tool-authorization", status_code=202)
+    def authorize_tool(task_id: str, value: ToolAuthorizationInput, request: Request):
+        return runner.task_with_pending_operations(runner.authorize_tool(task_id, value, request.state.user["id"]))
+
     @app.get("/api/knowledge/stats")
-    def knowledge_stats():
-        return {"total": runner.knowledge.count()}
+    def knowledge_stats(request: Request):
+        knowledge = runner.knowledge_for_user(request.state.user["id"])
+        failures = knowledge.failure_count() if hasattr(knowledge, "failure_count") else 0
+        return {"total": knowledge.count(), "failures": failures}
 
     @app.post("/api/knowledge/import")
-    def knowledge_import(request: KnowledgeImportInput):
+    def knowledge_import(request: KnowledgeImportInput, http_request: Request):
+        user_id = http_request.state.user["id"]
         with execution_scope(120, task_id="knowledge-import", circuit_path=root / "circuits.sqlite3",
-                             trace_path=root / "trace.jsonl"):
-            return runner.knowledge.import_cases(request.cases, "http-import")
+                             trace_path=root / "users" / user_id / "trace.jsonl"):
+            reviewer = runner.knowledge_reviewer(user_id)
+            return reviewer.knowledge.import_cases(request.cases, "http-import", reviewer=reviewer)
+
+    @app.get("/api/knowledge/candidates")
+    def knowledge_candidates(request: Request, status: str = "needs_human", limit: int = Query(100, ge=1, le=100)):
+        try:
+            return {"candidates": runner.knowledge_reviewer(request.state.user["id"]).list(status, limit=limit)}
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from error
+
+    @app.get("/api/knowledge/candidates/{candidate_id}")
+    def knowledge_candidate(candidate_id: str, request: Request):
+        try:
+            return runner.knowledge_reviewer(request.state.user["id"]).get(candidate_id)
+        except KeyError:
+            raise HTTPException(404, "待审案例不存在") from None
+
+    @app.post("/api/knowledge/candidates/{candidate_id}/review")
+    def knowledge_candidate_review(candidate_id: str, value: KnowledgeReviewInput, request: Request):
+        user_id = request.state.user["id"]
+        try:
+            with execution_scope(120, task_id="knowledge-review", circuit_path=root / "circuits.sqlite3",
+                                 trace_path=root / "users" / user_id / "trace.jsonl"):
+                return runner.knowledge_reviewer(user_id).decide(candidate_id,
+                    **value.model_dump(), actor="user:" + user_id)
+        except KeyError:
+            raise HTTPException(404, "待审案例不存在") from None
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from error
 
     @app.post("/api/knowledge/search")
-    def knowledge_search(request: KnowledgeSearchInput):
+    def knowledge_search(request: KnowledgeSearchInput, http_request: Request):
+        user_id = http_request.state.user["id"]
+        # Knowledge search may call Embedding; enforce scope before entering its execution scope.
+        if request.query.strip():
+            require_software_request(request.query, request.file_paths, request.dependency_versions)
         try:
             with execution_scope(120, task_id="knowledge-search", circuit_path=root / "circuits.sqlite3",
-                                 trace_path=root / "trace.jsonl") as context:
-                matches = runner.knowledge.search(request.query, request.limit, request.min_similarity)
+                                 trace_path=root / "users" / user_id / "trace.jsonl") as context:
+                matches = runner.knowledge_for_user(user_id).search(
+                    request.query, request.limit, request.min_similarity, outcome=request.outcome,
+                    filters={
+                        "repository_id": request.repository_id,
+                        "file_paths": request.file_paths,
+                        "dependency_versions": request.dependency_versions,
+                    },
+                )
                 return {"matches": matches, "warnings": context.warnings}
         except ValueError as error:
             raise HTTPException(422, str(error)) from error

@@ -30,6 +30,9 @@ from knowledge_base import KnowledgeBase, default_knowledge_path, retrieval_scop
 from qdrant_store import QdrantVectorIndex
 from retrieval_reranker import CrossEncoderReranker
 from docker_executor import get_execution_backend
+from business_scope import require_software_request
+from language_support import (default_code_filename, detect_language, detect_project_language,
+                              normalize_language, split_command, validate_execution_commands)
 
 # 类型注解中的 str 表示字符串，int 表示整数，dict 表示字典；
 # object 允许字典的值具有不同类型，None 表示没有提供可选值。
@@ -40,7 +43,7 @@ def make_parser() -> argparse.ArgumentParser:
     # parser：保存全部参数规则，并负责解析参数、输出帮助和参数错误。
     # argparse.ArgumentParser() 创建命令行解析器；description 是 --help 显示的程序说明。
     parser = argparse.ArgumentParser(
-        description="接收 Python 缺陷修复任务的输入，并显示当前输出占位内容。"
+        description="接收通用代码缺陷修复任务的输入，并执行配置好的复现和测试命令。"
     )
     # source：代码来源互斥组，要求文件、仓库、粘贴代码三者恰好选一个。
     # add_mutually_exclusive_group() 创建互斥组，使组内选项不能同时使用；
@@ -51,12 +54,15 @@ def make_parser() -> argparse.ArgumentParser:
     # type=Path 会调用 Path()，把输入的路径字符串转成路径对象；它本身不检查文件是否存在。
     # help 是 --help 显示的选项说明；解析时选项名里的连字符变成下划线。
     # add_argument() 返回表示该选项规则的 Action 对象；这里仅登记规则，不使用返回值。
-    # 此处登记包含 Python 代码的文件选项，扩展名不限；解析后的路径保存在 args.python_file 中。
-    source.add_argument("--python-file", type=Path, help="包含 Python 代码的文本文件路径（扩展名不限）")
+    # 保留旧参数作为兼容入口；新项目代码使用 --code-file，二者不能同时提供。
+    source.add_argument("--python-file", type=Path, help="兼容参数：代码文件路径（扩展名不限）")
+    source.add_argument("--code-file", type=Path, help="通用代码文件路径（支持任意文本代码扩展名）")
     # add_argument() 登记仓库选项，将输入转成 Path 对象并保存到 args.repository。
-    source.add_argument("--repository", type=Path, help="Python Git 仓库目录")
-    # add_argument() 登记代码文本选项；未指定 type，输入按字符串保存在 args.code_text。
-    source.add_argument("--code-text", help="直接粘贴的 Python 代码")
+    source.add_argument("--repository", type=Path, help="Git 仓库目录")
+    # add_argument() 登记代码文本选项；未指定 type，输入按字符串保存。
+    source.add_argument("--code-text", help="直接粘贴的代码文本")
+    parser.add_argument("--code-name", help="粘贴代码在任务副本中的文件名，默认按语言选择扩展名")
+    parser.add_argument("--language", default="auto", help="代码语言，默认按文件名自动识别")
 
     # add_argument() 在解析器上登记版本选项，不加入上面的互斥组，值保存到 args.revision。
     # 此处未设置 required=True，所以可省略；这些选项未提供时的默认值都是 None。
@@ -80,8 +86,16 @@ def make_parser() -> argparse.ArgumentParser:
         dest="test_targets",
         action="append",
         default=None,
-        help="pytest 测试目标，可重复提供；默认使用工作区目录 .",
+        help="测试目标，可重复提供；pytest 默认使用工作区目录 .，自定义命令可用 {targets}",
     )
+    parser.add_argument(
+        "--test-command", default="", help="固定测试命令；使用 argv 执行，不经过 shell，例如 'npm test -- {targets}'",
+    )
+    parser.add_argument(
+        "--reproduce-command", default="", help="固定复现命令；非 Python 任务建议配置，例如 'go test ./... -run TestBug'",
+    )
+    parser.add_argument("--regression-command", default="",
+        help="独立原生回归命令，使用 {test_file} 与 {report_file}，输出单测试JUnit；JS/TS默认node:test")
     parser.add_argument(
         "--execution-mode", choices=("docker", "host"), default=None,
         help="代码执行方式（默认 Docker；host 仅适用于可信本地代码）",
@@ -110,18 +124,20 @@ def read_text_file(path: Path, description: str) -> str:
 
 def check_source(args: argparse.Namespace) -> dict[str, object]:
     """校验代码来源并返回元数据；args 保存解析后的来源路径、代码文本和 revision。"""
-    if args.python_file is not None:
-        # path：用户提供的 Python 代码文件路径；args.python_file 是解析 --python-file 后生成的属性。
-        path = args.python_file
-        # Python 代码可以保存在 .txt 或无扩展名的文件中，因此这里不限制文件后缀。
-        # read_text_file() 读取并检查文件非空；这里仅验证输入，不保留返回的源码文本。
-        read_text_file(path, "Python 文件")
+    code_file = args.code_file if getattr(args, "code_file", None) is not None else args.python_file
+    if code_file is not None:
+        # 代码可以保存在任意文本扩展名中；这里只检查可读性，不执行输入文件。
+        path = code_file
+        read_text_file(path, "代码文件")
         if args.revision is not None:
             # ValueError 表示在单文件模式下错误地使用了仓库版本参数。
             raise ValueError("--revision 只能与 --repository 一起使用")
         # resolve() 取得绝对路径；内置 str() 将 Path 转成可放入 JSON 的字符串。
         return {
-            "type": "python_file", "path": str(path.resolve()),
+            "type": "code_file" if getattr(args, "code_file", None) is not None else "python_file",
+            "path": str(path.resolve()), "language": normalize_language(getattr(args, "language", "auto"))
+            if getattr(args, "language", "auto") != "auto" else
+            ("python" if getattr(args, "python_file", None) is not None else detect_language(path)),
             "retrieval_scope": retrieval_scope_for_path(path, file_path=path),
         }
 
@@ -154,6 +170,8 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
             # str.lower() 返回字母全部转为小写的新字符串，让输入中的 A～F 统一变成 a～f；不修改原值。
             "revision": args.revision.lower(),
             "revision_check": "仅检查了 ID 格式；尚未检查该 commit 是否存在",
+            "language": normalize_language(getattr(args, "language", "auto"))
+            if getattr(args, "language", "auto") != "auto" else detect_project_language(path),
             "retrieval_scope": retrieval_scope_for_path(path),
         }
 
@@ -166,7 +184,15 @@ def check_source(args: argparse.Namespace) -> dict[str, object]:
         # ValueError 表示代码文本为空或只有空白。
         raise ValueError("--code-text 不能为空")
     # 内置 len() 统计原始代码的字符数，包括空格和换行；不执行这段代码。
-    return {"type": "pasted_code", "character_count": len(args.code_text)}
+    language = normalize_language(getattr(args, "language", "auto"))
+    if language == "auto":
+        language = detect_language(path=getattr(args, "code_name", None), content=args.code_text)
+    code_name = getattr(args, "code_name", None) or default_code_filename(language)
+    if Path(code_name).name != code_name or code_name in (".", "..") or "/" in code_name or "\\" in code_name:
+        raise ValueError("--code-name 必须是普通文件名，不能包含目录")
+    return {"type": "pasted_code", "character_count": len(args.code_text),
+            "language": language, "file_name": code_name,
+            "retrieval_scope": {"language": language} if language not in {"auto", "text"} else {}}
 
 
 def get_error_report_text(args: argparse.Namespace) -> str:
@@ -202,6 +228,11 @@ def build_result(args: argparse.Namespace) -> dict[str, object]:
     """接收参数对象 args，汇总校验后的输入和输出占位说明，返回结果字典。"""
     # source：check_source(args) 校验代码来源后返回的元数据字典，包含类型、路径或字符数等信息。
     source = check_source(args)
+    try:
+        validate_execution_commands(source.get("language"), args.test_command, args.reproduce_command,
+                                    getattr(args, "regression_command", ""))
+    except ValueError as error:
+        raise ValueError(f"{error}；请通过 --test-command 和 --reproduce-command 指定") from error
     # error_report：check_error_report(args) 校验必需的错误报告后返回的来源元数据字典。
     error_report = check_error_report(args)
 
@@ -236,7 +267,7 @@ def _workflow_workspace(
         )
         return workspace_root, (".",), checkpoint
     # 单文件模式复制目录快照，但只允许补丁修改目标文件的相对路径。
-    if source["type"] == "python_file":
+    if source["type"] in ("python_file", "code_file"):
         path = Path(str(source["path"])).resolve()
         relative_path = path.relative_to(project_root).as_posix()
         checkpoint = create_checkpoint_workspace(
@@ -245,13 +276,14 @@ def _workflow_workspace(
             source_file=path,
         )
         return workspace_root, (relative_path,), checkpoint
-    # 粘贴代码模式在副本中写入 target.py，并对其建立基线 checkpoint。
+    # 粘贴代码模式在副本中保留语言对应的文件名，并对其建立基线 checkpoint。
     checkpoint = create_checkpoint_workspace(
         project_root,
         workspace_root,
         pasted_code=args.code_text,
+        pasted_filename=str(source.get("file_name", "target.py")),
     )
-    return workspace_root, ("target.py",), checkpoint
+    return workspace_root, (str(source.get("file_name", "target.py")),), checkpoint
 
 
 def _run_repair_workflow(
@@ -286,10 +318,14 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
     context.circuit_path = project_root / "work" / "circuits.sqlite3"
     # workspace_root：工具实际读取、应用补丁和运行测试的目录；allowed_paths：补丁允许触及的范围。
     workspace_root, allowed_paths, checkpoint = _workflow_workspace(args, source, project_root, task_id)
-    # test_targets：固定测试节点执行的 pytest 目标；没有显式参数时使用工作区根目录。
+    # test_targets：固定测试节点执行的目标；Python 未指定命令时使用 pytest。
     test_targets = tuple(args.test_targets or (".",))
+    test_command = split_command(args.test_command) if args.test_command else None
     # 优先使用项目配置的 PostgreSQL/pgvector；未配置时使用本地 SQLite 知识库。
     postgres_knowledge_base = PostgresKnowledgeBase.from_environment(project_root / ".env")
+    if postgres_knowledge_base is not None:
+        from dataclasses import replace
+        postgres_knowledge_base = replace(postgres_knowledge_base, regression_path=Path(args.knowledge_base))
     qdrant_index = QdrantVectorIndex.from_environment(project_root / ".env")
     reranker = CrossEncoderReranker.from_environment(project_root / ".env")
     knowledge_base = postgres_knowledge_base or KnowledgeBase(
@@ -302,6 +338,10 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
         retrieval_scope=source.get("retrieval_scope", {}),
         allowed_paths=allowed_paths,
         test_targets=test_targets,
+        test_command=test_command,
+        reproduce_command=split_command(args.reproduce_command) if args.reproduce_command else None,
+        regression_command=split_command(getattr(args, "regression_command", None) or None),
+        language=str(source.get("language", "auto")),
         checkpoint_revision=checkpoint,
         source_root=project_root,
         validation_report_path=project_root / "work" / "tasks" / task_id / "validation.md",
@@ -314,8 +354,9 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
         # 从已冻结的基线读取，避免原文件在任务开始后变化导致复现和修复版本不一致。
         # 全部输入模式均导出同一 checkpoint，保留单文件原名、依赖及测试的相对路径。
         baseline_source = {"type": "git_repository", "path": str(workspace_root), "revision": checkpoint}
-        if state["source"]["type"] == "python_file":
+        if state["source"]["type"] in ("python_file", "code_file"):
             baseline_source["analysis_paths"] = list(allowed_paths)
+        baseline_source["language"] = source.get("language", "auto")
         # seconds：将本轮剩余时间传给复现子进程；至少保留一个正数，避免 timeout=0 被拒绝。
         seconds = max(0.1, float(state["remaining_budget"]["seconds"]))
         record = reproduce(
@@ -325,6 +366,8 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
             timeout=min(10.0, seconds),
             execution_backend=toolbox.execution_backend,
             task_id=task_id, clarifications=state.get("clarifications", []),
+            language=str(source.get("language", "auto")),
+            reproduce_command=split_command(args.reproduce_command) if args.reproduce_command else None,
         )
         # matched：只有复现模块已经用真实输出确认报告一致时，才允许进入修复阶段。
         matched = record.get("status") == "已复现，与报告一致"
@@ -333,7 +376,7 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
             result["question"] = record.get("question") or "复现未能确认报告中的问题，请补充触发条件。"
         return result
 
-    # create_initial_state() 使用项目约定的默认预算：10 次、120 秒、20000 Token、0.10 元。
+    # create_initial_state() 使用项目约定的默认预算：10 次、1200 秒、200000 Token、0.10 元。
     initial_state = create_initial_state(
         task_id=task_id,
         source=source,
@@ -341,11 +384,36 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
         code_text=args.code_text,
     )
     initial_state["remaining_budget"]["seconds"] = context.remaining()
+    from execution_manifest import freeze, task_configuration, SnapshotKnowledge
+    from recovery_store import source_fingerprint
+    directory = project_root / "work" / "tasks" / task_id
+    directory.mkdir(parents=True, exist_ok=True)
+    task = {"state": initial_state, "config": {
+        "source_root": str(project_root), "workspace": str(workspace_root),
+        "allowed_paths": list(allowed_paths), "test_targets": list(test_targets),
+        "test_command": list(test_command or ()), "language": source.get("language", "auto"),
+        "reproduce_command": list(toolbox.reproduce_command or ()),
+        "regression_command": list(toolbox.regression_command or ()),
+        "checkpoint": checkpoint, "execution_backend": toolbox.execution_backend,
+        "source_fingerprint": source_fingerprint(source, project_root)}}
+    manifest, identity = freeze(task, directory, {"source": source, "error_report": error_report,
+                                                "code_text": args.code_text}, knowledge_base)
+    from execution_manifest import write_once
+    write_once(directory / "task-config.json", task["config"])
+    toolbox.knowledge_base = SnapshotKnowledge(knowledge_base, directory, manifest)
     # as_repair_services() 将复现、上下文收集、模型提议、补丁应用、测试和经验保存绑定到固定节点。
     services = toolbox.as_repair_services(reproduce_for_state)
     # invoke() 执行编译后的 LangGraph；返回值包含每个节点写回的最终状态快照。
     try:
-        state = build_repair_workflow(services).invoke(initial_state)
+        with task_configuration(task, directory):
+            toolbox.reset_mcp_client()
+            from langgraph.checkpoint.sqlite import SqliteSaver
+            from workflow_replay import recording_scope
+            with recording_scope(directory), SqliteSaver.from_conn_string(str(directory / "langgraph.sqlite3")) as saver:
+                state = build_repair_workflow(services, checkpointer=saver).invoke(initial_state,
+                    config={"configurable": {"thread_id": task_id}, "recursion_limit": 100}, durability="sync")
+        from input_protection import protect_input
+        write_once(directory / "final-state.json", protect_input(state))
     except Exception as error:
         from resilience import failure_update, trace_workflow_end
         trace_workflow_end({**initial_state, **failure_update(error, operation="cli.workflow")})
@@ -420,13 +488,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = build_result(args)
         # error_report_text：读取的原始报告文字，供独立复现工作文档保存；不会执行报告中的代码。
         error_report_text = get_error_report_text(args)
+        require_software_request(error_report_text, args.code_text,
+                                 *(args.test_targets or []),
+                                 source_type=result["input"]["source"]["type"])
         # project_root：仓库输入使用仓库目录，单文件输入使用文件所在目录，粘贴代码使用当前目录。
         if args.repository is not None:
             # Path.resolve() 返回规范化的绝对路径，并解析符号链接；不创建或修改目标目录。
             project_root = args.repository.resolve()
-        elif args.python_file is not None:
+        elif getattr(args, "code_file", None) is not None or args.python_file is not None:
             # resolve() 先取得文件的绝对路径；.parent 是该路径的父目录属性，不需要调用括号。
-            project_root = args.python_file.resolve().parent
+            code_file = getattr(args, "code_file", None) or args.python_file
+            project_root = code_file.resolve().parent
         else:
             # Path.cwd() 返回当前进程工作目录的绝对 Path 对象；它是 Path 类提供的方法。
             project_root = Path.cwd()

@@ -177,6 +177,28 @@ class KnowledgeBaseTests(unittest.TestCase):
             )
             self.assertEqual([item["case_id"] for item in matches], ["same-scope"])
 
+    def test_language_filter_normalizes_aliases_and_excludes_missing_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            knowledge_base = KnowledgeBase(Path(directory) / "knowledge.sqlite", self.fake_embed)
+            for task_id, language in (("python", "python"), ("typescript", "typescript"), ("legacy", None)):
+                state = self.make_state()
+                state["task_id"] = task_id
+                state["source"]["retrieval_scope"] = {
+                    "repository_id": "repo-a", "file_paths": ["src/shared.py"],
+                    "dependency_versions": {},
+                }
+                if language is not None:
+                    state["source"]["retrieval_scope"]["language"] = language
+                knowledge_base.save_case(state)
+
+            python_matches = knowledge_base.search("数据库查询错误", filters={"language": "py"})
+            typescript_matches = knowledge_base.search("数据库查询错误", filters={"language": "TypeScript"})
+
+            self.assertEqual([item["case_id"] for item in python_matches], ["python"])
+            self.assertEqual([item["case_id"] for item in typescript_matches], ["typescript"])
+            with self.assertRaisesRegex(ValueError, "language"):
+                knowledge_base.search("数据库查询错误", filters={"language": "auto"})
+
     def test_invalid_retrieval_outcome_is_rejected(self) -> None:
         """拒绝未知经验类型，避免调用方无意恢复混合召回。"""
         with tempfile.TemporaryDirectory() as directory:

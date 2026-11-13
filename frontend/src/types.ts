@@ -1,5 +1,5 @@
-/** 代码来源沿用 Python 工作流的三种输入方式。 */
-export type SourceType = "python_file" | "git_repository" | "pasted_code";
+/** 代码来源支持任意语言的单文件、Git 仓库或粘贴代码。 */
+export type SourceType = "code_file" | "python_file" | "git_repository" | "pasted_code";
 
 /** 任务草稿只保存在页面内存中，刷新页面后清空。 */
 export interface TaskDraft {
@@ -11,6 +11,10 @@ export interface TaskDraft {
   fileContent: string | null;
   errorReport: string;
   testTarget: string;
+  language: string;
+  testCommand: string;
+  reproduceCommand: string;
+  regressionCommand?: string;
 }
 
 /** 服务端持久保存的人工审核决定。 */
@@ -41,7 +45,13 @@ export interface StructuredError {
   outcome_unknown: boolean;
   next_action: string;
   retry_after?: number | null;
+  issues?: { path: (string | number)[]; type: string; source?: string; message: string }[];
+  details?: Record<string, unknown>;
+  budget_kind?: BudgetKind;
+  budget_label?: string;
 }
+
+export type BudgetKind = "runtime" | "tokens" | "cost" | "tool_calls" | "request_retries" | "repair_attempts";
 
 export interface CaseMatch {
   case_id: string;
@@ -70,6 +80,8 @@ export interface RepairTask {
     recovery_count: number;
     recovery: { id: string | null; status: "working" | "rolled_back" | "resumed" | "paused" | "rollback_pending"; error?: StructuredError } | null;
   };
+  pending_external_operations?: { operation_id: string; tool: string; status: "started" | "unknown"; updated_at: string }[];
+  pending_tool_authorizations?: { authorization_id: string; tool: string; parameters: Record<string, unknown>; target: unknown; impact: string; expires_at: number }[];
   execution: "queued" | "running" | "idle";
   source_label: string;
   review: ReviewRecord | null;
@@ -84,7 +96,11 @@ export interface RepairTask {
     elapsed_seconds: number;
     remaining_budget: { seconds: number; tokens: number; attempts: number; cost: number };
     question: string | null;
+    clarification_reasons?: string[];
+    awaiting_node?: string | null;
+    clarifications?: string[];
     last_error: string | null;
+    budget_exhausted?: BudgetKind | null;
     error_info?: StructuredError | null;
     warnings?: string[];
     accounting?: { tokens_observed: number; cost_observed_yuan: number; cost_complete: boolean; usage_complete: boolean };
@@ -102,6 +118,13 @@ export interface RepairTask {
       reproduction?: { stdout: string; stderr: string; returncode: number | null } | null;
     } | null;
   };
+}
+
+export interface TaskTracePage {
+  events: Record<string, unknown>[];
+  next_cursor: number;
+  has_more: boolean;
+  skipped_invalid_records: number;
 }
 
 export const statusLabels: Record<string, string> = {

@@ -7,7 +7,7 @@ import sqlite3
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
+from test_account_support import TestClient
 
 from knowledge_base import KnowledgeBase
 from operation_store import business_effect
@@ -34,12 +34,13 @@ def runner(tmp_path, monkeypatch):
     value.pool.shutdown(wait=True)
 
 
-def task_at(runner, *, workspace=False, node="prepare_workspace", status="queued"):
+def task_at(runner, *, workspace=False, node="prepare_workspace", status="queued", remaining_tokens=200000):
     identifier = uuid4().hex
     directory = runner.store.root / "tasks" / identifier
     (directory / "input").mkdir(parents=True)
     state = create_initial_state(identifier, {"type": "pasted_code"}, "value should be 2",
-                                 code_text="value = 1\n", remaining_seconds=60)
+                                 code_text="value = 1\n", remaining_seconds=60,
+                                 remaining_tokens=remaining_tokens)
     state.update(status=status, diagnosis="wrong value", patch_diff=PATCH,
                  patch_hash=hashlib.sha256(PATCH.encode()).hexdigest())
     task = {"state": state, "config": {"workspace": str(directory / "workspace"),
@@ -313,15 +314,26 @@ def test_business_parameter_conflict_cannot_be_overwritten_by_agent(runner):
 
 
 def test_lost_usage_keeps_reservation_across_restore(runner):
-    task = task_at(runner, workspace=True, node="propose_patch")
+    task = task_at(runner, workspace=True, node="propose_patch", remaining_tokens=20_000)
     task, _ = in_flight(runner, task, "propose_patch")
-    task["progress"]["pending_calls"] = [{"id": "call", "reserved_tokens": 900, "reserved_cost": 0.03}]
+    task["progress"]["pending_calls"] = [
+        {"id": "call-1", "reserved_tokens": 900, "reserved_cost": 0.03},
+        {"id": "call-2", "reserved_tokens": 300, "reserved_cost": 0.01},
+    ]
     runner.store.put(task)
-    manager(runner).recover_pending()
+    recovery = manager(runner)
+    recovery.recover_pending()
     saved = runner.store.get(task["state"]["task_id"])
-    assert saved["state"]["remaining_budget"]["tokens"] == 19100
-    assert saved["state"]["remaining_budget"]["cost"] <= 0.07
+    assert saved["state"]["remaining_budget"]["tokens"] == 18800
+    assert saved["state"]["remaining_budget"]["cost"] == pytest.approx(0.06)
     assert saved["state"]["error_info"]["code"] == "usage_unknown"
+    assert all(call["reservation_charged"] for call in saved["progress"]["pending_calls"])
+
+    recovery.recover(saved["state"]["task_id"], saved["progress"]["recovery"]["id"])
+    retried = runner.store.get(task["state"]["task_id"])
+    assert retried["state"]["remaining_budget"]["tokens"] == 18800
+    assert retried["state"]["remaining_budget"]["cost"] == pytest.approx(0.06)
+    assert all(call["reservation_charged"] for call in retried["progress"]["pending_calls"])
 
 
 def test_lost_node_commit_ack_does_not_repeat_effect(runner, monkeypatch):
@@ -493,6 +505,7 @@ def test_service_startup_recovers_partial_patch_and_dispatches_only_remaining_no
         return {"passed": True, "patch_hash": state["patch_hash"], "summary": "ok", "report_path": ""}
     monkeypatch.setattr(restarted.state.runner, "services", lambda task: RepairServices(
         forbidden, forbidden, forbidden, forbidden, validate, forbidden,
+        adversarial_review=lambda _: {"approved": True, "summary": "断点测试显式审查桩", "findings": []},
     ))
     with TestClient(restarted) as client:
         from test_repair_api import finished

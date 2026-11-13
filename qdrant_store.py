@@ -202,6 +202,10 @@ class QdrantVectorIndex:
                 models.FieldCondition(key="namespace", match=models.MatchValue(value=namespace)),
                 models.FieldCondition(key="outcome", match=models.MatchValue(value=outcome)),
             ]
+            if filters.get("language") is not None:
+                conditions.append(models.FieldCondition(
+                    key="retrieval_scope.language", match=models.MatchValue(value=filters["language"]),
+                ))
             repository_id = filters.get("repository_id")
             if repository_id is not None:
                 conditions.append(models.FieldCondition(

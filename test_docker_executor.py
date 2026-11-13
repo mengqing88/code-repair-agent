@@ -26,6 +26,10 @@ def test_docker_runner_applies_resource_and_mount_boundaries(tmp_path):
     workspace.mkdir()
     (workspace / ".env").write_text("CHAT_API_KEY=must-not-be-mounted\n", encoding="utf-8")
     (workspace / ".ssh").mkdir()
+    (workspace / "private.pem").write_text("private-test-only")
+    (workspace / ".mcp.json").write_text('{"token":"test-only"}')
+    (workspace / ".git").mkdir()
+    (workspace / ".git" / "historical-secret").write_text("old-credential")
     (workspace / "test_safe.py").write_text("def test_ok(): assert True\n", encoding="utf-8")
     calls = []
 
@@ -52,6 +56,10 @@ def test_docker_runner_applies_resource_and_mount_boundaries(tmp_path):
     mounts = [command[index + 1] for index, value in enumerate(command[:-1]) if value == "--mount"]
     assert any("target=/workspace/.env,readonly" in mount for mount in mounts)
     assert any("target=/workspace/.ssh,readonly" in mount for mount in mounts)
+    assert any("target=/workspace/private.pem,readonly" in mount for mount in mounts)
+    assert any("target=/workspace/.mcp.json,readonly" in mount for mount in mounts)
+    assert any("target=/workspace/.git,readonly" in mount for mount in mounts)
+    assert not any("target=/repair-git" in mount for mount in mounts)
     assert any("target=/task/test.py,readonly" in mount for mount in mounts)
     assert "must-not-be-mounted" not in " ".join(command)
 

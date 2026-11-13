@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "闭区间末日边界",
+    "日期区间含端点"
+  ],
+  "before_source": "import datetime\ndef trial_active(start, end, today):\n    return start <= today < end\n",
+  "dataset_experience_id": "WorkBuddy::experience-66",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "闭区间边界（含末日）需用 <= 结束日，而非 <。",
+  "experience_id": "experience-66",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "试用期内判断：结束当天应仍可用，却被判失效。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,3 +1,3 @@\n import datetime\n def trial_active(start, end, today):\n-    return start <= today < end\n+    return start <= today <= end\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nimport datetime\nfrom target import trial_active\n\ndef test_a():\n    assert trial_active(datetime.date(2024,1,1), datetime.date(2024,1,31), datetime.date(2024,1,31)) is True\n\ndef test_b():\n    assert trial_active(datetime.date(2024,5,5), datetime.date(2024,5,5), datetime.date(2024,5,5)) is True\n\ndef test_c():\n    assert trial_active(datetime.date(2024,2,1), datetime.date(2024,2,10), datetime.date(2024,2,10)) is True\n"
+}

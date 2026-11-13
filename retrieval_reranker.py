@@ -11,6 +11,7 @@ from threading import Lock
 from typing import Sequence
 
 from runtime_config import load_settings, setting
+from resilience import current, trace
 
 
 class RerankerUnavailable(RuntimeError):
@@ -30,6 +31,8 @@ class CrossEncoderReranker:
     _model: object | None = field(default=None, init=False, repr=False)
     _lock: Lock = field(default_factory=Lock, init=False, repr=False)
     _inference_lock: Lock = field(default_factory=Lock, init=False, repr=False)
+    _cpu_fallback: object | None = field(default=None, init=False, repr=False)
+    active_provider: str = field(default="", init=False)
 
     @classmethod
     def from_environment(cls, env_path: Path | None = None) -> CrossEncoderReranker | None:
@@ -106,18 +109,37 @@ class CrossEncoderReranker:
             try:
                 if self.backend == "onnx":
                     self._model = self._load_onnx()
+                    self.active_provider = self.provider
                 else:
                     from sentence_transformers import CrossEncoder
                     self._model = CrossEncoder(self.model_name)
             except Exception as error:
+                if self.backend == "onnx" and self.provider == "DmlExecutionProvider":
+                    return self._fallback_cpu(error)._load_model()
                 raise RerankerUnavailable("Cross-Encoder 模型未安装或无法加载") from error
         return self._model
+
+    def _fallback_cpu(self, error):
+        if self._cpu_fallback is None:
+            self._cpu_fallback = CrossEncoderReranker(
+                self.model_name, "onnx", self.onnx_path, "CPUExecutionProvider", 8, self.candidate_count)
+        self.active_provider = "CPUExecutionProvider"
+        trace("knowledge.reranker_backend", "degraded", fault=error, decision="cpu_8_threads",
+              details={"requested_provider": self.provider, "actual_provider": self.active_provider,
+                       "threads": 8})
+        if current() and "DirectML 不可用，重排已降级为 CPU 8 线程" not in current().warnings:
+            current().warnings.append("DirectML 不可用，重排已降级为 CPU 8 线程")
+        return self._cpu_fallback
 
     def score(self, query: str, documents: Sequence[str]) -> list[float]:
         """返回与 documents 顺序一一对应的有限相关度分数。"""
         if not documents:
             return []
+        if self._cpu_fallback is not None:
+            return self._cpu_fallback.score(query, documents)
         model = self._load_model()
+        if self._cpu_fallback is not None:
+            return self._cpu_fallback.score(query, documents)
         try:
             with self._inference_lock:
                 if self.backend == "onnx":
@@ -141,6 +163,9 @@ class CrossEncoderReranker:
                     )
                     scores = [float(value) for value in raw_scores]
         except Exception as error:
+            if self.backend == "onnx" and self.provider == "DmlExecutionProvider":
+                with self._lock:
+                    return self._fallback_cpu(error).score(query, documents)
             raise RerankerUnavailable("Cross-Encoder 预测失败") from error
         if len(scores) != len(documents) or any(not math.isfinite(value) for value in scores):
             raise RerankerUnavailable("Cross-Encoder 返回的分数数量或数值无效")

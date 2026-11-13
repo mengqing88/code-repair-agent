@@ -28,6 +28,7 @@ from diagnostics import redact
 # RepairState：保存案例时读取工作流的完整修复状态。
 from repair_state import RepairState
 from qdrant_store import QdrantIndexError, QdrantVectorIndex, configured_qdrant_index
+from language_support import detect_language, detect_project_language, normalize_language
 from retrieval_reranker import configured_reranker
 from semantic_dedup import (
     DEFAULT_DUPLICATE_THRESHOLD,
@@ -167,6 +168,9 @@ def retrieval_scope_for_path(path: Path, *, file_path: Path | None = None) -> di
     dependencies = _dependency_versions(scope_root)
     if dependencies:
         scope["dependency_versions"] = dependencies
+    language = detect_language(path=file_path) if file_path else detect_project_language(scan_root)
+    if language not in {"auto", "text"}:
+        scope["language"] = language
     return scope
 
 
@@ -196,7 +200,7 @@ def _case_retrieval_scope(document: Mapping[str, object]) -> dict[str, object]:
         raw = source.get("retrieval_scope", {}) if isinstance(source, Mapping) else {}
     scope = dict(raw) if isinstance(raw, Mapping) else {}
     if isinstance(source, Mapping):
-        for key in ("repository_id", "file_paths", "dependency_versions"):
+        for key in ("repository_id", "file_paths", "dependency_versions", "language"):
             if key not in scope and key in source:
                 scope[key] = source[key]
     patch_paths = _patch_file_paths(document.get("patch_diff"))
@@ -207,6 +211,13 @@ def _case_retrieval_scope(document: Mapping[str, object]) -> dict[str, object]:
             for item in declared_paths if isinstance(item, str) and item.strip()
         )
     scope["file_paths"] = sorted(patch_paths)
+    language = scope.get("language") or document.get("language")
+    if language:
+        scope["language"] = normalize_language(language)
+    elif patch_paths:
+        languages = {detect_language(path=path) for path in patch_paths} - {"auto", "text"}
+        if len(languages) == 1:
+            scope["language"] = languages.pop()
     dependencies = scope.get("dependency_versions")
     if isinstance(dependencies, Mapping):
         scope["dependency_versions"] = {
@@ -224,6 +235,14 @@ def _normalize_retrieval_filters(filters: Mapping[str, object] | None) -> dict[s
     if not isinstance(filters, Mapping):
         raise ValueError("检索过滤条件必须是对象")
     normalized: dict[str, object] = {}
+    language = filters.get("language")
+    if language is not None:
+        if not isinstance(language, str) or not language.strip():
+            raise ValueError("language 必须是非空语言名")
+        language = normalize_language(language)
+        if language == "auto":
+            raise ValueError("检索 language 必须是已确定的语言")
+        normalized["language"] = language
     repository_id = filters.get("repository_id")
     if repository_id is not None:
         if not isinstance(repository_id, str) or not repository_id.strip():
@@ -257,6 +276,8 @@ def _normalize_retrieval_filters(filters: Mapping[str, object] | None) -> dict[s
 def _matches_retrieval_filters(document: Mapping[str, object], filters: Mapping[str, object]) -> bool:
     """仅保留所有已指定过滤条件都匹配且案例具有对应元数据的记录。"""
     scope = _case_retrieval_scope(document)
+    if filters.get("language") is not None and scope.get("language") != filters["language"]:
+        return False
     repository_id = filters.get("repository_id")
     if repository_id is not None and scope.get("repository_id") != repository_id:
         return False
@@ -331,7 +352,7 @@ def _lexical_scores(query: str, documents: list[str]) -> list[float]:
 
 
 def normalize_historical_case(value: object) -> dict[str, object]:
-    """接受已审核的案例对象或工作流任务快照，缺少验收证据时拒绝导入。"""
+    """校验成功案例声明的结构；此函数不证明声明真实，也不授权发布。"""
     if not isinstance(value, dict):
         raise KnowledgeBaseError("历史案例必须是 JSON 对象")
     review = value.get("review")
@@ -379,6 +400,37 @@ def normalize_historical_case(value: object) -> dict[str, object]:
     }
 
 
+def normalize_import_candidate(value: object) -> dict[str, object]:
+    """分别规范成功声明与拒绝补丁反馈，不把拒绝理由视为技术验收。"""
+    if not isinstance(value, dict) or not isinstance(value.get("state", value), dict):
+        raise KnowledgeBaseError("案例和 state 必须是 JSON 对象")
+    state = dict(value.get("state", value))
+    review = value.get("review")
+    decision = state.get("review_decision")
+    if isinstance(review, dict):
+        if decision not in (None, review.get("decision")):
+            raise KnowledgeBaseError("案例和审核结论冲突")
+        decision = review.get("decision")
+        state.setdefault("review_reason", review.get("reason"))
+    if decision != "rejected":
+        return normalize_historical_case(value)
+    task_id = state.get("task_id", state.get("case_id"))
+    for key, item in (("task_id", task_id), ("original_report", state.get("original_report")),
+                      ("patch_diff", state.get("patch_diff")), ("review_reason", state.get("review_reason"))):
+        if not isinstance(item, str) or not item.strip():
+            raise KnowledgeBaseError(f"拒绝补丁经验必须提供非空 {key}")
+    patch_hash = hashlib.sha256(state["patch_diff"].encode()).hexdigest()
+    if state.get("patch_hash") not in (None, "", patch_hash):
+        raise KnowledgeBaseError("拒绝补丁经验的补丁哈希不匹配")
+    if not isinstance(state.get("source", {}), dict):
+        raise KnowledgeBaseError("source 必须是对象")
+    return {"task_id": task_id.strip(), "source": state.get("source", {}),
+            "original_report": state["original_report"], "diagnosis": state.get("diagnosis", ""),
+            "patch_diff": state["patch_diff"], "patch_hash": patch_hash,
+            "review_decision": "rejected", "review_reason": state["review_reason"].strip(),
+            "reproduction": state.get("reproduction"), "validation": state.get("validation")}
+
+
 def build_case_document(state: RepairState) -> str:
     """把已接受且验证通过的状态整理成可嵌入、可审阅的 JSON 文档。
 
@@ -410,6 +462,8 @@ def build_case_document(state: RepairState) -> str:
         "patch_hash": state["patch_hash"],
         "applicable_conditions": state.get("applicable_conditions", []),
     }
+    if state.get("knowledge_provenance"):
+        document["knowledge_provenance"] = state["knowledge_provenance"]
     # sort_keys=True 保证同一案例重复保存时正文顺序稳定，便于调试和复现。
     return json.dumps(document, ensure_ascii=False, sort_keys=True, default=str)
 
@@ -446,6 +500,8 @@ def build_rejection_document(state: RepairState) -> str:
         "patch_hash": state["patch_hash"],
         "validation": state["validation"],
     }
+    if state.get("knowledge_provenance"):
+        document["knowledge_provenance"] = state["knowledge_provenance"]
     return json.dumps(document, ensure_ascii=False, sort_keys=True, default=str)
 
 
@@ -492,6 +548,15 @@ class KnowledgeBase:
     duplicate_similarity_threshold: float = DEFAULT_DUPLICATE_THRESHOLD
     # 冻结快照使用固定索引身份，不能跟随每次查询的临时复制路径变化。
     index_namespace: str | None = None
+    outcomes_separated: bool = True
+
+    @property
+    def rejection_path(self) -> Path:
+        return self.path.with_name(self.path.stem + ".rejected" + self.path.suffix)
+
+    @property
+    def _failure_table(self) -> str:
+        return "failure_store.repair_failures" if self.outcomes_separated else "repair_failures"
 
     @property
     def qdrant_namespace(self) -> str:
@@ -529,10 +594,9 @@ class KnowledgeBase:
         except QdrantIndexError as error:
             trace("knowledge.qdrant", "degraded", fault=error, decision="sqlite_merge_remains_authoritative")
 
-    @staticmethod
-    def _table_for_outcome(outcome: str) -> str:
+    def _table_for_outcome(self, outcome: str) -> str:
         """返回固定结果类型对应的 SQLite 案例表名。"""
-        return "repair_cases" if outcome == "accepted" else "repair_failures"
+        return "repair_cases" if outcome == "accepted" else self._failure_table
 
     def _rebuild_scope_merges(self, connection, outcome: str, scope: tuple[object, ...]):
         """重算单一结果类型和适用范围内的主案例关系。"""
@@ -581,7 +645,7 @@ class KnowledgeBase:
         """首次访问时将旧案例并入同范围主案例，且保留原记录。"""
         if not 0 < self.duplicate_similarity_threshold <= 1:
             raise ValueError("duplicate_similarity_threshold 必须大于 0 且不超过 1")
-        version = f"same-scope-v1:{self.duplicate_similarity_threshold:.6f}"
+        version = f"same-scope-language-v2:{self.duplicate_similarity_threshold:.6f}"
         connection = self._connect()
         aliases_to_delete: list[tuple[str, str]] = []
         aliases_to_restore: list[tuple[str, str]] = []
@@ -682,6 +746,7 @@ class KnowledgeBase:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(self.path, timeout=10)
         connection.row_factory = sqlite3.Row
+        connection.execute("BEGIN IMMEDIATE")
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS repair_cases (
@@ -748,6 +813,32 @@ class KnowledgeBase:
             key TEXT PRIMARY KEY, task_id TEXT NOT NULL, name TEXT NOT NULL,
             params_hash TEXT NOT NULL, document_hash TEXT NOT NULL)""")
         connection.commit()
+        if self.outcomes_separated:
+            try:
+                connection.execute("ATTACH DATABASE ? AS failure_store", (str(self.rejection_path),))
+                connection.execute("PRAGMA main.journal_mode=DELETE")
+                connection.execute("PRAGMA failure_store.journal_mode=DELETE")
+                connection.execute("PRAGMA main.synchronous=FULL")
+                connection.execute("PRAGMA failure_store.synchronous=FULL")
+                connection.execute("BEGIN IMMEDIATE")
+                connection.execute("CREATE TABLE IF NOT EXISTS failure_store.repair_failures "
+                                   "AS SELECT * FROM main.repair_failures WHERE 0")
+                connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS failure_store.failure_case_id "
+                                   "ON repair_failures(case_id)")
+                conflict = connection.execute("SELECT 1 FROM main.repair_failures a "
+                    "JOIN failure_store.repair_failures b ON a.case_id=b.case_id "
+                    "WHERE " + " OR ".join(f"a.{column} IS NOT b.{column}" for column in
+                        ("document", "embedding", "dimension", "revision", "created_at", "updated_at", "search_text", "content_hash"))
+                    + " LIMIT 1").fetchone()
+                if conflict:
+                    raise KnowledgeBaseError("旧失败经验与独立库内容冲突，停止迁移")
+                connection.execute("INSERT OR IGNORE INTO failure_store.repair_failures SELECT * FROM main.repair_failures")
+                connection.execute("DELETE FROM main.repair_failures")
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                connection.close()
+                raise
         return connection
 
     @staticmethod
@@ -860,6 +951,9 @@ class KnowledgeBase:
 
     def record_rejection(self, state: RepairState) -> None:
         """记录拒绝理由，并把它保存为可检索但明确标记为失败的负向经验。"""
+        from failure_regression import FailureRegressions
+        # A durable candidate survives a later model/embedding/worker failure.
+        FailureRegressions(self.path).enqueue(state)
         document = build_rejection_document(state)
         self._ensure_semantic_merges()
         reason = str(state["review_reason"]).strip()
@@ -879,7 +973,7 @@ class KnowledgeBase:
             self._check_business_row(connection, "repair_reviews", "task_id", state, document)
             self._receipt(connection, document)
             previous = connection.execute(
-                "SELECT document FROM repair_failures WHERE case_id = ?", (state["task_id"],),
+                f"SELECT document FROM {self._failure_table} WHERE case_id = ?", (state["task_id"],),
             ).fetchone()
             previous_scope = None
             if previous is not None:
@@ -900,8 +994,8 @@ class KnowledgeBase:
                 (state["task_id"], "rejected", reason, document, timestamp),
             )
             connection.execute(
-                """
-                INSERT INTO repair_failures
+                f"""
+                INSERT INTO {self._failure_table}
                     (case_id, document, embedding, dimension, revision, created_at, updated_at, search_text, content_hash)
                 VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)
                 ON CONFLICT(case_id) DO UPDATE SET
@@ -919,7 +1013,7 @@ class KnowledgeBase:
             )
             self._receipt(connection, document, write=True)
             row = connection.execute(
-                "SELECT revision FROM repair_failures WHERE case_id = ?", (state["task_id"],),
+                f"SELECT revision FROM {self._failure_table} WHERE case_id = ?", (state["task_id"],),
             ).fetchone()
             revision = int(row["revision"])
             current_scope = scope_key(json.loads(document))
@@ -946,36 +1040,32 @@ class KnowledgeBase:
         elif vector:
             self._index_qdrant(state["task_id"], "rejected", revision, vector, json.loads(document))
 
-    def import_cases(self, records: Sequence[object], source: str = "") -> dict[str, object]:
-        """逐条校验并导入历史案例；相同正文重复导入不增加版本或重复嵌入。"""
+    def import_cases(self, records: Sequence[object], source: str = "", *, reviewer=None) -> dict[str, object]:
+        """外部案例先持久化待审，再由微型审核代理决定发布或转人工。"""
         if isinstance(records, (str, bytes)):
             raise ValueError("records 必须是案例列表")
+        from knowledge_review import KnowledgeReview
+        reviewer = reviewer or KnowledgeReview(self)
         results = []
         for index, record in enumerate(records, 1):
             try:
-                state = normalize_historical_case(record)
-                document = build_case_document(state)
-                digest = hashlib.sha256(document.encode("utf-8")).hexdigest()
-                connection = self._connect()
-                try:
-                    row = connection.execute(
-                        "SELECT content_hash FROM repair_cases WHERE case_id = ?", (state["task_id"],),
-                    ).fetchone()
-                finally:
-                    connection.close()
-                if row is not None and row["content_hash"] == digest:
-                    status = "unchanged"
-                else:
-                    self.save_case(state)
-                    status = "updated" if row is not None else "imported"
-                results.append({"index": index, "case_id": state["task_id"], "status": status, "source": source})
+                candidate, created = reviewer.stage(record, source)
+                if created:
+                    candidate = reviewer.review(candidate["id"])
+                results.append({"index": index, "candidate_id": candidate["id"],
+                    "content_hash": candidate["content_hash"], "case_id": candidate["published_case_id"],
+                    "status": candidate["status"], "created": created, "source": source})
             except Exception as error:
                 if isinstance(error, Fault) and error.category == "budget":
                     raise
                 results.append({"index": index, "status": "failed", "error": redact(str(error)), "source": source,
                                 "error_info": error_info(error, operation="knowledge.import.case")})
         return {
-            **{name: sum(item["status"] == name for item in results) for name in ("imported", "updated", "unchanged", "failed")},
+            "queued": sum(bool(item.get("created")) for item in results),
+            "imported": sum(item["status"] == "published" and item.get("created", False) for item in results),
+            "updated": 0,
+            "unchanged": sum(item.get("created") is False for item in results),
+            **{name: sum(item["status"] == name for item in results) for name in ("published", "needs_human", "declined", "failed")},
             "results": results,
         }
 
@@ -985,7 +1075,9 @@ class KnowledgeBase:
         if not path.exists():
             raise ValueError(f"历史案例路径不存在：{path}")
         files = sorted(item for item in path.rglob("*") if item.suffix.lower() in (".json", ".jsonl") and item.is_file()) if path.is_dir() else [path]
-        report: dict[str, object] = {"imported": 0, "updated": 0, "unchanged": 0, "failed": 0, "results": []}
+        report: dict[str, object] = {name: 0 for name in
+            ("queued", "imported", "updated", "unchanged", "published", "needs_human", "declined", "failed")}
+        report["results"] = []
         for file in files:
             try:
                 text = file.read_text(encoding="utf-8-sig")
@@ -998,14 +1090,14 @@ class KnowledgeBase:
                         except json.JSONDecodeError as error:
                             part = {"failed": 1, "results": [{"source": f"{file}:{line}", "status": "failed", "error": redact(str(error)),
                                     "error_info": error_info(error, operation="knowledge.import.jsonl")} ]}
-                        for key in ("imported", "updated", "unchanged", "failed"):
+                        for key in ("queued", "imported", "updated", "unchanged", "published", "needs_human", "declined", "failed"):
                             report[key] += part.get(key, 0)
                         report["results"].extend(part["results"])
                 else:
                     value = json.loads(text)
                     part = self.import_cases(value if isinstance(value, list) else [value], str(file))
-                    for key in ("imported", "updated", "unchanged", "failed"):
-                        report[key] += part[key]
+                    for key in ("queued", "imported", "updated", "unchanged", "published", "needs_human", "declined", "failed"):
+                        report[key] += part.get(key, 0)
                     report["results"].extend(part["results"])
             except Exception as error:
                 if isinstance(error, Fault) and error.category == "budget":
@@ -1041,7 +1133,7 @@ class KnowledgeBase:
             raise ValueError("rerank 必须是布尔值")
         normalized_filters = _normalize_retrieval_filters(filters)
         self._ensure_semantic_merges()
-        table = "repair_cases" if outcome == "accepted" else "repair_failures"
+        table = self._table_for_outcome(outcome)
         connection = self._connect()
         try:
             rows = connection.execute(
@@ -1212,8 +1304,11 @@ class KnowledgeBase:
                 )
                 results = rerank_candidates + results[rerank_count:]
                 trace("knowledge.rerank", "completed", details={"candidates": len(scores),
+                      "retrieval_candidates": len(results), "candidate_limit": rerank_count,
+                      "unreranked_candidates": max(0, len(results) - len(rerank_candidates)),
+                      "return_limit": limit,
                       "backend": getattr(self.reranker, "backend", "custom"),
-                      "provider": getattr(self.reranker, "provider", None)})
+                      "provider": getattr(self.reranker, "active_provider", "") or getattr(self.reranker, "provider", None)})
             except Exception as error:
                 if isinstance(error, Fault) and error.category == "budget":
                     raise
@@ -1247,7 +1342,7 @@ class KnowledgeBase:
         connection = self._connect()
         try:
             row = connection.execute(
-                """SELECT COUNT(*) AS total FROM repair_failures AS cases
+                f"""SELECT COUNT(*) AS total FROM {self._failure_table} AS cases
                    WHERE NOT EXISTS (SELECT 1 FROM repair_case_merges AS merges
                                      WHERE merges.outcome = 'rejected'
                                        AND merges.duplicate_case_id = cases.case_id)"""

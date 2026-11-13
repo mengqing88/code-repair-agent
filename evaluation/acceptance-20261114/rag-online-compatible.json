@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-13T17:16:17.103490+00:00",
+  "limitations": [
+    "合成数据只验证接线、隔离与模型执行，不证明独立相关性或修复成功率提升",
+    "没有并发、长输入和生产规模性能验收；GPU 可包含 CPU 算子",
+    "计时包含单进程冷启动；实际 Web worker 每次新建进程仍需重新加载"
+  ],
+  "collection": "activation_smoke_5460e44dfbb24fdf9f59c0545e3d0fa9",
+  "data": "synthetic, temporary; no private user cases",
+  "backend": "onnx",
+  "provider": "DmlExecutionProvider",
+  "candidates": 10,
+  "embedding_dimension": 4096,
+  "embedding_batch_seconds": 9.462022199993953,
+  "model_load_and_warmup_seconds": 8.623544699978083,
+  "providers": [
+    "DmlExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "snapshot_queries_seconds": 0.7283912000129931,
+  "checks": {
+    "frozen_remote_index": true,
+    "ten_candidates_reranked": true,
+    "top_five_returned": true,
+    "accepted_rejected_separated": true,
+    "live_changes_excluded": true,
+    "other_user_excluded": true,
+    "snapshot_unchanged": true,
+    "no_fallback_warning": true
+  },
+  "qdrant_completed_events": 3,
+  "rerank_completed_events": 3,
+  "returned_ids": [
+    "smoke-0",
+    "smoke-8",
+    "smoke-9",
+    "smoke-1",
+    "smoke-2"
+  ],
+  "artifacts": {
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\config.json": "cc2cfe51aa3fd759d21d21acf5dfd6994aa67a3c9210636d22e143699d336c77",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\tokenizer_config.json": "e7fbfbfa6347b4e414c1cee50d142e2c2f9a895dad68b068ae83a8b564c3837e",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\special_tokens_map.json": "378eb3bf733eb16e65792d7e3fda5b8a4631387ca04d2015199c4d4f22ae554d",
+    "F:\\项目1\\work\\models\\mmarco-mMiniLMv2\\sentencepiece.bpe.model": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+    "F:\\项目1\\work\\reranker-speed\\reranker-fp32.onnx": "23acebcbf4304019106e570c0dd77867f1e848a7c4d442aa076be9deb0d854c1"
+  },
+  "test_collection_removed": true
+}

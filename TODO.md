@@ -15,22 +15,25 @@
 - [ ] **外部服务与生产效果验收**（生产效果待验收）：聊天短请求、Embedding、PostgreSQL、真实本机 Qdrant 和 Cross-Encoder 权重均有实测证据；生产规模、代表性语料的独立相关性/重复标注及误合并率尚未验收。日常业务连接和默认检索配置未改。
 - [x] **MCP 本机只读服务验收**：Context7、GitHub、Sentry 三个服务共注册 19 个只读工具，完整启动约 35.55 秒且无连接警告；文档库解析、公开仓库搜索和 Sentry 组织查询均收到真实响应。专项测试 14 项通过。结果与限制见 `evaluation/MCP_DEPLOYMENT_ACCEPTANCE_20261112.md`。
 - [x] **本机 Docker 与 API staging 验收**：Docker Engine 29.7.2/Linux 的合成缺陷端到端验收通过；临时 Uvicorn 双账号个人记忆隔离通过，健康端点 100 次请求/并发 16 全部 HTTP 200，P95 42.01 ms。仅为本机有限场景，不代表公网生产隔离或容量验收。
-- [ ] **第三方 MCP 写操作与公网多租户验收**：当前 MCP 只读，且没有公网 staging 地址、两个线上测试账号和安全可清理的测试对象；因此真实写操作和公网隔离尚未验证。
+- [ ] **第三方 MCP 写操作与公网多租户验收**：日常 MCP 保持只读；2026-11-14 官方 GitHub MCP 在专用私有仓库通过 16 项真实写入/审批/幂等/重启回执/改参拒绝/清理检查，报告 evaluation/acceptance-20261114/github-mcp-write-v2.json。未真实诱发写入超时；公网 staging 与两个线上测试账号仍未提供，公网隔离不在本机验收结论内。
 - [ ] **部署专项高负载测试稳定性**：组合测试 `115 passed, 1 failed`；20 秒 watchdog 场景整组高负载时失败，单独复测通过。需定位高负载下的时序/调度敏感性后才能将该专项组合标为通过。
-- [ ] **真实模型补丁审查质量验收**：2026-11-12 初测计划 8 次，仅 2 次完整；两次都正确拒绝同一边界回归并通过源码引用校验。安全修复两次不完整、兼容性案例超时、权限风险未运行；覆盖率 2/8，不能据此报告总体准确率。聊天费率缺失，费用未知。详见 `evaluation/REAL_MODEL_REVIEW_QUALITY_20261112.md`。
+- [x] **真实模型补丁审查质量样例评测**（评测已完成，生产质量仍待验收）：保留初测 2/8 完整的失败记录；后续在四类作者编写的合成补丁上各重复 2 次，共 8 次真实模型审查，样例预期判断 8/8 正确、源码引用 8/8 可核验，有限 pytest fixture 均通过。标签未经独立复核，不能外推生产误放率/误拒率或复杂仓库质量；聊天费率未配置，费用未知。详见 `evaluation/REAL_MODEL_REVIEW_QUALITY_20261112.md` 和 `evaluation/REAL_MODEL_REVIEW_QUALITY_CONTROLLED_20261112.json`。
 - [x] **真实 Qdrant 在线与索引负载验收**：`evaluation/qdrant-acceptance-20261112.json` 为 passed，Qdrant 1.16.2；验证命名空间、元数据、版本、维度拒绝、合并点删除/恢复、重启持久化、实际停服时 SQLite 降级及恢复补索引。1 万条 64 维合成向量/100 查询的 Recall@10=1.0，P95≈128ms；只测索引，不含 Embedding/SQLite/全链路语义合并，不代表生产负载。
 - [x] **候选集近重复分组、划分与冻结工具**：162 任务与 162 经验形成 100 个泄漏组，开发/验证/测试为 126/19/17；哈希候选快照、只导出单题输入与开发语料、独立审阅模板已生成。另补 3 个有固定提交及 BSD 许可的公开真实缺陷，Docker 中旧版失败/修复版通过。
 - [ ] **正式基准准入与生产误合并率**：冻结候选仍 `formal_eligible=false`；待真实审核者核对契约、语义组、来源许可与跨组相关性，另需授权脱敏的代表性生产语料及独立重复标签。3 个公开 Issue 的合并探针不能替代生产误合并率。见 `evaluation/RAG_VALIDATION.md` 及冻结审阅包。
 - [x] **PostgreSQL/pgvector 在线验收**（一次性测试库已验收）：`python -m evaluation.postgres_acceptance --output evaluation/postgres-acceptance-20261112-verified.json` 在真实 PostgreSQL 16.15 / pgvector 0.8.7 上通过 11 项集成测试，覆盖建表幂等、成功/拒绝案例与审核记录、余弦检索与维度过滤、严格元数据过滤、upsert 版本、插入/更新事务回滚、验收前置条件和 SQLite 快照导出；另实际重启容器核对三表数据与版本，清理容器及匿名卷。首次重启连接超时报告保留；验收器已处理重启后的随机端口变化。固定向量/合成案例不证明真实 Embedding 质量、生产负载、高可用或断电恢复，Web 仍使用 SQLite 正文。
 - [x] **Docker 端到端验收**（当前合成场景已验收）：`python -m evaluation.docker_acceptance --output evaluation/docker-acceptance-20261112-verified.json` 在真实 Engine 29.7.2/Linux 容器上返回 `passed`，覆盖修复/复现/pytest、敏感遮蔽、只读挂载、网络/能力限制、超时清理、失败回归和结果回传，容器与工作区清理均通过。较早 Engine 不可连接的两个 `blocked` 报告及 `docker-acceptance-20261112-cleanup-failed.json` 保留；后者暴露的 Windows 只读 Git 对象删除问题已修复。模型回复固定，缺陷为合成样例，不能据此声称真实模型质量、第三方写入或公网生产隔离通过。
-- [ ] **真实 Agent 配对实验**（外部待验收）：目前没有关闭/开启 RAG 的 Agent 补丁与 Trace；运行同一模型、提示词、数据集和预算下的两组任务，保存 30 个实际补丁及对应 Trace，再使用 `--experiment-manifest` 计分。
+- [x] **真实 Agent 配对实验执行与归因**（已实测，收益未证实）：保留旧三十题与五题结果；2026-11-13 完成新的五题各两组真实模型/Docker 配对，完整成功 1/5 对 1/5、候选独立六条测试通过 4/5 对 4/5。JSON 纠错已改为复用候选和观察、不重放工具，三次在线纠错均无工具重放。报告见 `evaluation/RAG_CONTEXT_OPTIMIZATION_20261112.md`；作者开发样例、每题单次，不能当作生产效果或正式盲测。
+- [ ] **RAG 全链路时限与收益验证**：最新五题未测得成功率收益，四个 RAG 任务耗尽 120 秒；先处理复现、补丁、验证/审查的阶段耗时，再用独立任务、重复配对和预注册预算确认收益。不得仅靠放宽测试或跳过审查提高成绩。
 - [ ] **团队知识库简历描述核验**（外部待验收）：需要对应项目源码或可核验材料；当前仓库无法证明该项目的实现和指标。
 
 ## 记录
 
 - 当前 SQLite/PostgreSQL 适配器已把成功案例和拒绝经验分开召回，并按仓库、路径和依赖版本严格过滤。
 - 案例向量已限制为缺陷表现、根因、适用条件、修订报告和拒绝原因；历史向量需显式重建才会采用新文本规则。
-- 当前 `evaluation/results.json` 的真实 Embedding 合成集结果：关键词 Top-5 20/30，向量 Recall@5 29/30，混合 Top-5 26/30；过滤自检通过。Cross-Encoder 与真实 Agent 配对实验未测。
+- 较早 `evaluation/results.json` 的真实 Embedding 合成集结果：关键词 Top-5 20/30，向量 Recall@5 29/30，混合 Top-5 26/30；过滤自检通过。该旧报告生成时 Cross-Encoder 与真实 Agent 配对实验未测；后续权重与 Agent 实测另有报告，不能沿用旧状态描述当前实现。
 - 语义合并验证：同范围高相似案例合并、不同文件/依赖/结果类型与低相似案例隔离、旧 SQLite 首次迁移、主案例更新后重分组、Qdrant 删除重复点及阈值提高后的向量恢复均有专项测试。1,000 条合成向量记录分成 64 组，合并 936 条重复记录，算法用时约 0.78 秒；该计时不包括 SQLite 写入或真实 Qdrant 服务。
 - 2026-11-12 全量 Python 测试：375 passed、1 skipped、3 failed、48 subtests passed。3 个失败位于 `test_repair_api.py` 与 `test_resilience.py` 的现有 worker/API 审核与状态码断言；知识库合并专项与 RAG 集成测试通过。
 - 尚未验证真实生产语料上的相似度阈值/误合并率、PostgreSQL 持久化语义合并和全链路生产负载。Qdrant 本机真实索引契约、停服与恢复已验收；PostgreSQL/Qdrant 使用自动创建并清理的一次性服务，不保留业务连接。历史“Cross-Encoder 未测”仅对应此前报告，当前新增真实权重开发诊断不改写旧结果。
+
+- 2026-11-14 继续验收：Docker / PostgreSQL（13 项）/ 真实 RAG 联合检查通过；真实模型 HTTP 两任务完成验证审查与经验保存，第二题召回第一题经验；独立锁定环境 76 项关键回归及 wheel 内 43 模块导入通过。详见 evaluation/COMPLETION_ACCEPTANCE_20261114.md；这些结果不证明正式基准或生产效果。

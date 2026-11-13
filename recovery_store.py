@@ -33,7 +33,7 @@ def boot_identity():
 
 
 def initial_progress():
-    return {"version": WORKFLOW_VERSION, "revision": 0, "run_id": None,
+    return {"version": WORKFLOW_VERSION, "revision": 0, "run_id": None, "execution_epoch": 0,
             "next_node": "prepare_workspace", "in_flight": None, "interrupted": False,
             "recovery_count": 0, "recovery": None, "pending_calls": [], "clock": None}
 
@@ -93,7 +93,7 @@ def file_manifest(root, *, source=False):
             result[path.relative_to(root).as_posix()] = {"directory": True, "mode": path.stat().st_mode & 0o777}
         for name in files:
             relative = (parent / name).relative_to(root).as_posix()
-            if (source and name.startswith(".env")) or (not source and relative in AUDIT_FILES):
+            if (source and (name.startswith(".env") or name == ".git")) or (not source and relative in AUDIT_FILES):
                 continue
             path = parent / name
             result[relative] = {"hash": hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -151,6 +151,18 @@ class ProgressStore:
     def owns(self, task_id, run_id):
         return self.get(task_id).get("progress", {}).get("run_id") == run_id
 
+    @staticmethod
+    def allocate_epoch(db, task):
+        """The high-water mark lives outside recoverable task payloads."""
+        task_id = task["state"]["task_id"]
+        prior = int(task["progress"].get("execution_epoch", 0))
+        db.execute("INSERT INTO execution_epochs(task_id,value) VALUES (?,?) "
+                   "ON CONFLICT(task_id) DO UPDATE SET value=MAX(value+1,excluded.value)",
+                   (task_id, prior + 1))
+        epoch = db.execute("SELECT value FROM execution_epochs WHERE task_id=?", (task_id,)).fetchone()[0]
+        task["progress"]["execution_epoch"] = epoch
+        return epoch
+
     def claim(self, task_id):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -161,6 +173,7 @@ class ProgressStore:
             if task["execution"] != "queued" or progress["run_id"] is not None:
                 return None, None
             run_id = uuid4().hex
+            self.allocate_epoch(db, task)
             progress["run_id"] = run_id
             self._write(db, task, expected_run=None)
             return task, run_id
@@ -175,8 +188,10 @@ class ProgressStore:
         return task
 
     def assert_owner(self, task, run_id):
+        saved = self.get(task["state"]["task_id"]).get("progress", {})
         if task.get("progress") and (not run_id or task["progress"]["run_id"] != run_id
-                                     or not self.owns(task["state"]["task_id"], run_id)):
+                                     or saved.get("run_id") != run_id
+                                     or saved.get("execution_epoch", 0) != task["progress"].get("execution_epoch", 0)):
             raise Fault("stale_execution", "旧执行已失去任务写入资格", category="conflict")
 
     def begin_step(self, task, node, state, run_id):
@@ -230,6 +245,7 @@ class ProgressStore:
 
 
 def setup_recovery(db):
+    db.execute("CREATE TABLE IF NOT EXISTS execution_epochs (task_id TEXT PRIMARY KEY,value INTEGER NOT NULL)")
     db.execute("""CREATE TABLE IF NOT EXISTS recovery_jobs (
         id TEXT PRIMARY KEY, task_id TEXT NOT NULL, phase TEXT NOT NULL, snapshot TEXT NOT NULL)""")
 
@@ -376,6 +392,7 @@ class RecoveryBackup:
         original["state"]["warnings"] = current["state"].get("warnings", [])
         original["state"]["elapsed_seconds"] = max(original["state"]["elapsed_seconds"], current["state"]["elapsed_seconds"])
         original["progress"]["revision"] = current["progress"]["revision"]
+        original["progress"]["execution_epoch"] = current["progress"].get("execution_epoch", 0)
         original["progress"]["run_id"] = None
         for key in ("revoked_runs", "pending_calls", "clock", "agent_calls", "apply_generation"):
             original["progress"][key] = current["progress"].get(key)

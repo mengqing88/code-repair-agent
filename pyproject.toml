@@ -13,6 +13,7 @@ name = "code-repair-agent"
 version = "0.1.0"
 # description：安装工具展示的简短项目说明。
 description = "Command-line input validation for Python code repair tasks."
+requires-python = ">=3.11"
 # dependencies：运行依赖；openai 提供兼容接口客户端，python-dotenv 读取本地 .env 配置，
 # psycopg 提供 PostgreSQL/pgvector 知识库连接。
 # langgraph 提供 StateGraph；typing-extensions 提供兼容图状态解析的 TypedDict 类型声明。
@@ -21,12 +22,14 @@ description = "Command-line input validation for Python code repair tasks."
 dependencies = [
     "openai>=2.0,<3.0",
     "psycopg[binary]>=3.1,<4.0",
-    "qdrant-client>=1.12,<2.0",
+    "qdrant-client==1.16.2",
     "python-dotenv>=1.0,<2.0",
     "langgraph>=1.0,<2.0",
+    "langgraph-checkpoint-sqlite==3.1.3",
     "mcp>=1.30,<2.0",
     "jsonschema>=4.20,<5.0",
     "pydantic>=2.9,<3.0",
+    "tiktoken>=0.7,<1.0",
     "typing-extensions>=4.8,<5.0",
     "fastapi>=0.115,<1.0",
     "uvicorn>=0.30,<1.0",
@@ -36,7 +39,6 @@ dependencies = [
 [project.optional-dependencies]
 # dev：开发依赖组，通过 pip install -e ".[dev]" 安装 pytest。
 dev = ["pytest", "httpx>=0.27,<1.0"]
-
 # rerank：可选的本地 Cross-Encoder 模型运行依赖；模型权重按 CROSS_ENCODER_MODEL 配置加载。
 rerank = ["sentence-transformers>=3.0,<6.0"]
 # Windows 使用 DirectML；其他系统选择 ONNX CPU。不要在同一环境混装两种 ORT wheel。
@@ -49,7 +51,7 @@ rerank-onnx = [
 # setuptools 的打包范围配置。
 [tool.setuptools]
 # py-modules：打包 CLI、模型调用、独立错误复现、修复状态、工作流和知识库模块，不收录测试模块。
-py-modules = ["agent_cli", "llm_client", "reproduction", "defect_regression", "repair_state", "repair_workflow", "knowledge_base", "knowledge_cli", "repair_tools", "repair_api", "repair_worker", "resilience", "trace_store", "model_contracts", "operation_store", "diagnostics", "docker_executor", "recovery_store", "recovery_manager", "recovery_agent", "mcp_tool_client", "qdrant_store", "semantic_dedup", "retrieval_reranker", "runtime_config", "multi_agent"]
+py-modules = ["agent_cli", "llm_client", "reproduction", "defect_regression", "repair_state", "repair_workflow", "knowledge_base", "knowledge_cli", "knowledge_review", "repair_tools", "repair_api", "repair_worker", "resilience", "trace_store", "model_contracts", "operation_store", "diagnostics", "docker_executor", "recovery_store", "recovery_manager", "recovery_agent", "user_accounts", "personal_memory", "conversation_memory", "mcp_tool_client", "account_cli", "qdrant_store", "semantic_dedup", "retrieval_reranker", "tool_context", "input_protection", "tool_authorization", "execution_manifest", "execution_replay", "runtime_config", "business_scope", "adversarial_review", "failure_regression", "multi_agent", "language_support", "workflow_checkpoint", "workflow_replay", "native_regression"]
 
 # pytest 的项目级配置。
 [tool.pytest.ini_options]

@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "半开区间边界归属",
+    "分桶/档位边界"
+  ],
+  "before_source": "def tax_bracket(value, edges):\n    for i in range(len(edges) - 1):\n        if edges[i] <= value <= edges[i + 1]:\n            return i\n    if value >= edges[-1]:\n        return len(edges) - 2\n    return -1\n",
+  "dataset_experience_id": "WorkBuddy::experience-82",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "半开区间边界归属需上界用 < 而非 <=。",
+  "experience_id": "experience-82",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "税率档位：收入恰好落在档位边界时归入低档，应归入高档。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,6 +1,6 @@\n def tax_bracket(value, edges):\n     for i in range(len(edges) - 1):\n-        if edges[i] <= value <= edges[i + 1]:\n+        if edges[i] <= value < edges[i + 1]:\n             return i\n     if value >= edges[-1]:\n         return len(edges) - 2\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import tax_bracket\n\ndef test_a():\n    assert tax_bracket(10000, [0,10000,20000,30000]) == 1\n\ndef test_b():\n    assert tax_bracket(20000, [0,10000,20000,30000]) == 2\n\ndef test_c():\n    assert tax_bracket(30000, [0,10000,20000,30000]) == 2\n"
+}

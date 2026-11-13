@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "刷新/心跳接口未更新状态",
+    "空实现导致过期基准不更新",
+    "会话/在线状态超时判定"
+  ],
+  "before_source": "class PresenceTracker:\n    \"\"\"在线状态：last_seen 超过 timeout 秒视为离线。ping 刷新 last_seen。\"\"\"\n\n    def __init__(self, timeout):\n        self.timeout = timeout\n        self.last_seen = {}\n\n    def connect(self, uid, now):\n        self.last_seen[uid] = now\n\n    def ping(self, uid, now):\n        pass\n\n    def is_offline(self, uid, now):\n        return now - self.last_seen[uid] > self.timeout\n",
+  "dataset_experience_id": "GLM::experience-113",
+  "dataset_id": "GLM",
+  "diagnosis": "心跳/刷新接口是空实现：状态的时间基准从未更新。修复原则：刷新接口必须实际写入新的时间戳，空实现是典型的缺失状态更新缺陷。",
+  "experience_id": "experience-113",
+  "normalization_notes": [],
+  "original_report": "在线状态服务的活动心跳没有更新最后在线时间，活跃用户在登录 5 分钟后统一被标记离线。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -9,7 +9,7 @@\n         self.last_seen[uid] = now\n \n     def ping(self, uid, now):\n-        pass\n+        self.last_seen[uid] = now\n \n     def is_offline(self, uid, now):\n         return now - self.last_seen[uid] > self.timeout\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import PresenceTracker\n\ndef test_fresh_online():\n    p = PresenceTracker(30)\n    p.connect(\"u1\", 0)\n    assert p.is_offline(\"u1\", 10) is False\n\ndef test_timeout_offline():\n    p = PresenceTracker(30)\n    p.connect(\"u1\", 0)\n    assert p.is_offline(\"u1\", 31) is True\n\ndef test_ping_keeps_online():\n    p = PresenceTracker(30)\n    p.connect(\"u1\", 0)\n    p.ping(\"u1\", 20)\n    assert p.is_offline(\"u1\", 45) is False\n"
+}

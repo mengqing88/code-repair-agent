@@ -45,7 +45,8 @@ def acceptance(root, report):
     state = create_initial_state(task_id, {"type": "python_file", "path": str(source / "bug.py")},
                                  "add(2,1) should return 3, currently returns 1", remaining_seconds=300)
     config = {"test_targets": ["test_bug.py"], "allowed_paths": ["bug.py"],
-              "source_fingerprint": {}, "execution_backend": "docker", "deployment_mode": "untrusted"}
+              "source_fingerprint": {}, "execution_backend": "docker", "deployment_mode": "untrusted",
+              "language": "python"}
     task = {"state": state, "config": config}
     manifest, _ = freeze(task, directory, {"report": state["original_report"]}, knowledge)
     report["image"] = manifest["program"]["container"]

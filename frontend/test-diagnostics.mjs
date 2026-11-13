@@ -24,6 +24,7 @@ function setup({ storageFails = false, networkFails = false, recorded = true } =
       if (state.networkFails) throw new Error("offline");
       return { ok: true, json: async () => ({ recorded, error_id: body.error_id }) };
     } });
+  exports.setDiagnosticSession("test-owner", "test-csrf");
   return { exports, saved, sent, listeners, state, window };
 }
 
@@ -32,10 +33,10 @@ test("browser faults queue offline, deduplicate, then flush without source text"
   const id = instance.exports.captureClientError("component_error");
   assert.equal(instance.exports.captureClientError("component_error"), id);
   await tick();
-  assert.equal(JSON.parse(instance.saved.get("repair-client-errors")).length, 1);
+  assert.equal(JSON.parse(instance.saved.get("repair-client-errors:test-owner")).length, 1);
   instance.state.networkFails = false;
   await instance.exports.flushClientErrors();
-  assert.equal(JSON.parse(instance.saved.get("repair-client-errors")).length, 0);
+  assert.equal(JSON.parse(instance.saved.get("repair-client-errors:test-owner")).length, 0);
   assert.deepEqual(Object.keys(instance.sent[0]).sort(), ["code", "error_id", "task_id"]);
 });
 
@@ -52,7 +53,7 @@ test("diagnostic is retained when the backend could not persist it", async () =>
   const instance = setup({ recorded: false });
   instance.exports.captureClientError("browser_error");
   await tick();
-  assert.equal(JSON.parse(instance.saved.get("repair-client-errors")).length, 1);
+  assert.equal(JSON.parse(instance.saved.get("repair-client-errors:test-owner")).length, 1);
 });
 
 test("global error and rejection hooks emit only fixed codes", async () => {

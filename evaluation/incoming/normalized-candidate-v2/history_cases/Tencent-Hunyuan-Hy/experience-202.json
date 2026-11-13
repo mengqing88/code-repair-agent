@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "需要对同一批数据做两次及以上聚合",
+    "输入可能是一次性迭代器或生成器",
+    "缺陷表现为第二次聚合结果为默认值或空"
+  ],
+  "before_source": "# 一次性数据流的最大值与最小值。\n\n\ndef max_and_min(values):\n    it = iter(values)\n    hi = max(it, default=0)\n    lo = min(it, default=0)\n    return hi, lo\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-202",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "一次性迭代器被消费后不能再次遍历；若需要对同一批数据做多次聚合，应先把可迭代对象物化为列表（或在同一遍循环里同时计算多个指标）。修复原则是在入口处物化一次，之后所有聚合都基于该副本。",
+  "experience_id": "experience-202",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】流式数据统计场景：对同一个迭代器先取最大值再取最小值，最小值恒为 0（空迭代器的默认值）。预期：两个极值都基于同一批完整数据。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,7 +2,7 @@\n \n \n def max_and_min(values):\n-    it = iter(values)\n+    it = list(values)\n     hi = max(it, default=0)\n     lo = min(it, default=0)\n     return hi, lo\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import max_and_min\n\n\ndef test_empty_values():\n    assert max_and_min([]) == (0, 0)\n\n\ndef test_single_value():\n    assert max_and_min([5]) == (5, 5)\n\n\ndef test_multiple_values():\n    assert max_and_min([3, 1, 4]) == (4, 1)\n"
+}

@@ -1,6 +1,7 @@
 """验证初召回候选可重排，重排失败时初始排序仍可用。"""
 
 import hashlib
+import json
 import math
 from types import SimpleNamespace
 
@@ -10,6 +11,7 @@ import pytest
 from knowledge_base import KnowledgeBase
 from repair_state import create_initial_state
 from retrieval_reranker import CrossEncoderReranker, RerankerUnavailable, configured_reranker
+from resilience import execution_scope
 from runtime_config import configuration_scope
 
 
@@ -82,6 +84,49 @@ def test_configured_ten_candidates_can_promote_sixth(tmp_path):
     for number in range(1, 7):
         kb.save_case(make_case(f"case-{number}"))
     assert kb.search("unmatched query", limit=5)[0]["case_id"] == "case-6"
+
+
+@pytest.mark.parametrize(("target_rank", "expected_first", "expected_in_results"), [
+    (10, "case-10", True),
+    (11, "case-01", False),
+])
+def test_reranker_candidate_cutoff_is_explicit_at_tenth_and_eleventh(tmp_path, target_rank,
+                                                                    expected_first, expected_in_results):
+    class BoundaryReranker:
+        candidate_count = 10
+
+        def score(self, _query, documents):
+            return [float(f"case-{target_rank:02d}" in document) for document in documents]
+
+    def embed(text):
+        if text == "query":
+            return [1.0, 0.0]
+        match = next((f"case-{index:02d}" for index in range(1, 13) if f"case-{index:02d}" in text), None)
+        if match is None:
+            return [1.0, 0.0]
+        index = int(match[-2:])
+        angle = index * 0.04
+        return [math.cos(angle), math.sin(angle)]
+
+    kb = KnowledgeBase(tmp_path / f"rank-{target_rank}.sqlite3", embedder=embed,
+                       qdrant_index=None, reranker=BoundaryReranker())
+    for index in range(1, 13):
+        case = make_case(f"case-{index:02d}")
+        case["original_report"] += f" unique marker case-{index:02d}"
+        kb.save_case(case)
+
+    trace_path = tmp_path / f"rank-{target_rank}.jsonl"
+    with execution_scope(30, trace_path=trace_path):
+        results = kb.search("query", limit=5, min_similarity=0.0, strategy="vector")
+
+    assert results[0]["case_id"] == expected_first
+    assert (f"case-{target_rank:02d}" in [item["case_id"] for item in results]) is expected_in_results
+    event = next(json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines()
+                 if json.loads(line).get("operation") == "knowledge.rerank")
+    assert event["details"]["candidate_limit"] == 10
+    assert event["details"]["retrieval_candidates"] == 12
+    assert event["details"]["unreranked_candidates"] == 2
+    assert event["details"]["return_limit"] == 5
 
 
 def test_frozen_settings_select_separate_shared_models(monkeypatch):

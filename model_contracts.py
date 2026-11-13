@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import re
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from resilience import Fault, current, output_schema, trace, error_info
 
@@ -13,23 +13,54 @@ class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
-class ReproductionPlan(Contract):
+class ClarifiableContract(Contract):
+    clarification_required: bool
+    clarification_reasons: list[str]
+    question: str
+
+    @model_validator(mode="after")
+    def validate_clarification(self):
+        reasons = [reason.strip() for reason in self.clarification_reasons]
+        if self.clarification_required:
+            if not self.question.strip() or not reasons or any(not reason for reason in reasons):
+                raise ValueError("需要澄清时必须提供问题和具体未知项")
+        elif self.question.strip() or reasons:
+            raise ValueError("信息充分时 question 和 clarification_reasons 必须为空")
+        return self
+
+
+class ReproductionPlan(ClarifiableContract):
     revised_report: str
     steps: str
     reproduction_code: str
-    question: str
+
+    @model_validator(mode="after")
+    def validate_plan(self):
+        if self.clarification_required == bool(self.reproduction_code.strip()):
+            raise ValueError("需要澄清时复现脚本必须为空；否则必须提供脚本")
+        return self
 
 
-class ReproductionComparison(Contract):
+class ReproductionComparison(ClarifiableContract):
     comparison: Literal["matched", "mismatch", "inconclusive"]
     conclusion: str
     evidence: str
-    question: str
+
+    @model_validator(mode="after")
+    def validate_comparison(self):
+        if (self.comparison == "matched") == self.clarification_required:
+            raise ValueError("仅无法确认或与报告不符时需要澄清")
+        return self
 
 
-class RegressionPlan(Contract):
+class RegressionPlan(ClarifiableContract):
     test_body: str
-    question: str
+
+    @model_validator(mode="after")
+    def validate_test_body(self):
+        if self.clarification_required == bool(self.test_body.strip()):
+            raise ValueError("需要澄清时 test_body 必须为空；否则必须提供测试")
+        return self
 
 
 class CaseAssessment(Contract):
@@ -41,9 +72,17 @@ class CaseAssessment(Contract):
     unknowns: list[str]
 
 
-class PatchProposal(Contract):
-    diagnosis: str = Field(min_length=1)
-    patch_diff: str = Field(min_length=1)
+class PatchProposal(ClarifiableContract):
+    diagnosis: str
+    patch_diff: str
+
+    @model_validator(mode="after")
+    def validate_proposal(self):
+        if self.clarification_required == bool(self.diagnosis.strip() or self.patch_diff.strip()):
+            raise ValueError("需要澄清时诊断和补丁必须为空；否则两者都必须提供")
+        if not self.clarification_required and (not self.diagnosis.strip() or not self.patch_diff.strip()):
+            raise ValueError("信息充分时诊断和补丁都必须非空")
+        return self
 
 
 class RagPatchProposal(PatchProposal):
@@ -98,32 +137,32 @@ class RetrieveArguments(Contract):
         return value
 
 
-class ApplyPatchArguments(Contract):
-    patch_diff: str = Field(min_length=1, max_length=200_000)
-
-    @field_validator("patch_diff")
-    @classmethod
-    def patch_must_not_be_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("补丁内容不能为空白字符串")
-        return value
-
-
-class RunTestsArguments(Contract):
-    pass
-
-
 TOOL_ARGUMENTS = {
     "read_code": ReadArguments,
     "search_code": SearchArguments,
     "retrieve_repair_experience": RetrieveArguments,
-    "apply_patch": ApplyPatchArguments,
-    "run_tests": RunTestsArguments,
 }
 
-# Server policy allows only the declared, validated tools; memory writes stay in fixed workflow nodes.
+FIXED_NODE_TOOLS = frozenset({"apply_patch", "run_tests"})
 MODEL_TOOL_ALLOWLIST = frozenset(TOOL_ARGUMENTS)
 
+
+def validate_tool_arguments(name, arguments, additional_names=()):
+    """Validate one decoded tool call and return normalized arguments or safe field errors."""
+    if name in FIXED_NODE_TOOLS:
+        return None, {"code": "tool_fixed_execution_only", "category": "permission",
+                      "message": "本地补丁和测试仅由固定工作流执行；请返回候选补丁，等待程序验证结果"}
+    if name not in TOOL_ARGUMENTS and name not in additional_names:
+        return None, {"code": "tool_not_allowed", "category": "permission", "message": "工具不在服务端授权列表中"}
+    if name not in TOOL_ARGUMENTS:
+        return dict(arguments), None
+    try:
+        return TOOL_ARGUMENTS[name].model_validate(arguments).model_dump(exclude_unset=True), None
+    except ValidationError as error:
+        issues = [{"path": list(item["loc"]), "type": item["type"], "message": item["msg"]}
+                  for item in error.errors(include_input=False, include_url=False)]
+        return None, {"code": "tool_arguments_invalid", "category": "validation",
+                      "message": "工具参数未通过校验", "issues": issues}
 
 def parse_object(text):
     if not isinstance(text, str):

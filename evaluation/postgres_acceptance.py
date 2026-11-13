@@ -149,10 +149,10 @@ def acceptance(report, *, image=IMAGE):
                 "status": "failed" if item.find("failure") is not None or item.find("error") is not None
                 else "skipped" if item.find("skipped") is not None else "passed",
             } for item in cases]
-            if result.returncode or len(cases) != 11 or any(
+            if result.returncode or len(cases) != 13 or any(
                 item["status"] != "passed" for item in report["pytest"]["cases"]
             ):
-                raise RuntimeError("Real PostgreSQL integration suite did not pass all 11 cases")
+                raise RuntimeError("Real PostgreSQL integration suite did not pass all 13 cases")
         report["checks"]["real_sql_integration"] = True
         kb = PostgresKnowledgeBase(dsn=safe_dsn, embedder=fixed_embedding)
         accepted = case_state("persistent-accepted")

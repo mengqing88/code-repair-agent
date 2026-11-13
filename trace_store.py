@@ -52,9 +52,8 @@ def _write_lock(path):
     with path.with_suffix(path.suffix + ".lock").open("a+b") as lock:
         if os.name == "nt":
             import msvcrt
-            if lock.seek(0, 2) == 0:
-                lock.write(b"\0")
-                lock.flush()
+            # Windows permits locking beyond EOF. Initializing the byte here races
+            # with another process that has already locked it and can drop a record.
             lock.seek(0)
             msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)
         else:

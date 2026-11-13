@@ -45,6 +45,47 @@ def test_qdrant_filters_namespace_outcome_and_missing_metadata():
     assert rejected == []
 
 
+def test_qdrant_language_filter_excludes_other_and_missing_metadata():
+    index = make_index()
+    for case_id, language in (("python", "python"), ("typescript", "typescript"), ("legacy", None)):
+        scope = {"repository_id": "repo-a", "file_paths": ["src/shared.py"]}
+        if language is not None:
+            scope["language"] = language
+        index.upsert(namespace="user-a", case_id=case_id, outcome="accepted", revision=1,
+                     vector=[1.0, 0.0], retrieval_scope=scope)
+
+    matches = index.search(namespace="user-a", vector=[1.0, 0.0], limit=5, outcome="accepted",
+                           filters={"language": "python"})
+
+    assert [item["case_id"] for item in matches] == ["python"]
+
+
+def test_upsert_replaces_old_revision_and_embedding(tmp_path: Path):
+    index = make_index()
+
+    def embed(text):
+        return [1.0, 0.0] if "old root" in text else [0.0, 1.0]
+
+    knowledge = KnowledgeBase(tmp_path / "knowledge.sqlite3", embed, qdrant_index=index)
+    state = create_initial_state("case-update", {"type": "python_file", "path": "src/parser.py"},
+                                 "index failure", remaining_seconds=60, remaining_tokens=1000,
+                                 remaining_attempts=1)
+    state.update(review_decision="accepted", diagnosis="old root", patch_diff="--- a/src/parser.py\n+++ b/src/parser.py\n-old\n+new\n",
+                 patch_hash="stable", validation={"passed": True, "patch_hash": "stable"})
+    knowledge.save_case(state)
+    assert knowledge.search("old root", min_similarity=0.9, strategy="vector", rerank=False)[0]["revision"] == 1
+
+    state["diagnosis"] = "new root"
+    knowledge.save_case(state)
+
+    assert knowledge.search("old root", min_similarity=0.9, strategy="vector", rerank=False) == []
+    assert knowledge.search("new root", min_similarity=0.9, strategy="vector", rerank=False)[0]["revision"] == 2
+    old_vector_results = index.search(namespace=knowledge.qdrant_namespace, vector=[1.0, 0.0], limit=5,
+                                      outcome="accepted", filters={})
+    assert [(item["case_id"], item["revision"]) for item in old_vector_results] == [("case-update", 2)]
+    assert old_vector_results[0]["score"] == 0.0
+
+
 def test_sqlite_cases_are_indexed_and_retrieved_with_qdrant(tmp_path: Path):
     index = make_index()
     knowledge = KnowledgeBase(

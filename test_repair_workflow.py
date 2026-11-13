@@ -13,11 +13,12 @@ from unittest.mock import patch
 # ModelCallResult：模拟带 Token 和费用统计的模型回复。
 from llm_client import ModelCallResult, ModelToolCall
 # RepairServices、build_repair_workflow：创建并运行 LangGraph 工作流。
-from repair_workflow import RepairServices, build_repair_workflow, llm_propose_patch
+from repair_workflow import RepairServices, analyze_and_propose_node, build_repair_workflow, llm_propose_patch
 # create_initial_state：创建图的完整初始输入。
 from repair_state import create_initial_state
 from repair_tools import RepairToolbox, create_checkpoint_workspace
 from repair_workflow import validate_patch_node
+from resilience import Fault
 
 
 class RepairWorkflowTests(unittest.TestCase):
@@ -77,7 +78,8 @@ class RepairWorkflowTests(unittest.TestCase):
             events.append("save_case")
 
         return RepairServices(reproduce, collect_context, propose_patch, apply_patch,
-                              validate_patch, save_case)
+                              validate_patch, save_case,
+                              adversarial_review=lambda _: {"approved": True, "summary": "编排测试显式桩", "findings": []})
 
     def initial_state(self, attempts: int = 1):
         """创建测试任务；固定源码路径只作为状态数据，不实际读取文件。"""
@@ -122,6 +124,7 @@ class RepairWorkflowTests(unittest.TestCase):
             services.validate_patch,
             services.save_case,
             record_rejection,
+            adversarial_review=services.adversarial_review,
         )
         restored: list[str] = []
         services = replace(
@@ -156,7 +159,8 @@ class RepairWorkflowTests(unittest.TestCase):
         def fake_model(prompt: str) -> str:
             """记录发送给模型的提示词，并返回符合协议的 JSON。"""
             prompts.append(prompt)
-            return json.dumps({"diagnosis": "赋值使用了错误的默认值", "patch_diff": "diff --git a/target.py b/target.py"})
+            return json.dumps({"diagnosis": "赋值使用了错误的默认值", "patch_diff": "diff --git a/target.py b/target.py", "question": "",
+                               "clarification_required": False, "clarification_reasons": []})
 
         result = llm_propose_patch(state, fake_model)
 
@@ -171,7 +175,8 @@ class RepairWorkflowTests(unittest.TestCase):
         def fake_model(prompt: str) -> ModelCallResult:
             """模拟服务端同时返回 JSON 文字和 usage。"""
             return ModelCallResult(
-                text=json.dumps({"diagnosis": "根因", "patch_diff": "diff"}),
+                text=json.dumps({"diagnosis": "根因", "patch_diff": "diff", "question": "",
+                                 "clarification_required": False, "clarification_reasons": []}),
                 input_tokens=80,
                 output_tokens=20,
                 total_tokens=100,
@@ -200,7 +205,8 @@ class RepairWorkflowTests(unittest.TestCase):
             },),
         )
         final_turn = ModelCallResult(
-            text=json.dumps({"diagnosis": "函数返回值错误", "patch_diff": "完整 diff"}),
+                text=json.dumps({"diagnosis": "函数返回值错误", "patch_diff": "完整 diff", "question": "",
+                                 "clarification_required": False, "clarification_reasons": []}),
             input_tokens=140, output_tokens=30, total_tokens=170, cost_yuan=0.02,
         )
         tool_results: list[tuple[str, dict[str, object]]] = []
@@ -241,7 +247,8 @@ class RepairWorkflowTests(unittest.TestCase):
                            "arguments": '{"query":"timeout handling"}'},),
         )
         final_turn = ModelCallResult(
-            text=json.dumps({"diagnosis": "已查阅文档", "patch_diff": "完整 diff"}),
+                text=json.dumps({"diagnosis": "已查阅文档", "patch_diff": "完整 diff", "question": "",
+                                 "clarification_required": False, "clarification_reasons": []}),
             input_tokens=10, output_tokens=5, total_tokens=15, cost_yuan=0.001,
         )
         executed = []
@@ -260,6 +267,137 @@ class RepairWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "权限白名单"):
             with patch("repair_workflow.ask_model_with_tools", return_value=final_turn):
                 llm_propose_patch(state, tool_definitions=(tool,), tool_executor=lambda *_: None)
+
+    def test_tool_batch_validation_blocks_every_call_and_returns_field_errors(self) -> None:
+        state = self.initial_state()
+        definitions = (
+            {"type": "function", "name": "read_code", "parameters": {}},
+            {"type": "function", "name": "search_code", "parameters": {}},
+        )
+        calls = (
+            ModelToolCall("bad", "read_code", '{"wrong":"secret"}'),
+            ModelToolCall("good", "search_code", '{"query":"calculate"}'),
+        )
+        first = ModelCallResult(text="", input_tokens=10, output_tokens=2, total_tokens=12,
+            cost_yuan=0.001, tool_calls=calls, output_items=tuple({"type":"function_call", "call_id": item.call_id,
+                "name":item.name, "arguments":item.arguments} for item in calls))
+        final = ModelCallResult(text=json.dumps({"diagnosis":"root", "patch_diff":"diff", "question":"",
+                                                "clarification_required": False, "clarification_reasons": []}),
+                                input_tokens=10, output_tokens=2, total_tokens=12, cost_yuan=0.001)
+        executed = []
+        with patch("repair_workflow.ask_model_with_tools", side_effect=[first, final]) as model:
+            llm_propose_patch(state, tool_definitions=definitions,
+                              tool_executor=lambda name, args: executed.append((name, args)))
+        self.assertEqual(executed, [])
+        outputs = [json.loads(item["output"]) for item in model.call_args_list[1].args[0]
+                   if item.get("type") == "function_call_output"]
+        self.assertEqual({item["error"]["code"] for item in outputs},
+                         {"tool_arguments_invalid", "tool_batch_rejected"})
+        self.assertEqual(outputs[0]["error"]["issues"][0]["path"], ["path"])
+
+    def test_patch_model_can_return_a_question_without_a_candidate_patch(self) -> None:
+        state = self.initial_state()
+        response = json.dumps({"diagnosis": "", "patch_diff": "",
+                               "question": "相同输入下，预期保留小数还是四舍五入？",
+                               "clarification_required": True,
+                               "clarification_reasons": ["舍入规则会改变预期结果"]})
+        result = llm_propose_patch(state, model_call=lambda _prompt: response)
+        self.assertEqual(result["question"], "相同输入下，预期保留小数还是四舍五入？")
+        self.assertNotIn("patch_hash", result)
+
+        services = replace(
+            self.make_services([], []),
+            propose_patch=lambda _state: {"question": result["question"],
+                                          "clarification_reasons": result["clarification_reasons"],
+                                          "token_usage": {"total_tokens": 12},
+                                          "estimated_cost": 0.001},
+        )
+        update = analyze_and_propose_node(state, services)
+        self.assertEqual(update["status"], "needs_input")
+        self.assertEqual(update["awaiting_node"], "propose_patch")
+        self.assertEqual(update["clarification_reasons"], ["舍入规则会改变预期结果"])
+        self.assertEqual(update["remaining_budget"]["tokens"], state["remaining_budget"]["tokens"] - 12)
+
+    def test_conflicting_tool_group_is_rejected_before_execution(self) -> None:
+        state = self.initial_state()
+        names = ("mcp__docs__search_a", "mcp__docs__search_b")
+        definitions = tuple({"type":"function", "name":name, "parameters":{"type":"object"}} for name in names)
+        calls = tuple(ModelToolCall(f"call-{index}", name, "{}") for index, name in enumerate(names))
+        first = ModelCallResult(text="", input_tokens=10, output_tokens=2, total_tokens=12,
+            cost_yuan=0.001, tool_calls=calls, output_items=tuple({"type":"function_call", "call_id": item.call_id,
+                "name":item.name, "arguments":item.arguments} for item in calls))
+        final = ModelCallResult(text=json.dumps({"diagnosis":"root", "patch_diff":"diff", "question":"",
+                                                "clarification_required": False, "clarification_reasons": []}),
+                                input_tokens=10, output_tokens=2, total_tokens=12, cost_yuan=0.001)
+        executed = []
+        with patch("repair_workflow.ask_model_with_tools", side_effect=[first, final]) as model:
+            llm_propose_patch(state, tool_definitions=definitions,
+                additional_tool_names=names, tool_executor=lambda name, args: executed.append(name),
+                conflict_group=lambda _: "docs_search")
+        self.assertEqual(executed, [])
+        outputs = [json.loads(item["output"]) for item in model.call_args_list[1].args[0]
+                   if item.get("type") == "function_call_output"]
+        self.assertEqual([item["error"]["code"] for item in outputs], ["tool_conflict", "tool_conflict"])
+
+    def test_external_write_batch_is_rejected_before_any_tool_runs(self) -> None:
+        state = self.initial_state()
+        names = ("mcp__shop__create", "mcp__docs__search")
+        definitions = tuple({"type": "function", "name": name, "parameters": {"type": "object"}}
+                            for name in names)
+        calls = tuple(ModelToolCall(f"call-{index}", name, "{}") for index, name in enumerate(names))
+        first = ModelCallResult(text="", input_tokens=10, output_tokens=2, total_tokens=12,
+            cost_yuan=0.001, tool_calls=calls, output_items=tuple({"type": "function_call", "call_id": item.call_id,
+                "name": item.name, "arguments": item.arguments} for item in calls))
+        final = ModelCallResult(text=json.dumps({"diagnosis": "root", "patch_diff": "diff", "question": "",
+            "clarification_required": False, "clarification_reasons": []}),
+            input_tokens=10, output_tokens=2, total_tokens=12, cost_yuan=0.001)
+        executed = []
+
+        with patch("repair_workflow.ask_model_with_tools", side_effect=[first, final]) as model:
+            llm_propose_patch(state, tool_definitions=definitions, additional_tool_names=names,
+                tool_executor=lambda name, args: executed.append(name),
+                tool_validator=lambda *_args, **_kwargs: None,
+                external_write=lambda name: name == names[0])
+
+        self.assertEqual(executed, [])
+        outputs = [json.loads(item["output"]) for item in model.call_args_list[1].args[0]
+                   if item.get("type") == "function_call_output"]
+        self.assertEqual([item["error"]["code"] for item in outputs],
+                         ["tool_batch_conflict", "tool_batch_conflict"])
+        self.assertTrue(all(item["executed"] is False for item in outputs))
+
+    def test_unknown_external_tool_result_aborts_react_loop(self) -> None:
+        state = self.initial_state()
+        name = "mcp__shop__create"
+        definition = {"type":"function", "name":name, "parameters":{"type":"object"}}
+        call = ModelToolCall("call-write", name, "{}")
+        first = ModelCallResult(text="", input_tokens=10, output_tokens=2, total_tokens=12,
+            cost_yuan=0.001, tool_calls=(call,), output_items=({"type":"function_call", "call_id":call.call_id,
+                "name":name,"arguments":call.arguments},))
+        with patch("repair_workflow.ask_model_with_tools", return_value=first) as model:
+            with self.assertRaises(Fault) as raised:
+                llm_propose_patch(state, tool_definitions=(definition,), additional_tool_names=(name,),
+                    external_write=lambda _: True,
+                    tool_executor=lambda *_: (_ for _ in ()).throw(Fault("unknown", "unknown", category="unknown", outcome_unknown=True)))
+        self.assertTrue(raised.exception.outcome_unknown)
+        self.assertEqual(model.call_count, 1)
+
+    def test_required_trace_failure_aborts_react_loop(self) -> None:
+        state = self.initial_state()
+        name = "mcp__shop__create"
+        definition = {"type":"function", "name":name, "parameters":{"type":"object"}}
+        call = ModelToolCall("call-write", name, "{}")
+        first = ModelCallResult(text="", input_tokens=10, output_tokens=2, total_tokens=12,
+            cost_yuan=0.001, tool_calls=(call,), output_items=({"type":"function_call", "call_id":call.call_id,
+                "name":name,"arguments":call.arguments},))
+        with patch("repair_workflow.ask_model_with_tools", return_value=first) as model:
+            with self.assertRaises(Fault) as raised:
+                llm_propose_patch(state, tool_definitions=(definition,), additional_tool_names=(name,),
+                    external_write=lambda _: True,
+                    tool_executor=lambda *_: (_ for _ in ()).throw(Fault("trace_persist_failed", "audit unavailable",
+                        category="storage")))
+        self.assertEqual(raised.exception.code, "trace_persist_failed")
+        self.assertEqual(model.call_count, 1)
 
     def test_llm_propose_patch_stops_tool_loop_when_token_budget_is_spent(self) -> None:
         """工具回合耗尽 Token 预算时不执行工具，并把已用量交给工作流。"""
@@ -282,9 +420,65 @@ class RepairWorkflowTests(unittest.TestCase):
             )
 
         self.assertTrue(result["budget_exceeded"])
+        self.assertEqual(result["budget_code"], "token_budget_exceeded")
         self.assertEqual(result["token_usage"]["total_tokens"], 120)
         self.assertEqual(executed, [])
         self.assertEqual(model.call_count, 1)
+
+    def test_react_repeats_reads_but_rejects_local_execution_requests(self) -> None:
+        """重复只读观察可用；模型伪造本地写入或测试请求不能进入执行器。"""
+        state = self.initial_state()
+        names = ("read_code",)
+        definitions = tuple({"type": "function", "name": name, "parameters": {"type": "object"}}
+                            for name in names)
+        turns = []
+
+        def tool_turn(round_number, name, arguments):
+            call_id = f"call-{round_number}"
+            encoded = json.dumps(arguments)
+            tool = ModelToolCall(call_id, name, encoded)
+            turns.append(ModelCallResult(
+                text="", input_tokens=10, output_tokens=2, total_tokens=12, cost_yuan=0.001,
+                tool_calls=(tool,), output_items=({"type": "function_call", "call_id": call_id,
+                    "name": name, "arguments": encoded},),
+            ))
+
+        tool_turn(1, "read_code", {"path": "target.py"})
+        tool_turn(2, "apply_patch", {"patch_diff": "synthetic patch"})
+        tool_turn(3, "read_code", {"path": "target.py"})
+        tool_turn(4, "run_tests", {})
+        tool_turn(5, "run_tests", {})
+        turns.append(ModelCallResult(
+            text=json.dumps({"diagnosis": "修复并复测", "patch_diff": "final diff", "question": "",
+                             "clarification_required": False, "clarification_reasons": []}),
+            input_tokens=10, output_tokens=2, total_tokens=12, cost_yuan=0.001,
+        ))
+
+        workspace = {"target.py": "value = 0"}
+        executed = []
+
+        def execute(name, arguments):
+            executed.append((name, arguments))
+            if name == "read_code":
+                return {"text": workspace[arguments["path"]]}
+            raise AssertionError("本地执行工具不得进入模型执行器")
+
+        with patch("repair_workflow.ask_model_with_tools", side_effect=turns) as model:
+            result = llm_propose_patch(state, tool_definitions=definitions, tool_executor=execute)
+
+        self.assertEqual([item for item in executed if item[0] == "read_code"], [
+            ("read_code", {"path": "target.py"}), ("read_code", {"path": "target.py"}),
+        ])
+        self.assertEqual(len(executed), 2)
+        self.assertEqual(model.call_count, 6)
+        outputs = [json.loads(item["output"]) for item in model.call_args_list[-1].args[0]
+                   if item.get("type") == "function_call_output"]
+        self.assertEqual([item["text"] for item in outputs if "text" in item], ["value = 0", "value = 0"])
+        denied = [item for item in outputs if "error" in item]
+        self.assertEqual(len(denied), 3)
+        self.assertTrue(all(item["error"]["code"] == "tool_fixed_execution_only" and not item["executed"]
+                            for item in denied))
+        self.assertEqual(result["diagnosis"], "修复并复测")
 
     def test_llm_propose_patch_stops_when_tool_call_limit_is_reached(self) -> None:
         """模型持续要求工具时，到达单次修复上限后明确失败而不无限调用。"""
@@ -300,12 +494,13 @@ class RepairWorkflowTests(unittest.TestCase):
         with patch("repair_workflow.MAX_REACT_TOOL_CALLS", 1), patch(
             "repair_workflow.ask_model_with_tools", side_effect=[call_turn, call_turn],
         ):
-            with self.assertRaisesRegex(RuntimeError, "超过上限 1"):
+            with self.assertRaisesRegex(RuntimeError, "超过上限 1") as caught:
                 llm_propose_patch(
                     state,
                     tool_definitions=({"type": "function", "name": "search_code"},),
                     tool_executor=lambda name, arguments: {"matches": []},
                 )
+            self.assertEqual(caught.exception.budget_kind, "tool_calls")
 
     def test_llm_failure_becomes_workflow_failure_state(self) -> None:
         """模型调用失败时，提议节点返回失败状态而不是让异常冒出图外。"""
@@ -353,6 +548,8 @@ class RepairWorkflowTests(unittest.TestCase):
         result = graph.invoke(self.initial_state(attempts=0))
         self.assertEqual(result["status"], "failed")
         self.assertEqual(result["last_error"], "测试失败")
+        self.assertEqual(result["budget_exhausted"], "repair_attempts")
+        self.assertEqual(result["error_info"]["causes"][0]["code"], "validation_failed")
         self.assertNotIn("save_case", events)
 
     def test_model_token_budget_stops_before_applying_patch(self) -> None:
@@ -383,6 +580,7 @@ class RepairWorkflowTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "budget_exceeded")
         self.assertEqual(result["remaining_budget"]["tokens"], 0)
+        self.assertEqual(result["budget_exhausted"], "tokens")
         self.assertNotIn("apply_patch", events)
 
     def test_model_cost_budget_stops_before_applying_patch(self) -> None:
@@ -414,6 +612,7 @@ class RepairWorkflowTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "budget_exceeded")
         self.assertEqual(result["remaining_budget"]["cost"], 0.0)
+        self.assertEqual(result["budget_exhausted"], "cost")
         self.assertNotIn("apply_patch", events)
 
     def test_unmatched_baseline_waits_for_user_input(self) -> None:
@@ -455,15 +654,24 @@ class CheckpointWorkflowTests(unittest.TestCase):
             checkpoint_revision=checkpoint,
             allowed_paths=("target.py",),
             test_targets=("test_target.py",),
+            language="python",
             validation_report_path=self.root / "task" / "validation.md",
             execution_backend="host",
         )
         # 保留真实生成和基线失败校验，仅替换模型 I/O。
         model = patch("defect_regression.ask_model_with_usage", return_value=json.dumps({
             "test_body": "from target import value\nassert value == 2", "question": "",
+            "clarification_required": False, "clarification_reasons": [],
         }))
         model.start()
         self.addCleanup(model.stop)
+        reviewer = patch("adversarial_review.ask_model_with_usage", side_effect=lambda prompt: json.dumps({
+            "summary": "checkpoint 集成测试的独立模型桩", "checks": [
+                {"aspect": aspect, "verdict": "pass", "path": "target.py", "quote": "value = 2",
+                 "reasoning": "报告明确要求默认值为二，候选仅修正该常量且没有改变其他行为"}
+                for aspect in ("boundary_inputs", "behavior_compatibility", "patch_risk")]}))
+        reviewer.start()
+        self.addCleanup(reviewer.stop)
 
     def make_services(self, values: tuple[int, ...]) -> RepairServices:
         """模型回调生成固定候选补丁，其他修改和验证动作调用真实工具。"""

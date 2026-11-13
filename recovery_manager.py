@@ -112,11 +112,18 @@ class RecoveryManager:
         with diagnostic_scope(path=self.store.root / "tasks" / task_id / "errors.jsonl", task_id=task_id, operation="task.recovery"):
             try:
                 task = self.store.get(task_id)
+                self.runner.validate_task_identity(task)
                 self._stop_and_charge(task)
                 if job_id:
-                    backup = RecoveryBackup(self.store, job_id)
+                    candidate = RecoveryBackup(self.store, job_id)
+                    knowledge = self.runner.validate_task_identity(candidate.snapshot["task"])
+                    if (candidate.task_id != task_id
+                            or Path(candidate.snapshot["business_path"]).resolve() != knowledge.path.resolve()):
+                        raise Fault("permission_denied", "恢复快照归属或业务路径不一致，拒绝覆盖", category="permission")
+                    backup = candidate
                     # Restore exactly the original A even when a previous rollback stopped halfway.
                     task = backup.restore()
+                    self.runner.validate_task_identity(task)
                     self._trace(task_id, "rolled_back", key=job_id)
                 if task["progress"]["recovery_count"] >= self.MAX_RECOVERIES:
                     raise Fault("recovery_limit", "自动恢复次数已达上限", category="budget")
@@ -129,6 +136,8 @@ class RecoveryManager:
                 task["progress"].update(run_id=run_id, recovery={"id": backup.job_id, "status": "working"})
                 task["execution"] = "running"
                 with self.store.connect() as db:
+                    db.execute("BEGIN IMMEDIATE")
+                    self.store.allocate_epoch(db, task)
                     self.store._write(db, task, expected_run=None)
                 backup.set_phase("working")
                 with execution_scope(task["state"]["remaining_budget"]["seconds"], task_id=task_id, run_id=run_id,
@@ -238,8 +247,7 @@ class RecoveryManager:
         assert_plain_path(Path(config["workspace"]))
         if Path(config["workspace"]).absolute() != expected_workspace.absolute():
             raise Fault("recovery_path_denied", "恢复只允许修改当前任务的独立工作区", category="permission")
-        if config.get("principal") != "local-user":
-            raise Fault("permission_denied", "恢复任务执行身份不受支持", category="permission")
+        self.runner.validate_task_identity(task)
         if progress["version"] != WORKFLOW_VERSION or progress["next_node"] not in (*NODES, "prepare_workspace", "finish"):
             raise Fault("workflow_version_mismatch", "工作流版本或续执行节点不兼容", category="conflict")
         if progress["pending_calls"]:

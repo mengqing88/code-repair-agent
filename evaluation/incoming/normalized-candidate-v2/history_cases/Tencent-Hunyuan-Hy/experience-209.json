@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "数值字段以字符串形式存储并参与排序",
+    "缺陷表现为字典序导致 10 排在 2 前",
+    "排序键应做显式类型转换"
+  ],
+  "before_source": "# 版本号排序：按版本号的数值升序排列。\n\n\ndef sort_versions(versions):\n    return sorted(versions)\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-209",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "数值以字符串存储时，排序必须先转换类型再比较；直接按字符串排序会引入字典序，多位数与个位数混排时次序完全错误。修复原则是显式提供数值化的排序键，保持元素本身形式不变。",
+  "experience_id": "experience-209",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】版本号排序场景：版本 10 被排在版本 2 之前，因为按字符串字典序比较。预期：按版本号的数值升序排列。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def sort_versions(versions):\n-    return sorted(versions)\n+    return sorted(versions, key=int)\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import sort_versions\n\n\ndef test_empty_versions():\n    assert sort_versions([]) == []\n\n\ndef test_single_digit_versions():\n    assert sort_versions([\"1\", \"2\"]) == [\"1\", \"2\"]\n\n\ndef test_two_digit_versions():\n    assert sort_versions([\"2\", \"10\"]) == [\"2\", \"10\"]\n"
+}

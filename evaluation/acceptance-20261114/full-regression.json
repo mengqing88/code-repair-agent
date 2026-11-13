@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "junit_cases_including_subtests": 661,
+  "pytest_cases_passed": 600,
+  "pytest_cases_skipped": 14,
+  "pytest_cases_failed": 0,
+  "subtests_passed": 47,
+  "time_seconds": 1030.43,
+  "python": "3.11.9",
+  "environment": "fresh uv.lock environment",
+  "source": "clean Git export"
+}

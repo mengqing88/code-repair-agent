@@ -1,0 +1,52 @@
+{
+  "status": "completed_controlled_synthetic_fixture",
+  "date": "2026-11-12",
+  "entrypoint": "adversarial_review.review_patch",
+  "model": "deepseek-v4.1-flash-1017",
+  "dataset": "adversarial_review_cases_20261112.json",
+  "fixture": "Actual limited pytest passed for each patch; tests intentionally omit the hidden regression in the three negative cases.",
+  "planned_reviews": 8,
+  "completed_reviews": 8,
+  "decision_accuracy": 1.0,
+  "approved_safe_patches": 2,
+  "expected_safe_patches": 2,
+  "false_rejects_in_fixture": 0,
+  "rejected_flawed_patches": 6,
+  "expected_flawed_patches": 6,
+  "target_aspect_detected": 6,
+  "source_citations_validated_against_baseline_or_patch": 8,
+  "source_citations_checked": 8,
+  "workspace_cleanup_successes": 8,
+  "workspace_cleanup_attempts": 8,
+  "observed_tokens": 23418,
+  "token_usage_complete": true,
+  "mean_seconds_per_review": 24.41,
+  "p95_seconds_nearest_rank": 36.475,
+  "model_cost_known": false,
+  "cases": {
+    "safe_zero_total": {
+      "correct": 2,
+      "planned": 2
+    },
+    "inclusive_upper_boundary": {
+      "correct": 2,
+      "planned": 2
+    },
+    "zero_limit_compatibility": {
+      "correct": 2,
+      "planned": 2
+    },
+    "owner_only_authorization": {
+      "correct": 2,
+      "planned": 2
+    }
+  },
+  "limitations": [
+    "Expected labels were authored for synthetic cases and were not independently reviewed.",
+    "One limited pytest fixture passed per candidate; the three flawed candidates passed because their fixtures did not exercise the stated defect.",
+    "Only two safe and six flawed decisions were evaluated; these counts do not estimate production false-accept or false-reject rates.",
+    "This controlled fixture does not establish quality across large repositories or production traffic.",
+    "Model price is unconfigured; monetary cost is unknown."
+  ],
+  "raw_results": "work/evaluation/review-quality-controlled-20261112.json"
+}

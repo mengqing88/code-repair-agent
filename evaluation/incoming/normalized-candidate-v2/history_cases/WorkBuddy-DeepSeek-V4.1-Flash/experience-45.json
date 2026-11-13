@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "多关键字排序",
+    "升降方向混合",
+    "元组键"
+  ],
+  "before_source": "def rank_players(players):\n    return sorted(players, key=lambda p: (p['level'], p['score']),\n                  reverse=True)\n\n",
+  "dataset_experience_id": "WorkBuddy-DeepSeek-V4.1-Flash::experience-45",
+  "dataset_id": "WorkBuddy-DeepSeek-V4.1-Flash",
+  "diagnosis": "全局 reverse=True 会同时翻转所有关键字的方向，无法表达“一升一降”。修复原则：把需要降序的数值关键字取负后放进同一个元组键，整体保持升序；同时确认主序关键字排在最前。",
+  "experience_id": "experience-45",
+  "normalization_notes": [],
+  "original_report": "学生成绩表先按班级升序再按分数降序排列，实际只按分数降序排列。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,3 @@\n def rank_players(players):\n-    return sorted(players, key=lambda p: (p['level'], p['score']),\n-                  reverse=True)\n+    return sorted(players, key=lambda p: (p['level'], -p['score']))\n \n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import *\n\n\ndef test_experience_1():\n    assert rank_players([]) == []\n\n\ndef test_experience_2():\n    assert [p['level'] for p in rank_players([{'level': 2, 'score': 1}, {'level': 1, 'score': 1}])] == [1, 2]\n\n\ndef test_experience_3():\n    assert rank_players([{'level': 1, 'score': 1}]) == [{'level': 1, 'score': 1}]\n"
+}

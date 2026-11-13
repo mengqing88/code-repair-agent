@@ -122,7 +122,8 @@ class ReproductionTests(unittest.TestCase):
                     return json.dumps({
                         "revised_report": "value 应为 updated，但读取后实际输出 unchanged。",
                         "steps": "从 target 模块导入 value，运行复现脚本并检查标准输出。",
-                        "reproduction_code": "from target import value\nprint(value)",
+                        "reproduction_code": "import runpy\nprint(runpy.run_path(str(SOURCE_ROOT / 'example.txt'))['value'])",
+                        "clarification_required": False, "clarification_reasons": [],
                         "question": "",
                     }, ensure_ascii=False)
                 # json.dumps() 将核对结论字典转换为 JSON 字符串；ensure_ascii=False 保留中文。
@@ -131,6 +132,7 @@ class ReproductionTests(unittest.TestCase):
                     "comparison": "matched",
                     "conclusion": "标准输出为 unchanged，复现了报告所述的值不符合预期问题。",
                     "evidence": "unchanged",
+                    "clarification_required": False, "clarification_reasons": [],
                     "question": "",
                 }, ensure_ascii=False)
 
@@ -143,6 +145,7 @@ class ReproductionTests(unittest.TestCase):
 
             # assertEqual(实际值, 期望值) 检查两者相等，否则测试失败；这里验证状态为已复现。
             self.assertEqual(record["status"], "已复现，与报告一致")
+            self.assertIn("多种合理解释", prompts[0])
             # assertIn() 检查结论中包含实际证据引用。
             self.assertIn("证据引用：unchanged", record["conclusion"])
             # document：read_text(encoding="utf-8") 读取最新工作文档并返回字符串。
@@ -177,7 +180,8 @@ class ReproductionTests(unittest.TestCase):
                     return json.dumps({
                         "revised_report": "报告称运行代码时会抛出 ValueError，先导入代码并读取变量检查实际结果。",
                         "steps": "读取变量并打印。",
-                        "reproduction_code": "from target import value\nprint(value)",
+                        "reproduction_code": "from example import value\nprint(value)",
+                        "clarification_required": False, "clarification_reasons": [],
                         "question": "",
                     })
                 # json.dumps(..., ensure_ascii=False) 将核对字典转换为保留中文的 JSON 字符串。
@@ -185,6 +189,8 @@ class ReproductionTests(unittest.TestCase):
                     "comparison": "mismatch",
                     "conclusion": "实际正常输出 1，未出现报告所述的 ValueError。",
                     "evidence": "1",
+                    "clarification_required": True,
+                    "clarification_reasons": ["报告描述 ValueError，但实际脚本正常输出 1"],
                     "question": "实际正常输出 1，报告描述为抛出 ValueError；请确认触发条件。",
                 }, ensure_ascii=False)
 
@@ -196,6 +202,8 @@ class ReproductionTests(unittest.TestCase):
             # assertEqual() 核对暂停状态；assertIn() 核对具体问题；assertNotEqual() 确保没有误标为已复现。
             self.assertEqual(record["status"], "需要用户确认")
             self.assertIn("请确认触发条件", record["question"])
+            self.assertTrue(record["clarification_required"])
+            self.assertEqual(record["clarification_reasons"], ["报告描述 ValueError，但实际脚本正常输出 1"])
             self.assertNotEqual(record["status"], "已复现，与报告一致")
             # str.strip() 去掉输出两端换行，返回新字符串；assertEqual() 确认真正输出了源码变量 1。
             self.assertEqual(record["execution"]["stdout"].strip(), "1")

@@ -1,15 +1,17 @@
 """Fault injection for deadlines, contract repair, replay safety and durable effects."""
+import multiprocessing
 import difflib
 import json
 import sqlite3
 import subprocess
 import sys
+import time
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from fastapi.testclient import TestClient
+from test_account_support import TestClient
 
 from knowledge_base import KnowledgeBase
 from model_contracts import PatchProposal, generate_object, parse_object
@@ -17,7 +19,7 @@ from operation_store import OperationStore
 from repair_api import RepairRunner, TaskInput, create_app, reconcile_review
 from repair_state import create_initial_state
 from repair_tools import RepairToolError, RepairToolbox, apply_patch, create_checkpoint_workspace, restore_checkpoint_workspace
-from resilience import (Circuit, Fault, call_with_retry, charge_usage, execution_scope,
+from resilience import (Circuit, Fault, budget_fault, call_with_retry, charge_usage, execution_scope,
                         process_identity, retry_after_seconds, run_process, track_node)
 
 
@@ -30,16 +32,43 @@ def transient(error):
     return Fault("unavailable", "temporary", category="transient", retryable=True, retry_after=1)
 
 
+def _claim_half_open_circuit_probe(path, start, results):
+    if not start.wait(10):
+        results.put("start_timeout")
+        return
+    try:
+        Circuit(Path(path), threshold=1, cooldown=0.05).permit("shared-provider")
+    except Fault as error:
+        results.put(error.code)
+    else:
+        results.put("probe")
+
+
+@pytest.mark.parametrize(("code", "kind", "label"), [
+    ("deadline_exceeded", "runtime", "时间预算耗尽"),
+    ("token_budget_exceeded", "tokens", "模型 Token 预算耗尽"),
+    ("cost_budget_exceeded", "cost", "模型费用预算耗尽"),
+    ("tool_budget_exceeded", "tool_calls", "工具调用预算耗尽"),
+    ("retry_budget_exceeded", "request_retries", "请求重试次数耗尽"),
+    ("repair_attempts_exhausted", "repair_attempts", "修复尝试次数耗尽"),
+])
+def test_budget_exhaustion_has_a_distinct_structured_marker(code, kind, label):
+    fault = budget_fault(label, code=code)
+    info = fault.as_dict()
+    assert info["budget_kind"] == kind and info["budget_label"] == label
+
+
 def test_retry_bound_retry_after_and_safe_replay(tmp_path):
     calls, waits = [], []
     def unavailable(timeout):
         calls.append(timeout)
         raise RuntimeError("SECRET upstream body")
     with execution_scope(20, trace_path=tmp_path / "trace.jsonl"):
-        with pytest.raises(Fault):
+        with pytest.raises(Fault) as caught:
             call_with_retry("read", unavailable, classify=transient, replay_safe=True,
                             sleep=waits.append, jitter=lambda low, high: high / 2,
                             parameters={"password": "SECRET"})
+    assert caught.value.budget_kind == "request_retries"
     assert len(calls) == 3 and waits == [1, 1]
     text = (tmp_path / "trace.jsonl").read_text()
     assert "SECRET" not in text and "password" not in text
@@ -84,9 +113,62 @@ def test_circuit_survives_new_instances_and_single_half_open_probe(tmp_path, mon
     Circuit(path).permit("provider")
 
 
+def test_only_one_process_can_claim_the_half_open_circuit_probe(tmp_path):
+    """多个 worker 进程同时恢复时，SQLite 只允许一个半开探针。"""
+    path = tmp_path / "circuits.sqlite3"
+    Circuit(path, threshold=1, cooldown=0.05).failure("shared-provider")
+    time.sleep(0.07)
+    context = multiprocessing.get_context("spawn")
+    start = context.Event()
+    results = context.Queue()
+    processes = [context.Process(target=_claim_half_open_circuit_probe,
+                                 args=(str(path), start, results)) for _ in range(6)]
+    outcomes = []
+    try:
+        for process in processes:
+            process.start()
+        start.set()
+        outcomes = [results.get(timeout=20) for _ in processes]
+        for process in processes:
+            process.join(timeout=5)
+    finally:
+        start.set()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
+            process.join(timeout=5)
+        results.close()
+
+    assert all(process.exitcode == 0 for process in processes), [process.exitcode for process in processes]
+    assert outcomes.count("probe") == 1
+    assert outcomes.count("circuit_open") == 5
+
+
+def test_contextless_requests_share_the_process_circuit(monkeypatch):
+    import resilience
+
+    monkeypatch.setattr(resilience, "_DEFAULT_CIRCUIT", Circuit())
+    attempts = []
+
+    def unavailable(_):
+        attempts.append(1)
+        raise RuntimeError("unavailable")
+
+    for _ in range(3):
+        with pytest.raises(Fault):
+            call_with_retry("chat", unavailable, classify=transient, replay_safe=True,
+                            endpoint="chat-provider", max_retries=0)
+    with pytest.raises(Fault) as blocked:
+        call_with_retry("chat", unavailable, classify=transient, replay_safe=True,
+                        endpoint="chat-provider", max_retries=0)
+    assert blocked.value.code == "circuit_open"
+    assert len(attempts) == 3
+
+
 def test_schema_correction_is_bounded_and_accounts_all_generations():
     prompts, schemas = [], []
-    replies = iter(['{"diagnosis": 1}', '{"diagnosis":"root","patch_diff":"diff"}'])
+    replies = iter(['{"diagnosis": 1}', '{"diagnosis":"root","patch_diff":"diff","question":"",'
+                    '"clarification_required":false,"clarification_reasons":[]}'])
     def model(prompt):
         from resilience import schema_context
         prompts.append(prompt)
@@ -100,6 +182,18 @@ def test_schema_correction_is_bounded_and_accounts_all_generations():
     with pytest.raises(Fault) as caught:
         generate_object("task", lambda prompt: calls.append(prompt) or "invalid JSON", PatchProposal)
     assert caught.value.code == "schema_invalid" and len(calls) == 3
+
+
+@pytest.mark.parametrize("contract,payload", [
+    (PatchProposal, {"diagnosis": "root", "patch_diff": "diff", "question": "",
+                     "clarification_required": True, "clarification_reasons": ["未知舍入规则"]}),
+    (PatchProposal, {"diagnosis": "", "patch_diff": "", "question": "",
+                     "clarification_required": False, "clarification_reasons": []}),
+])
+def test_clarification_contract_rejects_inconsistent_decisions(contract, payload):
+    with pytest.raises(Fault) as raised:
+        generate_object("task", lambda _: json.dumps(payload), contract, max_corrections=0)
+    assert raised.value.code == "schema_invalid"
 
 
 @pytest.mark.parametrize("text", ['{"x":1,"x":2}', '{"x":NaN}', '[]'])
@@ -149,11 +243,27 @@ def test_unknown_effect_pauses_and_is_never_blindly_replayed(tmp_path):
     assert calls == [1] and store.lookup("key")["status"] == "unknown"
 
 
+def test_effect_is_not_started_when_write_ahead_trace_cannot_be_saved(tmp_path):
+    store = OperationStore(tmp_path / "operations.sqlite3")
+    blocked = tmp_path / "blocked"
+    blocked.write_text("not a directory", encoding="utf-8")
+    effects = []
+
+    with execution_scope(60, task_id="audit", trace_path=blocked / "trace.jsonl"):
+        with pytest.raises(Fault) as caught:
+            store.execute("audit-key", "audit", "external_write", {},
+                          lambda: effects.append("executed"), lambda: (False, None))
+
+    assert caught.value.code == "trace_persist_failed"
+    assert effects == []
+    assert store.lookup("audit-key")["status"] == "failed"
+
+
 def test_task_creation_replays_same_key_and_rejects_conflicting_body(tmp_path, monkeypatch):
     app = create_app(tmp_path)
     runner = app.state.runner
     monkeypatch.setattr(runner.pool, "submit", lambda *a: None)
-    payload = {"source_type": "pasted_code", "code_text": "value=1", "error_report": "report"}
+    payload = {"source_type": "pasted_code", "language": "python", "code_text": "value=1", "error_report": "report"}
     with TestClient(app) as client:
         a = client.post("/api/tasks", json=payload, headers={"Idempotency-Key": "stable-key"})
         b = client.post("/api/tasks", json=payload, headers={"Idempotency-Key": "stable-key"})
@@ -167,13 +277,13 @@ def test_task_creation_replays_same_key_and_rejects_conflicting_body(tmp_path, m
 def test_same_patch_can_be_applied_again_after_failed_attempt_rollback(tmp_path, monkeypatch):
     runner = RepairRunner(tmp_path / "data")
     monkeypatch.setattr(runner.pool, "submit", lambda *a: None)
-    task = runner.create(TaskInput(source_type="pasted_code", code_text="value = 1\n", error_report="wrong value"))
+    task = runner.create(TaskInput(source_type="pasted_code", language="python", code_text="value = 1\n", error_report="wrong value"))
     config, state = task["config"], task["state"]
     workspace = Path(config["workspace"])
     source_root = Path(config["source_root"])
     (source_root / "test_task.py").write_text("def test_task():\n    assert True\n", encoding="utf-8")
-    config["checkpoint"] = create_checkpoint_workspace(source_root, workspace, pasted_code="value = 1\n")
-    state["patch_diff"] = "--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-value = 1\n+value = 2\n"
+    config["checkpoint"] = create_checkpoint_workspace(source_root, workspace, pasted_code="value = 1\n", pasted_filename="main.py")
+    state["patch_diff"] = "--- a/main.py\n+++ b/main.py\n@@ -1 +1 @@\n-value = 1\n+value = 2\n"
     from resilience import digest
     state["patch_hash"] = digest(state["patch_diff"])
     services = runner.services(task)
@@ -181,14 +291,14 @@ def test_same_patch_can_be_applied_again_after_failed_attempt_rollback(tmp_path,
     restore_checkpoint_workspace(workspace, config["checkpoint"])
     state["attempt_count"] += 1
     services.apply_patch(state)
-    assert "value = 2" in (workspace / "target.py").read_text()
+    assert "value = 2" in (workspace / "main.py").read_text()
     runner.pool.shutdown()
 
 
 def test_restart_restores_interrupted_non_review_workspace(tmp_path, monkeypatch):
     runner = RepairRunner(tmp_path / "data")
     monkeypatch.setattr(runner.pool, "submit", lambda *a: None)
-    task = runner.create(TaskInput(source_type="pasted_code", code_text="value=1\n", error_report="wrong value"))
+    task = runner.create(TaskInput(source_type="pasted_code", language="python", code_text="value=1\n", error_report="wrong value"))
     # This test covers legacy tasks without a durable node checkpoint.
     with runner.store.connect() as db:
         task.pop("progress")
@@ -211,10 +321,10 @@ def test_patch_cannot_modify_tests_or_test_configuration(tmp_path, name):
         apply_patch(patch, workspace_root=tmp_path, allowed_paths=(".",))
 
 
-def test_model_effect_tools_can_be_enabled_by_configuration(tmp_path):
+def test_model_effect_tools_cannot_be_enabled_by_configuration(tmp_path):
     toolbox = RepairToolbox(tmp_path, permitted_model_tools=("read_code", "apply_patch", "run_tests"))
     names = {definition["name"] for definition in toolbox.model_tool_definitions()}
-    assert names == {"read_code", "apply_patch", "run_tests"}
+    assert names == {"read_code"}
     with pytest.raises(RepairToolError, match="Schema"):
         toolbox.call_model_tool("read_code", {"path": 1, "extra": "ignored?"})
 
@@ -228,6 +338,36 @@ def test_process_timeout_kills_descendants(tmp_path, parent_wait):
         run_process([sys.executable, "-c", parent], capture_output=True, timeout=0.3)
     # Wait using a real subprocess to prove a grandchild cannot perform its delayed effect.
     run_process([sys.executable, "-c", "import time; time.sleep(1.1)"], timeout=3)
+    assert not marker.exists()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows Job Object startup")
+def test_short_process_cannot_finish_before_job_registration(tmp_path, monkeypatch):
+    import time
+    import resilience
+    marker = tmp_path / "started"
+    assign_job = resilience.windows_process_job
+    def delayed_registration(process):
+        time.sleep(0.25)
+        assert not marker.exists(), "child ran before isolation was installed"
+        return assign_job(process)
+    monkeypatch.setattr(resilience, "windows_process_job", delayed_registration)
+    code = "from pathlib import Path; Path(" + repr(str(marker)) + ").write_text('ran')"
+    result = run_process([sys.executable, "-c", code], capture_output=True, timeout=5)
+    assert result.returncode == 0 and marker.read_text() == "ran"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows Job Object startup")
+def test_failed_process_registration_cannot_run_child_code(tmp_path):
+    import time
+    marker = tmp_path / "should-not-start"
+    def fail_registration(process):
+        time.sleep(0.25)
+        raise RuntimeError("worker identity could not be persisted")
+    code = "from pathlib import Path; Path(" + repr(str(marker)) + ").write_text('unsafe')"
+    with pytest.raises(RuntimeError, match="identity could not be persisted"):
+        run_process([sys.executable, "-c", code], on_started=fail_registration,
+                    capture_output=True, timeout=5)
     assert not marker.exists()
 
 
@@ -275,10 +415,17 @@ def model_http_server(monkeypatch):
                 name = body["text"]["format"]["name"]
                 values = {
                     "ReproductionPlan": {"revised_report": "add(2,1) must return 3, got 1", "steps": "call add", "question": "",
-                        "reproduction_code": "from bug import add\nprint(add(2,1))\n"},
-                    "ReproductionComparison": {"comparison": "matched", "conclusion": "got 1 instead of 3", "evidence": "1", "question": ""},
-                    "RegressionPlan": {"test_body": "from bug import add\nassert add(2,1) == 3\n", "question": ""},
-                    "PatchProposal": {"diagnosis": "subtract instead of add", "patch_diff": "--- a/bug.py\n+++ b/bug.py\n@@ -1,2 +1,2 @@\n def add(a,b):\n-    return a-b\n+    return a+b\n"},
+                        "clarification_required": False, "clarification_reasons": [], "reproduction_code": "from bug import add\nprint(add(2,1))\n"},
+                    "ReproductionComparison": {"comparison": "matched", "conclusion": "got 1 instead of 3", "evidence": "1", "question": "",
+                        "clarification_required": False, "clarification_reasons": []},
+                    "RegressionPlan": {"test_body": "from bug import add\nassert add(2,1) == 3\n", "question": "",
+                        "clarification_required": False, "clarification_reasons": []},
+                    "PatchProposal": {"diagnosis": "subtract instead of add", "patch_diff": "--- a/bug.py\n+++ b/bug.py\n@@ -1,2 +1,2 @@\n def add(a,b):\n-    return a-b\n+    return a+b\n", "question": "",
+                        "clarification_required": False, "clarification_reasons": []},
+                    "PatchReview": {"summary": "HTTP fixture independent reviewer", "checks": [
+                        {"aspect": aspect, "verdict": "pass", "path": "bug.py", "quote": "return a+b",
+                         "reasoning": "Fixture evidence: the arithmetic now adds both operands without changing the interface"}
+                        for aspect in ("boundary_inputs", "behavior_compatibility", "patch_risk")]},
                 }
                 response = {"id": "resp_fixture", "object": "response", "created_at": 1, "model": "fixture", "status": "completed",
                             "output": [{"type": "message", "id": "msg_fixture", "role": "assistant", "status": "completed",
@@ -298,10 +445,10 @@ def model_http_server(monkeypatch):
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     for name, value in {
-        "CHAT_BASE_URL": f"http://127.0.0.1:{server.server_port}/v1", "CHAT_API_KEY": "fixture",
-        "MODEL": "fixture", "CHAT_STRUCTURED_OUTPUT": "true", "CHAT_PRICE_PER_1K_TOKENS": "0.001",
-        "EMBEDDING_BASE_URL": f"http://127.0.0.1:{server.server_port}/v1", "EMBEDDING_API_KEY": "fixture",
-        "EMBEDDING_MODEL": "fixture", "EMBEDDING_PRICE_PER_1K_TOKENS": "0.001",
+        "CHAT_BASE_URL": f"http://127.0.0.1:{server.server_port}/v1", "CHAT_API_KEY": "chat-test-secret",
+        "MODEL": "fixture-chat-model", "CHAT_STRUCTURED_OUTPUT": "true", "CHAT_PRICE_PER_1K_TOKENS": "0.001",
+        "EMBEDDING_BASE_URL": f"http://127.0.0.1:{server.server_port}/v1", "EMBEDDING_API_KEY": "embedding-test-secret",
+        "EMBEDDING_MODEL": "fixture-embedding-model", "EMBEDDING_PRICE_PER_1K_TOKENS": "0.001",
     }.items():
         monkeypatch.setenv(name, value)
     yield requests, mode
@@ -320,8 +467,10 @@ def test_production_worker_sdk_graph_review_and_durable_restart(tmp_path, model_
     with TestClient(create_app(root)) as client:
         response = client.post("/api/tasks", json={"source_type": "python_file", "path": str(source / "bug.py"),
             "error_report": "add(2,1) must return 3, actually returns 1"}, headers={"Idempotency-Key": "worker-fixture"})
+        assert response.status_code == 202, response.text
         task_id = response.json()["state"]["task_id"]
-        task = finished(client, task_id, timeout=60)
+        # Windows SDK/TLS startup can exceed a minute; keep the task's 120 s budget unchanged.
+        task = finished(client, task_id, timeout=110)
         assert task["state"]["status"] == "reviewable", task["state"]
         assert task["worker"]["identity"]
         assert process_identity(task["worker"]["pid"]) != task["worker"]["identity"]
@@ -343,12 +492,17 @@ def test_production_worker_sdk_graph_review_and_durable_restart(tmp_path, model_
 def test_production_watchdog_stops_slow_upstream_and_rolls_back(tmp_path, model_http_server, monkeypatch):
     from test_repair_api import finished
     model_http_server[1]["slow"] = True
-    # Leave headroom for Windows worker/SDK startup, then cut off the actual slow request.
-    monkeypatch.setattr("repair_api.create_initial_state", lambda *a, **kw: create_initial_state(*a, **kw, remaining_seconds=20))
+    # Leave enough headroom for the production worker to reach the upstream under suite load.
+    def short_budget_state(*args, **kwargs):
+        kwargs["remaining_seconds"] = 45
+        return create_initial_state(*args, **kwargs)
+    monkeypatch.setattr("repair_api.create_initial_state", short_budget_state)
     app = create_app(tmp_path / "data")
     with TestClient(app) as client:
-        response = client.post("/api/tasks", json={"source_type": "pasted_code", "code_text": "value=1\n", "error_report": "wrong value"})
-        task = finished(client, response.json()["state"]["task_id"], timeout=60)
+        response = client.post("/api/tasks", json={"source_type": "pasted_code", "language": "python",
+                                                    "code_text": "value=1\n", "error_report": "wrong value"})
+        assert response.status_code == 202, response.text
+        task = finished(client, response.json()["state"]["task_id"], timeout=90)
         assert task["state"]["status"] == "budget_exceeded", task["state"]
         assert task["state"]["error_info"]["code"] == "deadline_exceeded"
         assert task["state"]["remaining_budget"]["seconds"] == 0
@@ -376,6 +530,7 @@ def test_watchdog_distinguishes_safe_calls_from_uncertain_effects(tmp_path, monk
     try:
         task = task_at(runner, workspace=True, node=node)
         task, run_id = in_flight(runner, task, node)
+        starting_tokens = task["state"]["remaining_budget"]["tokens"]
         task["progress"]["in_flight"]["code_execution_started"] = code_started
         task["progress"]["pending_calls"] = [{"id": "request", "reserved_tokens": 100, "reserved_cost": 0.01}]
         runner.store.put(task)
@@ -391,7 +546,7 @@ def test_watchdog_distinguishes_safe_calls_from_uncertain_effects(tmp_path, monk
             assert target.read_text() == "value = 1\n"
             assert saved["progress"]["next_node"] == "finish" and not saved["progress"]["interrupted"]
             assert not saved["state"]["accounting"]["usage_complete"]
-            assert saved["state"]["remaining_budget"]["tokens"] == 19900
+            assert saved["state"]["remaining_budget"]["tokens"] == starting_tokens - 100
         else:
             assert target.read_text() == "uncertain state\n"
             assert saved["state"]["error_info"]["outcome_unknown"]

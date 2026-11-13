@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "可变默认参数共享可变状态",
+    "默认值应为每次调用新建",
+    "None 哨兵替代可变默认值"
+  ],
+  "before_source": "def add_to_cart(item, cart=[]):\n    \"\"\"把商品加入购物车并返回；未提供 cart 时使用全新空车。\"\"\"\n    cart.append(item)\n    return cart\n",
+  "dataset_experience_id": "GLM::experience-115",
+  "dataset_id": "GLM",
+  "diagnosis": "Python 默认参数在函数定义时求值一次：可变默认值被所有调用共享。修复原则：默认值用 None 哨兵，在函数体内新建可变对象。",
+  "experience_id": "experience-115",
+  "normalization_notes": [],
+  "original_report": "购物车收集函数用可变默认参数做购物车，两个匿名访客的购物车出现了彼此的商品。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,6 @@\n-def add_to_cart(item, cart=[]):\n+def add_to_cart(item, cart=None):\n     \"\"\"把商品加入购物车并返回；未提供 cart 时使用全新空车。\"\"\"\n+    if cart is None:\n+        cart = []\n     cart.append(item)\n     return cart\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import add_to_cart\n\ndef test_explicit_cart():\n    c = []\n    add_to_cart(\"apple\", c)\n    assert c == [\"apple\"]\n\ndef test_default_independent():\n    c1 = add_to_cart(\"apple\")\n    c2 = add_to_cart(\"pear\")\n    assert c1 == [\"apple\"] and c2 == [\"pear\"]\n\ndef test_same_object_after_fix():\n    c1 = add_to_cart(\"a\")\n    c2 = add_to_cart(\"b\")\n    assert c1 is not c2\n"
+}

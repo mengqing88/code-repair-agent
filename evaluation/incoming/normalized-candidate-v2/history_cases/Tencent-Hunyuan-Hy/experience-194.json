@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "配置/表单字段允许显式的假值（0、False、空串）",
+    "缺陷表现为显式假值被默认值覆盖",
+    "应区分「键缺失 / 值为 None」与「显式假值」"
+  ],
+  "before_source": "# 日志开关配置：默认开启，允许显式关闭。\n\n\ndef verbose_enabled(config):\n    \"\"\"键缺失或为 None 时默认 True。\"\"\"\n    return config.get(\"verbose\") or True\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-194",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "用 `x or default` 提供默认值会吞掉所有假值（0、False、空串），即使调用方显式传入也会被替换。区分「未提供」与「显式假值」应使用 `is None` 判断键是否存在或值为 None。修复原则是把短路默认值改成显式的缺失判断。",
+  "experience_id": "experience-194",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】日志开关场景：默认开启详细日志，但运维显式配置 verbose=False 后日志依旧开启，配置无法关闭。预期：显式 False 必须被尊重，只有未配置时才使用默认值。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,4 +3,4 @@\n \n def verbose_enabled(config):\n     \"\"\"键缺失或为 None 时默认 True。\"\"\"\n-    return config.get(\"verbose\") or True\n+    return True if config.get(\"verbose\") is None else config[\"verbose\"]\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import verbose_enabled\n\n\ndef test_missing_key_defaults_to_true():\n    assert verbose_enabled({}) is True\n\n\ndef test_explicit_true():\n    assert verbose_enabled({\"verbose\": True}) is True\n\n\ndef test_explicit_false_is_respected():\n    assert verbose_enabled({\"verbose\": False}) is False\n"
+}

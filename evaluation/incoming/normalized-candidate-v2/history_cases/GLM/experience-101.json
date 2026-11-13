@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "序列生成首项错位",
+    "先推进状态后取值的循环缺陷",
+    "指数退避/等比序列实现"
+  ],
+  "before_source": "def retry_intervals(base, count, step=2):\n    \"\"\"重试间隔：第 i 项为 base * step**i（i 从 0 开始）。\"\"\"\n    out = []\n    cur = base\n    for _ in range(count):\n        cur = cur * step\n        out.append(cur)\n    return out\n",
+  "dataset_experience_id": "GLM::experience-101",
+  "dataset_id": "GLM",
+  "diagnosis": "循环内先乘后追加导致序列错位：应先使用当前值再推进状态。修复原则：追加与推进的先后顺序决定首项取值，需与契约的起始下标对齐。",
+  "experience_id": "experience-101",
+  "normalization_notes": [],
+  "original_report": "短信重试的间隔序列整体后移一档，第一次重试间隔是配置基数的 2 倍，与告警平台约定不符。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,6 +3,6 @@\n     out = []\n     cur = base\n     for _ in range(count):\n+        out.append(cur)\n         cur = cur * step\n-        out.append(cur)\n     return out\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import retry_intervals\n\ndef test_empty():\n    assert retry_intervals(4, 0) == []\n\ndef test_first_is_base():\n    assert retry_intervals(4, 1) == [4]\n\ndef test_sequence():\n    assert retry_intervals(4, 3) == [4, 8, 16]\n"
+}

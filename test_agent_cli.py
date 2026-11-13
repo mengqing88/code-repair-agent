@@ -95,6 +95,8 @@ class AgentCliTests(unittest.TestCase):
                     str(root),
                     "--revision",
                     "a" * 40,
+                    "--language",
+                    "python",
                     "--error-text",
                     "复现失败",
                 ]
@@ -121,7 +123,8 @@ class AgentCliTests(unittest.TestCase):
         """CLI 将配置好的 PostgreSQL 知识库传给本次任务的工具箱。"""
         args = make_parser().parse_args(["--code-text", "value = 1", "--error-text", "结果错误"])
         source = {"type": "pasted_code", "character_count": 9}
-        knowledge_base = object()
+        from repair_tools import PostgresKnowledgeBase
+        knowledge_base = PostgresKnowledgeBase(dsn="postgresql://fixture")
         workspace = Path("task-workspace")
 
         with (
@@ -129,13 +132,20 @@ class AgentCliTests(unittest.TestCase):
             patch("agent_cli.PostgresKnowledgeBase.from_environment", return_value=knowledge_base),
             patch("agent_cli.RepairToolbox") as toolbox_factory,
             patch("agent_cli.build_repair_workflow") as workflow_factory,
+            patch("execution_manifest.freeze", return_value=({}, "hash")),
+            patch("execution_manifest.SnapshotKnowledge"),
+            patch("execution_manifest.write_once"),
+            patch("execution_manifest.task_configuration", return_value=__import__("contextlib").nullcontext()),
+            patch("recovery_store.source_fingerprint", return_value={}),
         ):
             workflow_factory.return_value.invoke.return_value = {
                 "status": "queued", "remaining_budget": {"seconds": 60.0},
             }
             _run_repair_workflow(args, source, "结果错误", Path("project"))
 
-        self.assertIs(toolbox_factory.call_args.kwargs["knowledge_base"], knowledge_base)
+        configured = toolbox_factory.call_args.kwargs["knowledge_base"]
+        self.assertEqual(configured.dsn, knowledge_base.dsn)
+        self.assertEqual(configured.regression_path, args.knowledge_base)
 
     def test_command_line_prints_json(self) -> None:
         """通过子进程和模拟模型回复运行 CLI，检查工作文档和 JSON 输出。"""
@@ -156,6 +166,7 @@ class AgentCliTests(unittest.TestCase):
                 "revised_report": "x 应为 2，实际为 1；导入源码并打印 x 以核对。",
                 "steps": "从 target 模块导入 x 并打印真实值。",
                 "reproduction_code": "from target import x\nprint(x)",
+                "clarification_required": False, "clarification_reasons": [],
                 "question": "",
             })
             # comparison：json.dumps(..., ensure_ascii=False) 返回保留中文的核对结论 JSON 字符串。
@@ -164,14 +175,18 @@ class AgentCliTests(unittest.TestCase):
                 "comparison": "matched",
                 "conclusion": "实际输出 1，复现了报告所述的 x 不等于 2 的问题。",
                 "evidence": "1",
+                "clarification_required": False, "clarification_reasons": [],
                 "question": "",
             }, ensure_ascii=False)
             # patch：模拟修复模型返回的诊断和 unified diff，交给真实 Git 工具应用到任务副本。
             patch = json.dumps({
                 "diagnosis": "x 的初始值与错误报告不一致。",
                 "patch_diff": "diff --git a/target.py b/target.py\n--- a/target.py\n+++ b/target.py\n@@ -1 +1 @@\n-x = 1\n+x = 2\n",
+                "clarification_required": False, "clarification_reasons": [],
+                "question": "",
             }, ensure_ascii=False)
-            regression = json.dumps({"test_body": "from target import x\nassert x == 2", "question": ""})
+            regression = json.dumps({"test_body": "from target import x\nassert x == 2",
+                                     "clarification_required": False, "clarification_reasons": [], "question": ""})
             # bootstrap：子进程启动代码；将项目路径加入导入路径，用固定回复替代网络调用。
             # str(script.parent) 将脚本父目录转成字符串；f 字符串的 !r 相当于 repr()，保留引号和转义。
             # 生成代码中的 sys.path.insert(0, 路径) 在模块搜索列表开头插入项目目录，返回 None。
@@ -186,8 +201,10 @@ class AgentCliTests(unittest.TestCase):
                 "import reproduction; reproduction.ask_model = lambda prompt: next(responses); "
                 "import defect_regression; defect_regression.ask_model_with_usage = lambda prompt: next(responses); "
                 "import repair_workflow; "
+                "import adversarial_review; "
+                "adversarial_review.ask_model_with_usage = lambda prompt: json.dumps({'summary':'CLI test reviewer', 'checks':[{'aspect':a,'verdict':'pass','path':'target.py','quote':'x = 2','reasoning':'The report explicitly requires x to be 2 and changes only its default value'} for a in ('boundary_inputs','behavior_compatibility','patch_risk')]}); "
                 "from types import SimpleNamespace; "
-                "repair_workflow._model_tool_rounds = lambda prompt, state, definitions, execute: "
+                "repair_workflow._model_tool_rounds = lambda prompt, state, definitions, execute, *args: "
                 "SimpleNamespace(text=next(responses), input_tokens=0, output_tokens=0, total_tokens=0, cost_yuan=0.0); "
                 "import agent_cli; raise SystemExit(agent_cli.main(sys.argv[1:]))"
             )
@@ -203,6 +220,10 @@ class AgentCliTests(unittest.TestCase):
                     bootstrap,
                     "--code-text",
                     "x = 1\n",
+                    "--language",
+                    "python",
+                    "--code-name",
+                    "target.py",
                     "--error-text",
                     "x 应为 2，实际为 1",
                     "--test-target",

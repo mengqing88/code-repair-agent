@@ -1,0 +1,18 @@
+{
+  "applicable_conditions": [
+    "特殊 ttl 语义",
+    "永久/立即过期混淆"
+  ],
+  "before_source": "import time\nclass Session:\n    def __init__(self):\n        self.s = {}\n    def put(self, k, v, ttl):\n        self.s[k] = (v, time.time() + ttl)\n    def get(self, k):\n        if k not in self.s: return None\n        v, e = self.s[k]\n        if e is not None and time.time() >= e: return None\n        return v\n",
+  "dataset_experience_id": "WorkBuddy::experience-86",
+  "dataset_id": "WorkBuddy",
+  "diagnosis": "特殊 ttl 语义（0/负=永久）必须单独处理，不能代入过期公式。",
+  "experience_id": "experience-86",
+  "normalization_notes": [
+    "solution.py -> target.py"
+  ],
+  "original_report": "会话缓存：ttl=0 表示永久，却被当成立即过期。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -3,7 +3,8 @@\n     def __init__(self):\n         self.s = {}\n     def put(self, k, v, ttl):\n-        self.s[k] = (v, time.time() + ttl)\n+        e = None if ttl <= 0 else time.time() + ttl\n+        self.s[k] = (v, e)\n     def get(self, k):\n         if k not in self.s: return None\n         v, e = self.s[k]\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\nfrom target import Session\n\ndef test_a():\n    s = Session(); s.put('a',1,0); assert s.get('a')==1\n\ndef test_b():\n    s = Session(); s.put('x',5,0); assert s.get('x')==5\n\ndef test_c():\n    s = Session(); s.put('k',9,-1); assert s.get('k')==9\n"
+}

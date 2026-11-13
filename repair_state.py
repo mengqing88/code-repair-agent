@@ -18,8 +18,8 @@ from typing_extensions import NotRequired, TypedDict
 
 # 默认预算：新任务没有显式传入预算时，使用项目约定的限制。
 DEFAULT_MAX_REPAIR_ATTEMPTS = 10
-DEFAULT_MAX_RUNTIME_SECONDS = 120.0
-DEFAULT_MAX_MODEL_TOKENS = 20_000
+DEFAULT_MAX_RUNTIME_SECONDS = 1200.0
+DEFAULT_MAX_MODEL_TOKENS = 200_000
 DEFAULT_MAX_COST_YUAN = 0.10
 
 
@@ -76,6 +76,17 @@ class ValidationSummary(TypedDict):
     report_path: str
 
 
+class AdversarialReview(TypedDict):
+    """对抗审查代理对当前补丁的独立判断。"""
+
+    approved: bool
+    summary: str
+    findings: list[str]
+    checks: NotRequired[list[dict[str, object]]]
+    patch_hash: NotRequired[str]
+    reviewer_version: NotRequired[int]
+
+
 class RemainingBudget(TypedDict):
     """本次任务尚可使用的预算快照；实际扣减及是否停止由后续控制器负责。"""
 
@@ -85,6 +96,11 @@ class RemainingBudget(TypedDict):
     attempts: int
     # cost：剩余模型费用上限，单位为人民币元；实际费用由模型调用回调提供。
     cost: float
+
+
+BudgetKind = Literal[
+    "runtime", "tokens", "cost", "tool_calls", "request_retries", "repair_attempts",
+]
 
 
 class RepairState(TypedDict):
@@ -107,6 +123,8 @@ class RepairState(TypedDict):
     # code_evidence：当前诊断使用的代码证据；case_matches：当前案例候选及适用性判断。
     code_evidence: list[CodeEvidence]
     case_matches: list[CaseMatch]
+    # failure_matches：单独召回的用户拒绝经验，只作警示，不参与成功案例适用性判断。
+    failure_matches: NotRequired[list[dict[str, object]]]
     # diagnosis：有证据支持的根因说明，未诊断时为 None。
     diagnosis: str | None
     # patch_diff：候选补丁正文；patch_hash：同一补丁的哈希，尚未生成时均为 None。
@@ -114,16 +132,19 @@ class RepairState(TypedDict):
     patch_hash: str | None
     # validation：当前补丁的独立验证摘要，尚未执行时为 None，不能预设为验证通过。
     validation: ValidationSummary | None
+    # adversarial_review：验证通过后由独立审查代理产生，不能由补丁代理自填。
+    adversarial_review: NotRequired[AdversarialReview | None]
     # attempt_count：已经进行的修复尝试次数，初始为 0；后续节点负责显式更新。
     attempt_count: int
     # elapsed_seconds：已经消耗的自动执行时间，人工审核等待不由状态节点计入。
     elapsed_seconds: float
     # remaining_budget：剩余预算快照，不包含或修改服务端的原始预算上限。
     remaining_budget: RemainingBudget
-    # failure_matches：单独召回的用户拒绝经验，只作警示，不参与成功案例适用性判断。
-    failure_matches: NotRequired[list[dict[str, object]]]
     # question：需要向用户确认的具体问题；last_error：流程异常的说明，没有时为 None。
     question: str | None
+    clarification_reasons: NotRequired[list[str]]
+    clarifications: NotRequired[list[str]]
+    awaiting_node: NotRequired[str | None]
     last_error: str | None
     # review_decision：人工审核结果；pending 表示工作流已暂停等待用户，不能自动当作接受。
     review_decision: Literal["pending", "accepted", "rejected"]
@@ -131,9 +152,14 @@ class RepairState(TypedDict):
     review_reason: str | None
     # memory_saved：用户接受后是否已经保存修复经验，初始为 False。
     memory_saved: bool
+    # budget_exhausted：最近一次耗尽的具体预算维度；status 仍保留兼容的总状态。
+    budget_exhausted: NotRequired[BudgetKind | None]
     error_info: NotRequired[dict[str, object] | None]
     accounting: NotRequired[dict[str, object]]
     warnings: NotRequired[list[str]]
+    # agent_messages：代理之间的结构化交接记录；不把自然语言对话作为调度协议。
+    agent_messages: NotRequired[list[dict[str, object]]]
+    experience_retrieval_pending: NotRequired[bool]
 
 
 def create_initial_state(
@@ -150,8 +176,8 @@ def create_initial_state(
         task_id：由调用方分配的任务唯一标识。
         source：CLI 校验后的代码来源元数据；仓库来源须已包含固定 revision。
         error_report：原始错误报告文字，原样保存。
-        remaining_seconds：任务当前剩余的运行秒数，默认 120 秒。
-        remaining_tokens：任务当前剩余的模型 token 数，默认 20,000。
+        remaining_seconds：任务当前剩余的运行秒数，默认 1200 秒。
+        remaining_tokens：任务当前剩余的模型 token 数，默认 200,000。
         remaining_attempts：任务当前剩余的修复尝试次数，默认 10 次。
         remaining_cost：任务当前剩余的模型费用，单位为元，默认 0.10 元。
         code_text：粘贴模式的源码字符串，其他模式不传，默认 None。
@@ -200,10 +226,12 @@ def create_initial_state(
         "reproduction": None,
         "code_evidence": [],
         "case_matches": [],
+        "failure_matches": [],
         "diagnosis": None,
         "patch_diff": None,
         "patch_hash": None,
         "validation": None,
+        "adversarial_review": None,
         "attempt_count": 0,
         "elapsed_seconds": 0.0,
         "remaining_budget": {
@@ -213,9 +241,13 @@ def create_initial_state(
             "cost": float(remaining_cost),
         },
         "question": None,
+        "clarification_reasons": [],
+        "clarifications": [],
+        "awaiting_node": None,
         "last_error": None,
         "review_decision": "pending",
         "review_reason": None,
         "memory_saved": False,
+        "budget_exhausted": None,
+        "agent_messages": [],
     }
-        "failure_matches": [],

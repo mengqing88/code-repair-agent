@@ -1,0 +1,19 @@
+{
+  "source": "Observed tool output during diagnosis; pytest subsequently cleaned the temporary trace directories",
+  "main_failure_test": "test_api_real_workflow_tools_verification_review_and_trace_after_restart",
+  "main_test_duration_seconds": 32.555,
+  "observed_final_route": {
+    "node": "review_patch",
+    "to": "finish",
+    "status": "reviewable"
+  },
+  "observed_workflow_end": "awaiting_review",
+  "other_observed_completed_fixture_tests": [
+    "test_api_replay_and_rerun_keep0",
+    "test_real_workflow_review_and_0",
+    "test_real_workflow_review_and_1",
+    "test_fixed_repository_has_real0",
+    "test_imported_repair_experienc0"
+  ],
+  "original_trace_available_now": false
+}

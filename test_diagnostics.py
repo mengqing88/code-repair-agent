@@ -6,7 +6,7 @@ import subprocess
 import time
 from types import SimpleNamespace
 
-from fastapi.testclient import TestClient
+from test_account_support import TestClient
 import pytest
 
 import diagnostics
@@ -157,7 +157,7 @@ def test_unhandled_future_failure_cannot_leave_task_queued(tmp_path, monkeypatch
     runner = RepairRunner(tmp_path / "data")
     with monkeypatch.context() as creation:
         creation.setattr(runner, "submit", lambda *args: None)
-        task = runner.create(TaskInput(source_type="pasted_code", code_text="x=1", error_report="report"))
+        task = runner.create(TaskInput(source_type="pasted_code", language="python", code_text="x=1", error_report="report"))
     def crash(*args):
         raise KeyError("unexpected background bug")
     monkeypatch.setattr(runner, "run", crash)
@@ -172,7 +172,7 @@ def test_unhandled_future_failure_cannot_leave_task_queued(tmp_path, monkeypatch
 def test_crashed_worker_preserves_exit_and_sanitized_stderr_evidence(tmp_path, monkeypatch):
     runner = RepairRunner(tmp_path / "data")
     monkeypatch.setattr(runner.pool, "submit", lambda *args: None)
-    task = runner.create(TaskInput(source_type="pasted_code", code_text="x=1", error_report="report"))
+    task = runner.create(TaskInput(source_type="pasted_code", language="python", code_text="x=1", error_report="report"))
     stderr = b'Traceback:\n  File "private/path/worker.py", line 12, in main\n    secret_source\nImportError: PRIVATE_RESPONSE_BODY\n'
     monkeypatch.setattr("repair_api.run_process", lambda *a, **kw: SimpleNamespace(returncode=7, stderr=stderr))
     runner.run(task["state"]["task_id"], False)
@@ -188,7 +188,7 @@ def test_client_diagnostics_endpoint_and_truncated_trace_are_readable(tmp_path, 
     app = create_app(tmp_path / "data")
     monkeypatch.setattr(app.state.runner.pool, "submit", lambda *args: None)
     with TestClient(app) as client:
-        task = client.post("/api/tasks", json={"source_type": "pasted_code", "code_text": "x=1", "error_report": "report"}).json()
+        task = client.post("/api/tasks", json={"source_type": "pasted_code", "language": "python", "code_text": "x=1", "error_report": "report"}).json()
         task_id = task["state"]["task_id"]
         result = client.post("/api/client-errors", json={"code": "component_error", "error_id": "client-error-1", "task_id": task_id})
         assert result.status_code == 202 and result.json()["recorded"] is True
@@ -206,7 +206,7 @@ def test_client_diagnostics_endpoint_and_truncated_trace_are_readable(tmp_path, 
 
 def queued_task(runner, monkeypatch):
     monkeypatch.setattr(runner.pool, "submit", lambda *args: None)
-    return runner.create(TaskInput(source_type="pasted_code", code_text="x=1", error_report="report"))
+    return runner.create(TaskInput(source_type="pasted_code", language="python", code_text="x=1", error_report="report"))
 
 
 def test_process_cleanup_failure_keeps_timeout_and_cleanup_causes(tmp_path, monkeypatch):
@@ -218,6 +218,7 @@ def test_process_cleanup_failure_keeps_timeout_and_cleanup_causes(tmp_path, monk
         return b"", b""
     monkeypatch.setattr(resilience.subprocess, "Popen", lambda *a, **kw: SimpleNamespace(communicate=communicate))
     monkeypatch.setattr(resilience, "windows_process_job", lambda _: lambda: None)
+    monkeypatch.setattr(resilience, "resume_windows_process", lambda _: None)
     def cannot_stop(_):
         raise PermissionError(13, "stop denied")
     monkeypatch.setattr(resilience, "kill_process_tree", cannot_stop)
@@ -226,7 +227,8 @@ def test_process_cleanup_failure_keeps_timeout_and_cleanup_causes(tmp_path, monk
     info = error_info(caught.value)
     assert info["outcome_unknown"] and info["code"] == "process_stop_failed"
     assert [cause["code"] for cause in info["causes"]] == ["process_timeout", "filesystem_permission"]
-    assert calls == [0.1, 5]  # Draining inherited pipes also has a deadline.
+    assert len(calls) == 2 and 0 < calls[0] <= 0.1 + 1e-6
+    assert calls[1] == 5  # Draining inherited pipes also has a deadline.
 
 
 def test_failed_tree_stop_still_attempts_parent_cleanup(monkeypatch):

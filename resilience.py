@@ -20,21 +20,88 @@ from typing import Callable
 from uuid import uuid4
 from diagnostics import diagnostic_scope, record_error, process_evidence
 from trace_store import append_trace, safe_trace_data, trace_context, trace_scope
+from runtime_config import active_manifest
+
+
+_BUDGET_LABELS = {
+    "runtime": "时间预算耗尽",
+    "tokens": "模型 Token 预算耗尽",
+    "cost": "模型费用预算耗尽",
+    "tool_calls": "工具调用预算耗尽",
+    "request_retries": "请求重试次数耗尽",
+    "repair_attempts": "修复尝试次数耗尽",
+}
+_BUDGET_CODES = {
+    "deadline_exceeded": "runtime",
+    "token_budget_exceeded": "tokens",
+    "cost_budget_exceeded": "cost",
+    "tool_budget_exceeded": "tool_calls",
+    "retry_budget_exceeded": "request_retries",
+    "repair_attempts_exhausted": "repair_attempts",
+}
+
+
+def _infer_budget_kind(code, message=""):
+    kind = _BUDGET_CODES.get(code)
+    if kind:
+        return kind
+    text = f"{code} {message}"
+    if "Token" in text or "token" in text:
+        return "tokens"
+    if "费用" in text or "cost" in text:
+        return "cost"
+    if "工具" in text or "tool" in text or "ReAct" in text:
+        return "tool_calls"
+    if "重试" in text or "retry" in text:
+        return "request_retries"
+    if "尝试" in text or "attempt" in text:
+        return "repair_attempts"
+    if "时间" in text or "deadline" in text or "timeout" in text:
+        return "runtime"
+    return None
+
+
+def budget_fault(message, *, code=None, budget_kind=None, causes=None):
+    """Create a budget fault with a stable machine-readable exhaustion dimension."""
+    if not isinstance(code, str):
+        code = None
+    kind = budget_kind or _infer_budget_kind(code or "budget_exceeded", message)
+    code = code or {
+        "runtime": "deadline_exceeded", "tokens": "token_budget_exceeded", "cost": "cost_budget_exceeded",
+        "tool_calls": "tool_budget_exceeded", "request_retries": "retry_budget_exceeded",
+        "repair_attempts": "repair_attempts_exhausted",
+    }.get(kind, "budget_exceeded")
+    return Fault(code, message, category="budget", budget_kind=kind, causes=causes,
+                 next_action="检查执行耗时，调整预算后新建任务" if kind == "runtime" else "检查任务记录后重试")
 
 
 class Fault(RuntimeError):
     def __init__(self, code, message, *, category="internal", retryable=False,
-                 outcome_unknown=False, next_action="检查任务记录后重试", retry_after=None, causes=None):
+                 outcome_unknown=False, next_action="检查任务记录后重试", retry_after=None, causes=None,
+                 budget_kind=None, operation_id=None, issues=None, details=None):
         super().__init__(message)
         self.code, self.category, self.retryable = code, category, retryable
         self.outcome_unknown, self.next_action, self.retry_after = outcome_unknown, next_action, retry_after
+        self.budget_kind = budget_kind or _infer_budget_kind(code, message) if category == "budget" else budget_kind
+        self.operation_id = operation_id
         self.error_id, self.causes = uuid4().hex, causes or []
+        self.issues, self.details = issues or [], details or {}
 
     def as_dict(self):
-        return {"code": self.code, "category": self.category, "message": str(self),
+        result = {"code": self.code, "category": self.category, "message": str(self),
                 "retryable": self.retryable, "outcome_unknown": self.outcome_unknown,
                 "next_action": self.next_action, "retry_after": self.retry_after,
                 "error_id": self.error_id, "causes": self.causes}
+        if self.budget_kind:
+            result["budget_kind"] = self.budget_kind
+            result["budget_label"] = _BUDGET_LABELS.get(self.budget_kind, "预算耗尽")
+        if self.operation_id:
+            result["operation_id"] = self.operation_id
+        if self.issues:
+            result["issues"] = self.issues
+        if self.details:
+            result["details"] = self.details
+        return result
 
 
 def digest(value):
@@ -75,11 +142,11 @@ class Execution:
 
     def check(self):
         if self.remaining() <= 0:
-            raise Fault("deadline_exceeded", "自动执行时间预算已耗尽", category="budget", next_action="检查执行耗时，调整预算后新建任务")
+            raise budget_fault("自动执行时间预算已耗尽", code="deadline_exceeded")
         if self.max_tokens is not None and self.tokens >= self.max_tokens:
-            raise Fault("token_budget_exceeded", "模型 Token 预算已耗尽", category="budget")
+            raise budget_fault("模型 Token 预算已耗尽", code="token_budget_exceeded")
         if self.max_cost is not None and self.cost >= self.max_cost:
-            raise Fault("cost_budget_exceeded", "已统计模型费用达到预算上限", category="budget")
+            raise budget_fault("已统计模型费用达到预算上限", code="cost_budget_exceeded")
 
 
 _current: ContextVar[Execution | None] = ContextVar("repair_execution", default=None)
@@ -135,7 +202,7 @@ def bounded_timeout(limit):
 
 def trace(operation, event, *, parameters=None, call_id=None, attempt=0, elapsed=0,
           fault=None, failure=None, decision=None, key=None, version="2", path=None, task_id=None,
-          input_data=None, result=None, details=None, run_id=None):
+          input_data=None, result=None, details=None, run_id=None, required=False):
     ctx = current()
     span = trace_context()
     identifier = call_id or span.get("call_id") or uuid4().hex
@@ -149,7 +216,27 @@ def trace(operation, event, *, parameters=None, call_id=None, attempt=0, elapsed
               "idempotency_digest": digest(key) if key else None, "decision": decision,
               "error_code": info["code"] if info else None,
               "category": info["category"] if info else None, "error_id": info["error_id"] if info else None}
-    record.update({name: span[name] for name in ("node", "repair_attempt", "model_round", "model_call_id", "tool_name") if name in span})
+    manifest = active_manifest()
+    # Supervisor and human-review events run outside the task's ContextVar scope.
+    # Link those records to the same on-disk manifest as worker events.
+    target = path or (ctx.trace_path if ctx else None)
+    if manifest is None and target:
+        manifest_path = Path(target).parent / "execution-manifest.json"
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                if not isinstance(manifest, dict) or "version" not in manifest:
+                    manifest = None
+                    record["configuration_unavailable"] = True
+            except (OSError, ValueError):
+                record["configuration_unavailable"] = True
+    if manifest is not None:
+        record["manifest_hash"] = digest(manifest)
+        record["configuration_version"] = manifest["version"]
+    record.update({name: span[name] for name in (
+        "node", "repair_attempt", "model_round", "model_call_id", "tool_name",
+        "agent_role", "agent_label", "agent_node",
+    ) if name in span})
     try:
         for name, value in (("input", input_data), ("result", result), ("details", details)):
             if value is not None:
@@ -166,28 +253,39 @@ def trace(operation, event, *, parameters=None, call_id=None, attempt=0, elapsed
         try:
             append_trace(target, record)
         except Exception as error:
-            error_info(error, operation="trace.write")
+            diagnostic = error_info(error, operation="trace.write")
             if ctx and "Trace 写入失败，请按错误编号检查备用诊断记录" not in ctx.warnings:
                 ctx.warnings.append("Trace 写入失败，请按错误编号检查备用诊断记录")
+            if required:
+                raise Fault("trace_persist_failed", "关键操作无法持久化 Trace，已阻止后续执行",
+                            category="storage", next_action="修复审计存储后重新提交该操作",
+                            causes=[diagnostic]) from error
+    elif required:
+        raise Fault("trace_target_missing", "关键操作没有持久化 Trace 目标，已阻止后续执行",
+                    category="storage", next_action="配置任务 Trace 存储后重新提交该操作")
     return record
 
 
 @contextmanager
-def traced_call(operation, *, parameters=None, input_data=None, **labels):
+def traced_call(operation, *, parameters=None, input_data=None, required=False, **labels):
     """Pair every started call with its result/failure, retaining the parent span."""
+    ctx = current()
+    required = required or bool(ctx and ctx.trace_path)
     with trace_scope(**labels):
         started = time.monotonic()
-        trace(operation, "started", parameters=parameters, input_data=input_data)
+        trace(operation, "started", parameters=parameters, input_data=input_data, required=required)
         observation = {}
         try:
             yield observation
         except Exception as error:
             trace(operation, "failed", fault=error, elapsed=time.monotonic() - started,
-                  result=observation.get("result"), details=observation.get("details"))
+                  result=observation.get("result"), details=observation.get("details"), required=required)
             raise
         else:
-            trace(operation, "succeeded", elapsed=time.monotonic() - started,
-                  result=observation.get("result"), details=observation.get("details"))
+            failure = observation.get("failure")
+            trace(operation, "failed" if failure else "succeeded", failure=failure,
+                  elapsed=time.monotonic() - started,
+                  result=observation.get("result"), details=observation.get("details"), required=required)
 
 
 def trace_workflow_end(state, *, reason=None, path=None, run_id=None):
@@ -287,10 +385,14 @@ class Circuit:
         self._update(key, fail)
 
 
+_DEFAULT_CIRCUIT = Circuit()
+
+
 def call_with_retry(operation, call, *, classify, replay_safe, parameters=None, endpoint="local",
                     max_retries=2, sleep=time.sleep, jitter=random.uniform, circuit=None):
     ctx = current()
-    breaker = circuit or (Circuit(ctx.circuit_path) if ctx and ctx.circuit_path else Circuit())
+    trace_required = bool(ctx and ctx.trace_path)
+    breaker = circuit or (Circuit(ctx.circuit_path) if ctx and ctx.circuit_path else _DEFAULT_CIRCUIT)
     key = digest([operation, endpoint])
     call_id = uuid4().hex
     local_deadline = time.monotonic() + 120
@@ -302,10 +404,12 @@ def call_with_retry(operation, call, *, classify, replay_safe, parameters=None, 
         try:
             breaker.permit(key)
         except Exception as fault:
-            trace(operation, "failed", call_id=call_id, attempt=attempt, fault=fault, decision="circuit_check_failed")
+            trace(operation, "failed", call_id=call_id, attempt=attempt, fault=fault,
+                  decision="circuit_check_failed", required=trace_required)
             raise
         started = time.monotonic()
-        trace(operation, "started", parameters=parameters, call_id=call_id, attempt=attempt)
+        trace(operation, "started", parameters=parameters, call_id=call_id, attempt=attempt,
+              required=trace_required)
         request_id = uuid4().hex
         if ctx and ctx.on_request:
             ctx.on_request("started", request_id, operation)
@@ -314,6 +418,12 @@ def call_with_retry(operation, call, *, classify, replay_safe, parameters=None, 
             result = call(bounded_timeout(min(60.0, max(0.001, local_deadline - time.monotonic()))))
         except Exception as error:
             fault = error if isinstance(error, Fault) else classify(error)
+            exhausted_retries = (
+                fault.category == "transient" and fault.retryable and replay_safe and attempt >= max_retries
+            )
+            if exhausted_retries:
+                # Keep the provider's original code/message, but expose that the bounded retry budget ended.
+                fault.budget_kind = "request_retries"
             fault._repair_diagnostic = record_error(error, fault.as_dict(), operation=operation)
             if ctx and ctx.on_request:
                 ctx.on_request("unknown" if fault.category == "transient" or fault.outcome_unknown else "rejected", request_id, operation)
@@ -333,7 +443,7 @@ def call_with_retry(operation, call, *, classify, replay_safe, parameters=None, 
             retry = fault.category == "transient" and fault.retryable and replay_safe and attempt < max_retries and left > delay + 0.05
             trace(operation, "retry" if retry else "failed", call_id=call_id, attempt=attempt,
                   elapsed=time.monotonic() - started, fault=fault,
-                  decision=f"backoff:{delay:.3f}s" if retry else "stop")
+                  decision=f"backoff:{delay:.3f}s" if retry else "stop", required=trace_required)
             if not retry:
                 raise fault from None
             sleep(delay)
@@ -342,7 +452,8 @@ def call_with_retry(operation, call, *, classify, replay_safe, parameters=None, 
                 breaker.success(key)
             except Exception as error:
                 error_info(error, operation="circuit.success")
-            trace(operation, "succeeded", call_id=call_id, attempt=attempt, elapsed=time.monotonic() - started)
+            trace(operation, "succeeded", call_id=call_id, attempt=attempt,
+                  elapsed=time.monotonic() - started, required=trace_required)
             return result
 
 
@@ -490,10 +601,23 @@ def windows_process_job(process):
     return close
 
 
+def resume_windows_process(process):
+    """Popen closes the primary thread handle; resume via its owned process handle."""
+    import ctypes
+    from ctypes import wintypes
+    native = ctypes.WinDLL("ntdll")
+    native.NtResumeProcess.argtypes = [wintypes.HANDLE]
+    native.NtResumeProcess.restype = wintypes.LONG
+    if native.NtResumeProcess(wintypes.HANDLE(int(process._handle))) != 0:
+        raise Fault("process_isolation_failed", "无法启动已隔离的任务进程", category="internal")
+
+
 def run_process(command, *, timeout, on_started=None, **kwargs):
     """Interrupt the whole child tree, including pytest/spawned scripts, at a bounded deadline."""
     timeout = bounded_timeout(timeout)
-    process_options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
+    # No child code (including spawning descendants) may run before Job/lease registration.
+    process_options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP | 0x4} if os.name == "nt" else {"start_new_session": True}
+    expires_at = time.monotonic() + timeout
     input_data = kwargs.pop("input", None)
     capture_output = kwargs.pop("capture_output", False)
     check = kwargs.pop("check", False)
@@ -512,7 +636,12 @@ def run_process(command, *, timeout, on_started=None, **kwargs):
             close_job = windows_process_job(process)
         if on_started:
             on_started(process)
-        stdout, stderr = process.communicate(input_data, timeout=timeout)
+        remaining = expires_at - time.monotonic()
+        if remaining <= 0:
+            raise subprocess.TimeoutExpired(command, timeout)
+        if os.name == "nt":
+            resume_windows_process(process)
+        stdout, stderr = process.communicate(input_data, timeout=remaining)
     except BaseException as error:
         primary = error_info(error, operation="process.execute")
         failures = []
@@ -598,8 +727,11 @@ def error_info(error, *, operation=None, details=None):
 
 def failure_update(error, *, operation=None, message=None):
     info = error_info(error, operation=operation)
-    return {"status": "needs_input" if info["outcome_unknown"] else "budget_exceeded" if info["category"] == "budget" else "failed",
-            "last_error": message or info["message"], "error_info": info}
+    update = {"status": "needs_input" if info["outcome_unknown"] else "budget_exceeded" if info["category"] == "budget" else "failed",
+              "last_error": message or info["message"], "error_info": info}
+    if info.get("budget_kind"):
+        update["budget_exhausted"] = info["budget_kind"]
+    return update
 
 
 def rollback_error(primary, error):
@@ -649,10 +781,12 @@ def _track_node(name, state, function):
         update["status"] = "needs_input"
     elif info and info["category"] == "budget":
         update["status"] = "budget_exceeded"
+    update["budget_exhausted"] = info.get("budget_kind") if info else None
     if budget["seconds"] <= 0 and not (info and info["outcome_unknown"]) and update.get("status") not in ("failed", "succeeded"):
         update.update(status="budget_exceeded", last_error="自动执行时间预算已耗尽",
-                      error_info=error_info(Fault("deadline_exceeded", "自动执行时间预算已耗尽", category="budget",
-                                                 causes=[info] if info else []), operation=name))
+                      error_info=error_info(budget_fault("自动执行时间预算已耗尽", code="deadline_exceeded",
+                                                        causes=[info] if info else None), operation=name),
+                      budget_exhausted="runtime")
     from diagnostics import redact
     if update.get("last_error"):
         update["last_error"] = redact(update["last_error"])

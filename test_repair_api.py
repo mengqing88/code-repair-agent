@@ -1,20 +1,25 @@
 """API integration tests: real graph, git/pytest and SQLite; only model I/O is stubbed."""
 import difflib
+from copy import deepcopy
+import hashlib
 import json
 from pathlib import Path
 import re
 import subprocess
 import time
 
-from fastapi.testclient import TestClient
+from test_account_support import TestClient
 import pytest
 
 from knowledge_base import KnowledgeBase
 from llm_client import ModelCallResult
+from recovery_store import initial_progress
 from repair_api import create_app
 from repair_state import create_initial_state
 from repair_tools import create_checkpoint_workspace
 from reproduction import prepare_source
+from resilience import digest
+from user_accounts import SESSION_COOKIE, csrf_token
 
 
 CODE = "def add(a, b):\n    return a - b\n"
@@ -29,9 +34,11 @@ def local_models(monkeypatch):
             name = next(name for name in data["files"] if not name.startswith("test_"))
             return json.dumps({"revised_report": "add(2, 1) must return 3, currently returns 1",
                 "steps": "import module and call add(2, 1)",
-                "reproduction_code": f"from {Path(name).stem} import add\nprint(add(2, 1))\n", "question": ""})
+                "reproduction_code": f"from {Path(name).stem} import add\nprint(add(2, 1))\n",
+                "clarification_required": False, "clarification_reasons": [], "question": ""})
         return json.dumps({"comparison": "matched", "conclusion": "Actual value is 1 instead of 3",
-                           "evidence": "1", "question": ""})
+                           "evidence": "1", "clarification_required": False,
+                           "clarification_reasons": [], "question": ""})
 
     def propose_model(prompt):
         data = json.loads(prompt.split("\n", 1)[1])
@@ -42,14 +49,15 @@ def local_models(monkeypatch):
         fixed = original.replace("return a - b", "return a + b")
         patch = "".join(difflib.unified_diff(original.splitlines(True), fixed.splitlines(True),
                                            fromfile=f"a/{name}", tofile=f"b/{name}"))
-        return json.dumps({"diagnosis": "Subtracting instead of adding", "patch_diff": patch})
+        return json.dumps({"diagnosis": "Subtracting instead of adding", "patch_diff": patch, "question": "",
+                           "clarification_required": False, "clarification_reasons": []})
 
     def regression_model(*args, **kwargs):
         # Read the original reproduction import so the case is tied to the actual input.
         prompt = args[0]
         module = re.search(r"from (\w+) import add", prompt).group(1)
         return json.dumps({"test_body": f"from {module} import add\nassert add(2, 1) == 3\n",
-                           "question": ""})
+                           "question": "", "clarification_required": False, "clarification_reasons": []})
 
     monkeypatch.setattr("reproduction.ask_model", reproduce_model)
 
@@ -61,6 +69,20 @@ def local_models(monkeypatch):
     monkeypatch.setattr("repair_workflow.ask_model_with_usage", propose_model)
     monkeypatch.setattr("repair_workflow.ask_model_with_tools", propose_model_with_tools)
     monkeypatch.setattr("defect_regression.ask_model_with_usage", regression_model)
+    def adversarial_model(prompt):
+        data = json.loads(prompt.split("\n", 1)[1])
+        path = next(iter(data["sources"]))
+        return json.dumps({"summary": "离线独立审查模型样本", "checks": [
+            {"aspect": aspect, "verdict": "pass", "path": path,
+             "quote": data["sources"][path]["patched"],
+             "reasoning": "测试模型：保留接口并修正加法表达式，检查零和负数路径"}
+            for aspect in ("boundary_inputs", "behavior_compatibility", "patch_risk")]})
+    monkeypatch.setattr("adversarial_review.ask_model_with_usage", adversarial_model)
+    monkeypatch.setattr("failure_regression.ask_model_with_usage", lambda _: json.dumps({
+        "classification": "unclear", "uncertain": True, "rationale": "离线反馈待人工确认", "test_body": ""}))
+    def review_unavailable(_):
+        raise TimeoutError("offline knowledge reviewer")
+    monkeypatch.setattr("knowledge_review.ask_model_with_usage", review_unavailable)
 
 
 def app_at(root):
@@ -71,7 +93,7 @@ def app_at(root):
     return app
 
 
-def finished(client, task_id, timeout=30):
+def finished(client, task_id, timeout=90):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         result = client.get(f"/api/tasks/{task_id}")
@@ -79,8 +101,9 @@ def finished(client, task_id, timeout=30):
         task = result.json()
         if task["execution"] == "idle":
             return task
-        time.sleep(0.02)
-    raise AssertionError("worker did not finish")
+        time.sleep(0.1)
+    raise AssertionError(f"worker did not finish: execution={task['execution']}, "
+                         f"status={task['state']['status']}, error={task['state'].get('last_error')}")
 
 
 def submit(client, tmp_path, source_type="python_file", with_tests=True):
@@ -104,6 +127,69 @@ def submit(client, tmp_path, source_type="python_file", with_tests=True):
     response = client.post("/api/tasks", json=payload)
     assert response.status_code == 202, response.text
     return finished(client, response.json()["state"]["task_id"]), source
+
+
+def seed_paused_task(client, task_id, *, awaiting_node=None):
+    runner = client.app.state.runner
+    user_id = client.headers["X-Account-ID"]
+    state = create_initial_state(task_id, {"type": "pasted_code"}, "original report")
+    state.update(status="needs_input", question="核对信息", awaiting_node=awaiting_node)
+    if awaiting_node is None:
+        state["error_info"] = {"outcome_unknown": True}
+    progress = initial_progress()
+    progress.update(next_node=awaiting_node or "propose_patch", committed_state=deepcopy(state),
+                    state_hash=digest(state))
+    task = {"state": state, "execution": "idle", "review": None, "progress": progress,
+            "config": {"principal": user_id}}
+    runner.store.create_once(task, f"seed-{task_id[:8]}", {}, user_id)
+    return runner, task
+
+
+def test_real_workflow_external_authorization_pause_then_continue(tmp_path, local_models, monkeypatch):
+    from mcp_tool_client import MCPToolClient, MCPToolBinding, MCPToolPolicy
+    from test_prompt_injection import turn
+    from test_tool_authorization import NAME, ARGS
+    import repair_workflow
+    calls = []
+    schema = {"type": "object", "properties": {"order_id": {"type": "string"}, "message": {"type": "string"}},
+              "required": ["order_id", "message"], "additionalProperties": False}
+    def start(client):
+        client._loop = object()
+        client._bindings[NAME] = MCPToolBinding("shop", "create_order", schema,
+            MCPToolPolicy(access="external_write", resource_argument="order_id"))
+        return [{"type": "function", "name": NAME, "parameters": schema}]
+    monkeypatch.setattr(MCPToolClient, "start", start)
+    monkeypatch.setattr(MCPToolClient, "close", lambda _: None)
+    def invoke(_client, _binding, arguments, _timeout):
+        calls.append(arguments)
+        return {"isError": False, "result": "created"}
+    monkeypatch.setattr(MCPToolClient, "_invoke_tool", invoke)
+    base_model = repair_workflow.ask_model_with_tools
+    def model(conversation, definitions):
+        if isinstance(conversation, str):
+            return turn(NAME, ARGS)
+        return base_model(conversation[0]["content"], definitions)
+    monkeypatch.setattr(repair_workflow, "ask_model_with_tools", model)
+    with TestClient(app_at(tmp_path / "web")) as client:
+        task, _ = submit(client, tmp_path)
+        assert task["state"]["status"] == "needs_input", task["state"]
+        assert task["state"]["awaiting_node"] == "tool_authorization"
+        assert calls == []
+        item = task["pending_tool_authorizations"][0]
+        assert item["parameters"] == ARGS
+        task_id = task["state"]["task_id"]
+        response = client.post(f"/api/tasks/{task_id}/tool-authorization", json={
+            "authorization_id": item["authorization_id"], "decision": "approved"})
+        assert response.status_code == 202, response.text
+        result = finished(client, task_id)
+        assert result["state"]["status"] == "reviewable", result["state"]
+        assert result["state"]["validation"]["passed"] is True
+        assert calls == [ARGS]
+        # The durable consent and its execution remain separately auditable.
+        from trace_store import read_trace_page
+        path = tmp_path / "web" / "tasks" / task_id / "trace.jsonl"
+        trace_events = read_trace_page(path, limit=1000)["events"]
+        assert any(event["operation"] == "mcp.authorization" and event["event"] == "approved" for event in trace_events)
 
 
 @pytest.mark.parametrize("decision", ["accepted", "rejected"])
@@ -166,15 +252,22 @@ def test_imported_repair_experience_guides_real_patch_workflow(tmp_path, local_m
             "original_report": "add(2, 1) must return 3, actually returns 1",
             "diagnosis": "Subtracting instead of adding",
             "patch_diff": "--- a/old.py\n+++ b/old.py\n@@ -1 +1 @@\n-return a - b\n+return a + b\n",
+            "source": {"retrieval_scope": {"file_paths": ["bug.py"]}},
             "validation": {"passed": True, "summary": "historical regression passed"},
             "applicable_conditions": ["addition function incorrectly subtracts"],
         }]}).json()
-        assert imported["imported"] == 1
+        assert imported["needs_human"] == 1
+        candidate = client.get("/api/knowledge/candidates").json()["candidates"][0]
+        released = client.post(f"/api/knowledge/candidates/{candidate['id']}/review", json={
+            "decision": "approve", "reason": "测试操作者核验原始历史材料", "content_hash": candidate["content_hash"],
+        })
+        assert released.status_code == 200
+        published_id = released.json()["published_case_id"]
         task, _ = submit(client, tmp_path)
         assert task["state"]["status"] == "reviewable", task["state"]
         assert task["state"]["validation"]["passed"] is True
         assert task["state"]["case_matches"][0]["decision"] == "applicable"
-        assert "[historic-add@1]" in task["state"]["diagnosis"]
+        assert f"[{published_id}@1]" in task["state"]["diagnosis"]
         assert prompts[0]["case_matches"][0]["document"]["diagnosis"] == "Subtracting instead of adding"
         assert "a/bug.py" in task["state"]["patch_diff"]
         assert "a/old.py" not in task["state"]["patch_diff"]
@@ -256,6 +349,84 @@ def test_validation_input_and_local_origin(tmp_path):
         assert client.post("/api/tasks", json={"source_type": "python_file", "file_name": "../escape.py",
             "file_content": CODE, "error_report": "error"}).status_code == 422
         assert client.post("/api/tasks", headers={"origin": "https://untrusted.example"}, json={}).status_code == 403
+
+
+def test_clarification_resumes_original_node_without_resetting_report_or_budget(tmp_path):
+    with TestClient(app_at(tmp_path / "data")) as client:
+        runner, task = seed_paused_task(client, "1" * 32, awaiting_node="collect_context")
+        original_budget = deepcopy(task["state"]["remaining_budget"])
+        submitted = []
+        runner.submit = lambda task_id, reviewing: submitted.append((task_id, reviewing))
+
+        response = client.post(f"/api/tasks/{task['state']['task_id']}/clarification",
+                               json={"answer": "触发输入是整数 7，预期返回 49"})
+
+        assert response.status_code == 202, response.text
+        stored = runner.store.get(task["state"]["task_id"])
+        assert stored["state"]["original_report"] == "original report"
+        assert stored["state"]["clarifications"] == ["触发输入是整数 7，预期返回 49"]
+        assert stored["state"]["remaining_budget"] == original_budget
+        assert stored["progress"]["next_node"] == "collect_context"
+        assert stored["execution"] == "queued"
+        assert submitted == [(task["state"]["task_id"], False)]
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected_status", "expected_node", "should_resume"),
+    [("not_applied", "queued", "propose_patch", True),
+     ("completed", "failed", "finish", False)],
+)
+def test_external_operation_resolution_is_audited_and_has_explicit_resume_policy(
+    tmp_path, outcome, expected_status, expected_node, should_resume,
+):
+    with TestClient(app_at(tmp_path / "data")) as client:
+        task_id = "2" * 32
+        runner, task = seed_paused_task(client, task_id)
+        operation_id = hashlib.sha256(b"external-operation").hexdigest()
+        resource_key = hashlib.sha256(b"external-resource").hexdigest()
+        runner.operations.acquire_resource(resource_key, operation_id, task_id)
+        runner.operations.begin(operation_id, task_id, "mcp__shop__create_order", {"order_id": "o-7"})
+        runner.operations.finish(operation_id, "unknown")
+        submitted = []
+        runner.submit = lambda submitted_task, reviewing: submitted.append((submitted_task, reviewing))
+
+        response = client.post(f"/api/tasks/{task_id}/tool-outcome", json={
+            "operation_id": operation_id, "outcome": outcome,
+            "evidence": "核对订单系统的操作记录与订单编号 o-7",
+        })
+
+        assert response.status_code == 202, response.text
+        stored = runner.store.get(task_id)
+        assert stored["state"]["status"] == expected_status
+        assert stored["state"]["original_report"] == "original report"
+        assert stored["progress"]["next_node"] == expected_node
+        assert stored["progress"]["recovery_count"] == task["progress"]["recovery_count"]
+        assert stored["state"]["tool_resolutions"][-1]["outcome"] == outcome
+        assert runner.operations.lookup(operation_id)["status"] == (
+            "resolved_not_applied" if outcome == "not_applied" else "resolved_completed")
+        assert runner.operations.pending_for_task(task_id) == []
+        assert submitted == ([(task_id, False)] if should_resume else [])
+
+
+def test_external_operation_resolution_is_hidden_from_other_accounts(tmp_path):
+    with TestClient(app_at(tmp_path / "data")) as client:
+        task_id = "3" * 32
+        runner, _ = seed_paused_task(client, task_id)
+        operation_id = hashlib.sha256(b"foreign-operation").hexdigest()
+        runner.operations.begin(operation_id, task_id, "mcp__shop__create_order", {"order_id": "o-8"})
+        runner.operations.finish(operation_id, "unknown")
+        other = runner.accounts.register("other_user", "other-user-password-123")
+        token = runner.accounts.new_session(other["id"])
+        client.cookies.set(SESSION_COOKIE, token)
+        client.headers.update({"X-CSRF-Token": csrf_token(token), "X-Account-ID": other["id"]})
+
+        response = client.post(f"/api/tasks/{task_id}/tool-outcome", json={
+            "operation_id": operation_id, "outcome": "not_applied",
+            "evidence": "核对过外部操作记录，确认未发生副作用",
+        })
+
+        assert response.status_code == 404
+        assert runner.operations.pending_for_task(task_id)[0]["operation_id"] == operation_id
 
 
 def test_restart_marks_interrupted_tasks_failed(tmp_path):

@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "按权重分摊总额",
+    "逐项四舍五入导致合计不等于总额",
+    "最大余数法回补差额"
+  ],
+  "before_source": "from decimal import Decimal, ROUND_HALF_UP\n\n\ndef allocate_commission(total_cents, headcounts):\n    \"\"\"按人头比例把佣金总额分摊到各销售员。\"\"\"\n    if not headcounts:\n        return []\n    headcount_sum = sum(headcounts)\n    if headcount_sum <= 0:\n        raise ValueError(\"headcounts must sum to a positive number\")\n    shares = []\n    for headcount in headcounts:\n        exact = Decimal(total_cents) * Decimal(headcount) / Decimal(headcount_sum)\n        shares.append(int(exact.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP)))\n    return shares\n",
+  "dataset_experience_id": "MiniMax-M3.1-Flash::experience-157",
+  "dataset_id": "MiniMax-M3.1-Flash",
+  "diagnosis": "分摊时对每一项直接做四舍五入，没有把因取整产生的差额回补，合计金额因此小于或大于总额。修复原则：金额分摊必须先向下取整保证每项不超过应有份额，再用最大余数法把剩余的分按小数部分从大到小补回，使各项之和严格等于总额。",
+  "experience_id": "experience-157",
+  "normalization_notes": [],
+  "original_report": "把一笔 100 分的返佣按三个销售员的人数比例分摊后，各人返佣相加只有 99 分，公司账上少了 1 分。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,4 +1,4 @@\n-from decimal import Decimal, ROUND_HALF_UP\n+from decimal import Decimal, ROUND_DOWN\n \n \n def allocate_commission(total_cents, headcounts):\n@@ -9,7 +9,14 @@\n     if headcount_sum <= 0:\n         raise ValueError(\"headcounts must sum to a positive number\")\n     shares = []\n-    for headcount in headcounts:\n+    remainders = []\n+    for index, headcount in enumerate(headcounts):\n         exact = Decimal(total_cents) * Decimal(headcount) / Decimal(headcount_sum)\n-        shares.append(int(exact.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP)))\n+        floor_value = int(exact.quantize(Decimal(\"1\"), rounding=ROUND_DOWN))\n+        shares.append(floor_value)\n+        remainders.append((exact - floor_value, index))\n+    leftover = total_cents - sum(shares)\n+    remainders.sort(key=lambda item: (-item[0], item[1]))\n+    for position in range(leftover):\n+        shares[remainders[position][1]] += 1\n     return shares\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "import pytest\n\nfrom target import allocate_commission\n\n\ndef test_empty_headcounts_returns_empty_list():\n    assert allocate_commission(100, []) == []\n\n\ndef test_shares_sum_to_total():\n    assert sum(allocate_commission(100, [1, 1, 1])) == 100\n\n\ndef test_split_is_rebalanced_across_people():\n    assert allocate_commission(100, [1, 1, 1]) == [34, 33, 33]\n"
+}

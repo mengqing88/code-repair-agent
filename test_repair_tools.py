@@ -19,6 +19,7 @@ from repair_tools import (
     RepairToolbox,
     TOOL_DEFINITIONS,
     apply_patch,
+    collect_test_files,
     create_checkpoint_workspace,
     remove_checkpoint_workspace,
     read_code,
@@ -120,6 +121,21 @@ class RepairToolsTests(unittest.TestCase):
         self.assertEqual(set(toolbox.protected_test_hashes), {"checks/acceptance_rules.py"})
         self.assertEqual((workspace / "checks" / "acceptance_rules.py").read_text(encoding="utf-8"),
                          "def test_rule():\n    assert 1 == 1\n")
+
+    def test_collection_stays_within_the_explicit_pytest_target(self) -> None:
+        """基线保护只锁定固定目标实际收集的测试文件，不扩大到全仓发现。"""
+        selected = self.root / "checks" / "acceptance_rules.py"
+        selected.parent.mkdir()
+        selected.write_text("def test_rule():\n    assert True\n", encoding="utf-8")
+        (self.root / "test_unselected.py").write_text("def test_other():\n    assert True\n", encoding="utf-8")
+
+        files = collect_test_files(
+            workspace_root=self.root,
+            test_targets=("checks/acceptance_rules.py::test_rule",),
+            execution_backend="host",
+        )
+
+        self.assertEqual(files, ("checks/acceptance_rules.py",))
 
     def test_checkpoint_workspace_uses_fixed_commit_and_restores_without_touching_source(self) -> None:
         """Git 副本从固定 commit 开始，恢复 checkpoint 不改变原仓库当前文件。"""
@@ -260,8 +276,8 @@ class RepairToolsTests(unittest.TestCase):
         self.assertFalse(result["timed_out"])
         self.assertNotIn("secret-for-test", result["stdout"] + result["stderr"])
 
-    def test_toolbox_exposes_repair_tools_and_keeps_memory_writes_fixed(self) -> None:
-        """模型可调用代码和测试工具，修复经验写入仍由审核后的固定节点执行。"""
+    def test_toolbox_exposes_readonly_tools_and_keeps_memory_writes_fixed(self) -> None:
+        """模型只读本地代码和经验，经验写入由审核后的固定节点执行。"""
         class FakeKnowledgeBase:
             """记录知识库工具调用的假实现。"""
 
@@ -308,8 +324,8 @@ class RepairToolsTests(unittest.TestCase):
         )
         self.assertEqual(rejected[0]["outcome"], "rejected")
         self.assertNotIn("decision", rejected[0])
-        self.assertEqual(knowledge_base.search_calls[-1], ("rejected", {"file_paths": ["target.py"]}))
-        self.assertEqual(len(toolbox.model_tool_definitions()), 5)
+        self.assertEqual(knowledge_base.search_calls[-1], ("rejected", {"language": "python", "file_paths": ["target.py"]}))
+        self.assertEqual(len(toolbox.model_tool_definitions()), 3)
         with self.assertRaisesRegex(RepairToolError, "不能直接调用"):
             toolbox.call_model_tool("save_repair_experience", {})
 
@@ -335,7 +351,7 @@ class RepairToolsTests(unittest.TestCase):
         self.assertEqual(len(toolbox.call_model_tool("search_code", {"query": "value"})["matches"]), 1)
         schemas = {definition["name"]: definition["parameters"] for definition in TOOL_DEFINITIONS}
         self.assertEqual(set(schemas), {
-            "read_code", "search_code", "retrieve_repair_experience", "apply_patch", "run_tests",
+            "read_code", "search_code", "retrieve_repair_experience",
         })
         for schema in schemas.values():
             self.assertFalse(schema["additionalProperties"])
@@ -344,9 +360,6 @@ class RepairToolsTests(unittest.TestCase):
         self.assertEqual(schemas["retrieve_repair_experience"]["properties"]["outcome"]["enum"],
                          ["accepted", "rejected"])
         self.assertEqual(schemas["retrieve_repair_experience"]["properties"]["file_paths"]["maxItems"], 10)
-        self.assertEqual(schemas["apply_patch"]["required"], ["patch_diff"])
-        self.assertEqual(schemas["apply_patch"]["properties"]["patch_diff"]["minLength"], 1)
-        self.assertEqual(schemas["run_tests"]["properties"], {})
 
         invalid_arguments = (
             ("read_code", {}),
@@ -358,9 +371,6 @@ class RepairToolsTests(unittest.TestCase):
             ("retrieve_repair_experience", {"query": "\t"}),
             ("retrieve_repair_experience", {"query": "valid", "outcome": "all"}),
             ("retrieve_repair_experience", {"query": "valid", "file_paths": ["../outside.py"]}),
-            ("apply_patch", {"patch_diff": "  "}),
-            ("apply_patch", {"patch_diff": "diff", "extra": "sensitive-value"}),
-            ("run_tests", {"test_targets": ["unapproved.py"]}),
         )
         for name, arguments in invalid_arguments:
             with self.subTest(name=name, arguments=arguments):
@@ -391,12 +401,12 @@ class RepairToolsTests(unittest.TestCase):
         definitions = toolbox.model_tool_definitions()
         result = toolbox.call_model_tool(name, {"query": "repair flow"}, remaining_seconds=4)
 
-        self.assertEqual(len(definitions), 6)
+        self.assertEqual(len(definitions), 4)
         self.assertEqual(definitions[-1]["name"], name)
         self.assertEqual(result, {"tool": name, "arguments": {"query": "repair flow"}, "timeout": 4})
 
-    def test_react_can_apply_and_test_then_fixed_nodes_revalidate_final_patch(self) -> None:
-        """模型可试用补丁和运行固定测试，结束后固定节点重新应用并验收最终补丁。"""
+    def test_react_cannot_execute_local_effects_but_fixed_nodes_validate_patch(self) -> None:
+        """越权工具请求不改变工作区或运行测试，固定节点仍能真实应用并验收。"""
         import subprocess
 
         source = self.root / "source"
@@ -444,7 +454,8 @@ class RepairToolsTests(unittest.TestCase):
             tool_turn("apply-2", "apply_patch", json.dumps({"patch_diff": patch_two})),
             tool_turn("test-2", "run_tests", "{}"),
             ModelCallResult(
-                text=json.dumps({"diagnosis": "折扣结果计算错误", "patch_diff": patch_two}),
+                text=json.dumps({"diagnosis": "折扣结果计算错误", "patch_diff": patch_two, "question": "",
+                                 "clarification_required": False, "clarification_reasons": []}),
                 input_tokens=20, output_tokens=10, total_tokens=30, cost_yuan=0.002,
             ),
         ]
@@ -467,13 +478,21 @@ class RepairToolsTests(unittest.TestCase):
             )
         services = toolbox.as_repair_services(lambda current: {"matched": True, "record": {}})
 
-        with patch("repair_workflow.ask_model_with_tools", side_effect=tool_turns) as model:
+        with patch("repair_workflow.ask_model_with_tools", side_effect=tool_turns) as model, \
+             patch.object(toolbox, "apply_model_patch") as model_apply, \
+             patch.object(toolbox, "run_tests", wraps=toolbox.run_tests) as fixed_tests:
             proposal = services.propose_patch(state)
+            model_apply.assert_not_called()
+            fixed_tests.assert_not_called()
 
         self.assertEqual(model.call_count, 4)
         self.assertEqual((workspace / "target.py").read_text(encoding="utf-8"), "value = 1\n")
-        trial_result = json.loads(model.call_args_list[3].args[0][-1]["output"])
-        self.assertTrue(trial_result["passed"])
+        observations = [json.loads(item["output"]) for item in model.call_args_list[3].args[0]
+                        if item.get("type") == "function_call_output"]
+        denied = [item for item in observations if "error" in item]
+        self.assertEqual(len(denied), 2)
+        self.assertTrue(all(item["error"]["code"] == "tool_fixed_execution_only" and not item["executed"]
+                            for item in denied))
 
         state["patch_diff"] = proposal["patch_diff"]
         state["patch_hash"] = proposal["patch_hash"]
@@ -602,7 +621,8 @@ class RepairToolsTests(unittest.TestCase):
             },),
         )
         final_turn = ModelCallResult(
-            text=json.dumps({"diagnosis": "源码初始值错误", "patch_diff": "完整 diff"}),
+            text=json.dumps({"diagnosis": "源码初始值错误", "patch_diff": "完整 diff", "question": "",
+                             "clarification_required": False, "clarification_reasons": []}),
             input_tokens=80, output_tokens=20, total_tokens=100, cost_yuan=0.01,
         )
         with patch("repair_workflow.ask_model_with_tools", side_effect=[tool_turn, final_turn]) as model:
@@ -610,7 +630,7 @@ class RepairToolsTests(unittest.TestCase):
 
         definitions = model.call_args_list[0].args[1]
         self.assertEqual({item["name"] for item in definitions}, {
-            "read_code", "search_code", "retrieve_repair_experience", "apply_patch", "run_tests",
+            "read_code", "search_code", "retrieve_repair_experience",
         })
         self.assertEqual(model.call_count, 2)
         self.assertIn("value = 1", model.call_args_list[1].args[0][-1]["output"])

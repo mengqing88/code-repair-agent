@@ -1,0 +1,6 @@
+{
+  "status": "failed",
+  "scope": "real Docker; fixed model responses; synthetic defect",
+  "engine_version": "29.7.2",
+  "reason": "Fault: 没有为 auto 配置 Docker 运行镜像"
+}

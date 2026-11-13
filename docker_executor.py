@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import os
 from pathlib import Path
 import re
@@ -11,6 +12,7 @@ import tempfile
 from uuid import uuid4
 
 from resilience import Fault, current, run_process, trace
+from runtime_config import active_manifest
 
 
 DEFAULT_IMAGE = "code-repair-sandbox:py311"
@@ -32,6 +34,36 @@ def get_execution_backend(value: str | None = None) -> str:
         raise Fault("invalid_execution_mode", "REPAIR_EXECUTION_MODE 只能是 docker 或 host",
                     category="validation", next_action="修正执行模式配置后重试")
     return backend
+
+
+def configured_image_for_language(language: str, settings: dict[str, str] | None = None) -> str:
+    """Resolve a trusted service-side Docker image profile for the task language."""
+
+    from language_support import normalize_language
+    from runtime_config import setting
+
+    configured = setting("REPAIR_DOCKER_IMAGES", settings) or ""
+    try:
+        profiles = json.loads(configured) if configured else {}
+    except ValueError as error:
+        raise Fault("invalid_runtime_profiles", "REPAIR_DOCKER_IMAGES 必须是 JSON 对象",
+                    category="validation") from error
+    if not isinstance(profiles, dict) or any(not isinstance(name, str) or not isinstance(image, str)
+                                             for name, image in profiles.items()):
+        raise Fault("invalid_runtime_profiles", "REPAIR_DOCKER_IMAGES 必须是语言到镜像名的 JSON 对象",
+                    category="validation")
+    normalized = normalize_language(language)
+    image = next((value.strip() for name, value in profiles.items()
+                  if normalize_language(name) == normalized), "")
+    if not image and normalized == "python":
+        image = (setting("REPAIR_DOCKER_IMAGE", settings) or DEFAULT_IMAGE).strip()
+    if not image:
+        raise Fault("runtime_image_unconfigured", f"没有为 {normalized} 配置 Docker 运行镜像",
+                    category="validation",
+                    next_action=f"在 REPAIR_DOCKER_IMAGES 中为 {normalized} 配置已安装语言运行时和依赖的镜像")
+    if not _IMAGE_PATTERN.fullmatch(image):
+        raise Fault("invalid_sandbox_image", f"{normalized} 的 Docker 镜像名格式无效", category="validation")
+    return image
 
 
 def _task_label(task_id: str | None) -> str:
@@ -75,6 +107,13 @@ def cleanup_docker_task(task_id: str) -> bool:
 
 
 def _docker_image() -> str:
+    manifest = active_manifest()
+    if manifest is not None:
+        container = manifest["program"]["container"]
+        image = container.get("digest") or container.get("image_id")
+        if not image:
+            raise Fault("image_identity_unresolved", "冻结清单没有可用镜像 digest 或 image ID", category="validation")
+        return image
     image = os.environ.get("REPAIR_DOCKER_IMAGE", DEFAULT_IMAGE).strip()
     if not _IMAGE_PATTERN.fullmatch(image):
         raise Fault("invalid_sandbox_image", "REPAIR_DOCKER_IMAGE 格式无效", category="validation",
@@ -130,6 +169,7 @@ def _linked_worktree_mounts(workspace: Path, overlay: Path) -> list[BindMount]:
 
 
 def _sensitive_mounts(workspace: Path, overlay: Path) -> list[BindMount]:
+    from input_protection import sensitive_path
     mounts: list[BindMount] = []
     count = 0
     for directory, names, files in os.walk(workspace, followlinks=False):
@@ -137,7 +177,7 @@ def _sensitive_mounts(workspace: Path, overlay: Path) -> list[BindMount]:
         retained = []
         for name in names:
             path = root / name
-            if name in _HIDDEN_DIRECTORIES and not path.is_symlink():
+            if (name in _HIDDEN_DIRECTORIES or sensitive_path(name)) and not path.is_symlink():
                 hidden = overlay / f"hidden-dir-{count}"
                 hidden.mkdir()
                 relative = path.relative_to(workspace).as_posix()
@@ -148,7 +188,7 @@ def _sensitive_mounts(workspace: Path, overlay: Path) -> list[BindMount]:
         names[:] = retained
         for name in files:
             path = root / name
-            if (name == ".env" or name.startswith(".env.")) and name != ".env.example":
+            if sensitive_path(name):
                 hidden = overlay / f"hidden-file-{count}"
                 hidden.touch()
                 relative = path.relative_to(workspace).as_posix()
@@ -202,7 +242,8 @@ def run_in_docker(
     with tempfile.TemporaryDirectory(prefix=".repair-docker-", dir=root.parent) as temp_name:
         overlay = Path(temp_name)
         mounts = [BindMount(root, "/workspace")]
-        mounts.extend(_linked_worktree_mounts(root, overlay))
+        # Model-generated Python can invoke git too: never expose historical objects/credentials.
+        # Patch application/checkpoint operations run on the host's private task repository.
         mounts.extend(_sensitive_mounts(root, overlay))
         mounts.extend(extra_mounts)
         docker_command = [binary, "run", "--rm", "--pull=never", "--init", "--name", name,

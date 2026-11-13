@@ -7,7 +7,11 @@
       "allow_tools": [
         "resolve-library-id",
         "query-docs"
-      ]
+      ],
+      "tool_policies": {
+        "resolve-library-id": { "access": "read_only", "conflict_group": "library_lookup" },
+        "query-docs": { "access": "read_only", "conflict_group": "documentation_search" }
+      }
     },
     {
       "name": "github",
@@ -32,7 +36,19 @@
         "list_pull_requests",
         "list_commits",
         "get_commit"
-      ]
+      ],
+      "tool_policies": {
+        "get_file_contents": { "access": "read_only" },
+        "search_code": { "access": "read_only", "conflict_group": "github_search" },
+        "search_repositories": { "access": "read_only", "conflict_group": "github_search" },
+        "issue_read": { "access": "read_only" },
+        "list_issues": { "access": "read_only" },
+        "search_issues": { "access": "read_only", "conflict_group": "github_search" },
+        "pull_request_read": { "access": "read_only" },
+        "list_pull_requests": { "access": "read_only" },
+        "list_commits": { "access": "read_only" },
+        "get_commit": { "access": "read_only" }
+      }
     },
     {
       "name": "sentry",
@@ -52,7 +68,16 @@
         "get_issue_activity",
         "get_issue_breadcrumbs",
         "get_event_stacktrace"
-      ]
+      ],
+      "tool_policies": {
+        "find_organizations": { "access": "read_only", "conflict_group": "sentry_context" },
+        "find_projects": { "access": "read_only", "conflict_group": "sentry_context" },
+        "get_sentry_resource": { "access": "read_only" },
+        "get_issue_details": { "access": "read_only" },
+        "get_issue_activity": { "access": "read_only" },
+        "get_issue_breadcrumbs": { "access": "read_only" },
+        "get_event_stacktrace": { "access": "read_only" }
+      }
     }
   ]
 }

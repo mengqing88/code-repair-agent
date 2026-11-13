@@ -73,8 +73,11 @@ def generate_regression_test(
         "不能修改或替代被测实现、伪造返回值、无条件抛错、跳过测试、使用 xfail、"
         "启动子进程、安装依赖或访问网络。不要引用复现副本或原始源码的绝对路径。"
         "脚本打印错误但正常退出的情况也必须用断言区分正确结果和错误结果。"
-        "若缺少可确认的预期行为，question 写明缺失信息，test_body 留空。"
-        "只返回 JSON 对象，两个字段都是字符串：test_body、question。\n"
+        "若缺少可确认的预期行为，clarification_required 设为 true，clarification_reasons 列出缺失信息，"
+        "question 写明最关键问题，test_body 留空。信息充分时 clarification_required 为 false，"
+        "clarification_reasons 和 question 为空，并提供测试。"
+        "只返回 JSON 对象：test_body、question 是字符串，clarification_required 是布尔值，"
+        "clarification_reasons 是字符串数组。\n"
         + json.dumps({
             "original_report": original_report,
             "revised_report": reproduction.get("revised_report"),
@@ -89,16 +92,34 @@ def generate_regression_test(
             return
         body = textwrap.dedent(data["test_body"]).strip()
         tree = ast.parse("def test_reported_defect():\n" + textwrap.indent(body, "    ") + "\n")
+        test_function = tree.body[0]
+        executable = [node for node in test_function.body if not (
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Import, ast.ImportFrom))
+            or (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str))
+        )]
+        if not executable:
+            raise ValueError("测试函数不能只定义未调用的内层测试函数")
         if not any(isinstance(node, ast.Assert) for node in ast.walk(tree)) and not _expected_exceptions(tree):
             raise ValueError("缺陷回归用例必须包含 assert 或 pytest.raises 断言")
         compile(tree, "test_reported_defect.py", "exec")
     parsed, usage = generate_object(prompt, model_call or ask_model_with_usage, RegressionPlan, validate=validate_test)
     body, question = parsed["test_body"], parsed["question"]
-    result: dict[str, object] = {"question": question.strip()}
+    result: dict[str, object] = {"question": question.strip(),
+                                 "clarification_required": parsed["clarification_required"],
+                                 "clarification_reasons": list(parsed["clarification_reasons"])}
     if not question.strip():
         body = textwrap.dedent(body).strip()
         function = "def test_reported_defect():\n" + textwrap.indent(body, "    ") + "\n"
         tree = ast.parse(function)
+        test_function = tree.body[0]
+        executable = [node for node in test_function.body if not (
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Import, ast.ImportFrom))
+            or (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str))
+        )]
+        if not executable:
+            raise ValueError("测试函数不能只定义未调用的内层测试函数")
         if not any(isinstance(node, ast.Assert) for node in ast.walk(tree)) and not _expected_exceptions(tree):
             raise ValueError("缺陷回归用例必须包含对预期行为的 assert 或 pytest.raises 断言")
         compile(tree, "test_reported_defect.py", "exec")

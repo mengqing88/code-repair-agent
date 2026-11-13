@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "加权随机/确定性抽取的归一化错误",
+    "分母误用条目数",
+    "累积阈值抽样实现"
+  ],
+  "before_source": "def lottery_pick(candidates, tickets, r):\n    \"\"\"按票数加权确定性抽取：threshold = r * sum(tickets)，\n    返回首个累计票数 > threshold 的下标。\"\"\"\n    threshold = r * len(tickets)\n    acc = 0\n    for i, t in enumerate(tickets):\n        acc += t\n        if acc > threshold:\n            return i\n    return len(candidates) - 1\n",
+  "dataset_experience_id": "GLM::experience-104",
+  "dataset_id": "GLM",
+  "diagnosis": "比例阈值 = r * 权重总和；分母错用条目数会使阈值系统性偏小。修复原则：加权抽样的归一化分母必须是权重之和。",
+  "experience_id": "experience-104",
+  "normalization_notes": [],
+  "original_report": "抽奖程序按剩余票数而非总权重计算阈值，奖品被抽中的概率与配置的权重比例不符。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -1,7 +1,7 @@\n def lottery_pick(candidates, tickets, r):\n     \"\"\"按票数加权确定性抽取：threshold = r * sum(tickets)，\n     返回首个累计票数 > threshold 的下标。\"\"\"\n-    threshold = r * len(tickets)\n+    threshold = r * sum(tickets)\n     acc = 0\n     for i, t in enumerate(tickets):\n         acc += t\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import lottery_pick\n\ndef test_single():\n    assert lottery_pick([\"x\"], [9], 0.8) == 0\n\ndef test_zero_r():\n    assert lottery_pick([\"x\", \"y\"], [4, 4], 0.0) == 0\n\ndef test_weighted_result():\n    assert lottery_pick([\"x\", \"y\"], [1, 3], 0.3) == 1\n"
+}

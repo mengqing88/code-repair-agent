@@ -1,0 +1,37 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-13T17:38:03.341461+00:00",
+  "checks": {
+    "authenticated": true,
+    "dedicated_private_repository_created": true,
+    "real_mcp_write_tools_registered": true,
+    "file_absent_before_approval": true,
+    "create_or_update_file_requires_approval": true,
+    "create_or_update_file_approval_binds_parameters": true,
+    "remote_content_matches": true,
+    "different_call_id_returns_original_receipt": true,
+    "repeat_did_not_change_content": true,
+    "receipt_survives_client_restart": true,
+    "parameter_change_requires_new_approval": true,
+    "rejected_change_left_remote_content_intact": true,
+    "delete_file_requires_approval": true,
+    "delete_file_approval_binds_parameters": true,
+    "mcp_deleted_test_file": true,
+    "cleanup_ownership_verified": true
+  },
+  "scope": "real GitHub private repository + official MCP write; synthetic file; explicit user authorization",
+  "limitations": [
+    "No deliberately induced remote timeout",
+    "No production repositories or business data"
+  ],
+  "target": {
+    "owner": "mengqing88",
+    "repo": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "description_marker": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "id": 1456881117
+  },
+  "repository_access_http_status": 200,
+  "target_provisioning": "Previously created in authenticated browser; retain as reusable private test target",
+  "test_file_absent_after_cleanup": true,
+  "repository_retained": true
+}

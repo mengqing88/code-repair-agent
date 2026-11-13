@@ -1,0 +1,17 @@
+{
+  "applicable_conditions": [
+    "契约要求保持输入顺序（保序去重、保序截取）",
+    "缺陷表现为额外排序改变了输出顺序",
+    "修复应移除不必要的排序步骤"
+  ],
+  "before_source": "# 取列表前三条记录，保持原始输入顺序。\n\n\ndef first_three(items):\n    return sorted(items)[:3]\n",
+  "dataset_experience_id": "Tencent-Hunyuan-Hy::experience-198",
+  "dataset_id": "Tencent-Hunyuan-Hy",
+  "diagnosis": "「截取前 N 条」与「排序后取前 N 条」是不同语义；不必要的排序会破坏输入顺序契约，且排序键若是字符串还会引入字典序。修复原则是去掉多余的排序，只在契约明确要求排序时才排序。",
+  "experience_id": "experience-198",
+  "normalization_notes": [],
+  "original_report": "【合成历史案例，非真实项目/事故/人工审核】记录预览场景：需要取输入列表的前三条并保持原顺序，实际返回的是字典序最小的三条。预期：严格保持原始顺序。",
+  "patch_diff": "--- a/target.py\n+++ b/target.py\n@@ -2,4 +2,4 @@\n \n \n def first_three(items):\n-    return sorted(items)[:3]\n+    return items[:3]\n",
+  "provenance": "synthetic_analogue_not_real_accepted_repair",
+  "verification_tests": "from target import first_three\n\n\ndef test_already_sorted_input():\n    assert first_three([\"a\", \"b\", \"c\", \"d\"]) == [\"a\", \"b\", \"c\"]\n\n\ndef test_empty_items():\n    assert first_three([]) == []\n\n\ndef test_original_order_is_preserved():\n    assert first_three([\"c\", \"a\", \"b\", \"d\"]) == [\"c\", \"a\", \"b\"]\n"
+}

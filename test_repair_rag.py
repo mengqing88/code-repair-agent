@@ -8,10 +8,11 @@ from pathlib import Path
 import sqlite3
 from unittest.mock import patch
 
-from fastapi.testclient import TestClient
+from test_account_support import TestClient
 import pytest
 
-from knowledge_base import KnowledgeBase
+from knowledge_base import KnowledgeBase, normalize_historical_case
+from knowledge_review import KnowledgeReview
 from repair_api import create_app
 from repair_state import create_initial_state
 from repair_tools import RepairToolbox
@@ -35,7 +36,20 @@ def embed(text):
     return [1.0, 0.0] if "IndexError" in text or "空列表" in text else [0.0, 1.0]
 
 
-def test_json_jsonl_import_is_partial_idempotent_and_versioned(tmp_path):
+@pytest.fixture(autouse=True)
+def offline_knowledge_reviewer(monkeypatch):
+    def unavailable(_):
+        raise TimeoutError("offline reviewer fixture")
+    monkeypatch.setattr("knowledge_review.ask_model_with_usage", unavailable)
+
+
+def seed_verified_cases(knowledge, records):
+    """模拟可信内部任务的入库，检索测试不使用外部导入绕过审核。"""
+    for record in records:
+        knowledge.save_case(normalize_historical_case(record))
+
+
+def test_json_jsonl_import_is_partial_idempotent_and_quarantined(tmp_path):
     folder = tmp_path / "history_cases"
     folder.mkdir()
     (folder / "nested").mkdir()
@@ -50,17 +64,18 @@ def test_json_jsonl_import_is_partial_idempotent_and_versioned(tmp_path):
     calls = []
     knowledge = KnowledgeBase(tmp_path / "knowledge.sqlite3", lambda text: calls.append(text) or embed(text))
     result = knowledge.import_path(folder)
-    assert result["imported"] == 2
-    assert result["failed"] == 2
-    assert result["total"] == 2
-    assert len(calls) == 2
+    assert result["queued"] == 3
+    assert result["failed"] == 1
+    assert result["total"] == 0
+    assert len(calls) == 0
     again = knowledge.import_path(folder)
-    assert again["unchanged"] == 2
-    assert len(calls) == 2
+    assert again["unchanged"] == 3
+    assert len(calls) == 0
     case["diagnosis"] = "先判断列表长度，再读取首元素"
     result = knowledge.import_cases([case])
-    assert result["updated"] == 1
-    assert knowledge.search("IndexError")[0]["revision"] == 2
+    assert result["queued"] == 1
+    assert len(KnowledgeReview(knowledge).list()) == 4
+    assert knowledge.search("IndexError") == []
 
 
 @pytest.mark.parametrize("change", [
@@ -74,7 +89,7 @@ def test_invalid_import_never_embeds_or_enters_search(tmp_path, change):
         raise AssertionError("invalid cases must not be embedded")
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", unexpected)
     result = knowledge.import_cases([{**historical_case(), **change}])
-    assert result["failed"] == 1
+    assert result["needs_human"] == 1
     assert knowledge.count() == 0
 
 
@@ -86,8 +101,8 @@ def test_task_snapshot_and_case_array_can_be_imported(tmp_path):
         {**case, "task_id": "second"},
     ]), encoding="utf-8")
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
-    assert knowledge.import_path(path)["imported"] == 2
-    assert knowledge.import_cases([{"state": case, "review": {"decision": "rejected"}}])["failed"] == 1
+    assert knowledge.import_path(path)["queued"] == 2
+    assert knowledge.import_cases([{"state": case, "review": {"decision": "rejected"}}])["needs_human"] == 1
 
 
 def test_snapshot_review_decision_can_be_in_state_or_review_record(tmp_path):
@@ -95,7 +110,10 @@ def test_snapshot_review_decision_can_be_in_state_or_review_record(tmp_path):
     state_without_decision = {key: value for key, value in case.items() if key != "review_decision"}
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
     result = knowledge.import_cases([{"state": state_without_decision, "review": {"decision": "accepted"}}])
-    assert result["imported"] == 1
+    assert result["needs_human"] == 1
+    candidate = KnowledgeReview(knowledge).list()[0]
+    KnowledgeReview(knowledge).decide(candidate["id"], decision="approve", reason="离线测试操作者核实来源",
+        content_hash=candidate["content_hash"], actor="fixture-reviewer")
     assert knowledge.search("IndexError")[0]["document"]
 
 
@@ -107,20 +125,20 @@ def test_hybrid_ranks_exact_exception_and_rejects_unrelated_cases(tmp_path):
     other["patch_diff"] = "connection pool retry"
     other.pop("patch_hash")
     other["validation"].pop("patch_hash")
-    assert knowledge.import_cases([historical_case(), other])["imported"] == 2
+    seed_verified_cases(knowledge, [historical_case(), other])
     matches = knowledge.search("空列表触发 IndexError")
     assert matches[0]["case_id"] == "index-empty"
     assert matches[0]["keyword_score"] > 0
     assert matches[0]["vector_score"] == 1.0
     assert all(item["case_id"] != "connection" for item in matches)
     same_vectors = KnowledgeBase(tmp_path / "same-vectors.sqlite3", lambda _: [1.0, 0.0])
-    same_vectors.import_cases([historical_case(), other])
+    seed_verified_cases(same_vectors, [historical_case(), other])
     assert same_vectors.search("ConnectionError")[0]["case_id"] == "connection"
 
 
 def test_keyword_fallback_handles_model_failure_or_dimension_change(tmp_path):
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
-    knowledge.import_cases([historical_case()])
+    seed_verified_cases(knowledge, [historical_case()])
     def unavailable(_):
         raise RuntimeError("embedding unavailable")
     for embedder in (unavailable, lambda _: [1.0, 0.0, 0.0]):
@@ -171,18 +189,30 @@ def test_existing_database_migrates_without_losing_cases(tmp_path):
 
 def test_imported_case_reaches_patch_prompt_and_assessment_is_persisted(tmp_path):
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
-    knowledge.import_cases([historical_case()])
+    seed_verified_cases(knowledge, [historical_case()])
+    rejected = create_initial_state(
+        "rejected-boundary", {"type": "pasted_code"}, "空列表访问触发 IndexError", code_text="items[0]",
+    )
+    rejected.update(
+        review_decision="rejected", review_reason="拒绝：返回 None 不符合当前调用方契约。",
+        diagnosis="空列表时直接返回 None", patch_diff="--- a/parser.py\n+++ b/parser.py\n-old\n+new\n",
+    )
+    knowledge.record_rejection(rejected)
     state = create_initial_state("current", {"type": "pasted_code"}, "空列表访问触发 IndexError", code_text="items[0]")
     state["reproduction"] = {"execution": {"stderr": "IndexError: list index out of range"}}
     toolbox = RepairToolbox(tmp_path, knowledge_base=knowledge)
     state.update(toolbox.collect_context_for_state(state))
     assert state["case_matches"][0]["decision"] == "pending"
+    assert [item["case_id"] for item in state["case_matches"]] == ["index-empty"]
+    assert [item["case_id"] for item in state["failure_matches"]] == ["rejected-boundary"]
     prompts = []
     def model(prompt):
         prompts.append(prompt)
         return json.dumps({
             "diagnosis": "[index-empty@1] 当前源码同样在空列表上读取首元素，需要边界检查。",
             "patch_diff": "diff for current source",
+            "question": "",
+            "clarification_required": False, "clarification_reasons": [],
             "case_assessments": [{"case_id": "index-empty", "revision": 1, "decision": "applicable",
                                   "matched_conditions": ["当前复现为空列表首元素访问"], "conflicts": [], "unknowns": []}],
         })
@@ -191,6 +221,8 @@ def test_imported_case_reaches_patch_prompt_and_assessment_is_persisted(tmp_path
     payload = json.loads(prompts[0].split("\n", 1)[1])
     assert payload["case_matches"][0]["document"]["source"]["project"] == "historical-parser"
     assert "items[0]" in payload["case_matches"][0]["document"]["patch_diff"]
+    assert payload["failure_matches"][0]["outcome"] == "rejected"
+    assert "返回 None" in payload["failure_matches"][0]["document"]["review_reason"]
     services = toolbox.as_repair_services(lambda _: {}, propose_patch=lambda _: result)
     update = analyze_and_propose_node(state, services)
     assert update["case_matches"][0]["decision"] == "applicable"
@@ -199,13 +231,14 @@ def test_imported_case_reaches_patch_prompt_and_assessment_is_persisted(tmp_path
 @pytest.mark.parametrize("decision", ["rejected", "inconclusive"])
 def test_nonapplicable_cases_preserve_source_and_explain_why(tmp_path, decision):
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
-    knowledge.import_cases([historical_case()])
+    seed_verified_cases(knowledge, [historical_case()])
     state = create_initial_state("current", {"type": "pasted_code"}, "IndexError", code_text="items[0]")
     state.update(RepairToolbox(tmp_path, knowledge_base=knowledge).collect_context_for_state(state))
     assessment = {"case_id": "index-empty", "revision": 1, "decision": decision,
                   "matched_conditions": [], "conflicts": ["输入不是空列表"] if decision == "rejected" else [],
                   "unknowns": ["无法确认边界语义"] if decision == "inconclusive" else []}
-    response = {"diagnosis": "根据当前源码诊断", "patch_diff": "diff", "case_assessments": [assessment]}
+    response = {"diagnosis": "根据当前源码诊断", "patch_diff": "diff", "question": "",
+                "clarification_required": False, "clarification_reasons": [], "case_assessments": [assessment]}
     result = llm_propose_patch(state, lambda _: json.dumps(response))
     assert result["case_matches"][0]["decision"] == decision
     assert result["case_matches"][0]["document"]["patch_diff"] == historical_case()["patch_diff"]
@@ -214,12 +247,13 @@ def test_nonapplicable_cases_preserve_source_and_explain_why(tmp_path, decision)
 @pytest.mark.parametrize("problem", ["missing", "wrong_id", "wrong_revision", "no_evidence", "no_reference", "conflict", "duplicate"])
 def test_invalid_assessment_cannot_be_claimed_applicable(tmp_path, problem):
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
-    knowledge.import_cases([historical_case()])
+    seed_verified_cases(knowledge, [historical_case()])
     state = create_initial_state("current", {"type": "pasted_code"}, "IndexError", code_text="items[0]")
     state.update(RepairToolbox(tmp_path, knowledge_base=knowledge).collect_context_for_state(state))
     assessment = {"case_id": "index-empty", "revision": 1, "decision": "applicable",
                   "matched_conditions": ["空列表读取首元素"], "conflicts": [], "unknowns": []}
-    response = {"diagnosis": "[index-empty@1] 参考边界检查", "patch_diff": "diff", "case_assessments": [assessment]}
+    response = {"diagnosis": "[index-empty@1] 参考边界检查", "patch_diff": "diff", "question": "",
+                "clarification_required": False, "clarification_reasons": [], "case_assessments": [assessment]}
     if problem == "missing":
         response.pop("case_assessments")
     elif problem == "wrong_id":
@@ -240,18 +274,24 @@ def test_invalid_assessment_cannot_be_claimed_applicable(tmp_path, problem):
 
 def test_knowledge_http_import_search_and_errors(tmp_path):
     app = create_app(tmp_path / "data")
-    app.state.runner.knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
+    app.state.runner.knowledge = KnowledgeBase(tmp_path / "data" / "knowledge.sqlite3", embed)
     with TestClient(app) as client:
-        assert client.get("/api/knowledge/stats").json() == {"total": 0}
+        assert client.get("/api/knowledge/stats").json() == {"total": 0, "failures": 0}
         result = client.post("/api/knowledge/import", json={"cases": [historical_case()]}).json()
-        assert result["imported"] == 1
-        assert client.get("/api/knowledge/stats").json() == {"total": 1}
+        assert result["needs_human"] == 1
+        assert client.get("/api/knowledge/stats").json() == {"total": 0, "failures": 0}
+        candidate = client.get("/api/knowledge/candidates").json()["candidates"][0]
+        released = client.post(f"/api/knowledge/candidates/{candidate['id']}/review", json={
+            "decision": "approve", "reason": "模拟人工核实原始验收记录", "content_hash": candidate["content_hash"],
+        })
+        assert released.status_code == 200
+        assert client.get("/api/knowledge/stats").json() == {"total": 1, "failures": 0}
         result = client.post("/api/knowledge/search", json={"query": "IndexError"}).json()
-        assert result["matches"][0]["case_id"] == "index-empty"
+        assert result["matches"][0]["case_id"] == released.json()["published_case_id"]
         assert client.post("/api/knowledge/search", json={"query": " "}).status_code == 422
         assert client.post("/api/knowledge/search", json={"query": "IndexError", "limit": 0}).status_code == 422
         result = client.post("/api/knowledge/import", json={"cases": [{"review_decision": "rejected"}]}).json()
-        assert result["failed"] == 1
+        assert result["needs_human"] == 1
 
 
 def test_cli_import_search_stats_share_database(tmp_path, capsys):
@@ -263,8 +303,13 @@ def test_cli_import_search_stats_share_database(tmp_path, capsys):
         return KnowledgeBase(path, embed)
     with patch("knowledge_cli.KnowledgeBase", side_effect=factory):
         assert main(["--database", str(database), "import", str(path)]) == 0
-        assert json.loads(capsys.readouterr().out)["imported"] == 1
+        assert json.loads(capsys.readouterr().out)["needs_human"] == 1
+        assert main(["--database", str(database), "candidates"]) == 0
+        candidate = json.loads(capsys.readouterr().out)["candidates"][0]
+        assert main(["--database", str(database), "review", candidate["id"], "--decision", "approve",
+                     "--reason", "本机操作者核对证据", "--content-hash", candidate["content_hash"]]) == 0
+        published = json.loads(capsys.readouterr().out)
         assert main(["--database", str(database), "search", "IndexError"]) == 0
-        assert json.loads(capsys.readouterr().out)["matches"][0]["case_id"] == "index-empty"
+        assert json.loads(capsys.readouterr().out)["matches"][0]["case_id"] == published["published_case_id"]
         assert main(["--database", str(database), "stats"]) == 0
         assert json.loads(capsys.readouterr().out)["total"] == 1
