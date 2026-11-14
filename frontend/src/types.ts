@@ -1,5 +1,7 @@
 /** 代码来源支持任意语言的单文件、Git 仓库或粘贴代码。 */
-export type SourceType = "code_file" | "python_file" | "git_repository" | "pasted_code";
+export type SourceType = "code_file" | "python_file" | "git_repository" | "pasted_code" | "directory" | "zip_archive";
+
+export interface ProjectFileInput { path: string; content_base64: string; }
 
 /** 任务草稿只保存在页面内存中，刷新页面后清空。 */
 export interface TaskDraft {
@@ -9,6 +11,8 @@ export interface TaskDraft {
   codeText: string;
   fileName: string;
   fileContent: string | null;
+  projectFiles?: ProjectFileInput[] | null;
+  archiveBase64?: string | null;
   errorReport: string;
   testTarget: string;
   language: string;

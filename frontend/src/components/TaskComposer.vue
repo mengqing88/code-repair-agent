@@ -2,20 +2,26 @@
 import { computed, ref } from "vue";
 import type { SourceType, TaskDraft } from "../types";
 import AppIcon from "./AppIcon.vue";
+import { fileBase64, readProjectFolder } from "../project-upload";
 
 // draft：父组件提供的表单草稿；emit：通知父组件确认已校验的输入。
 const draft = defineModel<TaskDraft>({ required: true });
 const emit = defineEmits<{ submit: [] }>();
 const error = ref("");
 const fileInput = ref<HTMLInputElement | null>(null);
+const folderInput = ref<HTMLInputElement | null>(null);
+const archiveInput = ref<HTMLInputElement | null>(null);
+const importNotice = ref("");
 const reading = ref(false);
 const sourceOptions: {
   value: SourceType;
   label: string;
-  icon: "file" | "branch" | "code";
+  icon: "file" | "branch" | "code" | "upload";
 }[] = [
   { value: "code_file", label: "代码文件", icon: "file" },
   { value: "git_repository", label: "Git 仓库", icon: "branch" },
+  { value: "directory", label: "文件夹", icon: "file" },
+  { value: "zip_archive", label: "ZIP 压缩包", icon: "upload" },
   { value: "pasted_code", label: "粘贴代码", icon: "code" },
 ];
 const isRepository = computed(
@@ -25,6 +31,7 @@ const languageOptions = ["auto", "python", "javascript", "typescript", "java", "
 const effectiveLanguage = computed(() => {
   if (draft.value.language !== "auto") return draft.value.language;
   if (isRepository.value) return "auto";
+  if (draft.value.sourceType === "directory" || draft.value.sourceType === "zip_archive") return "auto";
   const name = draft.value.fileName || draft.value.path.split(/[\\/]/).pop() || "";
   const suffix = name.slice(name.lastIndexOf(".")).toLowerCase();
   return suffix === ".py" || suffix === ".pyw" ? "python" : "auto";
@@ -41,8 +48,46 @@ function updateLanguage(value: string) {
 
 /** 切换代码来源，保留已填写内容并清除上一种来源的校验提示。 */
 function selectSource(source: SourceType) {
+  if (draft.value.sourceType !== source) {
+    draft.value.path = ""; draft.value.fileName = ""; draft.value.fileContent = null;
+    draft.value.projectFiles = null; draft.value.archiveBase64 = null; importNotice.value = "";
+  }
   draft.value.sourceType = source;
   error.value = "";
+}
+
+async function readFolder(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files?.length) return;
+  clearSelectedProject(); draft.value.path = "";
+  reading.value = true; error.value = "";
+  try {
+    const project = await readProjectFolder(Array.from(input.files));
+    draft.value.projectFiles = project.files;
+    draft.value.path = project.name; draft.value.fileName = project.name;
+    importNotice.value = `已读取 ${project.files.length} 个文件${project.skipped ? `，排除 ${project.skipped} 项凭据、依赖或缓存` : ""}。`;
+  } catch (cause) { error.value = cause instanceof Error ? cause.message : "文件夹读取失败。"; }
+  finally { reading.value = false; input.value = ""; }
+}
+
+async function readArchive(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  clearSelectedProject(); draft.value.path = "";
+  error.value = ""; reading.value = true;
+  try {
+    if (!file.name.toLowerCase().endsWith(".zip") || file.size > 10_000_000) throw new Error("请选择不超过 10 MB 的 ZIP 压缩包。");
+    draft.value.archiveBase64 = await fileBase64(file);
+    draft.value.fileName = file.name; draft.value.path = file.name;
+    importNotice.value = `已读取 ${file.name}（${(file.size / 1_000_000).toFixed(2)} MB）。`;
+  } catch (cause) { error.value = cause instanceof Error ? cause.message : "ZIP 读取失败。"; }
+  finally { reading.value = false; input.value = ""; }
+}
+
+function clearSelectedProject() {
+  draft.value.fileContent = null; draft.value.fileName = "";
+  draft.value.projectFiles = null; draft.value.archiveBase64 = null; importNotice.value = "";
 }
 
 /** 读取用户主动选择的代码文本文件；不访问其他本地文件。 */
@@ -73,6 +118,8 @@ async function readSelectedFile(event: Event) {
 
 /** 检查必需输入，确认后由父组件提交给本地 Python 服务。 */
 function submit() {
+  if (reading.value) return;
+  const inferProject = ["directory", "zip_archive"].includes(draft.value.sourceType) && draft.value.language === "auto";
   if (
     draft.value.sourceType === "pasted_code" &&
     !draft.value.codeText.trim()
@@ -84,7 +131,9 @@ function submit() {
   ) {
     error.value = isRepository.value
       ? "请填写仓库路径。"
-      : "请填写代码文件路径或选择文件。";
+      : draft.value.sourceType === "directory" ? "请填写文件夹路径或选择文件夹。" : "请填写代码文件路径或选择文件。";
+  } else if (draft.value.sourceType === "zip_archive" && !draft.value.archiveBase64) {
+    error.value = "请先选择 ZIP 压缩包。";
   } else if (
     isRepository.value &&
     !/^(?:[a-f\d]{40}|[a-f\d]{64})$/i.test(draft.value.revision.trim())
@@ -93,11 +142,11 @@ function submit() {
   } else if (!draft.value.errorReport.trim()) {
     error.value = "请填写错误报告，以便核对实际问题。";
   } else if (
-    effectiveLanguage.value !== "python" &&
+    !inferProject && effectiveLanguage.value !== "python" &&
     (!draft.value.testCommand.trim() || !draft.value.reproduceCommand.trim())
   ) {
     error.value = "请为非 Python 或未确定语言的任务填写固定复现命令和测试命令。";
-  } else if (!["python", "javascript", "typescript"].includes(effectiveLanguage.value) && !draft.value.regressionCommand?.trim()) {
+  } else if (!inferProject && !["python", "javascript", "typescript"].includes(effectiveLanguage.value) && !draft.value.regressionCommand?.trim()) {
     error.value = "请填写独立回归命令，使用 {test_file} 和 {report_file} 输出 JUnit 报告。";
   } else {
     error.value = "";
@@ -122,6 +171,7 @@ function submit() {
         type="button"
         :class="{ selected: draft.sourceType === option.value }"
         :aria-pressed="draft.sourceType === option.value"
+        :disabled="reading"
         @click="selectSource(option.value)"
       >
         <AppIcon :name="option.icon" />{{ option.label }}
@@ -150,10 +200,19 @@ function submit() {
       <label for="code-name">文件名</label>
       <input id="code-name" v-model="draft.fileName" class="mono" placeholder="main.py" />
     </div>
+    <div v-else-if="draft.sourceType === 'zip_archive'" class="field">
+      <label>项目 ZIP 压缩包 <span class="required">*</span></label>
+      <button type="button" class="button subtle" :disabled="reading" @click="archiveInput?.click()">
+        <AppIcon name="upload" />{{ reading ? "读取中…" : "选择 ZIP 压缩包" }}
+      </button>
+      <input ref="archiveInput" type="file" accept=".zip,application/zip" class="visually-hidden" tabindex="-1" aria-label="选择 ZIP 压缩包" @change="readArchive" />
+      <p class="input-hint">{{ importNotice || "ZIP 最大 10 MB；导入后最多 1000 个文件、总共 20 MB，单文件最多 2 MB。" }}</p>
+      <p class="input-hint">仅有一个外层文件夹时自动以该文件夹为项目根目录。凭据、依赖和缓存路径会排除；不支持加密 ZIP。</p>
+    </div>
     <template v-else>
       <div class="field">
         <label for="source-path"
-          >{{ isRepository ? "本地仓库路径" : "代码文件路径" }}
+          >{{ isRepository ? "本地仓库路径" : draft.sourceType === 'directory' ? "本机文件夹路径或上传文件夹" : "代码文件路径" }}
           <span class="required">*</span></label
         >
         <div class="file-path-row">
@@ -162,24 +221,22 @@ function submit() {
             v-model="draft.path"
             class="mono"
             :placeholder="
-              isRepository
+              isRepository || draft.sourceType === 'directory'
                 ? 'F:\\projects\\my-repository'
                 : 'F:\\projects\\example.js'
             "
             autocomplete="off"
-            @input="
-              draft.fileContent = null;
-              draft.fileName = '';
-            "
+            :disabled="reading"
+            @input="clearSelectedProject"
           />
           <button
             v-if="!isRepository"
             type="button"
             class="button subtle"
             :disabled="reading"
-            @click="fileInput?.click()"
+            @click="draft.sourceType === 'directory' ? folderInput?.click() : fileInput?.click()"
           >
-            <AppIcon name="upload" />{{ reading ? "读取中…" : "选择文件" }}
+            <AppIcon name="upload" />{{ reading ? "读取中…" : draft.sourceType === 'directory' ? "选择文件夹" : "选择文件" }}
           </button>
         </div>
         <input
@@ -190,9 +247,10 @@ function submit() {
           aria-label="选择代码文本文件"
           @change="readSelectedFile"
         />
+        <input ref="folderInput" type="file" webkitdirectory multiple class="visually-hidden" tabindex="-1" aria-label="选择项目文件夹" @change="readFolder" />
         <p class="input-hint">
           {{
-            draft.fileContent !== null && !isRepository
+            draft.sourceType === 'directory' ? importNotice || "本机路径由修复服务读取；也可上传整个文件夹。最多 1000 个文件、总共 20 MB，单文件最多 2 MB。" : draft.fileContent !== null && !isRepository
               ? `已读取 ${draft.fileName}，共 ${draft.fileContent.split("\n").length} 行`
               : "文件路径由本地修复服务使用。"
           }}

@@ -139,16 +139,31 @@ from execution_manifest import (SnapshotKnowledge, freeze as freeze_execution_ma
 from business_scope import require_software_request
 from language_support import (detect_language, detect_project_language, normalize_language, split_command,
                               validate_execution_commands)
+from project_inputs import (MAX_ARCHIVE_BYTES, MAX_FILE_BYTES, MAX_PROJECT_FILES, decode_base64,
+                            import_local_directory, import_uploaded_files, import_zip, project_path)
+
+
+class ProjectFileInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    path: str = Field(min_length=1, max_length=1024)
+    content_base64: str = Field(max_length=4 * ((MAX_FILE_BYTES + 2) // 3))
+
+    @model_validator(mode="after")
+    def validate_path(self):
+        project_path(self.path)
+        return self
 
 
 class TaskInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    source_type: Literal["code_file", "python_file", "git_repository", "pasted_code"]
+    source_type: Literal["code_file", "python_file", "git_repository", "pasted_code", "directory", "zip_archive"]
     path: str = Field(default="", max_length=4096)
     revision: str = Field(default="", max_length=64)
     code_text: str = Field(default="", max_length=1_000_000)
     file_name: str = Field(default="", max_length=255)
     file_content: str | None = Field(default=None, max_length=1_000_000)
+    project_files: list[ProjectFileInput] | None = Field(default=None, max_length=MAX_PROJECT_FILES)
+    archive_base64: str | None = Field(default=None, max_length=4 * ((MAX_ARCHIVE_BYTES + 2) // 3))
     error_report: str = Field(min_length=1, max_length=100_000)
     test_target: str = Field(default="", max_length=4096)
     language: str = Field(default="auto", max_length=40)
@@ -163,8 +178,18 @@ class TaskInput(BaseModel):
             raise ValueError("错误报告不能为空")
         if self.source_type == "pasted_code" and not self.code_text.strip():
             raise ValueError("代码不能为空")
-        if self.source_type != "pasted_code" and not self.path.strip() and self.file_content is None:
+        if (self.source_type != "pasted_code" and not self.path.strip() and self.file_content is None
+                and self.project_files is None and self.archive_base64 is None):
             raise ValueError("请提供本地路径或上传文件")
+        if self.project_files is not None and (self.source_type != "directory" or not self.project_files):
+            raise ValueError("文件夹上传必须包含项目文件")
+        if self.archive_base64 is not None and self.source_type != "zip_archive":
+            raise ValueError("压缩包数据仅适用于 ZIP 模式")
+        if self.source_type == "zip_archive":
+            if self.archive_base64 is None or not self.file_name.lower().endswith(".zip"):
+                raise ValueError("请上传 ZIP 压缩包")
+        if self.project_files is not None and self.archive_base64 is not None:
+            raise ValueError("不能同时上传文件夹和压缩包")
         if self.file_content is not None:
             name = self.file_name
             if self.source_type not in ("code_file", "python_file") or not self.file_content.strip():
@@ -193,11 +218,22 @@ class TaskInput(BaseModel):
                 self.language = detect_project_language(self.path)
             elif self.source_type == "pasted_code":
                 self.language = detect_language(path=self.file_name or None, content=self.code_text)
-        try:
-            validate_execution_commands(self.language, self.test_command, self.reproduce_command, self.regression_command)
-        except ValueError as error:
-            raise ValueError(f"{error}；请在任务设置中补充执行命令") from error
+        if self.language != "auto" or self.source_type not in ("directory", "zip_archive"):
+            try:
+                validate_execution_commands(self.language, self.test_command, self.reproduce_command, self.regression_command)
+            except ValueError as error:
+                raise ValueError(f"{error}；请在任务设置中补充执行命令") from error
         return self
+
+    def persisted_input(self):
+        result = self.model_dump(exclude={"project_files", "archive_base64"})
+        if self.project_files is not None:
+            result["project_files"] = [{"path": item.path,
+                "sha256": hashlib.sha256(decode_base64(item.content_base64, MAX_FILE_BYTES)).hexdigest()}
+                for item in self.project_files]
+        if self.archive_base64 is not None:
+            result["archive_sha256"] = hashlib.sha256(decode_base64(self.archive_base64, MAX_ARCHIVE_BYTES)).hexdigest()
+        return result
 
 
 class ReviewInput(BaseModel):
@@ -727,7 +763,8 @@ class RepairRunner:
 
     def create(self, request: TaskInput, key: str | None = None, user_id=None):
         if self.deployment_mode == "untrusted":
-            if request.source_type != "pasted_code" and request.file_content is None:
+            if (request.source_type != "pasted_code" and request.file_content is None
+                    and request.project_files is None and request.archive_base64 is None):
                 raise HTTPException(403, "不可信用户模式只允许上传或粘贴源码，禁止访问服务端本地路径")
             if self.execution_backend != "docker":
                 raise HTTPException(403, "不可信用户模式禁止宿主执行")
@@ -740,7 +777,11 @@ class RepairRunner:
         with self.lock:
             if user_id:
                 self.accounts.knowledge_path(user_id)
-            existing = self.store.request_task(key, request.model_dump(), user_id)
+            try:
+                request_input = request.persisted_input()
+            except ValueError as error:
+                raise HTTPException(422, str(error)) from error
+            existing = self.store.request_task(key, request_input, user_id)
             if existing:
                 return existing
             return self._create(request, key, user_id)
@@ -750,11 +791,34 @@ class RepairRunner:
         directory = self.store.root / "tasks" / task_id
         input_dir = directory / "input"
         input_dir.mkdir(parents=True)
-        source_path = Path(request.path.strip()).expanduser().resolve()
-        if user_id and request.file_content is None and request.source_type != "pasted_code":
-            source_directory = source_path if request.source_type == "git_repository" else source_path.parent
+        source_path = Path(request.path.strip()).expanduser().absolute()
+        project_mode = request.source_type in ("directory", "zip_archive")
+        is_upload = request.file_content is not None or request.project_files is not None or request.archive_base64 is not None
+        if user_id and not is_upload and request.source_type != "pasted_code":
+            source_directory = source_path.resolve() if request.source_type in ("git_repository", "directory") else source_path.parent.resolve()
             if source_directory.is_relative_to(self.store.root) or self.store.root.is_relative_to(source_directory):
                 raise HTTPException(403, "代码来源不能包含服务数据目录；请使用目录外的代码或上传文件")
+        import_summary = None
+        if project_mode:
+            try:
+                if request.project_files is not None:
+                    project = import_uploaded_files([item.model_dump() for item in request.project_files])
+                elif request.archive_base64 is not None:
+                    project = import_zip(request.archive_base64)
+                else:
+                    project = import_local_directory(source_path)
+                source_path = input_dir / "project"
+                project.write(source_path)
+                language = detect_project_language(source_path) if request.language == "auto" else request.language
+                validate_execution_commands(language, request.test_command, request.reproduce_command, request.regression_command)
+                import_summary = project.summary()
+                source = {"type": "directory", "path": str(source_path), "language": language,
+                          "input_kind": request.source_type, "retrieval_scope": {"language": language}}
+            except (ValueError, OSError) as error:
+                shutil.rmtree(directory, ignore_errors=True)
+                error_info(error, operation="task.project_import")
+                message = str(error) if isinstance(error, ValueError) else "项目导入失败，请检查文件夹权限或压缩包"
+                raise HTTPException(422, message) from error
         if request.file_content is not None:
             source_path = input_dir / request.file_name
             source_path.write_text(request.file_content, encoding="utf-8")
@@ -771,15 +835,18 @@ class RepairRunner:
             regression_command=request.regression_command,
         )
         try:
-            source = check_source(args)
+            if not project_mode:
+                source = check_source(args)
         except (ValueError, OSError) as error:
             error_info(error, operation="task.input")
             raise HTTPException(422, "输入来源校验失败，请检查路径、文件编码或版本参数") from error
-        source_root = (source_path if request.source_type == "git_repository" else
+        source_root = (source_path if request.source_type in ("git_repository", "directory", "zip_archive") else
                        source_path.parent if request.source_type in ("python_file", "code_file") else input_dir)
         state = create_initial_state(task_id, source, request.error_report,
                                      code_text=request.code_text if request.source_type == "pasted_code" else None,
                                      remaining_seconds=request.runtime_seconds)
+        if import_summary and import_summary["skipped_count"]:
+            state["warnings"] = [f"项目导入已排除 {import_summary['skipped_count']} 项凭据、依赖或缓存路径。"]
         task = {
             "state": state, "execution": "queued", "review": None,
             "progress": initial_progress(),
@@ -790,6 +857,7 @@ class RepairRunner:
                        "reproduce_command": list(split_command(request.reproduce_command) if request.reproduce_command else ()),
                        "regression_command": list(split_command(request.regression_command) if request.regression_command else ()),
                        "language": source.get("language", request.language),
+                       **({"project_import": import_summary} if import_summary else {}),
                        "execution_backend": self.execution_backend,
                        "deployment_mode": self.deployment_mode,
                        "effect_keys": {name: uuid4().hex for name in ("apply_patch", "save_case", "reject_patch")},
@@ -802,12 +870,13 @@ class RepairRunner:
             "created_at": timestamp(), "updated_at": timestamp(),
         }
         knowledge = self.knowledge_for_user(user_id) if user_id else self.knowledge
-        manifest, manifest_hash = freeze_execution_manifest(task, directory, request.model_dump(), knowledge)
+        request_input = request.persisted_input()
+        manifest, manifest_hash = freeze_execution_manifest(task, directory, request_input, knowledge)
         try:
-            self.store.create_once(task, key, request.model_dump(), user_id)
+            self.store.create_once(task, key, request_input, user_id)
         except sqlite3.IntegrityError:
             try:
-                existing = self.store.request_task(key, request.model_dump(), user_id)
+                existing = self.store.request_task(key, request_input, user_id)
             finally:
                 shutil.rmtree(directory, ignore_errors=True)
             if existing is None:
@@ -1526,6 +1595,23 @@ def create_app(data_root: Path | None = None):
                             request.headers.get("X-CSRF-Token", ""), csrf_token(token)):
                         raise HTTPException(403, "会话校验失败，请刷新页面后重试")
                 with diagnostic_scope(path=path, task_id=task_id):
+                    if request.method == "POST" and request.url.path == "/api/tasks":
+                        limit = 30_000_000
+                        try:
+                            declared = int(request.headers.get("content-length", "0"))
+                        except ValueError:
+                            raise HTTPException(400, "请求大小声明无效") from None
+                        if declared < 0 or declared > limit:
+                            raise HTTPException(413, "项目上传请求不能超过 30 MB")
+                        chunks = []
+                        size = 0
+                        async for chunk in request.stream():
+                            size += len(chunk)
+                            if size > limit:
+                                raise HTTPException(413, "项目上传请求不能超过 30 MB")
+                            chunks.append(chunk)
+                        # Starlette replays this cached body to the JSON endpoint.
+                        request._body = b"".join(chunks)
                     response = await call_next(request)
             except Fault as error:
                 response = await fault_response(request, error)

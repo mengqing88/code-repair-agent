@@ -50,6 +50,7 @@ Web、CLI 和对话入口在接触模型、Embedding 或 MCP 前执行确定性�
 - `knowledge_base.py`：定义修复经验文档以及本地知识库实现。
 - `test_*.py`：覆盖 CLI、复现、状态、工作流、工具、模型客户端和知识库的离线测试。
 - `frontend/`：已连接本地 API 的 Vue 3、TypeScript 和 Vite 工作台；具体范围见 `frontend/README.md`。
+- `project_inputs.py`：Web 多文件项目导入，支持本机文件夹、浏览器文件夹上传与 ZIP；统一校验路径、凭据排除、链接和解压资源上限，再保存任务私有源码快照。
 
 ## 当前实现边界
 

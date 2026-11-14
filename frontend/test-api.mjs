@@ -34,6 +34,53 @@ test("creation sends original key and stable parameter fingerprint", async () =>
   assert.notEqual(await client.taskFingerprint(draft), await client.taskFingerprint({ ...draft, errorReport: "changed" }));
 });
 
+test("folder and ZIP payloads include selected bytes and never reuse stale single-file contents", async () => {
+  const client = api(() => {});
+  const files = [{ path: "src/a.py", content_base64: "eD0x" }, { path: "tests/test_a.py", content_base64: "eD0y" }];
+  const folder = { ...draft, sourceType: "directory", path: "project", projectFiles: files, fileContent: "stale" };
+  const payload = client.taskPayload(folder);
+  assert.equal(payload.project_files, files);
+  assert.equal(payload.file_content, null);
+  assert.equal(payload.revision, "");
+  assert.notEqual(await client.taskFingerprint(folder), await client.taskFingerprint({ ...folder, projectFiles: files.slice(1) }));
+  const zip = client.taskPayload({ ...folder, sourceType: "zip_archive", fileName: "project.zip", archiveBase64: "UEs=" });
+  assert.equal(zip.archive_base64, "UEs=");
+  assert.equal(zip.file_name, "project.zip");
+  assert.equal(zip.project_files, undefined);
+  assert.equal(client.taskPayload({ ...folder, sourceType: "code_file" }).project_files, undefined);
+});
+
+const uploadSource = ts.transpileModule(await readFile(new URL("./src/project-upload.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+function uploads() {
+  const exports = {};
+  vm.runInNewContext(uploadSource, { exports, Uint8Array, btoa });
+  return exports;
+}
+function selectedFile(path, text, size = Buffer.byteLength(text)) {
+  return { webkitRelativePath: path, size, arrayBuffer: async () => Uint8Array.from(Buffer.from(text)).buffer };
+}
+
+test("folder selection retains relative paths and binary bytes, excluding credentials before reading", async () => {
+  const secret = selectedFile("demo/.env", "do not read");
+  secret.arrayBuffer = async () => { throw new Error("credential read"); };
+  const result = await uploads().readProjectFolder([selectedFile("demo/src/a.py", "x=1"), secret,
+    selectedFile("demo/node_modules/cache.js", "ignored"), selectedFile("demo/tests/test_a.py", "assert True")]);
+  assert.equal(result.name, "demo");
+  assert.equal(result.skipped, 2);
+  assert.equal(result.files.length, 2);
+  assert.equal(result.files[0].path, "src/a.py");
+  assert.equal(Buffer.from(result.files[0].content_base64, "base64").toString(), "x=1");
+});
+
+test("folder selection rejects missing relative paths, oversized files and too many files", async () => {
+  const client = uploads();
+  await assert.rejects(client.readProjectFolder([selectedFile("", "x")]), /ZIP/);
+  await assert.rejects(client.readProjectFolder([selectedFile("demo/a.py", "x", 2_000_001)]), /2 MB/);
+  await assert.rejects(client.readProjectFolder(Array.from({ length: 1001 }, (_, i) => selectedFile(`demo/${i}.py`, "x"))), /1000/);
+});
+
 test("request timeout aborts fetch and reports uncertain outcome", async () => {
   let abort, cleared = false;
   const client = api(async (_url, options) => new Promise((_resolve, reject) => {

@@ -75,7 +75,7 @@ def assess_software_request(*values: object, source_type: str | None = None) -> 
                 return ScopeDecision(False, "explicit_non_software_request", (match.group(0)[:80],))
 
     signals: list[str] = []
-    if source_type in {"code_file", "python_file", "git_repository", "pasted_code"}:
+    if source_type in {"code_file", "python_file", "git_repository", "pasted_code", "directory", "zip_archive"}:
         signals.append("software_source")
     if preference_match:
         return ScopeDecision(True, "software_development_preference", ("coding_preference",))
@@ -91,7 +91,7 @@ def assess_software_request(*values: object, source_type: str | None = None) -> 
     # A technology name alone is incidental context, not proof of a software task.
     # A recognized software entity (for example TypeError) is sufficiently specific.
     explicit_entity = bool(re.search(_SOFTWARE_CONTEXT[0], text, flags=re.IGNORECASE))
-    if source_type in {"code_file", "python_file", "git_repository", "pasted_code"} or explicit_entity or (
+    if source_type in {"code_file", "python_file", "git_repository", "pasted_code", "directory", "zip_archive"} or explicit_entity or (
         action and (technology or software_context)
     ) or (technology and software_context):
         return ScopeDecision(True, "software_development_signal", tuple(signals))

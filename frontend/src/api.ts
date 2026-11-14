@@ -72,8 +72,10 @@ export function validTask(value: unknown): value is RepairTask {
 export function taskPayload(draft: TaskDraft) {
   return {
     source_type: draft.sourceType, path: draft.path, revision: draft.sourceType === "git_repository" ? draft.revision : "",
-    code_text: draft.codeText, file_name: ["code_file", "python_file", "pasted_code"].includes(draft.sourceType) ? draft.fileName : "",
+    code_text: draft.codeText, file_name: ["code_file", "python_file", "pasted_code", "directory", "zip_archive"].includes(draft.sourceType) ? draft.fileName : "",
     file_content: ["code_file", "python_file"].includes(draft.sourceType) ? draft.fileContent : null,
+    ...(draft.sourceType === "directory" ? { project_files: draft.projectFiles ?? null } : {}),
+    ...(draft.sourceType === "zip_archive" ? { archive_base64: draft.archiveBase64 ?? null } : {}),
     language: draft.language, test_command: draft.testCommand, reproduce_command: draft.reproduceCommand,
     regression_command: draft.regressionCommand || "",
     error_report: draft.errorReport, test_target: draft.testTarget,

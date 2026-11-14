@@ -51,7 +51,7 @@ rerank-onnx = [
 # setuptools 的打包范围配置。
 [tool.setuptools]
 # py-modules：打包 CLI、模型调用、独立错误复现、修复状态、工作流和知识库模块，不收录测试模块。
-py-modules = ["agent_cli", "llm_client", "reproduction", "defect_regression", "repair_state", "repair_workflow", "knowledge_base", "knowledge_cli", "knowledge_review", "repair_tools", "repair_api", "repair_worker", "resilience", "trace_store", "model_contracts", "operation_store", "diagnostics", "docker_executor", "recovery_store", "recovery_manager", "recovery_agent", "user_accounts", "personal_memory", "conversation_memory", "mcp_tool_client", "account_cli", "qdrant_store", "semantic_dedup", "retrieval_reranker", "tool_context", "input_protection", "tool_authorization", "execution_manifest", "execution_replay", "runtime_config", "business_scope", "adversarial_review", "failure_regression", "multi_agent", "language_support", "workflow_checkpoint", "workflow_replay", "native_regression"]
+py-modules = ["agent_cli", "llm_client", "reproduction", "defect_regression", "repair_state", "repair_workflow", "knowledge_base", "knowledge_cli", "knowledge_review", "repair_tools", "repair_api", "repair_worker", "resilience", "trace_store", "model_contracts", "operation_store", "diagnostics", "docker_executor", "recovery_store", "recovery_manager", "recovery_agent", "user_accounts", "personal_memory", "conversation_memory", "mcp_tool_client", "account_cli", "qdrant_store", "semantic_dedup", "retrieval_reranker", "tool_context", "input_protection", "project_inputs", "tool_authorization", "execution_manifest", "execution_replay", "runtime_config", "business_scope", "adversarial_review", "failure_regression", "multi_agent", "language_support", "workflow_checkpoint", "workflow_replay", "native_regression"]
 
 # pytest 的项目级配置。
 [tool.pytest.ini_options]
