@@ -39,6 +39,86 @@ from user_accounts import UserAccounts, SESSION_COOKIE, SESSION_SECONDS, csrf_to
 from personal_memory import PersonalMemory, MemoryInput, memory_scope
 from conversation_memory import Conversations, ChatInput, CandidateInput, conversation_lock
 
+
+_LOCAL_HOSTS = {"127.0.0.1", "localhost", "testserver"}
+_LOCAL_ORIGINS = {"http://127.0.0.1:5173", "http://localhost:5173"}
+
+
+def _parse_authority(authority: str) -> tuple[str, int | None] | None:
+    if not authority or authority != authority.strip() or any(char in authority for char in "/\\?#@"):
+        return None
+    try:
+        parsed = urlsplit("//" + authority)
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError:
+        return None
+    if (not hostname or parsed.path or parsed.query or parsed.fragment or parsed.username or parsed.password
+            or parsed.netloc != authority or authority.endswith(":")):
+        return None
+    return hostname.rstrip(".").lower(), port
+
+
+def _public_web_allowlist() -> tuple[set[str], set[str]]:
+    hosts = {value.strip().rstrip(".").lower()
+             for value in os.environ.get("REPAIR_ALLOWED_HOSTS", "").split(",") if value.strip()}
+    origins = {value.strip().rstrip("/").lower()
+               for value in os.environ.get("REPAIR_ALLOWED_ORIGINS", "").split(",") if value.strip()}
+    if not hosts and not origins:
+        return hosts, origins
+    if os.environ.get("REPAIR_DEPLOYMENT_MODE", "local").strip().lower() != "untrusted":
+        raise ValueError("公网 Host/Origin 白名单只能与 REPAIR_DEPLOYMENT_MODE=untrusted 一起使用")
+    for host in hosts:
+        labels = host.split(".")
+        if (len(host) > 253 or any(re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label) is None
+                                   for label in labels)):
+            raise ValueError("REPAIR_ALLOWED_HOSTS 必须是精确域名，不能使用通配符、端口或 URL")
+    for origin in origins:
+        parsed = urlsplit(origin)
+        if (parsed.scheme != "https" or not parsed.hostname or parsed.hostname not in hosts
+                or parsed.username or parsed.password or parsed.port or parsed.path or parsed.query or parsed.fragment
+                or parsed.netloc != parsed.hostname):
+            raise ValueError("REPAIR_ALLOWED_ORIGINS 必须是白名单域名对应的 HTTPS Origin")
+    return hosts, origins
+
+
+def _allowed_request_host(authority: str, public_hosts: set[str]) -> bool:
+    parsed = _parse_authority(authority)
+    if parsed is None:
+        return False
+    hostname, port = parsed
+    if hostname in _LOCAL_HOSTS:
+        return True
+    return hostname in public_hosts and port in (None, 443)
+
+
+def _allowed_request_origin(origin: str, authority: str, public_origins: set[str]) -> bool:
+    try:
+        parsed = urlsplit(origin)
+        if (parsed.scheme not in ("http", "https") or not parsed.netloc or parsed.username or parsed.password
+                or parsed.path not in ("", "/") or parsed.query or parsed.fragment):
+            return False
+        origin_authority = _parse_authority(parsed.netloc)
+        request_authority = _parse_authority(authority)
+        if origin_authority is None or request_authority is None:
+            return False
+        origin_hostname, origin_port = origin_authority
+        request_hostname, request_port = request_authority
+        normalized = f"{parsed.scheme}://{origin_hostname}"
+        if origin_port is not None:
+            normalized += f":{origin_port}"
+        if request_hostname in _LOCAL_HOSTS and normalized in _LOCAL_ORIGINS:
+            return True
+        same_origin_port = origin_port or (443 if parsed.scheme == "https" else 80)
+        request_default_port = request_port or (443 if parsed.scheme == "https" else 80)
+        same_origin = origin_hostname == request_hostname and same_origin_port == request_default_port
+        if request_hostname in _LOCAL_HOSTS and same_origin:
+            return True
+        return (normalized in public_origins and origin_hostname == request_hostname
+                and same_origin_port == 443 and request_port in (None, 443))
+    except ValueError:
+        return False
+
 from agent_cli import check_source
 from knowledge_base import KnowledgeBase
 from repair_state import create_initial_state
@@ -1350,6 +1430,7 @@ class RepairRunner:
 
 
 def create_app(data_root: Path | None = None):
+    public_hosts, public_origins = _public_web_allowlist()
     root = data_root or Path(os.environ.get("REPAIR_DATA_DIR", Path(__file__).parent / "work" / "web"))
     with diagnostic_scope(path=root / "errors.jsonl", operation="api.initialize"):
         try:
@@ -1423,10 +1504,11 @@ def create_app(data_root: Path | None = None):
         path = root / "errors.jsonl"
         with diagnostic_scope(path=path, request_id=request_id, operation=f"http.{request.method}"):
             try:
-                if request.headers.get("host", "").split(":")[0] not in ("127.0.0.1", "localhost", "testserver"):
-                    raise Fault("local_only", "仅支持本地服务", category="permission")
+                host = request.headers.get("host", "")
+                if not _allowed_request_host(host, public_hosts):
+                    raise Fault("host_denied", "请求 Host 未列入服务端允许列表", category="permission")
                 origin = request.headers.get("origin")
-                if origin and urlsplit(origin).netloc not in ("127.0.0.1:5173", "localhost:5173", request.headers.get("host")):
+                if origin and not _allowed_request_origin(origin, host, public_origins):
                     raise Fault("origin_denied", "请求来源不受支持", category="permission")
                 public = request.url.path in ("/api/health", "/api/auth/register", "/api/auth/login")
                 if request.url.path.startswith("/api/") and not public:

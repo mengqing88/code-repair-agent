@@ -44,6 +44,7 @@ def test_non_software_or_ambiguous_requests_are_rejected(content):
 
 def test_code_source_is_a_positive_signal_for_repair_tasks():
     assert assess_software_request("请修复这个文件的错误", source_type="python_file").allowed
+    assert assess_software_request("Handle a zero denominator", source_type="code_file").allowed
 
 
 @pytest.mark.parametrize(("arguments", "valid"), [
@@ -70,6 +71,8 @@ def test_unknown_language_fails_closed_without_fixed_commands():
 
 def test_explicit_non_software_intent_wins_over_code_source():
     decision = assess_software_request("请写一封邮件，内容放进这个 Python 文件", source_type="python_file")
+    assert not decision.allowed and decision.reason == "explicit_non_software_request"
+    decision = assess_software_request("Write a customer email", source_type="code_file")
     assert not decision.allowed and decision.reason == "explicit_non_software_request"
 
 

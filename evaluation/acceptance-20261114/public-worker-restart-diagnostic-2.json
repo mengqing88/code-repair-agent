@@ -1,0 +1,804 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-14T08:43:06.249726+00:00",
+  "scope": "two untrusted-mode users, real repair_worker processes, real Docker reproduction containers, abrupt API restart",
+  "checks": {
+    "alice_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "alice_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "alice_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "bob_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "bob_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "bob_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "two_real_workers_running_concurrently": {
+      "passed": false,
+      "active_workers": 0,
+      "tasks": {
+        "c699dd0c1a574c0fb1d4180ec8120547": {
+          "execution": "idle",
+          "node": null,
+          "container_count": 0
+        },
+        "e6f337df2f2c4c2fbdfa6f65728f72fb": {
+          "execution": "idle",
+          "node": null,
+          "container_count": 0
+        }
+      }
+    }
+  },
+  "limitations": [
+    "A fixed local reproduction planner replaces only the model planning call; no external model or MCP service is contacted",
+    "The Docker reproduction commands intentionally sleep after opening each task's own source copy; patch generation and task completion are not tested",
+    "The API uses local loopback HTTP in untrusted mode, not a public HTTPS tunnel or production host",
+    "The test validates two concurrent workers and their task mounts, not maximum service capacity or production load"
+  ],
+  "engine_version": "29.7.2",
+  "failure": {
+    "type": "RuntimeError",
+    "message": "two_real_workers_running_concurrently"
+  },
+  "diagnostics": {
+    "c699dd0c1a574c0fb1d4180ec8120547": {
+      "state": {
+        "task_id": "c699dd0c1a574c0fb1d4180ec8120547",
+        "source": {
+          "type": "pasted_code",
+          "character_count": 52,
+          "language": "python",
+          "file_name": "sample.py",
+          "retrieval_scope": {
+            "language": "python"
+          }
+        },
+        "code_text": "def identify():\n    return 'alice-dc1001579a35e1fd'\n",
+        "original_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+        "status": "needs_input",
+        "reproduction": {
+          "status": "复现未完成",
+          "source": {
+            "type": "git_repository",
+            "path": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\workspace",
+            "revision": "54eea16d33fba80af891faa724ef1af9d56832c3",
+            "analysis_paths": []
+          },
+          "original_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+          "clarifications": [],
+          "clarification_required": false,
+          "language": "python",
+          "reproduction_command": [
+            "python",
+            "-c",
+            "\"import time; time.sleep(120)\""
+          ],
+          "clarification_reasons": [],
+          "work_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\reproduction.md",
+          "task_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\reproduction.md",
+          "revised_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+          "steps": "Run the caller-provided reproduction command against the isolated source copy.\n\n语言：python；执行环境：docker；超时限制：10.0 秒。",
+          "reproduction_code": "",
+          "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+          "execution_attempts": [
+            {
+              "attempt": 1,
+              "reproduction_code": "",
+              "execution": {
+                "command": [
+                  "python",
+                  "-c",
+                  "\"import time; time.sleep(120)\""
+                ],
+                "cwd": "/workspace",
+                "returncode": 0,
+                "timed_out": false,
+                "stdout": "",
+                "stderr": "",
+                "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stdout.log",
+                "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stderr.log",
+                "execution_backend": "docker",
+                "source_root": "/workspace",
+                "error_info": null
+              },
+              "script_error": null
+            }
+          ],
+          "execution": {
+            "command": [
+              "python",
+              "-c",
+              "\"import time; time.sleep(120)\""
+            ],
+            "cwd": "/workspace",
+            "returncode": 0,
+            "timed_out": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stdout.log",
+            "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stderr.log",
+            "execution_backend": "docker",
+            "source_root": "/workspace",
+            "error_info": null
+          },
+          "error_info": {
+            "code": "execution_failed",
+            "category": "internal",
+            "message": "操作执行失败，请按错误编号检查诊断记录",
+            "retryable": false,
+            "outcome_unknown": false,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "27832d0f19a247a58178f4ee0898f52e",
+            "causes": [],
+            "operation": "baseline_reproduction",
+            "request_id": null,
+            "diagnostics_persisted": true
+          },
+          "conclusion": "复现流程停止：unexpected model request in worker restart acceptance"
+        },
+        "code_evidence": [],
+        "case_matches": [],
+        "failure_matches": [],
+        "diagnosis": null,
+        "patch_diff": null,
+        "patch_hash": null,
+        "validation": null,
+        "adversarial_review": null,
+        "attempt_count": 0,
+        "elapsed_seconds": 1.625,
+        "remaining_budget": {
+          "seconds": 1187.4379999999946,
+          "tokens": 200000,
+          "attempts": 10,
+          "cost": 0.1
+        },
+        "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+        "clarification_reasons": [
+          "基线复现未能确认报告描述的问题"
+        ],
+        "clarifications": [],
+        "awaiting_node": "baseline_reproduction",
+        "last_error": null,
+        "review_decision": "pending",
+        "review_reason": null,
+        "memory_saved": false,
+        "budget_exhausted": null,
+        "accounting": {
+          "tokens_observed": 0,
+          "cost_observed_yuan": 0.0,
+          "cost_complete": true,
+          "usage_complete": true
+        },
+        "agent_messages": [
+          {
+            "message_id": "88c3cb28570c413d8dd9cf03cd9acf47",
+            "sender": "reproducer",
+            "sender_label": "复现代理",
+            "receiver": "supervisor",
+            "receiver_label": "调度代理",
+            "type": "result",
+            "node": "baseline_reproduction",
+            "payload": {
+              "status": "needs_input",
+              "output_keys": [
+                "awaiting_node",
+                "clarification_reasons",
+                "elapsed_seconds",
+                "error_info",
+                "question",
+                "remaining_budget",
+                "reproduction",
+                "status"
+              ]
+            }
+          }
+        ],
+        "error_info": {
+          "code": "execution_failed",
+          "category": "internal",
+          "message": "操作执行失败，请按错误编号检查诊断记录",
+          "retryable": false,
+          "outcome_unknown": false,
+          "next_action": "检查任务记录后重试",
+          "retry_after": null,
+          "error_id": "27832d0f19a247a58178f4ee0898f52e",
+          "causes": [],
+          "operation": "baseline_reproduction",
+          "request_id": null,
+          "diagnostics_persisted": true
+        },
+        "warnings": []
+      },
+      "progress": {
+        "version": 1,
+        "revision": 12,
+        "run_id": null,
+        "execution_epoch": 1,
+        "next_node": "finish",
+        "in_flight": null,
+        "interrupted": false,
+        "recovery_count": 0,
+        "recovery": null,
+        "pending_calls": [],
+        "clock": null,
+        "workspace_manifest": {
+          "sample.py": {
+            "hash": "d878bc02e757f1e54c30ae131e93fe0ed40226abb705a79ae80b80fbf7753bf6",
+            "mode": 438
+          }
+        },
+        "baseline_manifest": {
+          "sample.py": {
+            "hash": "d878bc02e757f1e54c30ae131e93fe0ed40226abb705a79ae80b80fbf7753bf6",
+            "mode": 438
+          }
+        },
+        "last_attempt": "6b86cc1671aa4756b2eac140daee0d7f",
+        "committed_state": {
+          "task_id": "c699dd0c1a574c0fb1d4180ec8120547",
+          "source": {
+            "type": "pasted_code",
+            "character_count": 52,
+            "language": "python",
+            "file_name": "sample.py",
+            "retrieval_scope": {
+              "language": "python"
+            }
+          },
+          "code_text": "def identify():\n    return 'alice-dc1001579a35e1fd'\n",
+          "original_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+          "status": "needs_input",
+          "reproduction": {
+            "status": "复现未完成",
+            "source": {
+              "type": "git_repository",
+              "path": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\workspace",
+              "revision": "54eea16d33fba80af891faa724ef1af9d56832c3",
+              "analysis_paths": []
+            },
+            "original_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+            "clarifications": [],
+            "clarification_required": false,
+            "language": "python",
+            "reproduction_command": [
+              "python",
+              "-c",
+              "\"import time; time.sleep(120)\""
+            ],
+            "clarification_reasons": [],
+            "work_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\reproduction.md",
+            "task_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\reproduction.md",
+            "revised_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+            "steps": "Run the caller-provided reproduction command against the isolated source copy.\n\n语言：python；执行环境：docker；超时限制：10.0 秒。",
+            "reproduction_code": "",
+            "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+            "execution_attempts": [
+              {
+                "attempt": 1,
+                "reproduction_code": "",
+                "execution": {
+                  "command": [
+                    "python",
+                    "-c",
+                    "\"import time; time.sleep(120)\""
+                  ],
+                  "cwd": "/workspace",
+                  "returncode": 0,
+                  "timed_out": false,
+                  "stdout": "",
+                  "stderr": "",
+                  "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stdout.log",
+                  "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stderr.log",
+                  "execution_backend": "docker",
+                  "source_root": "/workspace",
+                  "error_info": null
+                },
+                "script_error": null
+              }
+            ],
+            "execution": {
+              "command": [
+                "python",
+                "-c",
+                "\"import time; time.sleep(120)\""
+              ],
+              "cwd": "/workspace",
+              "returncode": 0,
+              "timed_out": false,
+              "stdout": "",
+              "stderr": "",
+              "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stdout.log",
+              "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\c699dd0c1a574c0fb1d4180ec8120547\\reproduction\\tasks\\140be2bc2eb34602bfd1687203ba09bd\\stderr.log",
+              "execution_backend": "docker",
+              "source_root": "/workspace",
+              "error_info": null
+            },
+            "error_info": {
+              "code": "execution_failed",
+              "category": "internal",
+              "message": "操作执行失败，请按错误编号检查诊断记录",
+              "retryable": false,
+              "outcome_unknown": false,
+              "next_action": "检查任务记录后重试",
+              "retry_after": null,
+              "error_id": "27832d0f19a247a58178f4ee0898f52e",
+              "causes": [],
+              "operation": "baseline_reproduction",
+              "request_id": null,
+              "diagnostics_persisted": true
+            },
+            "conclusion": "复现流程停止：unexpected model request in worker restart acceptance"
+          },
+          "code_evidence": [],
+          "case_matches": [],
+          "failure_matches": [],
+          "diagnosis": null,
+          "patch_diff": null,
+          "patch_hash": null,
+          "validation": null,
+          "adversarial_review": null,
+          "attempt_count": 0,
+          "elapsed_seconds": 0.7810000000172295,
+          "remaining_budget": {
+            "seconds": 1198.6719999999914,
+            "tokens": 200000,
+            "attempts": 10,
+            "cost": 0.1
+          },
+          "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+          "clarification_reasons": [
+            "基线复现未能确认报告描述的问题"
+          ],
+          "clarifications": [],
+          "awaiting_node": "baseline_reproduction",
+          "last_error": null,
+          "review_decision": "pending",
+          "review_reason": null,
+          "memory_saved": false,
+          "budget_exhausted": null,
+          "accounting": {
+            "tokens_observed": 0,
+            "cost_observed_yuan": 0.0,
+            "cost_complete": true,
+            "usage_complete": true
+          },
+          "agent_messages": [
+            {
+              "message_id": "88c3cb28570c413d8dd9cf03cd9acf47",
+              "sender": "reproducer",
+              "sender_label": "复现代理",
+              "receiver": "supervisor",
+              "receiver_label": "调度代理",
+              "type": "result",
+              "node": "baseline_reproduction",
+              "payload": {
+                "status": "needs_input",
+                "output_keys": [
+                  "awaiting_node",
+                  "clarification_reasons",
+                  "elapsed_seconds",
+                  "error_info",
+                  "question",
+                  "remaining_budget",
+                  "reproduction",
+                  "status"
+                ]
+              }
+            }
+          ],
+          "error_info": {
+            "code": "execution_failed",
+            "category": "internal",
+            "message": "操作执行失败，请按错误编号检查诊断记录",
+            "retryable": false,
+            "outcome_unknown": false,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "27832d0f19a247a58178f4ee0898f52e",
+            "causes": [],
+            "operation": "baseline_reproduction",
+            "request_id": null,
+            "diagnostics_persisted": true
+          },
+          "warnings": []
+        },
+        "state_hash": "6b74085a55c63baac54104475b169b66414ff4a58d08b0001e90d4b920d22c29",
+        "revoked_runs": [
+          "804a2ba863c44750a117b927a29a9dec"
+        ]
+      }
+    },
+    "e6f337df2f2c4c2fbdfa6f65728f72fb": {
+      "state": {
+        "task_id": "e6f337df2f2c4c2fbdfa6f65728f72fb",
+        "source": {
+          "type": "pasted_code",
+          "character_count": 50,
+          "language": "python",
+          "file_name": "sample.py",
+          "retrieval_scope": {
+            "language": "python"
+          }
+        },
+        "code_text": "def identify():\n    return 'bob-954b3a526c44d469'\n",
+        "original_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+        "status": "needs_input",
+        "reproduction": {
+          "status": "复现未完成",
+          "source": {
+            "type": "git_repository",
+            "path": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\workspace",
+            "revision": "4cd9ff5764a415d3b9d49c9bd5a1802358a16f97",
+            "analysis_paths": []
+          },
+          "original_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+          "clarifications": [],
+          "clarification_required": false,
+          "language": "python",
+          "reproduction_command": [
+            "python",
+            "-c",
+            "\"import time; time.sleep(120)\""
+          ],
+          "clarification_reasons": [],
+          "work_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\reproduction.md",
+          "task_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\reproduction.md",
+          "revised_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+          "steps": "Run the caller-provided reproduction command against the isolated source copy.\n\n语言：python；执行环境：docker；超时限制：10.0 秒。",
+          "reproduction_code": "",
+          "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+          "execution_attempts": [
+            {
+              "attempt": 1,
+              "reproduction_code": "",
+              "execution": {
+                "command": [
+                  "python",
+                  "-c",
+                  "\"import time; time.sleep(120)\""
+                ],
+                "cwd": "/workspace",
+                "returncode": 0,
+                "timed_out": false,
+                "stdout": "",
+                "stderr": "",
+                "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stdout.log",
+                "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stderr.log",
+                "execution_backend": "docker",
+                "source_root": "/workspace",
+                "error_info": null
+              },
+              "script_error": null
+            }
+          ],
+          "execution": {
+            "command": [
+              "python",
+              "-c",
+              "\"import time; time.sleep(120)\""
+            ],
+            "cwd": "/workspace",
+            "returncode": 0,
+            "timed_out": false,
+            "stdout": "",
+            "stderr": "",
+            "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stdout.log",
+            "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stderr.log",
+            "execution_backend": "docker",
+            "source_root": "/workspace",
+            "error_info": null
+          },
+          "error_info": {
+            "code": "execution_failed",
+            "category": "internal",
+            "message": "操作执行失败，请按错误编号检查诊断记录",
+            "retryable": false,
+            "outcome_unknown": false,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "e0fd5efa66a14da58c83084f96e97a60",
+            "causes": [],
+            "operation": "baseline_reproduction",
+            "request_id": null,
+            "diagnostics_persisted": true
+          },
+          "conclusion": "复现流程停止：unexpected model request in worker restart acceptance"
+        },
+        "code_evidence": [],
+        "case_matches": [],
+        "failure_matches": [],
+        "diagnosis": null,
+        "patch_diff": null,
+        "patch_hash": null,
+        "validation": null,
+        "adversarial_review": null,
+        "attempt_count": 0,
+        "elapsed_seconds": 1.5940000000118744,
+        "remaining_budget": {
+          "seconds": 1187.1879999999946,
+          "tokens": 200000,
+          "attempts": 10,
+          "cost": 0.1
+        },
+        "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+        "clarification_reasons": [
+          "基线复现未能确认报告描述的问题"
+        ],
+        "clarifications": [],
+        "awaiting_node": "baseline_reproduction",
+        "last_error": null,
+        "review_decision": "pending",
+        "review_reason": null,
+        "memory_saved": false,
+        "budget_exhausted": null,
+        "accounting": {
+          "tokens_observed": 0,
+          "cost_observed_yuan": 0.0,
+          "cost_complete": true,
+          "usage_complete": true
+        },
+        "agent_messages": [
+          {
+            "message_id": "42e1529eb3784432af87d44e604bb831",
+            "sender": "reproducer",
+            "sender_label": "复现代理",
+            "receiver": "supervisor",
+            "receiver_label": "调度代理",
+            "type": "result",
+            "node": "baseline_reproduction",
+            "payload": {
+              "status": "needs_input",
+              "output_keys": [
+                "awaiting_node",
+                "clarification_reasons",
+                "elapsed_seconds",
+                "error_info",
+                "question",
+                "remaining_budget",
+                "reproduction",
+                "status"
+              ]
+            }
+          }
+        ],
+        "error_info": {
+          "code": "execution_failed",
+          "category": "internal",
+          "message": "操作执行失败，请按错误编号检查诊断记录",
+          "retryable": false,
+          "outcome_unknown": false,
+          "next_action": "检查任务记录后重试",
+          "retry_after": null,
+          "error_id": "e0fd5efa66a14da58c83084f96e97a60",
+          "causes": [],
+          "operation": "baseline_reproduction",
+          "request_id": null,
+          "diagnostics_persisted": true
+        },
+        "warnings": []
+      },
+      "progress": {
+        "version": 1,
+        "revision": 12,
+        "run_id": null,
+        "execution_epoch": 1,
+        "next_node": "finish",
+        "in_flight": null,
+        "interrupted": false,
+        "recovery_count": 0,
+        "recovery": null,
+        "pending_calls": [],
+        "clock": null,
+        "workspace_manifest": {
+          "sample.py": {
+            "hash": "b2b38681fddc711088e1c6acb24d300c9509326d1ffe6196d165414a8f9c8cca",
+            "mode": 438
+          }
+        },
+        "baseline_manifest": {
+          "sample.py": {
+            "hash": "b2b38681fddc711088e1c6acb24d300c9509326d1ffe6196d165414a8f9c8cca",
+            "mode": 438
+          }
+        },
+        "last_attempt": "aab5cf7b25ef4ee6a30acabded265b8d",
+        "committed_state": {
+          "task_id": "e6f337df2f2c4c2fbdfa6f65728f72fb",
+          "source": {
+            "type": "pasted_code",
+            "character_count": 50,
+            "language": "python",
+            "file_name": "sample.py",
+            "retrieval_scope": {
+              "language": "python"
+            }
+          },
+          "code_text": "def identify():\n    return 'bob-954b3a526c44d469'\n",
+          "original_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+          "status": "needs_input",
+          "reproduction": {
+            "status": "复现未完成",
+            "source": {
+              "type": "git_repository",
+              "path": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\workspace",
+              "revision": "4cd9ff5764a415d3b9d49c9bd5a1802358a16f97",
+              "analysis_paths": []
+            },
+            "original_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+            "clarifications": [],
+            "clarification_required": false,
+            "language": "python",
+            "reproduction_command": [
+              "python",
+              "-c",
+              "\"import time; time.sleep(120)\""
+            ],
+            "clarification_reasons": [],
+            "work_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\reproduction.md",
+            "task_document": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\reproduction.md",
+            "revised_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+            "steps": "Run the caller-provided reproduction command against the isolated source copy.\n\n语言：python；执行环境：docker；超时限制：10.0 秒。",
+            "reproduction_code": "",
+            "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+            "execution_attempts": [
+              {
+                "attempt": 1,
+                "reproduction_code": "",
+                "execution": {
+                  "command": [
+                    "python",
+                    "-c",
+                    "\"import time; time.sleep(120)\""
+                  ],
+                  "cwd": "/workspace",
+                  "returncode": 0,
+                  "timed_out": false,
+                  "stdout": "",
+                  "stderr": "",
+                  "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stdout.log",
+                  "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stderr.log",
+                  "execution_backend": "docker",
+                  "source_root": "/workspace",
+                  "error_info": null
+                },
+                "script_error": null
+              }
+            ],
+            "execution": {
+              "command": [
+                "python",
+                "-c",
+                "\"import time; time.sleep(120)\""
+              ],
+              "cwd": "/workspace",
+              "returncode": 0,
+              "timed_out": false,
+              "stdout": "",
+              "stderr": "",
+              "stdout_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stdout.log",
+              "stderr_log": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-6qbb3f4e\\data\\tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\reproduction\\tasks\\bcc6c40674564434986c37119c49c3e8\\stderr.log",
+              "execution_backend": "docker",
+              "source_root": "/workspace",
+              "error_info": null
+            },
+            "error_info": {
+              "code": "execution_failed",
+              "category": "internal",
+              "message": "操作执行失败，请按错误编号检查诊断记录",
+              "retryable": false,
+              "outcome_unknown": false,
+              "next_action": "检查任务记录后重试",
+              "retry_after": null,
+              "error_id": "e0fd5efa66a14da58c83084f96e97a60",
+              "causes": [],
+              "operation": "baseline_reproduction",
+              "request_id": null,
+              "diagnostics_persisted": true
+            },
+            "conclusion": "复现流程停止：unexpected model request in worker restart acceptance"
+          },
+          "code_evidence": [],
+          "case_matches": [],
+          "failure_matches": [],
+          "diagnosis": null,
+          "patch_diff": null,
+          "patch_hash": null,
+          "validation": null,
+          "adversarial_review": null,
+          "attempt_count": 0,
+          "elapsed_seconds": 0.7810000000172295,
+          "remaining_budget": {
+            "seconds": 1198.7030000000086,
+            "tokens": 200000,
+            "attempts": 10,
+            "cost": 0.1
+          },
+          "question": "请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。",
+          "clarification_reasons": [
+            "基线复现未能确认报告描述的问题"
+          ],
+          "clarifications": [],
+          "awaiting_node": "baseline_reproduction",
+          "last_error": null,
+          "review_decision": "pending",
+          "review_reason": null,
+          "memory_saved": false,
+          "budget_exhausted": null,
+          "accounting": {
+            "tokens_observed": 0,
+            "cost_observed_yuan": 0.0,
+            "cost_complete": true,
+            "usage_complete": true
+          },
+          "agent_messages": [
+            {
+              "message_id": "42e1529eb3784432af87d44e604bb831",
+              "sender": "reproducer",
+              "sender_label": "复现代理",
+              "receiver": "supervisor",
+              "receiver_label": "调度代理",
+              "type": "result",
+              "node": "baseline_reproduction",
+              "payload": {
+                "status": "needs_input",
+                "output_keys": [
+                  "awaiting_node",
+                  "clarification_reasons",
+                  "elapsed_seconds",
+                  "error_info",
+                  "question",
+                  "remaining_budget",
+                  "reproduction",
+                  "status"
+                ]
+              }
+            }
+          ],
+          "error_info": {
+            "code": "execution_failed",
+            "category": "internal",
+            "message": "操作执行失败，请按错误编号检查诊断记录",
+            "retryable": false,
+            "outcome_unknown": false,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "e0fd5efa66a14da58c83084f96e97a60",
+            "causes": [],
+            "operation": "baseline_reproduction",
+            "request_id": null,
+            "diagnostics_persisted": true
+          },
+          "warnings": []
+        },
+        "state_hash": "e9156e24b893eba009395205544d911a2937bc705f84e5cfe10f6341cdc4a1a1",
+        "revoked_runs": [
+          "2870aa6cd3244c06a63f2c1808627a08"
+        ]
+      }
+    }
+  },
+  "logs": {
+    "tasks\\c699dd0c1a574c0fb1d4180ec8120547\\errors.jsonl": "{\"timestamp\": \"2026-11-14T08:43:28.874413+00:00\", \"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"27832d0f19a247a58178f4ee0898f52e\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"task_id\": \"c699dd0c1a574c0fb1d4180ec8120547\", \"exception_chain\": [{\"type\": \"RuntimeError\", \"module\": \"builtins\", \"frames\": [{\"file\": \"reproduction.py\", \"line\": 487, \"function\": \"reproduce\"}, {\"file\": \"model_contracts.py\", \"line\": 211, \"function\": \"generate_object\"}, {\"file\": \"sitecustomize.py\", \"line\": 16, \"function\": \"fixed_reproduction_model\"}]}]}\n",
+    "tasks\\c699dd0c1a574c0fb1d4180ec8120547\\trace.jsonl": "a6d1d832fac5d7dbd16ffb51097b6fa9\", \"configuration_version\": 1, \"node\": \"baseline_reproduction\", \"repair_attempt\": 1, \"result\": {\"elapsed_seconds\": 0.7810000000172295, \"remaining_budget\": {\"seconds\": 1198.6719999999914, \"tokens\": 200000, \"attempts\": 10, \"cost\": 0.1}, \"reproduction\": {\"status\": \"复现未完成\", \"source\": {\"type\": \"git_repository\", \"path\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\workspace\", \"revision\": \"54eea16d33fba80af891faa724ef1af9d56832c3\", \"analysis_paths\": []}, \"original_report\": \"identify should preserve the alice value while reproducing this acceptance interruption.\", \"clarifications\": [], \"clarification_required\": false, \"language\": \"python\", \"reproduction_command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"clarification_reasons\": [], \"work_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\reproduction.md\", \"task_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\reproduction.md\", \"revised_report\": \"identify should preserve the alice value while reproducing this acceptance interruption.\", \"steps\": \"Run the caller-provided reproduction command against the isolated source copy.\\n\\n语言：python；执行环境：docker；超时限制：10.0 秒。\", \"reproduction_code\": \"\", \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"execution_attempts\": [{\"attempt\": 1, \"reproduction_code\": \"\", \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"script_error\": null}], \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"27832d0f19a247a58178f4ee0898f52e\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"conclusion\": \"复现流程停止：unexpected model request in worker restart acceptance\"}, \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"clarification_reasons\": [\"基线复现未能确认报告描述的问题\"], \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"27832d0f19a247a58178f4ee0898f52e\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"awaiting_node\": \"baseline_reproduction\", \"status\": \"needs_input\", \"agent_messages\": [{\"message_id\": \"88c3cb28570c413d8dd9cf03cd9acf47\", \"sender\": \"reproducer\", \"sender_label\": \"复现代理\", \"receiver\": \"supervisor\", \"receiver_label\": \"调度代理\", \"type\": \"result\", \"node\": \"baseline_reproduction\", \"payload\": {\"status\": \"needs_input\", \"output_keys\": [\"awaiting_node\", \"clarification_reasons\", \"elapsed_seconds\", \"error_info\", \"question\", \"remaining_budget\", \"reproduction\", \"status\"]}}], \"accounting\": {\"tokens_observed\": 0, \"cost_observed_yuan\": 0.0, \"cost_complete\": true, \"usage_complete\": true}, \"warnings\": [], \"budget_exhausted\": null}}\n{\"timestamp\": \"2026-11-14T08:43:29.040656+00:00\", \"task_id\": \"c699dd0c1a574c0fb1d4180ec8120547\", \"event_id\": \"b7dec6165e824b00a4a36ac5d846014d\", \"run_id\": \"804a2ba863c44750a117b927a29a9dec\", \"call_id\": \"4c85bd6a3d92463aace37da273fac990\", \"parent_call_id\": \"804a2ba863c44750a117b927a29a9dec\", \"operation\": \"checkpoint\", \"version\": \"2\", \"event\": \"committed\", \"attempt\": 0, \"elapsed_ms\": 0, \"parameter_digest\": null, \"idempotency_digest\": null, \"decision\": null, \"error_code\": null, \"category\": null, \"error_id\": null, \"manifest_hash\": \"60861977557c2a2e159cd37b115a6af2a6d1d832fac5d7dbd16ffb51097b6fa9\", \"configuration_version\": 1, \"node\": \"baseline_reproduction\", \"repair_attempt\": 1, \"result\": {\"state\": {\"task_id\": \"c699dd0c1a574c0fb1d4180ec8120547\", \"source\": {\"type\": \"pasted_code\", \"character_count\": 52, \"language\": \"python\", \"file_name\": \"sample.py\", \"retrieval_scope\": {\"language\": \"python\"}}, \"code_text\": \"def identify():\\n    return 'alice-dc1001579a35e1fd'\\n\", \"original_report\": \"identify should preserve the alice value while reproducing this acceptance interruption.\", \"status\": \"needs_input\", \"reproduction\": {\"status\": \"复现未完成\", \"source\": {\"type\": \"git_repository\", \"path\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\workspace\", \"revision\": \"54eea16d33fba80af891faa724ef1af9d56832c3\", \"analysis_paths\": []}, \"original_report\": \"identify should preserve the alice value while reproducing this acceptance interruption.\", \"clarifications\": [], \"clarification_required\": false, \"language\": \"python\", \"reproduction_command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"clarification_reasons\": [], \"work_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\reproduction.md\", \"task_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\reproduction.md\", \"revised_report\": \"identify should preserve the alice value while reproducing this acceptance interruption.\", \"steps\": \"Run the caller-provided reproduction command against the isolated source copy.\\n\\n语言：python；执行环境：docker；超时限制：10.0 秒。\", \"reproduction_code\": \"\", \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"execution_attempts\": [{\"attempt\": 1, \"reproduction_code\": \"\", \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"script_error\": null}], \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\c699dd0c1a574c0fb1d4180ec8120547\\\\reproduction\\\\tasks\\\\140be2bc2eb34602bfd1687203ba09bd\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"27832d0f19a247a58178f4ee0898f52e\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"conclusion\": \"复现流程停止：unexpected model request in worker restart acceptance\"}, \"code_evidence\": [], \"case_matches\": [], \"failure_matches\": [], \"diagnosis\": null, \"patch_diff\": null, \"patch_hash\": null, \"validation\": null, \"adversarial_review\": null, \"attempt_count\": 0, \"elapsed_seconds\": 0.7810000000172295, \"remaining_budget\": {\"seconds\": 1198.6719999999914, \"tokens\": 200000, \"attempts\": 10, \"cost\": 0.1}, \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"clarification_reasons\": [\"基线复现未能确认报告描述的问题\"], \"clarifications\": [], \"awaiting_node\": \"baseline_reproduction\", \"last_error\": null, \"review_decision\": \"pending\", \"review_reason\": null, \"memory_saved\": false, \"budget_exhausted\": null, \"accounting\": {\"tokens_observed\": 0, \"cost_observed_yuan\": 0.0, \"cost_complete\": true, \"usage_complete\": true}, \"agent_messages\": [{\"message_id\": \"88c3cb28570c413d8dd9cf03cd9acf47\", \"sender\": \"reproducer\", \"sender_label\": \"复现代理\", \"receiver\": \"supervisor\", \"receiver_label\": \"调度代理\", \"type\": \"result\", \"node\": \"baseline_reproduction\", \"payload\": {\"status\": \"needs_input\", \"output_keys\": [\"awaiting_node\", \"clarification_reasons\", \"elapsed_seconds\", \"error_info\", \"question\", \"remaining_budget\", \"reproduction\", \"status\"]}}], \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"27832d0f19a247a58178f4ee0898f52e\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"warnings\": []}, \"next_node\": \"finish\"}, \"details\": {\"node\": \"baseline_reproduction\"}}\n{\"timestamp\": \"2026-11-14T08:43:29.179844+00:00\", \"task_id\": \"c699dd0c1a574c0fb1d4180ec8120547\", \"event_id\": \"1d340b7deb7542b387ceb643d75eb0ab\", \"run_id\": \"804a2ba863c44750a117b927a29a9dec\", \"call_id\": \"804a2ba863c44750a117b927a29a9dec\", \"parent_call_id\": null, \"operation\": \"workflow.route\", \"version\": \"2\", \"event\": \"selected\", \"attempt\": 0, \"elapsed_ms\": 0, \"parameter_digest\": null, \"idempotency_digest\": null, \"decision\": \"finish\", \"error_code\": null, \"category\": null, \"error_id\": null, \"manifest_hash\": \"60861977557c2a2e159cd37b115a6af2a6d1d832fac5d7dbd16ffb51097b6fa9\", \"configuration_version\": 1, \"details\": {\"from\": \"baseline_reproduction\", \"to\": \"finish\", \"status\": \"needs_input\", \"patch_hash\": null}}\n{\"timestamp\": \"2026-11-14T08:43:29.186844+00:00\", \"task_id\": \"c699dd0c1a574c0fb1d4180ec8120547\", \"event_id\": \"2407c2c675b54824965b1e0d985e7408\", \"run_id\": \"804a2ba863c44750a117b927a29a9dec\", \"call_id\": \"804a2ba863c44750a117b927a29a9dec\", \"parent_call_id\": null, \"operation\": \"workflow\", \"version\": \"2\", \"event\": \"paused\", \"attempt\": 0, \"elapsed_ms\": 0, \"parameter_digest\": null, \"idempotency_digest\": null, \"decision\": \"needs_input\", \"error_code\": \"execution_failed\", \"category\": \"internal\", \"error_id\": \"27832d0f19a247a58178f4ee0898f52e\", \"manifest_hash\": \"60861977557c2a2e159cd37b115a6af2a6d1d832fac5d7dbd16ffb51097b6fa9\", \"configuration_version\": 1, \"result\": {\"status\": \"needs_input\", \"patch_hash\": null, \"attempt_count\": 0, \"remaining_budget\": {\"seconds\": 1198.6719999999914, \"tokens\": 200000, \"attempts\": 10, \"cost\": 0.1}, \"accounting\": {\"tokens_observed\": 0, \"cost_observed_yuan\": 0.0, \"cost_complete\": true, \"usage_complete\": true}, \"memory_saved\": false, \"review_decision\": \"pending\"}, \"details\": {\"reason\": \"awaiting_input\", \"message\": null, \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\"}}\n",
+    "tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\errors.jsonl": "{\"timestamp\": \"2026-11-14T08:43:30.540260+00:00\", \"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"e0fd5efa66a14da58c83084f96e97a60\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"task_id\": \"e6f337df2f2c4c2fbdfa6f65728f72fb\", \"exception_chain\": [{\"type\": \"RuntimeError\", \"module\": \"builtins\", \"frames\": [{\"file\": \"reproduction.py\", \"line\": 487, \"function\": \"reproduce\"}, {\"file\": \"model_contracts.py\", \"line\": 211, \"function\": \"generate_object\"}, {\"file\": \"sitecustomize.py\", \"line\": 16, \"function\": \"fixed_reproduction_model\"}]}]}\n",
+    "tasks\\e6f337df2f2c4c2fbdfa6f65728f72fb\\trace.jsonl": "8b43acea544a26e06a3c099e040c3e110d385d02f4ec\", \"configuration_version\": 1, \"node\": \"baseline_reproduction\", \"repair_attempt\": 1, \"result\": {\"elapsed_seconds\": 0.7810000000172295, \"remaining_budget\": {\"seconds\": 1198.7030000000086, \"tokens\": 200000, \"attempts\": 10, \"cost\": 0.1}, \"reproduction\": {\"status\": \"复现未完成\", \"source\": {\"type\": \"git_repository\", \"path\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\workspace\", \"revision\": \"4cd9ff5764a415d3b9d49c9bd5a1802358a16f97\", \"analysis_paths\": []}, \"original_report\": \"identify should preserve the bob value while reproducing this acceptance interruption.\", \"clarifications\": [], \"clarification_required\": false, \"language\": \"python\", \"reproduction_command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"clarification_reasons\": [], \"work_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\reproduction.md\", \"task_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\reproduction.md\", \"revised_report\": \"identify should preserve the bob value while reproducing this acceptance interruption.\", \"steps\": \"Run the caller-provided reproduction command against the isolated source copy.\\n\\n语言：python；执行环境：docker；超时限制：10.0 秒。\", \"reproduction_code\": \"\", \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"execution_attempts\": [{\"attempt\": 1, \"reproduction_code\": \"\", \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"script_error\": null}], \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"e0fd5efa66a14da58c83084f96e97a60\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"conclusion\": \"复现流程停止：unexpected model request in worker restart acceptance\"}, \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"clarification_reasons\": [\"基线复现未能确认报告描述的问题\"], \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"e0fd5efa66a14da58c83084f96e97a60\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"awaiting_node\": \"baseline_reproduction\", \"status\": \"needs_input\", \"agent_messages\": [{\"message_id\": \"42e1529eb3784432af87d44e604bb831\", \"sender\": \"reproducer\", \"sender_label\": \"复现代理\", \"receiver\": \"supervisor\", \"receiver_label\": \"调度代理\", \"type\": \"result\", \"node\": \"baseline_reproduction\", \"payload\": {\"status\": \"needs_input\", \"output_keys\": [\"awaiting_node\", \"clarification_reasons\", \"elapsed_seconds\", \"error_info\", \"question\", \"remaining_budget\", \"reproduction\", \"status\"]}}], \"accounting\": {\"tokens_observed\": 0, \"cost_observed_yuan\": 0.0, \"cost_complete\": true, \"usage_complete\": true}, \"warnings\": [], \"budget_exhausted\": null}}\n{\"timestamp\": \"2026-11-14T08:43:30.697963+00:00\", \"task_id\": \"e6f337df2f2c4c2fbdfa6f65728f72fb\", \"event_id\": \"5da17044688a4132874808004fa67218\", \"run_id\": \"2870aa6cd3244c06a63f2c1808627a08\", \"call_id\": \"7f24c07b2c2642bcabc2445ea6649bb5\", \"parent_call_id\": \"2870aa6cd3244c06a63f2c1808627a08\", \"operation\": \"checkpoint\", \"version\": \"2\", \"event\": \"committed\", \"attempt\": 0, \"elapsed_ms\": 0, \"parameter_digest\": null, \"idempotency_digest\": null, \"decision\": null, \"error_code\": null, \"category\": null, \"error_id\": null, \"manifest_hash\": \"b8b689a456dd217f703a8b43acea544a26e06a3c099e040c3e110d385d02f4ec\", \"configuration_version\": 1, \"node\": \"baseline_reproduction\", \"repair_attempt\": 1, \"result\": {\"state\": {\"task_id\": \"e6f337df2f2c4c2fbdfa6f65728f72fb\", \"source\": {\"type\": \"pasted_code\", \"character_count\": 50, \"language\": \"python\", \"file_name\": \"sample.py\", \"retrieval_scope\": {\"language\": \"python\"}}, \"code_text\": \"def identify():\\n    return 'bob-954b3a526c44d469'\\n\", \"original_report\": \"identify should preserve the bob value while reproducing this acceptance interruption.\", \"status\": \"needs_input\", \"reproduction\": {\"status\": \"复现未完成\", \"source\": {\"type\": \"git_repository\", \"path\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\workspace\", \"revision\": \"4cd9ff5764a415d3b9d49c9bd5a1802358a16f97\", \"analysis_paths\": []}, \"original_report\": \"identify should preserve the bob value while reproducing this acceptance interruption.\", \"clarifications\": [], \"clarification_required\": false, \"language\": \"python\", \"reproduction_command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"clarification_reasons\": [], \"work_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\reproduction.md\", \"task_document\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\reproduction.md\", \"revised_report\": \"identify should preserve the bob value while reproducing this acceptance interruption.\", \"steps\": \"Run the caller-provided reproduction command against the isolated source copy.\\n\\n语言：python；执行环境：docker；超时限制：10.0 秒。\", \"reproduction_code\": \"\", \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"execution_attempts\": [{\"attempt\": 1, \"reproduction_code\": \"\", \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"script_error\": null}], \"execution\": {\"command\": [\"python\", \"-c\", \"\\\"import time; time.sleep(120)\\\"\"], \"cwd\": \"/workspace\", \"returncode\": 0, \"timed_out\": false, \"stdout\": \"\", \"stderr\": \"\", \"stdout_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stdout.log\", \"stderr_log\": \"C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-6qbb3f4e\\\\data\\\\tasks\\\\e6f337df2f2c4c2fbdfa6f65728f72fb\\\\reproduction\\\\tasks\\\\bcc6c40674564434986c37119c49c3e8\\\\stderr.log\", \"execution_backend\": \"docker\", \"source_root\": \"/workspace\", \"error_info\": null}, \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"e0fd5efa66a14da58c83084f96e97a60\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"conclusion\": \"复现流程停止：unexpected model request in worker restart acceptance\"}, \"code_evidence\": [], \"case_matches\": [], \"failure_matches\": [], \"diagnosis\": null, \"patch_diff\": null, \"patch_hash\": null, \"validation\": null, \"adversarial_review\": null, \"attempt_count\": 0, \"elapsed_seconds\": 0.7810000000172295, \"remaining_budget\": {\"seconds\": 1198.7030000000086, \"tokens\": 200000, \"attempts\": 10, \"cost\": 0.1}, \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\", \"clarification_reasons\": [\"基线复现未能确认报告描述的问题\"], \"clarifications\": [], \"awaiting_node\": \"baseline_reproduction\", \"last_error\": null, \"review_decision\": \"pending\", \"review_reason\": null, \"memory_saved\": false, \"budget_exhausted\": null, \"accounting\": {\"tokens_observed\": 0, \"cost_observed_yuan\": 0.0, \"cost_complete\": true, \"usage_complete\": true}, \"agent_messages\": [{\"message_id\": \"42e1529eb3784432af87d44e604bb831\", \"sender\": \"reproducer\", \"sender_label\": \"复现代理\", \"receiver\": \"supervisor\", \"receiver_label\": \"调度代理\", \"type\": \"result\", \"node\": \"baseline_reproduction\", \"payload\": {\"status\": \"needs_input\", \"output_keys\": [\"awaiting_node\", \"clarification_reasons\", \"elapsed_seconds\", \"error_info\", \"question\", \"remaining_budget\", \"reproduction\", \"status\"]}}], \"error_info\": {\"code\": \"execution_failed\", \"category\": \"internal\", \"message\": \"操作执行失败，请按错误编号检查诊断记录\", \"retryable\": false, \"outcome_unknown\": false, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"e0fd5efa66a14da58c83084f96e97a60\", \"causes\": [], \"operation\": \"baseline_reproduction\", \"request_id\": null, \"diagnostics_persisted\": true}, \"warnings\": []}, \"next_node\": \"finish\"}, \"details\": {\"node\": \"baseline_reproduction\"}}\n{\"timestamp\": \"2026-11-14T08:43:30.826091+00:00\", \"task_id\": \"e6f337df2f2c4c2fbdfa6f65728f72fb\", \"event_id\": \"b417fa1869e9433e9894242cee5b13dc\", \"run_id\": \"2870aa6cd3244c06a63f2c1808627a08\", \"call_id\": \"2870aa6cd3244c06a63f2c1808627a08\", \"parent_call_id\": null, \"operation\": \"workflow.route\", \"version\": \"2\", \"event\": \"selected\", \"attempt\": 0, \"elapsed_ms\": 0, \"parameter_digest\": null, \"idempotency_digest\": null, \"decision\": \"finish\", \"error_code\": null, \"category\": null, \"error_id\": null, \"manifest_hash\": \"b8b689a456dd217f703a8b43acea544a26e06a3c099e040c3e110d385d02f4ec\", \"configuration_version\": 1, \"details\": {\"from\": \"baseline_reproduction\", \"to\": \"finish\", \"status\": \"needs_input\", \"patch_hash\": null}}\n{\"timestamp\": \"2026-11-14T08:43:30.835997+00:00\", \"task_id\": \"e6f337df2f2c4c2fbdfa6f65728f72fb\", \"event_id\": \"c8b3a4bfef6c4399a567624eaec1e2e8\", \"run_id\": \"2870aa6cd3244c06a63f2c1808627a08\", \"call_id\": \"2870aa6cd3244c06a63f2c1808627a08\", \"parent_call_id\": null, \"operation\": \"workflow\", \"version\": \"2\", \"event\": \"paused\", \"attempt\": 0, \"elapsed_ms\": 0, \"parameter_digest\": null, \"idempotency_digest\": null, \"decision\": \"needs_input\", \"error_code\": \"execution_failed\", \"category\": \"internal\", \"error_id\": \"e0fd5efa66a14da58c83084f96e97a60\", \"manifest_hash\": \"b8b689a456dd217f703a8b43acea544a26e06a3c099e040c3e110d385d02f4ec\", \"configuration_version\": 1, \"result\": {\"status\": \"needs_input\", \"patch_hash\": null, \"attempt_count\": 0, \"remaining_budget\": {\"seconds\": 1198.7030000000086, \"tokens\": 200000, \"attempts\": 10, \"cost\": 0.1}, \"accounting\": {\"tokens_observed\": 0, \"cost_observed_yuan\": 0.0, \"cost_complete\": true, \"usage_complete\": true}, \"memory_saved\": false, \"review_decision\": \"pending\"}, \"details\": {\"reason\": \"awaiting_input\", \"message\": null, \"question\": \"请检查报告中的运行条件和本次工作文档，补充所缺信息后重试。\"}}\n",
+    "api-first.log": ""
+  },
+  "cleanup": {
+    "api_processes_stopped": true
+  }
+}

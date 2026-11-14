@@ -1,0 +1,48 @@
+{
+  "status": "completed_with_failures",
+  "created_at": "2026-11-14T03:42:21.464770+00:00",
+  "dataset": "three generated synthetic Python defects; one evaluation group",
+  "execution": "local trusted host mode; generated source and tests only; Docker unavailable",
+  "metric": "reviewable tasks with independent validation passed and matching patch hash",
+  "tasks": [
+    {
+      "name": "safe_ratio_zero_denominator",
+      "status": "needs_input",
+      "task_id": "5fc3068ba0c64288a31691f0b58c0a89",
+      "execution": "idle",
+      "seconds": 33.72,
+      "validation_passed": false,
+      "patch_hash": null,
+      "validation_patch_hash": null,
+      "token_usage": null,
+      "remaining_budget": {
+        "seconds": 1166.8429999999935,
+        "tokens": 195856,
+        "attempts": 10,
+        "cost": 0.1
+      },
+      "error_code": "schema_invalid",
+      "accepted": false
+    },
+    {
+      "name": "normalize_label_case",
+      "status": "create_failed",
+      "http_status": 403
+    },
+    {
+      "name": "first_nonempty_ignores_whitespace",
+      "status": "create_failed",
+      "http_status": 403
+    }
+  ],
+  "limitations": [
+    "Synthetic cases are not production corpus and cannot establish production repair effectiveness",
+    "No Docker isolation, public-user input, MCP, or external write was used",
+    "Provider/model rate and cost are not inferred when the service does not report them"
+  ],
+  "summary": {
+    "passed": 0,
+    "total": 3
+  },
+  "own_server_stopped": true
+}

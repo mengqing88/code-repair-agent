@@ -19,7 +19,8 @@ from zipfile import ZipFile
 # ask_model：已经封装好的模型调用函数，负责读取 .env 和请求模型。
 from llm_client import ask_model
 from input_protection import sensitive_path, protect_input
-from model_contracts import generate_object, ReproductionPlan, ReproductionComparison
+from model_contracts import (generate_object, ReproductionPlan, FixedCommandReproductionPlan,
+                             ReproductionComparison)
 from docker_executor import BindMount, get_execution_backend, run_execution
 from resilience import Fault, error_info, run_process, trace
 from language_support import default_code_filename, detect_language, is_code_path, normalize_language
@@ -408,7 +409,9 @@ def reproduce(
         def validate_plan(value):
             if value["reproduction_code"].strip():
                 compile(value["reproduction_code"], "reproduce.py", "exec")
-        plan, _ = generate_object(plan_prompt, call, ReproductionPlan, validate=validate_plan, max_corrections=1)
+        plan_contract = (ReproductionPlan if language == "python" and not reproduce_command
+                         else FixedCommandReproductionPlan)
+        plan, _ = generate_object(plan_prompt, call, plan_contract, validate=validate_plan, max_corrections=1)
         # name：模型协议要求的四个字段名；required_text() 检查每个字段确实是字符串。
         for name in ("revised_report", "steps", "reproduction_code", "question"):
             record[name] = required_text(plan, name)

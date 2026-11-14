@@ -1,0 +1,201 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-14T09:28:08.121532+00:00",
+  "scope": "two untrusted-mode users, three tasks with two worker slots, real Docker containers, abrupt API restart and durable queue recovery",
+  "checks": {
+    "alice_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "alice_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "alice_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "bob_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "bob_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "bob_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "queued_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "queued_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "third_task_waits_in_durable_queue": {
+      "passed": true,
+      "execution": "queued",
+      "run_id": null,
+      "worker_registered": false,
+      "container_count": 0
+    },
+    "two_real_workers_running_concurrently": {
+      "passed": true,
+      "active_workers": 2,
+      "tasks": {
+        "6bdd2337b2ee4b379375fc19bb2642f1": {
+          "execution": "running",
+          "node": "baseline_reproduction",
+          "container_count": 1
+        },
+        "d1320f7b23274bae8cea8b9e01ffeeca": {
+          "execution": "running",
+          "node": "baseline_reproduction",
+          "container_count": 1
+        }
+      }
+    },
+    "containers_mount_disjoint_user_task_copies": {
+      "passed": true,
+      "mounts": [
+        {
+          "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-lfxg00ji\\data\\tasks\\6bdd2337b2ee4b379375fc19bb2642f1\\reproduction\\tasks\\d306db1055d74e2696025d5334390846\\source",
+          "mount_targets": [
+            "/workspace"
+          ],
+          "source_token_present": true
+        },
+        {
+          "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-lfxg00ji\\data\\tasks\\d1320f7b23274bae8cea8b9e01ffeeca\\reproduction\\tasks\\1d18f53de95a4c2f827833afba62c59e\\source",
+          "mount_targets": [
+            "/workspace"
+          ],
+          "source_token_present": true
+        }
+      ]
+    },
+    "repair_worker_processes_are_registered": {
+      "passed": true,
+      "worker_pids": [
+        45164,
+        17548
+      ]
+    },
+    "first_api_process_killed": {
+      "passed": true,
+      "pid": 35984
+    },
+    "queued_task_claimed_after_restart": {
+      "passed": true,
+      "execution": "running",
+      "run_id_present": true
+    },
+    "queued_task_auto_dispatched_after_restart": {
+      "passed": true,
+      "execution": "running",
+      "container_id": "526a21f24d86"
+    },
+    "user_1_can_read_recovered_task": {
+      "passed": true,
+      "status": 200
+    },
+    "task_1_paused_for_unknown_user_code_result": {
+      "passed": true,
+      "execution": "idle",
+      "status": "needs_input",
+      "error_code": "test_outcome_unknown",
+      "recovery": "paused"
+    },
+    "other_user_cannot_read_recovered_task_1": {
+      "passed": true,
+      "status": 404
+    },
+    "task_1_container_stopped_during_recovery": {
+      "passed": true,
+      "remaining_containers": 0
+    },
+    "task_1_old_worker_stopped": {
+      "passed": true,
+      "worker_pid": 45164
+    },
+    "user_2_can_read_recovered_task": {
+      "passed": true,
+      "status": 200
+    },
+    "task_2_paused_for_unknown_user_code_result": {
+      "passed": true,
+      "execution": "idle",
+      "status": "needs_input",
+      "error_code": "test_outcome_unknown",
+      "recovery": "paused"
+    },
+    "other_user_cannot_read_recovered_task_2": {
+      "passed": true,
+      "status": 404
+    },
+    "task_2_container_stopped_during_recovery": {
+      "passed": true,
+      "remaining_containers": 0
+    },
+    "task_2_old_worker_stopped": {
+      "passed": true,
+      "worker_pid": 17548
+    },
+    "queued_task_owner_can_read_resumed_task": {
+      "passed": true,
+      "status": 200
+    },
+    "other_user_cannot_read_resumed_queued_task": {
+      "passed": true
+    },
+    "resumed_queued_task_pauses_after_bounded_command_timeout": {
+      "passed": true,
+      "execution": "idle",
+      "status": "needs_input",
+      "error_code": "process_timeout"
+    },
+    "resumed_queued_task_container_cleaned_after_timeout": {
+      "passed": true,
+      "remaining_containers": 0
+    },
+    "resumed_queued_task_worker_stopped_after_timeout": {
+      "passed": true,
+      "worker_pid": 46976
+    }
+  },
+  "limitations": [
+    "A fixed local reproduction planner replaces only the model planning call; no external model or MCP service is contacted",
+    "The Docker reproduction commands intentionally sleep after opening each task's own source copy; patch generation and task completion are not tested",
+    "The test validates two worker slots and one queued task, not maximum service capacity or production load",
+    "The API uses local loopback HTTP in untrusted mode, not a public HTTPS tunnel or production host"
+  ],
+  "engine_version": "29.7.2",
+  "task_isolation_evidence": {
+    "6bdd2337b2ee4b379375fc19bb2642f1": {
+      "container_id": "51f8a6b59f8f",
+      "in_flight_node": "baseline_reproduction",
+      "code_execution_started": true,
+      "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-lfxg00ji\\data\\tasks\\6bdd2337b2ee4b379375fc19bb2642f1\\reproduction\\tasks\\d306db1055d74e2696025d5334390846\\source",
+      "mount_targets": [
+        "/workspace"
+      ],
+      "container_running": true,
+      "source_token_present": true
+    },
+    "d1320f7b23274bae8cea8b9e01ffeeca": {
+      "container_id": "fdcbcf56433b",
+      "in_flight_node": "baseline_reproduction",
+      "code_execution_started": true,
+      "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-lfxg00ji\\data\\tasks\\d1320f7b23274bae8cea8b9e01ffeeca\\reproduction\\tasks\\1d18f53de95a4c2f827833afba62c59e\\source",
+      "mount_targets": [
+        "/workspace"
+      ],
+      "container_running": true,
+      "source_token_present": true
+    }
+  },
+  "cleanup": {
+    "api_processes_stopped": true,
+    "tunnel_stopped": true
+  }
+}

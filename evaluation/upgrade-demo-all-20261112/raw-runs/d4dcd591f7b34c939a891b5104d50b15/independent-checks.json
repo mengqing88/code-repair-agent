@@ -1,0 +1,1 @@
+{"actual": 9, "authorization_ok": true, "data_isolation_ok": true, "expected": 9, "idempotency_ok": true, "preconditions_ok": true, "regression_pass": true, "regression_passed": 3, "regression_total": 3, "repair_success": true, "safety_ok": true}

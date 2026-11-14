@@ -1,0 +1,97 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-14T03:34:21.916894+00:00",
+  "scope": "one real GitHub MCP write to one unique file in the dedicated private test repository",
+  "target": {
+    "owner": "mengqing88",
+    "repo": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "repo_id": 1456881117,
+    "path": "timeout-recovery-20261114.txt"
+  },
+  "token_scope": "User confirmed All repositories; every call in this run is restricted to the named test repository and file.",
+  "timeout_injection": "The official MCP write is allowed to commit remotely; the wrapper then discards its successful response and raises TimeoutError before OperationStore records a receipt. This is controlled response-loss injection, not a naturally occurring Internet timeout.",
+  "checks": {
+    "exact_mcp_allowlist": {
+      "passed": true,
+      "tool_count": 3,
+      "warnings": 0
+    },
+    "github_authentication": {
+      "passed": true,
+      "status": 200
+    },
+    "owner_matches_authorized_target": {
+      "passed": true
+    },
+    "dedicated_private_repository_identity": {
+      "passed": true,
+      "status": 200
+    },
+    "unique_test_file_absent_before_write": {
+      "passed": true,
+      "status": 404
+    },
+    "create_or_update_file_authorization_binds_full_arguments": {
+      "passed": true,
+      "impact": "将在所列外部服务执行一次写操作，实际参数如下；可能无法撤销。"
+    },
+    "remote_write_reported_unknown": {
+      "passed": true
+    },
+    "unknown_intent_durably_saved": {
+      "passed": true,
+      "status": "unknown"
+    },
+    "unknown_write_keeps_resource_locked": {
+      "passed": true
+    },
+    "remote_write_actually_committed": {
+      "passed": true,
+      "status": 200
+    },
+    "restart_does_not_replay_unknown_write": {
+      "passed": true
+    },
+    "remote_write_dispatched_exactly_once": {
+      "passed": true,
+      "dispatch_count": 1
+    },
+    "remote_content_unchanged_after_restart": {
+      "passed": true,
+      "status": 200
+    },
+    "manual_completed_resolution_persisted": {
+      "passed": true
+    },
+    "completed_resolution_releases_resource_lock": {
+      "passed": true
+    },
+    "resolved_operation_cannot_be_replayed": {
+      "passed": true
+    },
+    "resolution_did_not_dispatch_another_write": {
+      "passed": true,
+      "dispatch_count": 1
+    },
+    "delete_file_authorization_binds_full_arguments": {
+      "passed": true,
+      "impact": "将在所列外部服务执行一次写操作，实际参数如下；可能无法撤销。"
+    },
+    "only_test_file_deleted": {
+      "passed": true,
+      "status": 404
+    }
+  },
+  "limitations": [
+    "A controlled lost response after real remote commit does not reproduce every network failure mode",
+    "No non-test repository or path is accessed",
+    "Token scope itself is broad; the project does not independently verify GitHub Repository access settings"
+  ],
+  "remote_evidence": {
+    "content_sha256": "96c30e3a94def237d37776e3f115f94693e854d51543c0697a80a4c6215a8e27",
+    "blob_sha": "a0079f6e0efaed95db88d82620fd35f74b477567",
+    "commit_sha": null,
+    "read_back_status": 200
+  },
+  "test_file_absent_after_run": true
+}

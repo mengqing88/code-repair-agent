@@ -1,0 +1,89 @@
+{
+  "source": "rag-ab-five-20261112-budget80k-retry",
+  "mode": "offline_archived_trace_audit",
+  "model_requests": 0,
+  "cases": [
+    {
+      "case_id": "case-03",
+      "trace_sha256": "35e775a20f75851632b33e22fb2faccccbbf6e6aefb9d80b23be115ae45c65cc",
+      "case_count": 5,
+      "initial_case_bytes_before": 3950,
+      "initial_case_bytes_after": 3950,
+      "dynamic_retrievals": 2,
+      "dynamic_case_bytes_before": 9942,
+      "dynamic_case_bytes_after": 7514,
+      "schema_rejections": 1,
+      "tools_after_first_schema_rejection": 4,
+      "model_ms_after_first_schema_rejection": 27984.0
+    },
+    {
+      "case_id": "case-11",
+      "trace_sha256": "db5a142f459442c4a75d37cdcd0b12f6b1b7545ee6669a7774da002debbbf2f5",
+      "case_count": 5,
+      "initial_case_bytes_before": 3835,
+      "initial_case_bytes_after": 3835,
+      "dynamic_retrievals": 1,
+      "dynamic_case_bytes_before": 5099,
+      "dynamic_case_bytes_after": 3939,
+      "schema_rejections": 1,
+      "tools_after_first_schema_rejection": 6,
+      "model_ms_after_first_schema_rejection": 34827.0
+    },
+    {
+      "case_id": "case-12",
+      "trace_sha256": "3cac19f4a164180d0b62e9846382bfd5cdfdd5e7c05b472ce03dd0a92d40e038",
+      "case_count": 5,
+      "initial_case_bytes_before": 3895,
+      "initial_case_bytes_after": 3895,
+      "dynamic_retrievals": 1,
+      "dynamic_case_bytes_before": 5055,
+      "dynamic_case_bytes_after": 3895,
+      "schema_rejections": 0,
+      "tools_after_first_schema_rejection": 0,
+      "model_ms_after_first_schema_rejection": 0
+    },
+    {
+      "case_id": "case-19",
+      "trace_sha256": "bfa23b1320afcdfde3e2ec1adcbb9187aa4dd87aa261f9b7453a2963f5411ac8",
+      "case_count": 5,
+      "initial_case_bytes_before": 3662,
+      "initial_case_bytes_after": 3662,
+      "dynamic_retrievals": 0,
+      "dynamic_case_bytes_before": 0,
+      "dynamic_case_bytes_after": 0,
+      "schema_rejections": 1,
+      "tools_after_first_schema_rejection": 5,
+      "model_ms_after_first_schema_rejection": 34750.0
+    },
+    {
+      "case_id": "case-30",
+      "trace_sha256": "156fc20c3971adc1230e8dc7897995bce71cd9668d5162bebde4c0ba094ccbf8",
+      "case_count": 5,
+      "initial_case_bytes_before": 3749,
+      "initial_case_bytes_after": 3749,
+      "dynamic_retrievals": 2,
+      "dynamic_case_bytes_before": 9850,
+      "dynamic_case_bytes_after": 7469,
+      "schema_rejections": 2,
+      "tools_after_first_schema_rejection": 11,
+      "model_ms_after_first_schema_rejection": 56421.0
+    }
+  ],
+  "totals": {
+    "case_count": 25,
+    "initial_case_bytes_before": 19091,
+    "initial_case_bytes_after": 19091,
+    "dynamic_retrievals": 6,
+    "dynamic_case_bytes_before": 29946,
+    "dynamic_case_bytes_after": 22817,
+    "schema_rejections": 5,
+    "tools_after_first_schema_rejection": 26,
+    "model_ms_after_first_schema_rejection": 153982.0,
+    "cases_with_schema_rejections": 4
+  },
+  "limitations": [
+    "压缩对照只计算 UTF-8 序列化字节，不是模型实际 Token 或端到端延迟",
+    "纠错后的耗时属于旧运行观测，不能全部算作新实现节省的时间",
+    "没有执行新模型任务，不能推导修复成功率或 RAG 收益"
+  ]
+}

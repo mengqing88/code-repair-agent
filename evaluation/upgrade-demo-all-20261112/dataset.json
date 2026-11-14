@@ -1,0 +1,1 @@
+{"cases": [{"case_id": "critical", "expected": 3, "group": "critical", "input": [2, 1]}, {"case_id": "ordinary-1", "expected": 9, "group": "ordinary", "input": [4, 5]}, {"case_id": "ordinary-2", "expected": 9, "group": "ordinary", "input": [7, 2]}], "version": "synthetic-demo-v1"}

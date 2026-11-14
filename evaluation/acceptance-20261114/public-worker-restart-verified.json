@@ -1,0 +1,19 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-14T08:32:31.816385+00:00",
+  "scope": "two untrusted-mode users, real repair_worker processes, real Docker reproduction containers, abrupt API restart",
+  "checks": {},
+  "limitations": [
+    "A fixed local reproduction planner replaces only the model planning call; no external model or MCP service is contacted",
+    "The Docker reproduction commands intentionally sleep after opening each task's own source copy; patch generation and task completion are not tested",
+    "The API uses local loopback HTTP in untrusted mode, not a public HTTPS tunnel or production host",
+    "The test validates two concurrent workers and their task mounts, not maximum service capacity or production load"
+  ],
+  "failure": {
+    "type": "PermissionError",
+    "message": "[WinError 32] 另一个程序正在使用此文件，进程无法访问。: 'C:\\\\Users\\\\mengq\\\\AppData\\\\Local\\\\Temp\\\\repair-worker-restart-itfju2z0\\\\data\\\\api-first.log'"
+  },
+  "cleanup": {
+    "api_processes_stopped": true
+  }
+}

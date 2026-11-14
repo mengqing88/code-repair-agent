@@ -1,0 +1,59 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-14T08:40:00.407627+00:00",
+  "scope": "two untrusted-mode users, real repair_worker processes, real Docker reproduction containers, abrupt API restart",
+  "checks": {
+    "alice_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "alice_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "alice_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "bob_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "bob_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "bob_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "two_real_workers_running_concurrently": {
+      "passed": false,
+      "active_workers": 0,
+      "tasks": {
+        "1eb27213d3b547a1aa9a204a6a0de374": {
+          "execution": "idle",
+          "node": null,
+          "container_count": 0
+        },
+        "572b4285e71947c2b74161480e3a3ce8": {
+          "execution": "idle",
+          "node": null,
+          "container_count": 0
+        }
+      }
+    }
+  },
+  "limitations": [
+    "A fixed local reproduction planner replaces only the model planning call; no external model or MCP service is contacted",
+    "The Docker reproduction commands intentionally sleep after opening each task's own source copy; patch generation and task completion are not tested",
+    "The API uses local loopback HTTP in untrusted mode, not a public HTTPS tunnel or production host",
+    "The test validates two concurrent workers and their task mounts, not maximum service capacity or production load"
+  ],
+  "engine_version": "29.7.2",
+  "failure": {
+    "type": "RuntimeError",
+    "message": "two_real_workers_running_concurrently"
+  },
+  "cleanup": {
+    "api_processes_stopped": true
+  }
+}

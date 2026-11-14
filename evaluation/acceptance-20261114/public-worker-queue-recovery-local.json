@@ -1,0 +1,342 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-14T09:15:07.956789+00:00",
+  "scope": "two untrusted-mode users, three tasks with two worker slots, real Docker containers, abrupt API restart and durable queue recovery",
+  "checks": {
+    "alice_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "alice_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "alice_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "bob_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "bob_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "bob_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "queued_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "queued_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "third_task_waits_in_durable_queue": {
+      "passed": true,
+      "execution": "queued",
+      "run_id": null,
+      "worker_registered": false,
+      "container_count": 0
+    },
+    "two_real_workers_running_concurrently": {
+      "passed": true,
+      "active_workers": 2,
+      "tasks": {
+        "83820bb42a104cbba8e8fad6378a5aea": {
+          "execution": "running",
+          "node": "baseline_reproduction",
+          "container_count": 1
+        },
+        "d83f1e63732147ba85f5dc1a9b69c3e0": {
+          "execution": "running",
+          "node": "baseline_reproduction",
+          "container_count": 1
+        }
+      }
+    },
+    "containers_mount_disjoint_user_task_copies": {
+      "passed": true,
+      "mounts": [
+        {
+          "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-zbxnfqya\\data\\tasks\\83820bb42a104cbba8e8fad6378a5aea\\reproduction\\tasks\\1a304bb4dac34933b70543d9fb67c6c3\\source",
+          "mount_targets": [
+            "/workspace"
+          ],
+          "source_token_present": true
+        },
+        {
+          "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-zbxnfqya\\data\\tasks\\d83f1e63732147ba85f5dc1a9b69c3e0\\reproduction\\tasks\\1de75fd617264f5284964b381b78a06b\\source",
+          "mount_targets": [
+            "/workspace"
+          ],
+          "source_token_present": true
+        }
+      ]
+    },
+    "repair_worker_processes_are_registered": {
+      "passed": true,
+      "worker_pids": [
+        9368,
+        58628
+      ]
+    },
+    "first_api_process_killed": {
+      "passed": true,
+      "pid": 9300
+    },
+    "queued_task_auto_dispatched_after_restart": {
+      "passed": false,
+      "execution": "queued",
+      "container_id": null
+    }
+  },
+  "limitations": [
+    "A fixed local reproduction planner replaces only the model planning call; no external model or MCP service is contacted",
+    "The Docker reproduction commands intentionally sleep after opening each task's own source copy; patch generation and task completion are not tested",
+    "The test validates two worker slots and one queued task, not maximum service capacity or production load",
+    "The API uses local loopback HTTP in untrusted mode, not a public HTTPS tunnel or production host"
+  ],
+  "engine_version": "29.7.2",
+  "task_isolation_evidence": {
+    "83820bb42a104cbba8e8fad6378a5aea": {
+      "container_id": "0855026a6e4c",
+      "in_flight_node": "baseline_reproduction",
+      "code_execution_started": true,
+      "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-zbxnfqya\\data\\tasks\\83820bb42a104cbba8e8fad6378a5aea\\reproduction\\tasks\\1a304bb4dac34933b70543d9fb67c6c3\\source",
+      "mount_targets": [
+        "/workspace"
+      ],
+      "container_running": true,
+      "source_token_present": true
+    },
+    "d83f1e63732147ba85f5dc1a9b69c3e0": {
+      "container_id": "472bda43bf10",
+      "in_flight_node": "baseline_reproduction",
+      "code_execution_started": true,
+      "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-zbxnfqya\\data\\tasks\\d83f1e63732147ba85f5dc1a9b69c3e0\\reproduction\\tasks\\1de75fd617264f5284964b381b78a06b\\source",
+      "mount_targets": [
+        "/workspace"
+      ],
+      "container_running": true,
+      "source_token_present": true
+    }
+  },
+  "failure": {
+    "type": "RuntimeError",
+    "message": "queued_task_auto_dispatched_after_restart"
+  },
+  "diagnostics": {
+    "83820bb42a104cbba8e8fad6378a5aea": {
+      "execution": "idle",
+      "status": "needs_input",
+      "error_info": {
+        "code": "test_outcome_unknown",
+        "category": "unknown",
+        "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+        "retryable": false,
+        "outcome_unknown": true,
+        "next_action": "检查任务记录后重试",
+        "retry_after": null,
+        "error_id": "c98530aedfbd4d2292b074e88c3d4ec9",
+        "causes": [],
+        "operation": "task.recovery",
+        "request_id": null,
+        "diagnostics_persisted": true
+      },
+      "progress": {
+        "next_node": "baseline_reproduction",
+        "in_flight": {
+          "node": "baseline_reproduction",
+          "attempt_id": "ed1d5bbe73ca4bafa042ec7cbdb63698",
+          "input_hash": "5b79c9c50b7d29e2a7ce369d832488de26f0313f8d44addf70f366278c4a4b78",
+          "input_state": {
+            "task_id": "83820bb42a104cbba8e8fad6378a5aea",
+            "source": {
+              "type": "pasted_code",
+              "character_count": 52,
+              "language": "python",
+              "file_name": "sample.py",
+              "retrieval_scope": {
+                "language": "python"
+              }
+            },
+            "code_text": "def identify():\n    return 'alice-74bc391698d0d20f'\n",
+            "original_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+            "status": "queued",
+            "reproduction": null,
+            "code_evidence": [],
+            "case_matches": [],
+            "failure_matches": [],
+            "diagnosis": null,
+            "patch_diff": null,
+            "patch_hash": null,
+            "validation": null,
+            "adversarial_review": null,
+            "attempt_count": 0,
+            "elapsed_seconds": 0.0,
+            "remaining_budget": {
+              "seconds": 1200.0,
+              "tokens": 200000,
+              "attempts": 10,
+              "cost": 0.1
+            },
+            "question": null,
+            "clarification_reasons": [],
+            "clarifications": [],
+            "awaiting_node": null,
+            "last_error": null,
+            "review_decision": "pending",
+            "review_reason": null,
+            "memory_saved": false,
+            "budget_exhausted": null,
+            "accounting": {
+              "tokens_observed": 0,
+              "cost_observed_yuan": 0.0,
+              "cost_complete": true,
+              "usage_complete": true
+            },
+            "agent_messages": []
+          },
+          "code_execution_started": true,
+          "model_tool_policy": "not_applicable"
+        },
+        "recovery": {
+          "id": "89bb8bbcbc70497a82570b7fca9a02d7",
+          "status": "paused",
+          "error": {
+            "code": "test_outcome_unknown",
+            "category": "unknown",
+            "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+            "retryable": false,
+            "outcome_unknown": true,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "c98530aedfbd4d2292b074e88c3d4ec9",
+            "causes": [],
+            "operation": "task.recovery",
+            "request_id": null,
+            "diagnostics_persisted": true
+          }
+        },
+        "interrupted": false
+      }
+    },
+    "d83f1e63732147ba85f5dc1a9b69c3e0": {
+      "execution": "idle",
+      "status": "needs_input",
+      "error_info": {
+        "code": "test_outcome_unknown",
+        "category": "unknown",
+        "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+        "retryable": false,
+        "outcome_unknown": true,
+        "next_action": "检查任务记录后重试",
+        "retry_after": null,
+        "error_id": "ce652a3b8841450cb146aea388b02b88",
+        "causes": [],
+        "operation": "task.recovery",
+        "request_id": null,
+        "diagnostics_persisted": true
+      },
+      "progress": {
+        "next_node": "baseline_reproduction",
+        "in_flight": {
+          "node": "baseline_reproduction",
+          "attempt_id": "90438b5433fb42c287d66163ffccdf4e",
+          "input_hash": "8fcbc4c50d48139b62983d8c212f287a2dd81d8a87b3d9c7ad73d42ad5a0d7d0",
+          "input_state": {
+            "task_id": "d83f1e63732147ba85f5dc1a9b69c3e0",
+            "source": {
+              "type": "pasted_code",
+              "character_count": 50,
+              "language": "python",
+              "file_name": "sample.py",
+              "retrieval_scope": {
+                "language": "python"
+              }
+            },
+            "code_text": "def identify():\n    return 'bob-74e1786352e227db'\n",
+            "original_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+            "status": "queued",
+            "reproduction": null,
+            "code_evidence": [],
+            "case_matches": [],
+            "failure_matches": [],
+            "diagnosis": null,
+            "patch_diff": null,
+            "patch_hash": null,
+            "validation": null,
+            "adversarial_review": null,
+            "attempt_count": 0,
+            "elapsed_seconds": 0.0,
+            "remaining_budget": {
+              "seconds": 1200.0,
+              "tokens": 200000,
+              "attempts": 10,
+              "cost": 0.1
+            },
+            "question": null,
+            "clarification_reasons": [],
+            "clarifications": [],
+            "awaiting_node": null,
+            "last_error": null,
+            "review_decision": "pending",
+            "review_reason": null,
+            "memory_saved": false,
+            "budget_exhausted": null,
+            "accounting": {
+              "tokens_observed": 0,
+              "cost_observed_yuan": 0.0,
+              "cost_complete": true,
+              "usage_complete": true
+            },
+            "agent_messages": []
+          },
+          "code_execution_started": true,
+          "model_tool_policy": "not_applicable"
+        },
+        "recovery": {
+          "id": "48b8369b0830466ca4e6deb901a9e225",
+          "status": "paused",
+          "error": {
+            "code": "test_outcome_unknown",
+            "category": "unknown",
+            "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+            "retryable": false,
+            "outcome_unknown": true,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "ce652a3b8841450cb146aea388b02b88",
+            "causes": [],
+            "operation": "task.recovery",
+            "request_id": null,
+            "diagnostics_persisted": true
+          }
+        },
+        "interrupted": false
+      }
+    },
+    "08cbad786618448a9a6c3f7a6195cd84": {
+      "execution": "queued",
+      "status": "queued",
+      "error_info": null,
+      "progress": {
+        "next_node": "prepare_workspace",
+        "in_flight": null,
+        "recovery": null,
+        "interrupted": false
+      }
+    }
+  },
+  "logs": {
+    "tasks\\83820bb42a104cbba8e8fad6378a5aea\\errors.jsonl": "{\"timestamp\": \"2026-11-14T09:16:04.524790+00:00\", \"code\": \"test_outcome_unknown\", \"category\": \"unknown\", \"message\": \"中断节点运行过用户代码，缺少可安全重放的证据\", \"retryable\": false, \"outcome_unknown\": true, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"c98530aedfbd4d2292b074e88c3d4ec9\", \"causes\": [], \"operation\": \"task.recovery\", \"request_id\": null, \"task_id\": \"83820bb42a104cbba8e8fad6378a5aea\", \"exception_chain\": [{\"type\": \"Fault\", \"module\": \"resilience\", \"frames\": [{\"file\": \"recovery_manager.py\", \"line\": 161, \"function\": \"recover\"}, {\"file\": \"recovery_manager.py\", \"line\": 271, \"function\": \"_verify_and_repair\"}]}]}\n",
+    "tasks\\d83f1e63732147ba85f5dc1a9b69c3e0\\errors.jsonl": "{\"timestamp\": \"2026-11-14T09:16:05.823516+00:00\", \"code\": \"test_outcome_unknown\", \"category\": \"unknown\", \"message\": \"中断节点运行过用户代码，缺少可安全重放的证据\", \"retryable\": false, \"outcome_unknown\": true, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"ce652a3b8841450cb146aea388b02b88\", \"causes\": [], \"operation\": \"task.recovery\", \"request_id\": null, \"task_id\": \"d83f1e63732147ba85f5dc1a9b69c3e0\", \"exception_chain\": [{\"type\": \"Fault\", \"module\": \"resilience\", \"frames\": [{\"file\": \"recovery_manager.py\", \"line\": 161, \"function\": \"recover\"}, {\"file\": \"recovery_manager.py\", \"line\": 271, \"function\": \"_verify_and_repair\"}]}]}\n",
+    "api-first.log": "",
+    "api-restarted.log": ""
+  },
+  "cleanup": {
+    "api_processes_stopped": true,
+    "tunnel_stopped": true
+  }
+}

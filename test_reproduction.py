@@ -2,6 +2,7 @@
 
 # json：解析测试模型返回的 JSON；tempfile：创建测试后自动清理的临时目录。
 import json
+import sys
 import tempfile
 # Path：读取测试产生的工作文档。
 from pathlib import Path
@@ -158,6 +159,43 @@ class ReproductionTests(unittest.TestCase):
             self.assertEqual(source_file.read_text(encoding="utf-8"), original_source)
             # len(prompts) 返回调用记录的条数；assertEqual() 确认恰好调用两次：先规划，再核对。
             self.assertEqual(len(prompts), 2)
+
+    def test_fixed_reproduction_command_accepts_empty_model_script(self) -> None:
+        """A caller-frozen command is executed without asking the model for Python code."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source_file = root / "example.py"
+            source_file.write_text("value = 1\n", encoding="utf-8")
+            calls = []
+
+            def model_call(prompt: str) -> str:
+                calls.append(prompt)
+                if len(calls) == 1:
+                    return json.dumps({
+                        "revised_report": "The fixed command prints the actual value.",
+                        "steps": "Run the caller-provided command from the source copy.",
+                        "reproduction_code": "",
+                        "clarification_required": False, "clarification_reasons": [],
+                        "question": "",
+                    })
+                return json.dumps({
+                    "comparison": "matched", "conclusion": "The command printed 1.",
+                    "evidence": "1", "clarification_required": False,
+                    "clarification_reasons": [], "question": "",
+                })
+
+            record = reproduce(
+                {"type": "python_file", "path": str(source_file)},
+                "The command output is 1.",
+                work_root=root / "work", model_call=model_call, timeout=5,
+                execution_backend="host",
+                reproduce_command=(sys.executable, "-c", "from example import value; print(value)"),
+            )
+
+            self.assertEqual(record["status"], "已复现，与报告一致")
+            self.assertEqual(record["execution"]["stdout"].strip(), "1")
+            self.assertEqual(record["reproduction_code"], "")
+            self.assertEqual(len(calls), 2)
 
     def test_mismatch_pauses_for_user_confirmation(self) -> None:
         """模型发现实际输出与报告不一致时，流程标记需要确认并保留问题。"""

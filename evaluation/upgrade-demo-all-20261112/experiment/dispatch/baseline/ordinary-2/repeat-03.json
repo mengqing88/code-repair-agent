@@ -1,0 +1,1 @@
+{"case_id": "ordinary-2", "dispatched_at": "2026-11-12T05:18:24.520259+00:00", "idempotency_key": "d4d804caa63f8dbe25c672c7bc7d7a346ccbf3b4d5a281d6c1cb23dde622a8cc", "repeat": 3, "runner": {"name": "__main__:runner", "source_sha256": "4f76b3fa63219dbd3b8eafa8dcd977e1495ea1ce77f59259fd8f23fe8971b87a"}, "variant": "baseline"}

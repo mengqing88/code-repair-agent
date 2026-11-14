@@ -1,0 +1,1 @@
+{"case_id": "critical", "dispatched_at": "2026-11-12T05:18:24.322286+00:00", "idempotency_key": "f48aa481e95f933ae8ac5af10de18983165ae1032e634433a94512cfbae5536e", "repeat": 1, "runner": {"name": "__main__:runner", "source_sha256": "4f76b3fa63219dbd3b8eafa8dcd977e1495ea1ce77f59259fd8f23fe8971b87a"}, "variant": "baseline"}

@@ -351,6 +351,59 @@ def test_validation_input_and_local_origin(tmp_path):
         assert client.post("/api/tasks", headers={"origin": "https://untrusted.example"}, json={}).status_code == 403
 
 
+def test_public_host_origin_requires_exact_untrusted_allowlists(tmp_path, monkeypatch):
+    import repair_api
+
+    monkeypatch.setenv("REPAIR_DEPLOYMENT_MODE", "untrusted")
+    monkeypatch.setenv("REPAIR_ALLOWED_HOSTS", "repair-test.example")
+    monkeypatch.setenv("REPAIR_ALLOWED_ORIGINS", "https://repair-test.example")
+    with TestClient(app_at(tmp_path / "public-data")) as client:
+        assert client.get("/api/health", headers={"host": "repair-test.example"}).status_code == 200
+        assert client.post("/api/auth/register", headers={"host": "repair-test.example",
+            "origin": "https://repair-test.example"},
+            json={"username": "public_user", "password": "public-test-password-123"}).status_code == 201
+        assert client.get("/api/health", headers={"host": "other.example"}).status_code == 403
+        assert client.get("/api/health", headers={"host": "repair-test.example:8443"}).status_code == 403
+        assert client.post("/api/auth/login", headers={"host": "repair-test.example",
+            "origin": "https://other.example"},
+            json={"username": "public_user", "password": "public-test-password-123"}).status_code == 403
+
+
+def test_public_allowlist_rejects_wildcards_and_non_https_origins(monkeypatch):
+    import repair_api
+
+    monkeypatch.setenv("REPAIR_DEPLOYMENT_MODE", "untrusted")
+    monkeypatch.setenv("REPAIR_ALLOWED_HOSTS", "*")
+    monkeypatch.setenv("REPAIR_ALLOWED_ORIGINS", "https://example.test")
+    with pytest.raises(ValueError, match="精确域名"):
+        repair_api._public_web_allowlist()
+    monkeypatch.setenv("REPAIR_ALLOWED_HOSTS", "example.test")
+    monkeypatch.setenv("REPAIR_ALLOWED_ORIGINS", "http://example.test")
+    with pytest.raises(ValueError, match="HTTPS Origin"):
+        repair_api._public_web_allowlist()
+
+
+def test_host_origin_authority_parsing_rejects_confusion_and_keeps_local_same_origin(tmp_path, monkeypatch):
+    import repair_api
+
+    monkeypatch.setenv("REPAIR_DEPLOYMENT_MODE", "untrusted")
+    monkeypatch.setenv("REPAIR_ALLOWED_HOSTS", "repair-test.example")
+    monkeypatch.setenv("REPAIR_ALLOWED_ORIGINS", "https://repair-test.example")
+    public_hosts, public_origins = repair_api._public_web_allowlist()
+    for authority in ("evil@localhost", "localhost/path", "localhost?x=1", "localhost#x", r"localhost\evil"):
+        assert not repair_api._allowed_request_host(authority, public_hosts), authority
+    assert not repair_api._allowed_request_origin("http://repair-test.example", "repair-test.example", public_origins)
+    assert not repair_api._allowed_request_origin("http://evil@localhost", "localhost", public_origins)
+
+    with TestClient(app_at(tmp_path / "data")) as client:
+        assert client.get("/api/health", headers={"host": "localhost:8000",
+            "origin": "http://localhost:8000"}).status_code == 200
+        assert client.get("/api/health", headers={"host": "localhost:5173",
+            "origin": "http://localhost:5173"}).status_code == 200
+        assert client.get("/api/health", headers={"host": "repair-test.example",
+            "origin": "http://repair-test.example"}).status_code == 403
+
+
 def test_clarification_resumes_original_node_without_resetting_report_or_budget(tmp_path):
     with TestClient(app_at(tmp_path / "data")) as client:
         runner, task = seed_paused_task(client, "1" * 32, awaiting_node="collect_context")

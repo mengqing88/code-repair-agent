@@ -1,0 +1,1 @@
+{"case_id": "ordinary-2", "dispatched_at": "2026-11-12T05:18:24.288432+00:00", "idempotency_key": "115ed04a63c8aa1cafbff82467d4937b8ba0dbeac2b8796daa8e1df588656899", "repeat": 2, "runner": {"name": "__main__:runner", "source_sha256": "4f76b3fa63219dbd3b8eafa8dcd977e1495ea1ce77f59259fd8f23fe8971b87a"}, "variant": "candidate"}

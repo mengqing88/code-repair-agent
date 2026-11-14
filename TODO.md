@@ -12,10 +12,10 @@
 
 ## 外部验收
 
-- [ ] **外部服务与生产效果验收**（生产效果待验收）：聊天短请求、Embedding、PostgreSQL、真实本机 Qdrant 和 Cross-Encoder 权重均有实测证据；生产规模、代表性语料的独立相关性/重复标注及误合并率尚未验收。日常业务连接和默认检索配置未改。
+- [ ] **外部服务与生产效果验收**（生产效果待验收）：聊天短请求、Embedding、PostgreSQL、真实本机 Qdrant 和 Cross-Encoder 权重均有实测证据；2026-11-14 的 MarkupSafe Issue 417 单题 Agent 样例生成并独立验证了候选补丁，但独立审查调用遇到模型上游超时，工作流失败、用量未知且该题没有检索到历史经验。生产规模、代表性语料的独立相关性/重复标注及误合并率尚未验收。日常业务连接和默认检索配置未改。
 - [x] **MCP 本机只读服务验收**：Context7、GitHub、Sentry 三个服务共注册 19 个只读工具，完整启动约 35.55 秒且无连接警告；文档库解析、公开仓库搜索和 Sentry 组织查询均收到真实响应。专项测试 14 项通过。结果与限制见 `evaluation/MCP_DEPLOYMENT_ACCEPTANCE_20261112.md`。
-- [x] **本机 Docker 与 API staging 验收**：Docker Engine 29.7.2/Linux 的合成缺陷端到端验收通过；临时 Uvicorn 双账号个人记忆隔离通过，健康端点 100 次请求/并发 16 全部 HTTP 200，P95 42.01 ms。仅为本机有限场景，不代表公网生产隔离或容量验收。
-- [ ] **第三方 MCP 写操作与公网多租户验收**：日常 MCP 保持只读；2026-11-14 官方 GitHub MCP 在专用私有仓库通过 16 项真实写入/审批/幂等/重启回执/改参拒绝/清理检查，报告 evaluation/acceptance-20261114/github-mcp-write-v2.json。未真实诱发写入超时；公网 staging 与两个线上测试账号仍未提供，公网隔离不在本机验收结论内。
+- [x] **本机 Docker 与 API staging 验收**：Docker Engine 29.7.2/Linux 的合成缺陷端到端验收通过；本机 API 的三任务/两 worker 重启后队列恢复验收 30/30 通过，临时 Uvicorn 双账号个人记忆隔离通过，健康端点 100 次请求/并发 16 全部 HTTP 200，P95 42.01 ms。仅为有限本机场景，不代表公网生产隔离或容量验收。
+- [ ] **第三方 MCP 写操作与公网多租户验收**：日常 MCP 保持只读；2026-11-14 官方 GitHub MCP 在专用私有仓库通过真实写入/审批/幂等/受控超时与服务重启恢复检查，失败与清理记录见 `evaluation/acceptance-20261114`；自然公网故障仍未诱发。临时 Cloudflare HTTPS 双用户真实 worker + Docker 验收为 20/20，确认两个任务并发运行在分离容器挂载中，API 重启后旧 worker/容器停止，未知代码执行不重放且账号间读取返回 404。另有本机三任务/两 worker 持久队列恢复验收 30/30，通过报告 `public-worker-queue-recovery-final.json`。此项仍标待验收：临时隧道与两个并发任务不代表正式公网部署、生产主机隔离或容量测试；GitHub Token 当前范围为 All repositories，测试脚本约束到专用仓库和单个文件。
 - [ ] **部署专项高负载测试稳定性**：组合测试 `115 passed, 1 failed`；20 秒 watchdog 场景整组高负载时失败，单独复测通过。需定位高负载下的时序/调度敏感性后才能将该专项组合标为通过。
 - [x] **真实模型补丁审查质量样例评测**（评测已完成，生产质量仍待验收）：保留初测 2/8 完整的失败记录；后续在四类作者编写的合成补丁上各重复 2 次，共 8 次真实模型审查，样例预期判断 8/8 正确、源码引用 8/8 可核验，有限 pytest fixture 均通过。标签未经独立复核，不能外推生产误放率/误拒率或复杂仓库质量；聊天费率未配置，费用未知。详见 `evaluation/REAL_MODEL_REVIEW_QUALITY_20261112.md` 和 `evaluation/REAL_MODEL_REVIEW_QUALITY_CONTROLLED_20261112.json`。
 - [x] **真实 Qdrant 在线与索引负载验收**：`evaluation/qdrant-acceptance-20261112.json` 为 passed，Qdrant 1.16.2；验证命名空间、元数据、版本、维度拒绝、合并点删除/恢复、重启持久化、实际停服时 SQLite 降级及恢复补索引。1 万条 64 维合成向量/100 查询的 Recall@10=1.0，P95≈128ms；只测索引，不含 Embedding/SQLite/全链路语义合并，不代表生产负载。

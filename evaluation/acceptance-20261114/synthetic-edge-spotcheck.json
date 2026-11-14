@@ -1,0 +1,96 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-14T05:08:55.102515+00:00",
+  "dataset": "three generated synthetic defects; one evaluation group",
+  "scope": "post-hoc specification edge spot-check against frozen accepted patches",
+  "blind_holdout": false,
+  "execution": "local trusted host; three inspected pure-Python functions",
+  "summary": {
+    "passed": 12,
+    "total": 12
+  },
+  "source_evidence": {
+    "safe_ratio_zero_denominator": {
+      "task_id": "ec8d33ccf0284b308ee0f242be349470",
+      "patch_sha256": "a74b9696852cb3f783e11e61e63ec0b52c19e21935e90889cb7ef82d998cd89f",
+      "source_sha256": "cf230b76f0629423007d37121c5e02479542b8366d6ed4fd3fb91a9a62e0f6f9"
+    },
+    "normalize_label_case": {
+      "task_id": "5dcfd4f91ed5402e962eac24247bf643",
+      "patch_sha256": "0440014265d998740df299650500fc776848b8ebda32d4aa53b094086f36e352",
+      "source_sha256": "30ce533461cb7d09a78ac1f82d18837327b77a1bc5f516688f7de00fbbd766ac"
+    },
+    "first_nonempty_ignores_whitespace": {
+      "task_id": "90e5e94e2d8448f19c4b326633651e2e",
+      "patch_sha256": "13bf2f83437940c02f97749a880737d7c5fc04d42dfedd32c7c3e5486f0efd3a",
+      "source_sha256": "960a70928db9f82b003ca77113efda1463c8ca7916cc0d36b46a56a6b17de643"
+    }
+  },
+  "checks": {
+    "ratio_zero_positive": {
+      "passed": true,
+      "expected": null,
+      "actual": null
+    },
+    "ratio_zero_negative": {
+      "passed": true,
+      "expected": null,
+      "actual": null
+    },
+    "ratio_negative_numerator": {
+      "passed": true,
+      "expected": -3,
+      "actual": -3.0
+    },
+    "ratio_negative_denominator": {
+      "passed": true,
+      "expected": -3,
+      "actual": -3.0
+    },
+    "labels_tabs_and_newlines": {
+      "passed": true,
+      "expected": "multi word",
+      "actual": "multi word"
+    },
+    "labels_unicode_lowercase": {
+      "passed": true,
+      "expected": "äbc",
+      "actual": "äbc"
+    },
+    "labels_all_whitespace": {
+      "passed": true,
+      "expected": "",
+      "actual": ""
+    },
+    "labels_empty_string": {
+      "passed": true,
+      "expected": "",
+      "actual": ""
+    },
+    "lines_unicode_whitespace": {
+      "passed": true,
+      "expected": "value",
+      "actual": "value"
+    },
+    "lines_generator": {
+      "passed": true,
+      "expected": "next",
+      "actual": "next"
+    },
+    "lines_empty_generator": {
+      "passed": true,
+      "expected": null,
+      "actual": null
+    },
+    "lines_all_whitespace": {
+      "passed": true,
+      "expected": null,
+      "actual": null
+    }
+  },
+  "limitations": [
+    "Checks were authored after inspecting the candidate patches and are not a blind holdout",
+    "Synthetic cases do not establish effectiveness on production corpus",
+    "This spot-check does not use Docker isolation or test the full repair workflow"
+  ]
+}

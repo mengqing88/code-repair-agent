@@ -1,0 +1,5322 @@
+{
+  "benchmark": "synthetic-rag-30-v2",
+  "targets": {
+    "top5_hit_rate": 0.82,
+    "baseline_successes": 16,
+    "rag_successes": 22,
+    "regression_pass_rate": 0.96
+  },
+  "dataset_manifest_sha256": "7442868f3bca4a54fb7722b8d3c13094daeaa7d139ec09c413fa499d13990841",
+  "status": "valid",
+  "self_check": {
+    "valid_tasks": 30,
+    "valid_experiences": 30,
+    "tasks": [
+      {
+        "case_id": "case-01",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "a40aff2e7d18e2f6c9e93db77e02fc22927b4a8a6127bdf507f15a308880a827"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert 1 == 3\n +  where 1 = add(2, 1)"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert -5 == 1\n +  where -5 = add(-2, 3)"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert -7 == 7\n +  where -7 = add(0, 7)"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-02",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "7c4f5d31b04eb57ed2c00071e8ab8cfd1e9782a2e72afebca79db9ae204c5ec4"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert 7 == 12\n +  where 7 = multiply(3, 4)"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert 1 == -6\n +  where 1 = multiply(-2, 3)"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert 7 == 0\n +  where 7 = multiply(7, 0)"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-03",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "1f365f24f16d562972b70a1813c2c3a6f7595c86e87cf7dff5378ae384d93ac3"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-04",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "fc640293a97295560b464686a6560dae86648058a185016ee9735d6d95e006c4"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "IndexError: list index out of range"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "IndexError: tuple index out of range"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "IndexError: string index out of range"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-05",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "a7f5607f81bdcba5393f5cb1851f4f59cdee0afbeeb664025311d33e70b619bb"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert 2 == 3\n +  where 2 = last([1, 2, 3])"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "IndexError: list index out of range"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert 'a' == 'b'\n  \n  - b\n  + a"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-06",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "c3b5e41681c2974975c5f1bcbf16a0f6ee39586e4470dbbd4e7012d3cb1df4f9"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert 11 == 10\n +  where 11 = clamp(11, 10)"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert 8 == 7\n +  where 8 = clamp(100, 7)"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert 1 == 0\n +  where 1 = clamp(1, 0)"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-07",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "605c9a6d2f570f0e322c2a762460741c156f81d7f26514e944e442a868e98847"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert [1, 2] == [1, 2, 3]\n  \n  Right contains one more item: 3\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert [] == [4]\n  \n  Right contains one more item: 4\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert [-2, -1] == [-2, -1, 0]\n  \n  Right contains one more item: 0\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-08",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "1d282be77d2372c0354bd674d2a45896e7367b5814ee8e5ff5c6c124ecf3dcd4"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "KeyError: 'name'"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "KeyError: 'y'"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "KeyError: 0"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-09",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "80a4ef1f0908317b07decf96c0965ff4c10c40361c618992353edc88a6b87e4a"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = parse_bool(' TRUE ')"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = parse_bool('TrUe')"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = parse_bool('\\ttrue\\n')"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-10",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "94264ba0812cd9edb7a6f61d92156acbd7edf88dba53a94de9a78638706059c4"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert ' alice ' == 'alice'\n  \n  - alice\n  +  alice \n  ? +     +"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert '\\tbob\\n' == 'bob'\n  \n  - bob\n  + \tbob\n  ? +   +"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert '   ' == ''\n  \n  Strings contain only whitespace, escaping them using repr()\n  - ''\n  + '   '"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-11",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "ab02c7eb9a6c93882b27cc2000f73cc3ca229364a46ec5961e0f404b8a2a7a5e"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert ['a', 'b'] == ['b', 'a']\n  \n  At index 0 diff: 'a' != 'b'\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert [1, 2, 3] == [3, 1, 2]\n  \n  At index 0 diff: 1 != 3\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert ['a', 'x', 'z'] == ['z', 'x', 'a']\n  \n  At index 0 diff: 'a' != 'z'\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-12",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "b8259aa0242587866da0b306929cafab081444c83665fa543743b736a3873cfe"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert [[1, 2], [4, 5]] == [[1, 2], [3, 4], [5]]\n  \n  At index 1 diff: [4, 5] != [3, 4]\n  Right contains one more item: [5]\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert [[1], [3]] == [[1], [2], [3]]\n  \n  At index 1 diff: [3] != [2]\n  Right contains one more item: [3]\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert [[0, 1, 2], [4, 5]] == [[0, 1, 2], [3, 4, 5]]\n  \n  At index 1 diff: [4, 5] != [3, 4, 5]\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-13",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "c0f98826ab86e21a07eb48342d19c98ab9447f98cf75dd5e01465ca843a9f762"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-14",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "28661c1b75d6115b17ef185924d02596f58097319086784479466ca0547a6abe"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert 3 == 2.5\n +  where 3 = median([1, 2, 3, 4])"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert 8 == 5\n +  where 8 = median([8, 2])"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert 2 == 0\n +  where 2 = median([-4, -2, 2, 4])"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-15",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "2f2623df3f88afb1c9e4591113b4407e80c5d277902f312c43333e0e8df250e2"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-16",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "b5bdd5fe1569cbe59389a4664a50d39c2fca45597decf33b6c5e3df1d5566d26"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert [0, 1] == [0, 1, 2]\n  \n  Right contains one more item: 2\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert [] == [0]\n  \n  Right contains one more item: 0\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert [0, 1, 2, 3] == [0, 1, 2, 3, 4]\n  \n  Right contains one more item: 4\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-17",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "a6c69595726f13a62722a25086e429678108257fca4c754e214643b932a80666"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert False is True\n +  where False = within_timeout(1.0, 1.0)"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert False is True\n +  where False = within_timeout(0, 0)"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert False is True\n +  where False = within_timeout(2.5, 2.5)"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-18",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "367b1e59605432419cbe8af958b2bc52e7bfd79d0335b073a60aa096b8934e7b"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "assert ([1, 2], 3) == ([1, 2], 2)\n  \n  At index 1 diff: 3 != 2\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert 2 == 1"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert 8 == 7"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-19",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "84f43285971eb84f83334e4cbf3602fad6eba2c58de678314d52ef603cfe70fe"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "KeyError: 'name'"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "KeyError: 'name'"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "KeyError: 'name'"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-20",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "f1206e04677904dbcd80e53443230d8a91393948a80e419b8e6ec066c583d9e7"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert True is False\n +  where True = valid_code('ABC-1')"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert True is False\n +  where True = valid_code('ABCD')"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert True is False\n +  where True = valid_code('XYZ\\n')"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-21",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "16aade94f77e8a65618480a38f565979fdeec5686cc9ba5fe5769aaebdf42974"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert 'PNG' == 'png'\n  \n  - png\n  + PNG"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert 'TxT' == 'txt'\n  \n  - txt\n  + TxT"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert 'GZ' == 'gz'\n  \n  - gz\n  + GZ"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-22",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "30499494502a38dd43254ad6f37a806fec2c042dce9c683e3a6c6cf73e94ed28"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert 'https://example.test///api' == 'https://example.test/api'\n  \n  - https://example.test/api\n  + https://example.test///api\n  ?                      ++"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert 'https://a.test////x' == 'https://a.test/x'\n  \n  - https://a.test/x\n  + https://a.test////x\n  ?                +++"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert 'https://a.test///x' == 'https://a.test/x'\n  \n  - https://a.test/x\n  + https://a.test///x\n  ?                ++"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-23",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "d82b6182e97da4df628a11613833f0fcd98038c113393a2fd9c21f4a0a50e6d6"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert ['a', 'b'] == ['b', 'a']\n  \n  At index 0 diff: 'a' != 'b'\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "assert [0, 2, 3] == [3, 2, 0]\n  \n  At index 0 diff: 0 != 3\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert [-5, -1] == [-1, -5]\n  \n  At index 0 diff: -5 != -1\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-24",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "512e37df18a8ff95fd3f9ea4a411f0e098233025f71e9d713393ac52176a5d43"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert 2 == 1\n +  where 2 = len([{'id': 1}, {'id': 1}])\n +    where [{'id': 1}, {'id': 1}] = unique_ids([{'id': 1}, {'id': 1}])"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert [{'id': 2, 'v...': 2, 'v': 2}] == [{'id': 2, 'v': 1}]\n  \n  Left contains one more item: {'id': 2, 'v': 2}\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "assert [3, 1, 3] == [3, 1]\n  \n  Left contains one more item: 3\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-25",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "29b28afd41c7d69adce87a01175e74620c7712a5227f9e8847d71b0926a6cf72"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert ['name', 'Alice', 'Bob'] == ['Alice', 'Bob']\n  \n  At index 0 diff: 'name' != 'Alice'\n  Left contains one more item: 'Bob'\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert ['name'] == []\n  \n  Left contains one more item: 'name'\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert ['name', 'Li, Mei'] == ['Li, Mei']\n  \n  At index 0 diff: 'name' != 'Li, Mei'\n  Left contains one more item: 'Li, Mei'\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-26",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "a8c54e2997eba224024ba4c7f262cfee65a2987cea20fb6fac94efd71dbc4ef6"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert 1.2 == '1.20'\n +  where 1.2 = money(1.2)"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert 0 == '0.00'\n +  where 0 = money(0)"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert -2.5 == '-2.50'\n +  where -2.5 = money(-2.5)"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-27",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "f61e8f4a582cf835c119d8f1c167418e52f9411bdbcf31e3a2c6bed772104490"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert '1' != '1'\n +  where '1' = cache_key(1, 'en')\n +  and   '1' = cache_key(1, 'zh')"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert 'a' != 'a'\n +  where 'a' = cache_key('a', 'fr')\n +  and   'a' = cache_key('a', 'de')"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert '' != ''\n +  where '' = cache_key('', 'en')\n +  and   '' = cache_key('', 'zh')"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-28",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "d680aeb5d22a2704fcbcc1ed9c0d4ad6867796e683de7114da0c235fe961a538"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = can_update('editor')"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = can_update('editor')\n +    where 'editor' = <built-in method join of str object at 0x00007FFB9313C6E0>(['ed', 'itor'])\n +      where <built-in method join of str object at 0x00007FFB9313C6E0> = ''.join"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = can_update('editor')\n +    where 'editor' = <built-in method lower of str object at 0x000002B06D169270>()\n +      where <built-in method lower of str object at 0x000002B06D169270> = 'EDITOR'.lower\n +        where 'EDITOR' = <built-in method uppe"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-29",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "65401e7b0c7d4c5519bab658ea39804b20830ea4700dbb3487a372b579d228a3"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "RecursionError: maximum recursion depth exceeded"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "RecursionError: maximum recursion depth exceeded"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "RecursionError: maximum recursion depth exceeded"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "case_id": "case-30",
+        "valid": true,
+        "baseline_exposes_defect": true,
+        "reference_passed": true,
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "f3f08380742f9edc32a5e8d94d7838e2c1c1481de266f1ff1cfd2fa91c606342"
+        },
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_reported_defect",
+              "status": "failed",
+              "message": "AssertionError: assert 0 == 1\n +  where 0 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-1208/test_reported_defect0/one.txt'))"
+            },
+            {
+              "test": "test_boundary_1",
+              "status": "failed",
+              "message": "AssertionError: assert 1 == 2\n +  where 1 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-1208/test_boundary_10/d'))"
+            },
+            {
+              "test": "test_boundary_2",
+              "status": "failed",
+              "message": "AssertionError: assert 2 == 3\n +  where 2 = line_count(WindowsPath('C:/Users/mengq/AppData/Local/Temp/pytest-of-mengq/pytest-1208/test_boundary_20/e'))"
+            }
+          ]
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_existing": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            "test_acceptance": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      }
+    ],
+    "experiences": [
+      {
+        "experience_id": "experience-01",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert 16 == 24\n +  where 16 = checkout(20, 4)"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "assert -8 == 8\n +  where -8 = checkout(0, 8)"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "2d3c010c1825b9a86fd61cf5574643a4df7e7e8b19a9f3742f0450c5f8c32236"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-02",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert 8 == 15\n +  where 8 = area(5, 3)"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "assert 7 == 0\n +  where 7 = area(0, 7)"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "29d154a0056e12c83d09189bc856e9f9eeac8407d7b7fb1907bf0bc5027de7ed"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-03",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "7d07e896393166ce8ea7ad6172d6723b8b2e5ccf79a57edfd88c4b65b05ea1e8"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-04",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "IndexError: list index out of range"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "IndexError: tuple index out of range"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "a52325a7e9dca365b6c684ae73e20477e5b15e8d21afdbed7b983a6c28cc7fce"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-05",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert 'old' == 'new'\n  \n  - new\n  + old"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "assert 2 == 3\n +  where 2 = latest([1, 2, 3])"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "152977f5c2b22470cb3705277006fbeee7b4d449464c028f7b98810d02eb27e3"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-06",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert 101 == 100\n +  where 101 = volume(101)"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "12152d1f141a223e54711ed1b42f44d981154c6c41a74e90a41f8e6bf5659970"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-07",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert [5, 6] == [5, 6, 7]\n  \n  Right contains one more item: 7\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "assert [] == [2]\n  \n  Right contains one more item: 2\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "ce0d67ac6ce4a250b8d17f1d4727161a4f958d090dcf7b293a8f16b46ec4f274"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-08",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "KeyError: 'theme'"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "KeyError: 'y'"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "54970ba81732296b142eb47d3d240cf2aedc31fa3c427a42ec42b0ee887a9476"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-09",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = enabled('True')"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = enabled(' true ')"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "a9c098cee77e1b4365326016a2840bbc33c4a1df5f759278952a265b3a789b88"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-10",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert '  zoe ' == 'zoe'\n  \n  - zoe\n  +   zoe"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "AssertionError: assert ' ' == ''\n  \n  Strings contain only whitespace, escaping them using repr()\n  - ''\n  + ' '\n  ?  +"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "e658ffccb46571c3450ff06e99ad5c8a3c1c30d11705425de32f18cc82598a5f"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-11",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert ['a', 'z'] == ['z', 'a']\n  \n  At index 0 diff: 'a' != 'z'\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "assert [1, 3] == [3, 1]\n  \n  At index 0 diff: 1 != 3\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "1f7f3b3f4ce479b2171c5a9b01730351c4d23394ed561ba4f54b882fa0f91b83"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-12",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert [[1, 2], [4]] == [[1, 2], [3, 4]]\n  \n  At index 1 diff: [4] != [3, 4]\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "assert [[1]] == [[1], [2]]\n  \n  Right contains one more item: [2]\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "37033b96a19934322f925252ae89db88f0b755fd666868e3ec6d267d79375aff"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-13",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "98e47b2a66d8d4414e57c46e4b932a1b21ea248ceb8796980942fa1c15744524"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-14",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert 8 == 5\n +  where 8 = middle_latency([2, 8])"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "assert 4 == 3\n +  where 4 = middle_latency([0, 2, 4, 6])"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "d5329bf65c2f56c96392708e5065a0dd58b1ada5435f30f4c5bedc2a2bb4f9dd"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-15",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "ZeroDivisionError: division by zero"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "c65179abf898d224c830d1aec6cd4c6bfcb30618705011ef24166511044517c0"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-16",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert [] == [0]\n  \n  Right contains one more item: 0\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "assert [0, 1, 2] == [0, 1, 2, 3]\n  \n  Right contains one more item: 3\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "assert [0] == [0, 1]\n  \n  Right contains one more item: 1\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "fc0ea933cd9d929ab12b79affb7b0d2546c48a27083393d1739eec27e1bde7e0"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-17",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert False is True\n +  where False = on_time(3, 3)"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "6a5129c1866d7651b191171ff0cef5ae101071537ed1f6bd0ee92ff33c6d0ace"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-18",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert 11 == 10\n +  where 11 = next_cursor(0, 10)"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "assert 21 == 20\n +  where 21 = next_cursor(10, 10)"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "assert 6 == 5\n +  where 6 = next_cursor(3, 2)"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "f3a030ef715821e3aefb454b5511b0af7334c4d5d32c5231964e079d6f5ac539"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-19",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "KeyError: 'nickname'"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "48cfe6c550df626f0d6c6acd4adeeca7539bc03532845d75a8a4b593ad7b0e14"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-20",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert True is False\n +  where True = postal_code('12345-x')"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "AssertionError: assert True is False\n +  where True = postal_code('123456')"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "03afecdb7e18e0cd1e5af8d14a84961c80b618decbb47b5fd4e1a22b102641d4"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-21",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert 'JPEG' == 'jpeg'\n  \n  - jpeg\n  + JPEG"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "a7034a8a20c31304d58bd09efc45a7553b01d4d7172d6d6a0e15b1c9eaeab40e"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-22",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert 'https://s.test///v2' == 'https://s.test/v2'\n  \n  - https://s.test/v2\n  + https://s.test///v2\n  ?                ++"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "AssertionError: assert 'https://s.test///' == 'https://s.test/'\n  \n  - https://s.test/\n  + https://s.test///\n  ?                ++"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "bb5d4d2a5fd3556066f78e681c2982245b5acde5abfd58320ebe56c82ad6d491"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-23",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert [1, 9] == [9, 1]\n  \n  At index 0 diff: 1 != 9\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "43cc9f237177bd76ee4941c7e774998eaed47de024e06a77c181ad7e83515be7"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-24",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert [4, 4] == [4]\n  \n  Left contains one more item: 4\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "assert [2, 1, 2] == [2, 1]\n  \n  Left contains one more item: 2\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "fc24fc34fe2de5c266e07c01301498f80a6a8dfc2cf2d1bc80fb551df8817e62"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-25",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 1,
+              "failed": 2,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert ['id', '42'] == ['42']\n  \n  At index 0 diff: 'id' != '42'\n  Left contains one more item: '42'\n  Use -v to get more diff"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "AssertionError: assert ['id'] == []\n  \n  Left contains one more item: 'id'\n  Use -v to get more diff"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "68275ed30c0f746ef784597d30ce6f71c497842a82e8cfcdddfed65b53908662"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-26",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 0,
+              "failed": 3,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert 4.5 == '4.50'\n +  where 4.5 = quote_text(4.5)"
+            },
+            {
+              "test": "test_experience_2",
+              "status": "failed",
+              "message": "AssertionError: assert 0 == '0.00'\n +  where 0 = quote_text(0)"
+            },
+            {
+              "test": "test_experience_3",
+              "status": "failed",
+              "message": "AssertionError: assert -1 == '-1.00'\n +  where -1 = quote_text(-1)"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "9f76a2895c38fbd42c0b83ab049daf34628c1d0cb8a47d7f35b9f79935577be1"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-27",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "assert \"'/a'\" != \"'/a'\"\n +  where \"'/a'\" = page_cache('/a', 'en')\n +  and   \"'/a'\" = page_cache('/a', 'fr')"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "52d44bd35980c0f005fd87e116927f724e661a9e5de2da69533a8ba884eec1ea"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-28",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert False is True\n +  where False = may_publish('author')"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "fe22101772c450f010c6089c1be4f9a1ea6f8d9375f18360790510fed945c23f"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-29",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "RecursionError: maximum recursion depth exceeded"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "c8d696abc9ada0fdbfcd5c41d80a9a4f823c41e4c5b7eec42585b301a7a89a3f"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      },
+      {
+        "experience_id": "experience-30",
+        "valid": true,
+        "baseline": {
+          "infrastructure_ok": true,
+          "return_code": 1,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 2,
+              "failed": 1,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": [
+            {
+              "test": "test_experience_1",
+              "status": "failed",
+              "message": "AssertionError: assert 1 == 2\n +  where 1 = log_records('a\\nb')"
+            }
+          ]
+        },
+        "reference_patch": {
+          "applied": true,
+          "patch_sha256": "eae1eafdba6555492cd5f57ff83d37303c39bfe593574442f70376b1eaf20e12"
+        },
+        "reference": {
+          "infrastructure_ok": true,
+          "return_code": 0,
+          "groups": {
+            "test_experience": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          },
+          "failures": []
+        }
+      }
+    ]
+  },
+  "retrieval": {
+    "measured": true,
+    "method": "keyword",
+    "min_similarity": 0.35,
+    "corpus_size": 30,
+    "queries": 30,
+    "hits": 20,
+    "top5_hit_rate": 0.6666666666666666,
+    "metrics_by_strategy": {
+      "keyword": {
+        "metrics": {
+          "mrr": 0.5583333333333333,
+          "recall@1": 0.4666666666666667,
+          "precision@1": 0.4666666666666667,
+          "mrr@1": 0.4666666666666667,
+          "recall@3": 0.6333333333333333,
+          "precision@3": 0.21111111111111105,
+          "mrr@3": 0.55,
+          "recall@5": 0.6666666666666666,
+          "precision@5": 0.13333333333333336,
+          "mrr@5": 0.5583333333333333,
+          "recall@10": 0.6666666666666666,
+          "precision@10": 0.06666666666666668,
+          "mrr@10": 0.5583333333333333
+        },
+        "details": [
+          {
+            "case_id": "case-01",
+            "query": "add 返回结果错误，两个整数相加",
+            "ranked": [
+              "experience-01",
+              "experience-26",
+              "experience-08"
+            ],
+            "relevant": [
+              "experience-01"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-02",
+            "query": "multiply 计算乘积错误",
+            "ranked": [
+              "experience-01"
+            ],
+            "relevant": [
+              "experience-02"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-03",
+            "query": "divide 空除数触发 ZeroDivisionError",
+            "ranked": [
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-03"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-04",
+            "query": "empty list first item IndexError",
+            "ranked": [
+              "experience-25",
+              "experience-04",
+              "experience-11",
+              "experience-23",
+              "experience-13",
+              "experience-03"
+            ],
+            "relevant": [
+              "experience-04"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-05",
+            "query": "last item returns the wrong list element",
+            "ranked": [
+              "experience-27",
+              "experience-05",
+              "experience-17",
+              "experience-23",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-05"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-06",
+            "query": "clamp upper bound lets values exceed the maximum",
+            "ranked": [
+              "experience-11",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-06"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-07",
+            "query": "inclusive range misses the end value",
+            "ranked": [
+              "experience-07",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-07"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-08",
+            "query": "lookup missing dictionary key should use a default",
+            "ranked": [
+              "experience-19",
+              "experience-27",
+              "experience-02",
+              "experience-11",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-08"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-09",
+            "query": "parse_bool rejects whitespace around true",
+            "ranked": [
+              "experience-09",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-09"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-10",
+            "query": "normalize name keeps leading and trailing spaces",
+            "ranked": [
+              "experience-09",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-10"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-11",
+            "query": "dedupe should preserve the input order",
+            "ranked": [
+              "experience-23",
+              "experience-03",
+              "experience-29",
+              "experience-11",
+              "experience-17",
+              "experience-05",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-11"
+            ],
+            "metrics": {
+              "mrr": 0.25,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.25,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.25
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-12",
+            "query": "chunk list skips items when size is greater than one",
+            "ranked": [
+              "experience-19",
+              "experience-23",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-12"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-13",
+            "query": "average empty list should return zero",
+            "ranked": [
+              "experience-13",
+              "experience-15",
+              "experience-03",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-13"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-14",
+            "query": "median of an even list should average the middle pair",
+            "ranked": [
+              "experience-11",
+              "experience-19",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-02",
+              "experience-17",
+              "experience-05",
+              "experience-23"
+            ],
+            "relevant": [
+              "experience-14"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-15",
+            "query": "percentage with a zero total should not divide by zero",
+            "ranked": [
+              "experience-15",
+              "experience-03",
+              "experience-13",
+              "experience-25",
+              "experience-09",
+              "experience-23",
+              "experience-19",
+              "experience-29",
+              "experience-07",
+              "experience-17"
+            ],
+            "relevant": [
+              "experience-15"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-16",
+            "query": "retry loop should include the configured final attempt",
+            "ranked": [
+              "experience-27",
+              "experience-05",
+              "experience-07",
+              "experience-17",
+              "experience-23",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-16"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-17",
+            "query": "timeout at the exact deadline should still be accepted",
+            "ranked": [
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-25",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-17"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-18",
+            "query": "pagination next offset must advance by the page limit",
+            "ranked": [
+              "experience-13",
+              "experience-18",
+              "experience-27",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-07",
+              "experience-25",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-18"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-19",
+            "query": "json field lookup should provide a missing name default",
+            "ranked": [
+              "experience-19",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-19"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-20",
+            "query": "regex validation must reject trailing characters",
+            "ranked": [
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-20"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-21",
+            "query": "file extension should be normalized to lowercase",
+            "ranked": [
+              "experience-21",
+              "experience-25",
+              "experience-02",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-21"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-22",
+            "query": "URL join should remove duplicate slashes",
+            "ranked": [
+              "experience-22"
+            ],
+            "relevant": [
+              "experience-22"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-23",
+            "query": "records should be sorted by score descending",
+            "ranked": [
+              "experience-23",
+              "experience-13",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-23"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-24",
+            "query": "unique ids should add every accepted id to the seen set",
+            "ranked": [
+              "experience-11",
+              "experience-24",
+              "experience-21",
+              "experience-02",
+              "experience-15",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07"
+            ],
+            "relevant": [
+              "experience-24"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-25",
+            "query": "CSV rows should skip the header row",
+            "ranked": [
+              "experience-25",
+              "experience-17",
+              "experience-05",
+              "experience-23",
+              "experience-27",
+              "experience-07",
+              "experience-13",
+              "experience-03",
+              "experience-21"
+            ],
+            "relevant": [
+              "experience-25"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-26",
+            "query": "money formatting should return two decimal places as text",
+            "ranked": [
+              "experience-09",
+              "experience-13",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-26"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-27",
+            "query": "cache key must distinguish values from different locales",
+            "ranked": [
+              "experience-27",
+              "experience-11",
+              "experience-13"
+            ],
+            "relevant": [
+              "experience-27"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-28",
+            "query": "editor role should be allowed to update a document",
+            "ranked": [
+              "experience-15",
+              "experience-28",
+              "experience-02",
+              "experience-19",
+              "experience-21",
+              "experience-29",
+              "experience-07",
+              "experience-17",
+              "experience-03",
+              "experience-25"
+            ],
+            "relevant": [
+              "experience-28"
+            ],
+            "metrics": {
+              "mrr": 0.5,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 0.5,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 0.5,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 0.5
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-29",
+            "query": "factorial negative input should use the base case",
+            "ranked": [
+              "experience-29",
+              "experience-05",
+              "experience-09",
+              "experience-02",
+              "experience-11",
+              "experience-19",
+              "experience-17",
+              "experience-23",
+              "experience-27",
+              "experience-07"
+            ],
+            "relevant": [
+              "experience-29"
+            ],
+            "metrics": {
+              "mrr": 1.0,
+              "recall@1": 1.0,
+              "precision@1": 1.0,
+              "mrr@1": 1.0,
+              "recall@3": 1.0,
+              "precision@3": 0.3333333333333333,
+              "mrr@3": 1.0,
+              "recall@5": 1.0,
+              "precision@5": 0.2,
+              "mrr@5": 1.0,
+              "recall@10": 1.0,
+              "precision@10": 0.1,
+              "mrr@10": 1.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          },
+          {
+            "case_id": "case-30",
+            "query": "line count should count a final line without a newline",
+            "ranked": [
+              "experience-19",
+              "experience-07",
+              "experience-05",
+              "experience-29",
+              "experience-17",
+              "experience-03",
+              "experience-25",
+              "experience-15"
+            ],
+            "relevant": [
+              "experience-30"
+            ],
+            "metrics": {
+              "mrr": 0.0,
+              "recall@1": 0.0,
+              "precision@1": 0.0,
+              "mrr@1": 0.0,
+              "recall@3": 0.0,
+              "precision@3": 0.0,
+              "mrr@3": 0.0,
+              "recall@5": 0.0,
+              "precision@5": 0.0,
+              "mrr@5": 0.0,
+              "recall@10": 0.0,
+              "precision@10": 0.0,
+              "mrr@10": 0.0
+            },
+            "returned_modes": [
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword",
+              "keyword"
+            ]
+          }
+        ]
+      }
+    },
+    "details": [
+      {
+        "case_id": "case-01",
+        "query": "add 返回结果错误，两个整数相加",
+        "top5": [
+          "experience-01",
+          "experience-26",
+          "experience-08"
+        ],
+        "relevant": [
+          "experience-01"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-02",
+        "query": "multiply 计算乘积错误",
+        "top5": [
+          "experience-01"
+        ],
+        "relevant": [
+          "experience-02"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-03",
+        "query": "divide 空除数触发 ZeroDivisionError",
+        "top5": [
+          "experience-03"
+        ],
+        "relevant": [
+          "experience-03"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-04",
+        "query": "empty list first item IndexError",
+        "top5": [
+          "experience-25",
+          "experience-04",
+          "experience-11",
+          "experience-23",
+          "experience-13"
+        ],
+        "relevant": [
+          "experience-04"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-05",
+        "query": "last item returns the wrong list element",
+        "top5": [
+          "experience-27",
+          "experience-05",
+          "experience-17",
+          "experience-23",
+          "experience-07"
+        ],
+        "relevant": [
+          "experience-05"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-06",
+        "query": "clamp upper bound lets values exceed the maximum",
+        "top5": [
+          "experience-11",
+          "experience-17",
+          "experience-05",
+          "experience-23",
+          "experience-27"
+        ],
+        "relevant": [
+          "experience-06"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-07",
+        "query": "inclusive range misses the end value",
+        "top5": [
+          "experience-07",
+          "experience-17",
+          "experience-05",
+          "experience-23",
+          "experience-27"
+        ],
+        "relevant": [
+          "experience-07"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-08",
+        "query": "lookup missing dictionary key should use a default",
+        "top5": [
+          "experience-19",
+          "experience-27",
+          "experience-02",
+          "experience-11",
+          "experience-29"
+        ],
+        "relevant": [
+          "experience-08"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-09",
+        "query": "parse_bool rejects whitespace around true",
+        "top5": [
+          "experience-09",
+          "experience-17"
+        ],
+        "relevant": [
+          "experience-09"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-10",
+        "query": "normalize name keeps leading and trailing spaces",
+        "top5": [
+          "experience-09",
+          "experience-21"
+        ],
+        "relevant": [
+          "experience-10"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-11",
+        "query": "dedupe should preserve the input order",
+        "top5": [
+          "experience-23",
+          "experience-03",
+          "experience-29",
+          "experience-11",
+          "experience-17"
+        ],
+        "relevant": [
+          "experience-11"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-12",
+        "query": "chunk list skips items when size is greater than one",
+        "top5": [
+          "experience-19",
+          "experience-23",
+          "experience-13"
+        ],
+        "relevant": [
+          "experience-12"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-13",
+        "query": "average empty list should return zero",
+        "top5": [
+          "experience-13",
+          "experience-15",
+          "experience-03",
+          "experience-25"
+        ],
+        "relevant": [
+          "experience-13"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-14",
+        "query": "median of an even list should average the middle pair",
+        "top5": [
+          "experience-11",
+          "experience-19",
+          "experience-07",
+          "experience-25",
+          "experience-13"
+        ],
+        "relevant": [
+          "experience-14"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-15",
+        "query": "percentage with a zero total should not divide by zero",
+        "top5": [
+          "experience-15",
+          "experience-03",
+          "experience-13",
+          "experience-25",
+          "experience-09"
+        ],
+        "relevant": [
+          "experience-15"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-16",
+        "query": "retry loop should include the configured final attempt",
+        "top5": [
+          "experience-27",
+          "experience-05",
+          "experience-07",
+          "experience-17",
+          "experience-23"
+        ],
+        "relevant": [
+          "experience-16"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-17",
+        "query": "timeout at the exact deadline should still be accepted",
+        "top5": [
+          "experience-17",
+          "experience-05",
+          "experience-23",
+          "experience-27",
+          "experience-07"
+        ],
+        "relevant": [
+          "experience-17"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-18",
+        "query": "pagination next offset must advance by the page limit",
+        "top5": [
+          "experience-13",
+          "experience-18",
+          "experience-27",
+          "experience-17",
+          "experience-05"
+        ],
+        "relevant": [
+          "experience-18"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-19",
+        "query": "json field lookup should provide a missing name default",
+        "top5": [
+          "experience-19",
+          "experience-29",
+          "experience-07",
+          "experience-17",
+          "experience-03"
+        ],
+        "relevant": [
+          "experience-19"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-20",
+        "query": "regex validation must reject trailing characters",
+        "top5": [
+          "experience-13"
+        ],
+        "relevant": [
+          "experience-20"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-21",
+        "query": "file extension should be normalized to lowercase",
+        "top5": [
+          "experience-21",
+          "experience-25",
+          "experience-02",
+          "experience-15"
+        ],
+        "relevant": [
+          "experience-21"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-22",
+        "query": "URL join should remove duplicate slashes",
+        "top5": [
+          "experience-22"
+        ],
+        "relevant": [
+          "experience-22"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-23",
+        "query": "records should be sorted by score descending",
+        "top5": [
+          "experience-23",
+          "experience-13",
+          "experience-25"
+        ],
+        "relevant": [
+          "experience-23"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-24",
+        "query": "unique ids should add every accepted id to the seen set",
+        "top5": [
+          "experience-11",
+          "experience-24",
+          "experience-21",
+          "experience-02",
+          "experience-15"
+        ],
+        "relevant": [
+          "experience-24"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-25",
+        "query": "CSV rows should skip the header row",
+        "top5": [
+          "experience-25",
+          "experience-17",
+          "experience-05",
+          "experience-23",
+          "experience-27"
+        ],
+        "relevant": [
+          "experience-25"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-26",
+        "query": "money formatting should return two decimal places as text",
+        "top5": [
+          "experience-09",
+          "experience-13",
+          "experience-03",
+          "experience-25",
+          "experience-15"
+        ],
+        "relevant": [
+          "experience-26"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-27",
+        "query": "cache key must distinguish values from different locales",
+        "top5": [
+          "experience-27",
+          "experience-11",
+          "experience-13"
+        ],
+        "relevant": [
+          "experience-27"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-28",
+        "query": "editor role should be allowed to update a document",
+        "top5": [
+          "experience-15",
+          "experience-28",
+          "experience-02",
+          "experience-19",
+          "experience-21"
+        ],
+        "relevant": [
+          "experience-28"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-29",
+        "query": "factorial negative input should use the base case",
+        "top5": [
+          "experience-29",
+          "experience-05",
+          "experience-09",
+          "experience-02",
+          "experience-11"
+        ],
+        "relevant": [
+          "experience-29"
+        ],
+        "hit": true,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      },
+      {
+        "case_id": "case-30",
+        "query": "line count should count a final line without a newline",
+        "top5": [
+          "experience-19",
+          "experience-07",
+          "experience-05",
+          "experience-29",
+          "experience-17"
+        ],
+        "relevant": [
+          "experience-30"
+        ],
+        "hit": false,
+        "returned_modes": [
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword",
+          "keyword"
+        ]
+      }
+    ],
+    "not_measured": {
+      "vector": "configured embeddings service is required",
+      "hybrid": "configured embeddings service is required",
+      "hybrid+cross_encoder": "configured embeddings and CROSS_ENCODER_MODEL are required"
+    },
+    "limitation": "Synthetic authored labels; configured service modes require real credentials and model runs"
+  },
+  "retrieval_filtering": {
+    "passed": true,
+    "accepted_ids": [
+      "accepted-match"
+    ],
+    "rejected_ids": [
+      "rejected-match"
+    ],
+    "excluded_missing_metadata": true
+  },
+  "agent_outcomes": {
+    "measured": false,
+    "reason": "No paired Agent patch submissions; reference patches do not measure repair ability"
+  },
+  "target_assessment": {
+    "agent_targets_measured": false,
+    "min_top5_hits_out_of_30": 25,
+    "min_regression_passes_out_of_90": 87,
+    "note": "Synthetic self-check cannot establish real-world target attainment"
+  }
+}

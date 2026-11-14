@@ -35,6 +35,7 @@ _CODING_PREFERENCE = (
 _NON_SOFTWARE_SIGNALS = (
     r"(?:写|起草|润色|回复)(?:一封|一条|一份|一首)?\s*(?:道歉|客户|工作)?(?:邮件|短信|简历|情书|诗|歌词|小说|故事)",
     r"\b(?:write|draft|compose)\s+(?:me\s+)?(?:an?\s+)?(?:email|text message|resume|love letter|poem|poetry|story|song)\b",
+    r"\b(?:write|draft|compose)\s+(?:me\s+)?(?:an?\s+)?(?:customer|business|work|sales|support)\s+(?:email|text message|resume|love letter|poem|poetry|story|song)\b",
     r"\b(?:plan|recommend|give me)\s+(?:a\s+)?(?:recipe|travel itinerary|vacation|stock|investment|weather|medical advice|legal advice)\b",
     r"(?:帮我|请|给我|我想要|帮忙).{0,12}(?:规划|安排|推荐|给出|写).{0,8}(?:旅游|旅行|行程|菜谱|食谱|股票|投资|天气|新闻|法律意见|合同审查|医疗建议|诊断病情|诗|歌词|小说|故事|绘画|图片|音乐|健身|减肥计划|租房|买房)",
 )
@@ -74,7 +75,7 @@ def assess_software_request(*values: object, source_type: str | None = None) -> 
                 return ScopeDecision(False, "explicit_non_software_request", (match.group(0)[:80],))
 
     signals: list[str] = []
-    if source_type in {"python_file", "git_repository", "pasted_code"}:
+    if source_type in {"code_file", "python_file", "git_repository", "pasted_code"}:
         signals.append("software_source")
     if preference_match:
         return ScopeDecision(True, "software_development_preference", ("coding_preference",))
@@ -90,7 +91,7 @@ def assess_software_request(*values: object, source_type: str | None = None) -> 
     # A technology name alone is incidental context, not proof of a software task.
     # A recognized software entity (for example TypeError) is sufficiently specific.
     explicit_entity = bool(re.search(_SOFTWARE_CONTEXT[0], text, flags=re.IGNORECASE))
-    if source_type in {"python_file", "git_repository", "pasted_code"} or explicit_entity or (
+    if source_type in {"code_file", "python_file", "git_repository", "pasted_code"} or explicit_entity or (
         action and (technology or software_context)
     ) or (technology and software_context):
         return ScopeDecision(True, "software_development_signal", tuple(signals))

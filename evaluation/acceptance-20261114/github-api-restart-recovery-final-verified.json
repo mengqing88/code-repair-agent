@@ -1,0 +1,144 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-14T07:02:34.609875+00:00",
+  "scope": "real GitHub MCP write with a controlled lost response, reconciled through a restarted FastAPI process",
+  "target": {
+    "owner": "mengqing88",
+    "repo": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "repo_id": 1456881117,
+    "path": "api-restart-20261114T070234-cabd581d6d.txt"
+  },
+  "checks": {
+    "api_process_one_healthy": {
+      "passed": true,
+      "pid": 53928
+    },
+    "isolated_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "repair_task_persisted_without_dispatch": {
+      "passed": true,
+      "status": 202
+    },
+    "scoped_github_allowlist_loaded": {
+      "passed": true,
+      "tool_count": 3,
+      "warnings": 0
+    },
+    "dedicated_private_repository_identity": {
+      "passed": true,
+      "status": 200
+    },
+    "unique_acceptance_file_absent_before_write": {
+      "passed": true,
+      "status": 404
+    },
+    "write_requires_itemized_approval": {
+      "passed": true
+    },
+    "write_approval_binds_exact_target": {
+      "passed": true
+    },
+    "write_approved_through_api": {
+      "passed": true,
+      "status": 202
+    },
+    "real_write_paused_as_unknown": {
+      "passed": true,
+      "code": "mcp_outcome_unknown",
+      "operation_id": "e5c6268c5bb6a2b3e307a7fefd777b73776b9913e6657ab7b953b02571e1cad3"
+    },
+    "unknown_write_and_resource_lock_persisted": {
+      "passed": true
+    },
+    "write_effect_stays_locked_and_authorization_consumed": {
+      "passed": true
+    },
+    "remote_commit_matches_authorized_content": {
+      "passed": true,
+      "status": 200,
+      "content_sha256": "c76db2b54a311771ff08502bedd99332796f73c6e454d25ac82fde3ef863a6bd"
+    },
+    "first_api_process_stopped": {
+      "passed": true,
+      "pid": 53928
+    },
+    "restarted_api_process_healthy": {
+      "passed": true,
+      "first_pid": 53928,
+      "restarted_pid": 66756
+    },
+    "restart_preserved_pending_unknown_task": {
+      "passed": true,
+      "status": 200
+    },
+    "restarted_mcp_allowlist_loaded": {
+      "passed": true,
+      "tool_count": 3,
+      "warnings": 0,
+      "connection_attempts": 1
+    },
+    "fresh_client_blocks_unknown_write_replay": {
+      "passed": true,
+      "code": "mcp_outcome_unknown",
+      "write_dispatches": 0
+    },
+    "user_api_resolves_completed_write": {
+      "passed": true,
+      "status": 202
+    },
+    "resolution_persisted_and_released_lock": {
+      "passed": true,
+      "status": "resolved_completed",
+      "locks": 0
+    },
+    "resolved_operation_cannot_be_replayed": {
+      "passed": true
+    },
+    "remote_file_unchanged_through_recovery": {
+      "passed": true,
+      "status": 200
+    },
+    "cleanup_requires_itemized_approval": {
+      "passed": true
+    },
+    "cleanup_approval_binds_exact_file": {
+      "passed": true
+    },
+    "cleanup_approved_through_api": {
+      "passed": true,
+      "status": 202
+    },
+    "exact_test_file_deleted_and_verified": {
+      "passed": true,
+      "status": 404
+    },
+    "only_create_and_cleanup_operations_remain": {
+      "passed": true,
+      "operation_statuses": [
+        "resolved_completed",
+        "completed"
+      ],
+      "remaining_locks": 0
+    }
+  },
+  "limitations": [
+    "The remote write is performed by this isolated acceptance harness using the same MCP client and durable operation store; no repair worker or model is run",
+    "The response-body ReadTimeout is controlled after the real MCP server returns response headers, not a naturally occurring provider outage",
+    "The local API uses trusted host mode and an isolated temporary data directory; this does not verify public ingress, Docker isolation, or production capacity",
+    "The GitHub token was confirmed by the user as All repositories; MCP tool schemas and this harness restrict actions to the dedicated private repository and one exact file"
+  ],
+  "transport_fault": {
+    "request_dispatched": true,
+    "response_headers_received": true,
+    "response_body_delivered": false,
+    "injected_error": "httpx.ReadTimeout"
+  },
+  "remote_evidence": {
+    "read_back_status": 200,
+    "content_sha256": "c76db2b54a311771ff08502bedd99332796f73c6e454d25ac82fde3ef863a6bd",
+    "blob_sha": "c5c85faf221439852910f01ea8d9f2367812a91a"
+  },
+  "test_file_absent_after_run": true
+}

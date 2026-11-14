@@ -1,0 +1,21 @@
+{
+  "created_at": "2026-11-14T09:44:11.967368+00:00",
+  "scope": "independent Docker regression of a saved model candidate; no model or MCP requests",
+  "task_id": "fbfa5a3c810c456cb0ea0644168d01ec",
+  "workflow_status": "failed",
+  "workflow_error_code": "upstream_timeout",
+  "patch_sha256": "b344afa5155c07aac4c2e1c74b46bd7783419d89ff9b67478761b081b87be33d",
+  "baseline_commit": "fcab0979d3692398035e473b54e9bbaf2a0bbc8b",
+  "patch_applied": true,
+  "test": {
+    "return_code": 0,
+    "passed": true,
+    "stdout": ".                                                                        [100%]\n1 passed in 0.05s\n",
+    "stderr": "",
+    "container_cleaned": true
+  },
+  "patch_paths": [
+    "markupsafe/__init__.py"
+  ],
+  "status": "passed"
+}

@@ -1,0 +1,343 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-14T09:22:37.207062+00:00",
+  "scope": "two untrusted-mode users, three tasks with two worker slots, real Docker containers, abrupt API restart and durable queue recovery",
+  "checks": {
+    "alice_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "alice_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "alice_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "bob_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "bob_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "bob_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "queued_task_accepted": {
+      "passed": true,
+      "status": 202
+    },
+    "queued_task_uses_untrusted_docker": {
+      "passed": true
+    },
+    "third_task_waits_in_durable_queue": {
+      "passed": true,
+      "execution": "queued",
+      "run_id": null,
+      "worker_registered": false,
+      "container_count": 0
+    },
+    "two_real_workers_running_concurrently": {
+      "passed": true,
+      "active_workers": 2,
+      "tasks": {
+        "c3a9b61f8a7345bfa0c602ee43f83a6d": {
+          "execution": "running",
+          "node": "baseline_reproduction",
+          "container_count": 1
+        },
+        "a72f80d1d46c4e27ada9568d6d25b1c8": {
+          "execution": "running",
+          "node": "baseline_reproduction",
+          "container_count": 1
+        }
+      }
+    },
+    "containers_mount_disjoint_user_task_copies": {
+      "passed": true,
+      "mounts": [
+        {
+          "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-k8tku78g\\data\\tasks\\c3a9b61f8a7345bfa0c602ee43f83a6d\\reproduction\\tasks\\4e2bc1a3ff6a471bb7710fd14de76916\\source",
+          "mount_targets": [
+            "/workspace"
+          ],
+          "source_token_present": true
+        },
+        {
+          "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-k8tku78g\\data\\tasks\\a72f80d1d46c4e27ada9568d6d25b1c8\\reproduction\\tasks\\248a46ee03aa478097954b687d90b139\\source",
+          "mount_targets": [
+            "/workspace"
+          ],
+          "source_token_present": true
+        }
+      ]
+    },
+    "repair_worker_processes_are_registered": {
+      "passed": true,
+      "worker_pids": [
+        67392,
+        48364
+      ]
+    },
+    "first_api_process_killed": {
+      "passed": true,
+      "pid": 65932
+    },
+    "queued_task_auto_dispatched_after_restart": {
+      "passed": false,
+      "execution": "queued",
+      "container_id": null
+    }
+  },
+  "limitations": [
+    "A fixed local reproduction planner replaces only the model planning call; no external model or MCP service is contacted",
+    "The Docker reproduction commands intentionally sleep after opening each task's own source copy; patch generation and task completion are not tested",
+    "The test validates two worker slots and one queued task, not maximum service capacity or production load",
+    "The API uses local loopback HTTP in untrusted mode, not a public HTTPS tunnel or production host"
+  ],
+  "engine_version": "29.7.2",
+  "task_isolation_evidence": {
+    "c3a9b61f8a7345bfa0c602ee43f83a6d": {
+      "container_id": "5557389ce66e",
+      "in_flight_node": "baseline_reproduction",
+      "code_execution_started": true,
+      "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-k8tku78g\\data\\tasks\\c3a9b61f8a7345bfa0c602ee43f83a6d\\reproduction\\tasks\\4e2bc1a3ff6a471bb7710fd14de76916\\source",
+      "mount_targets": [
+        "/workspace"
+      ],
+      "container_running": true,
+      "source_token_present": true
+    },
+    "a72f80d1d46c4e27ada9568d6d25b1c8": {
+      "container_id": "f56913cbdd9e",
+      "in_flight_node": "baseline_reproduction",
+      "code_execution_started": true,
+      "mount_source": "C:\\Users\\mengq\\AppData\\Local\\Temp\\repair-worker-restart-k8tku78g\\data\\tasks\\a72f80d1d46c4e27ada9568d6d25b1c8\\reproduction\\tasks\\248a46ee03aa478097954b687d90b139\\source",
+      "mount_targets": [
+        "/workspace"
+      ],
+      "container_running": true,
+      "source_token_present": true
+    }
+  },
+  "failure": {
+    "type": "RuntimeError",
+    "message": "queued_task_auto_dispatched_after_restart"
+  },
+  "diagnostics": {
+    "c3a9b61f8a7345bfa0c602ee43f83a6d": {
+      "execution": "idle",
+      "status": "needs_input",
+      "error_info": {
+        "code": "test_outcome_unknown",
+        "category": "unknown",
+        "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+        "retryable": false,
+        "outcome_unknown": true,
+        "next_action": "检查任务记录后重试",
+        "retry_after": null,
+        "error_id": "54a26eefc1e243efbfd52f63f094cf3e",
+        "causes": [],
+        "operation": "task.recovery",
+        "request_id": null,
+        "diagnostics_persisted": true
+      },
+      "progress": {
+        "next_node": "baseline_reproduction",
+        "in_flight": {
+          "node": "baseline_reproduction",
+          "attempt_id": "c5b27cf757a742d0ae8da5a3a3e84944",
+          "input_hash": "d1e3271c9fa420f23d7a6b1fb1c4051ae9cc36e3f1ebe7d31941ed6f77f1950b",
+          "input_state": {
+            "task_id": "c3a9b61f8a7345bfa0c602ee43f83a6d",
+            "source": {
+              "type": "pasted_code",
+              "character_count": 52,
+              "language": "python",
+              "file_name": "sample.py",
+              "retrieval_scope": {
+                "language": "python"
+              }
+            },
+            "code_text": "def identify():\n    return 'alice-8f100882a5a4a83f'\n",
+            "original_report": "identify should preserve the alice value while reproducing this acceptance interruption.",
+            "status": "queued",
+            "reproduction": null,
+            "code_evidence": [],
+            "case_matches": [],
+            "failure_matches": [],
+            "diagnosis": null,
+            "patch_diff": null,
+            "patch_hash": null,
+            "validation": null,
+            "adversarial_review": null,
+            "attempt_count": 0,
+            "elapsed_seconds": 0.0,
+            "remaining_budget": {
+              "seconds": 1200.0,
+              "tokens": 200000,
+              "attempts": 10,
+              "cost": 0.1
+            },
+            "question": null,
+            "clarification_reasons": [],
+            "clarifications": [],
+            "awaiting_node": null,
+            "last_error": null,
+            "review_decision": "pending",
+            "review_reason": null,
+            "memory_saved": false,
+            "budget_exhausted": null,
+            "accounting": {
+              "tokens_observed": 0,
+              "cost_observed_yuan": 0.0,
+              "cost_complete": true,
+              "usage_complete": true
+            },
+            "agent_messages": []
+          },
+          "code_execution_started": true,
+          "model_tool_policy": "not_applicable"
+        },
+        "recovery": {
+          "id": "5bce92b07ec34d45a8ac6ab3f524e7f1",
+          "status": "paused",
+          "error": {
+            "code": "test_outcome_unknown",
+            "category": "unknown",
+            "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+            "retryable": false,
+            "outcome_unknown": true,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "54a26eefc1e243efbfd52f63f094cf3e",
+            "causes": [],
+            "operation": "task.recovery",
+            "request_id": null,
+            "diagnostics_persisted": true
+          }
+        },
+        "interrupted": false
+      }
+    },
+    "a72f80d1d46c4e27ada9568d6d25b1c8": {
+      "execution": "idle",
+      "status": "needs_input",
+      "error_info": {
+        "code": "test_outcome_unknown",
+        "category": "unknown",
+        "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+        "retryable": false,
+        "outcome_unknown": true,
+        "next_action": "检查任务记录后重试",
+        "retry_after": null,
+        "error_id": "bdeaf2d8f53e4ca28dac776da2fd0d5e",
+        "causes": [],
+        "operation": "task.recovery",
+        "request_id": null,
+        "diagnostics_persisted": true
+      },
+      "progress": {
+        "next_node": "baseline_reproduction",
+        "in_flight": {
+          "node": "baseline_reproduction",
+          "attempt_id": "3776ae5592ce4e65bfaa0810c578c464",
+          "input_hash": "b10e4610281414c297fe5a536574302ba7949ca60d63f746b56344b6a7ee8d4d",
+          "input_state": {
+            "task_id": "a72f80d1d46c4e27ada9568d6d25b1c8",
+            "source": {
+              "type": "pasted_code",
+              "character_count": 50,
+              "language": "python",
+              "file_name": "sample.py",
+              "retrieval_scope": {
+                "language": "python"
+              }
+            },
+            "code_text": "def identify():\n    return 'bob-f67eeab1512e24cd'\n",
+            "original_report": "identify should preserve the bob value while reproducing this acceptance interruption.",
+            "status": "queued",
+            "reproduction": null,
+            "code_evidence": [],
+            "case_matches": [],
+            "failure_matches": [],
+            "diagnosis": null,
+            "patch_diff": null,
+            "patch_hash": null,
+            "validation": null,
+            "adversarial_review": null,
+            "attempt_count": 0,
+            "elapsed_seconds": 0.0,
+            "remaining_budget": {
+              "seconds": 1200.0,
+              "tokens": 200000,
+              "attempts": 10,
+              "cost": 0.1
+            },
+            "question": null,
+            "clarification_reasons": [],
+            "clarifications": [],
+            "awaiting_node": null,
+            "last_error": null,
+            "review_decision": "pending",
+            "review_reason": null,
+            "memory_saved": false,
+            "budget_exhausted": null,
+            "accounting": {
+              "tokens_observed": 0,
+              "cost_observed_yuan": 0.0,
+              "cost_complete": true,
+              "usage_complete": true
+            },
+            "agent_messages": []
+          },
+          "code_execution_started": true,
+          "model_tool_policy": "not_applicable"
+        },
+        "recovery": {
+          "id": "c15523cef261407ebeafbf6375e5895e",
+          "status": "paused",
+          "error": {
+            "code": "test_outcome_unknown",
+            "category": "unknown",
+            "message": "中断节点运行过用户代码，缺少可安全重放的证据",
+            "retryable": false,
+            "outcome_unknown": true,
+            "next_action": "检查任务记录后重试",
+            "retry_after": null,
+            "error_id": "bdeaf2d8f53e4ca28dac776da2fd0d5e",
+            "causes": [],
+            "operation": "task.recovery",
+            "request_id": null,
+            "diagnostics_persisted": true
+          }
+        },
+        "interrupted": false
+      }
+    },
+    "247906509ae44069b35e3c16a469d03b": {
+      "execution": "queued",
+      "status": "queued",
+      "error_info": null,
+      "progress": {
+        "next_node": "prepare_workspace",
+        "in_flight": null,
+        "recovery": null,
+        "interrupted": false
+      }
+    }
+  },
+  "logs": {
+    "tasks\\a72f80d1d46c4e27ada9568d6d25b1c8\\errors.jsonl": "{\"timestamp\": \"2026-11-14T09:23:37.651929+00:00\", \"code\": \"test_outcome_unknown\", \"category\": \"unknown\", \"message\": \"中断节点运行过用户代码，缺少可安全重放的证据\", \"retryable\": false, \"outcome_unknown\": true, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"bdeaf2d8f53e4ca28dac776da2fd0d5e\", \"causes\": [], \"operation\": \"task.recovery\", \"request_id\": null, \"task_id\": \"a72f80d1d46c4e27ada9568d6d25b1c8\", \"exception_chain\": [{\"type\": \"Fault\", \"module\": \"resilience\", \"frames\": [{\"file\": \"recovery_manager.py\", \"line\": 161, \"function\": \"recover\"}, {\"file\": \"recovery_manager.py\", \"line\": 271, \"function\": \"_verify_and_repair\"}]}]}\n",
+    "tasks\\c3a9b61f8a7345bfa0c602ee43f83a6d\\errors.jsonl": "{\"timestamp\": \"2026-11-14T09:23:35.444738+00:00\", \"code\": \"test_outcome_unknown\", \"category\": \"unknown\", \"message\": \"中断节点运行过用户代码，缺少可安全重放的证据\", \"retryable\": false, \"outcome_unknown\": true, \"next_action\": \"检查任务记录后重试\", \"retry_after\": null, \"error_id\": \"54a26eefc1e243efbfd52f63f094cf3e\", \"causes\": [], \"operation\": \"task.recovery\", \"request_id\": null, \"task_id\": \"c3a9b61f8a7345bfa0c602ee43f83a6d\", \"exception_chain\": [{\"type\": \"Fault\", \"module\": \"resilience\", \"frames\": [{\"file\": \"recovery_manager.py\", \"line\": 161, \"function\": \"recover\"}, {\"file\": \"recovery_manager.py\", \"line\": 271, \"function\": \"_verify_and_repair\"}]}]}\n",
+    "api-first.log": "",
+    "api-restarted.log": "",
+    "dispatcher-events.jsonl": "{\"timestamp\": 1794648173.7147903, \"event\": \"dispatcher_start_called\", \"capacity\": 2}\n{\"timestamp\": 1794648173.7167885, \"event\": \"dispatcher_thread_started\", \"alive\": true}\n{\"timestamp\": 1794648177.3668208, \"event\": \"submit_called\", \"task_id\": \"c3a9b61f8a7345bfa0c602ee43f83a6d\", \"reviewing\": false, \"submitted\": [], \"capacity\": 2}\n{\"timestamp\": 1794648177.3814588, \"event\": \"submit_returned\", \"task_id\": \"c3a9b61f8a7345bfa0c602ee43f83a6d\", \"execution\": \"queued\", \"run_id\": \"f3b13d3d35b147c18f9de0d816602dd0\", \"submitted\": [\"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648179.886673, \"event\": \"submit_called\", \"task_id\": \"a72f80d1d46c4e27ada9568d6d25b1c8\", \"reviewing\": false, \"submitted\": [\"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648179.9029567, \"event\": \"submit_returned\", \"task_id\": \"a72f80d1d46c4e27ada9568d6d25b1c8\", \"execution\": \"queued\", \"run_id\": \"69f156db0b6e4b23ad2a92410e374301\", \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648180.6977742, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648180.701291, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648180.8496563, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648180.851655, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648181.3587363, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648181.3617373, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648181.8651247, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648181.868124, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648182.3754985, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648182.3784978, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648182.883743, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648182.8867447, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648183.3932016, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648183.3952084, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648183.9035623, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648183.9060788, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648184.414665, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648184.4176674, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648184.927428, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648184.9304297, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648185.4387467, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648185.4407485, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648185.950357, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648185.9534442, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648186.4585435, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648186.4615443, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648186.9726858, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648186.9756842, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648187.4822826, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648187.4842803, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648187.9948165, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648187.9968128, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648188.5066583, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648188.509998, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648189.0194037, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648189.0210307, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648189.5291362, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648189.5318923, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648190.0438516, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648190.0460923, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648190.5548527, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648190.5568466, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648191.0681076, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648191.0711029, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648191.577327, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648191.5793207, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648192.0891218, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648192.0912373, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648192.6003783, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648192.6023858, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648193.109977, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648193.1123893, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648193.6168954, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648193.6194282, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648194.1284032, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648194.1304102, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648194.6393394, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648194.641587, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648195.1516907, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648195.1536984, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648195.661141, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648195.663139, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648196.1711702, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648196.173162, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648196.727722, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648196.7297223, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648197.240577, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648197.242578, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648197.749695, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648197.7527502, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648198.259005, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648198.261002, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648198.7656267, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648198.767635, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648199.2760773, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648199.278582, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648199.7853556, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"], \"capacity\": 2}\n{\"timestamp\": 1794648199.7873473, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": null, \"submitted\": [\"a72f80d1d46c4e27ada9568d6d25b1c8\", \"c3a9b61f8a7345bfa0c602ee43f83a6d\"]}\n{\"timestamp\": 1794648218.3680587, \"event\": \"dispatcher_start_called\", \"capacity\": 2}\n{\"timestamp\": 1794648218.369021, \"event\": \"dispatcher_thread_started\", \"alive\": true}\n{\"timestamp\": 1794648218.8719296, \"event\": \"submit_called\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"reviewing\": false, \"submitted\": [], \"capacity\": 2}\n{\"timestamp\": 1794648218.8851643, \"event\": \"submit_returned\", \"task_id\": \"247906509ae44069b35e3c16a469d03b\", \"execution\": \"queued\", \"run_id\": \"627130de34024d04b03b8e908422ee39\", \"submitted\": [\"247906509ae44069b35e3c16a469d03b\"]}\n"
+  },
+  "cleanup": {
+    "api_processes_stopped": true,
+    "tunnel_stopped": true
+  }
+}

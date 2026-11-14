@@ -1,0 +1,78 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-14T04:56:26.311973+00:00",
+  "scope": "one live GitHub MCP write with a 50ms client deadline, followed by remote reconciliation",
+  "target": {
+    "owner": "mengqing88",
+    "repo": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "repo_id": 1456881117,
+    "path": "deadline-timeout-recheck-20261114.txt"
+  },
+  "timeout": {
+    "call_timeout_seconds": 0.05,
+    "injected_transport_fault": false,
+    "http_request_entered_transport": true,
+    "call_result": "mcp_outcome_unknown",
+    "operation_id": "eac16d3555a190b3d596fd249be13667d5deefe067c8cd983bfd4df7e8318def",
+    "durable_status_before_reconciliation": "unknown"
+  },
+  "checks": {
+    "exact_mcp_allowlist": {
+      "passed": true,
+      "tool_count": 3,
+      "warnings": 0
+    },
+    "dedicated_private_repository_identity": {
+      "passed": true,
+      "status": 200
+    },
+    "unique_file_absent_before_write": {
+      "passed": true,
+      "status": 404
+    },
+    "authorization_binds_exact_test_arguments": {
+      "passed": true
+    },
+    "remote_operation_reconciled_from_read_only_api": {
+      "passed": true,
+      "evidence": "exact_content_committed"
+    },
+    "manual_reconciliation_persisted": {
+      "passed": true,
+      "status": "resolved_completed"
+    },
+    "reconciliation_released_resource_lock": {
+      "passed": true
+    },
+    "resolved_write_cannot_be_replayed": {
+      "passed": true,
+      "code": "operation_manually_resolved"
+    },
+    "cleanup_authorization_binds_exact_arguments": {
+      "passed": true
+    },
+    "test_file_absent_after_run": {
+      "passed": true
+    },
+    "write_request_entered_real_http_transport": {
+      "passed": true,
+      "dispatch_count": 1
+    },
+    "call_deadline_expired_with_unknown_outcome": {
+      "passed": true,
+      "code": "mcp_outcome_unknown",
+      "durable_status": "unknown"
+    }
+  },
+  "limitations": [
+    "The timeout is caused by a deliberately short local deadline; this is not a naturally occurring provider outage",
+    "The test is limited to one unique file in the dedicated private repository",
+    "The GitHub Token was confirmed by the user as All repositories; this script does not verify token scope"
+  ],
+  "remote_evidence": {
+    "content_sha256": "1404791629c17be0aa0ef5ea5e289198e6f1fd6ae8c9eee2cfe7ce033865423d",
+    "blob_sha": "a2f4eec8c853fa54ae672b8b1b013ae80fbeacdf",
+    "read_back_status": 200
+  },
+  "test_file_absent_after_run": true
+}

@@ -1,0 +1,46 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-14T04:55:52.522492+00:00",
+  "scope": "reconcile the verified timed-out test write, then delete that exact file through approved GitHub MCP",
+  "target": {
+    "owner": "mengqing88",
+    "repo": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "repo_id": 1456881117,
+    "path": "deadline-timeout-recovery-20261114.txt"
+  },
+  "checks": {
+    "dedicated_allowlist_loaded": {
+      "passed": true,
+      "tool_count": 3,
+      "warnings": 0
+    },
+    "private_repository_identity_matches": {
+      "passed": true,
+      "status": 200
+    },
+    "remote_test_content_matches_timed_out_operation": {
+      "passed": true,
+      "status": 200,
+      "expected_content_sha256": "633ee6c2f52cc0993f7a454fcc8f87192f3a5a11e9c52e5764c3db3f984dda7d"
+    },
+    "one_matching_unknown_write_and_lock": {
+      "passed": true,
+      "operation_count": 1,
+      "matching_status": "unknown",
+      "lock_count": 1
+    },
+    "unknown_write_resolved_completed": {
+      "passed": true
+    },
+    "reconciliation_released_resource_lock": {
+      "passed": true
+    },
+    "cleanup_approval_binds_exact_file_and_sha": {
+      "passed": true
+    },
+    "exact_test_file_deleted_and_verified": {
+      "passed": true,
+      "status": 404
+    }
+  }
+}

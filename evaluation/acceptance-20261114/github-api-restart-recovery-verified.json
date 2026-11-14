@@ -1,0 +1,107 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-14T06:43:34.921653+00:00",
+  "scope": "real GitHub MCP write with a controlled lost response, reconciled through a restarted FastAPI process",
+  "target": {
+    "owner": "mengqing88",
+    "repo": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "repo_id": 1456881117,
+    "path": "api-restart-20261114T064334-ce18b5b380.txt"
+  },
+  "checks": {
+    "api_process_one_healthy": {
+      "passed": true,
+      "pid": 67084
+    },
+    "isolated_account_registered": {
+      "passed": true,
+      "status": 201
+    },
+    "repair_task_persisted_without_dispatch": {
+      "passed": true,
+      "status": 202
+    },
+    "scoped_github_allowlist_loaded": {
+      "passed": true,
+      "tool_count": 3,
+      "warnings": 0
+    },
+    "dedicated_private_repository_identity": {
+      "passed": true,
+      "status": 200
+    },
+    "unique_acceptance_file_absent_before_write": {
+      "passed": true,
+      "status": 404
+    },
+    "write_requires_itemized_approval": {
+      "passed": true
+    },
+    "write_approval_binds_exact_target": {
+      "passed": true
+    },
+    "write_approved_through_api": {
+      "passed": true,
+      "status": 202
+    },
+    "real_write_paused_as_unknown": {
+      "passed": true,
+      "code": "mcp_outcome_unknown",
+      "operation_id": "7ffbe009b19aedfd0d088ba45d91fc889c0754a5a15ff3618609c34487b4633c"
+    },
+    "unknown_write_and_resource_lock_persisted": {
+      "passed": true
+    },
+    "write_effect_stays_locked_and_authorization_consumed": {
+      "passed": true
+    },
+    "remote_commit_matches_authorized_content": {
+      "passed": true,
+      "status": 200,
+      "content_sha256": "d79e3a87a5bcf68ac8ab11ee10bc36a41fdb49596f146b482a934b8537a55348"
+    },
+    "first_api_process_stopped": {
+      "passed": true,
+      "pid": 67084
+    },
+    "restarted_api_process_healthy": {
+      "passed": true,
+      "first_pid": 67084,
+      "restarted_pid": 51824
+    },
+    "restart_preserved_pending_unknown_task": {
+      "passed": true,
+      "status": 200
+    },
+    "fresh_client_blocks_unknown_write_replay": {
+      "passed": false,
+      "code": "permission_denied",
+      "write_dispatches": 0
+    }
+  },
+  "limitations": [
+    "The remote write is performed by this isolated acceptance harness using the same MCP client and durable operation store; no repair worker or model is run",
+    "The response-body ReadTimeout is controlled after the real MCP server returns response headers, not a naturally occurring provider outage",
+    "The local API uses trusted host mode and an isolated temporary data directory; this does not verify public ingress, Docker isolation, or production capacity",
+    "The GitHub token was confirmed by the user as All repositories; MCP tool schemas and this harness restrict actions to the dedicated private repository and one exact file"
+  ],
+  "transport_fault": {
+    "request_dispatched": true,
+    "response_headers_received": true,
+    "response_body_delivered": false,
+    "injected_error": "httpx.ReadTimeout"
+  },
+  "remote_evidence": {
+    "read_back_status": 200,
+    "content_sha256": "d79e3a87a5bcf68ac8ab11ee10bc36a41fdb49596f146b482a934b8537a55348",
+    "blob_sha": "5378b1ff65d187f5d432e6743b6e5aad9451545f"
+  },
+  "failure": {
+    "type": "RuntimeError"
+  },
+  "cleanup": {
+    "status": "unverified",
+    "error_type": "Fault"
+  },
+  "test_file_absent_after_run": false
+}

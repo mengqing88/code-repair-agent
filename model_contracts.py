@@ -41,6 +41,18 @@ class ReproductionPlan(ClarifiableContract):
         return self
 
 
+class FixedCommandReproductionPlan(ClarifiableContract):
+    revised_report: str
+    steps: str
+    reproduction_code: str
+
+    @model_validator(mode="after")
+    def validate_fixed_command_plan(self):
+        if self.reproduction_code.strip():
+            raise ValueError("固定复现命令或非 Python 代码不能生成 Python 复现脚本")
+        return self
+
+
 class ReproductionComparison(ClarifiableContract):
     comparison: Literal["matched", "mismatch", "inconclusive"]
     conclusion: str

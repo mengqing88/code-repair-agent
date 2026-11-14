@@ -1,0 +1,2869 @@
+{
+  "experiment_id": "rag-ab-real-20261112-v2",
+  "date": "2026-11-12",
+  "workflow_outcomes_measured": true,
+  "rag_treatment_exposure_observed": false,
+  "rag_benefit_identifiable": false,
+  "conclusion": "两组自动完成率均为 0/30；全部在复现阶段停止，没有进入 RAG 检索和补丁生成，因此无法据此判断 RAG 的修复收益。",
+  "report": {
+    "experiment_id": "rag-ab-real-20261112-v2",
+    "model": "deepseek-v4.1-flash-1017",
+    "budget": {
+      "cost_yuan": 0.1,
+      "repair_attempts": 10,
+      "runtime_seconds": 120,
+      "tokens": 20000
+    },
+    "measured": true,
+    "scope": "real Agent + real Docker; 30 authored synthetic tasks; one paired repetition",
+    "cost_known": false,
+    "arms": {
+      "baseline": {
+        "tasks": 30,
+        "repair_successes": 0,
+        "candidate_successes": 0,
+        "existing_tests_passed": 0,
+        "existing_tests_expected": 90,
+        "regression_pass_rate": 0.0,
+        "candidate_test_execution_tasks": 0,
+        "tokens": 133288,
+        "tokens_complete": true,
+        "mean_seconds": 40.64743333333342,
+        "p95_seconds": 49.875,
+        "model_requests": 61,
+        "model_responses": 60,
+        "cases": [
+          {
+            "case_id": "case-01",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3748,
+            "seconds": 39.48500000000058,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-02",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4149,
+            "seconds": 35.0,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-03",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4095,
+            "seconds": 34.73500000000058,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-04",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3847,
+            "seconds": 41.60900000000038,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-05",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3839,
+            "seconds": 36.5779999999977,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-06",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4418,
+            "seconds": 42.375,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-07",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4082,
+            "seconds": 40.875,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-08",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4456,
+            "seconds": 39.15599999999904,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-09",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3985,
+            "seconds": 43.13999999999942,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-10",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4006,
+            "seconds": 39.89099999999962,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-11",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5778,
+            "seconds": 49.875,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-12",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5022,
+            "seconds": 38.14099999999962,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-13",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3596,
+            "seconds": 30.51600000000326,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-14",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3743,
+            "seconds": 41.875,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-15",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3484,
+            "seconds": 42.32800000000134,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-16",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3874,
+            "seconds": 43.45400000000154,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-17",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4814,
+            "seconds": 41.04599999999846,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-18",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4674,
+            "seconds": 48.84400000000096,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-19",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3067,
+            "seconds": 26.5,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-20",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5457,
+            "seconds": 50.5,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-21",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5064,
+            "seconds": 40.90700000000288,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-22",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 6309,
+            "seconds": 38.98400000000038,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-23",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4121,
+            "seconds": 40.76499999999942,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-24",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5059,
+            "seconds": 37.84400000000096,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-25",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4792,
+            "seconds": 41.98400000000038,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-26",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 6405,
+            "seconds": 48.63999999999942,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-27",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4402,
+            "seconds": 39.09399999999732,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-28",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3818,
+            "seconds": 33.89099999999962,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-29",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4201,
+            "seconds": 43.43800000000192,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-30",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4983,
+            "seconds": 47.9529999999977,
+            "trace": {
+              "events": 30,
+              "model_requests": 3,
+              "model_responses": 2,
+              "errors": [
+                "upstream_http_503"
+              ]
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          }
+        ]
+      },
+      "rag": {
+        "tasks": 30,
+        "repair_successes": 0,
+        "candidate_successes": 0,
+        "existing_tests_passed": 0,
+        "existing_tests_expected": 90,
+        "regression_pass_rate": 0.0,
+        "candidate_test_execution_tasks": 0,
+        "tokens": 139448,
+        "tokens_complete": true,
+        "mean_seconds": 43.560466666667224,
+        "p95_seconds": 61.03099999999904,
+        "model_requests": 61,
+        "model_responses": 61,
+        "cases": [
+          {
+            "case_id": "case-01",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 7051,
+            "seconds": 61.03099999999904,
+            "trace": {
+              "events": 34,
+              "model_requests": 3,
+              "model_responses": 3,
+              "errors": [
+                "schema_invalid"
+              ]
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-02",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 2985,
+            "seconds": 35.48500000000058,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-03",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4424,
+            "seconds": 40.875,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-04",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4453,
+            "seconds": 39.6720000000023,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-05",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5301,
+            "seconds": 39.25,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-06",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3919,
+            "seconds": 63.7970000000023,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-07",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4799,
+            "seconds": 44.95300000000134,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-08",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3344,
+            "seconds": 43.07800000000134,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-09",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4803,
+            "seconds": 51.53099999999904,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-10",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3723,
+            "seconds": 34.15599999999904,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-11",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 6167,
+            "seconds": 53.26600000000326,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-12",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5336,
+            "seconds": 43.96899999999732,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-13",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3269,
+            "seconds": 38.45300000000134,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-14",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 7070,
+            "seconds": 46.14100000000326,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-15",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3564,
+            "seconds": 38.75,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-16",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4223,
+            "seconds": 38.11000000000058,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-17",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3394,
+            "seconds": 36.45300000000134,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-18",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4937,
+            "seconds": 42.56200000000172,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-19",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 3290,
+            "seconds": 32.75,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-20",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 6167,
+            "seconds": 50.18700000000172,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-21",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4393,
+            "seconds": 46.5470000000023,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-22",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 6658,
+            "seconds": 51.59399999999732,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-23",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4600,
+            "seconds": 44.36000000000058,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-24",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4212,
+            "seconds": 46.2970000000023,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-25",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 5074,
+            "seconds": 36.7029999999977,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-26",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4757,
+            "seconds": 45.59300000000076,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-27",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4456,
+            "seconds": 41.875,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-28",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4057,
+            "seconds": 40.48500000000058,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-29",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4118,
+            "seconds": 42.04699999999866,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          },
+          {
+            "case_id": "case-30",
+            "workflow_status": "needs_input",
+            "repair_success": false,
+            "candidate_success": false,
+            "application": {
+              "applied": false,
+              "reason": "empty_patch"
+            },
+            "tests": {
+              "infrastructure_ok": false,
+              "groups": {}
+            },
+            "tokens": 4904,
+            "seconds": 36.84400000000096,
+            "trace": {
+              "events": 26,
+              "model_requests": 2,
+              "model_responses": 2,
+              "errors": []
+            },
+            "case_matches": [],
+            "reproduction_status": "需要用户确认",
+            "error": null,
+            "last_error": null
+          }
+        ]
+      }
+    },
+    "paired": {
+      "both_success": 0,
+      "rag_only_success": 0,
+      "baseline_only_success": 0,
+      "both_failed": 30,
+      "uplift_count": 0,
+      "uplift_percentage_points": 0.0,
+      "mcnemar_exact_two_sided_p": 1.0
+    },
+    "limitations": [
+      "Synthetic small tasks and deliberately related history; not production defects",
+      "One repetition; stochastic model/provider defaults; paired difference is descriptive",
+      "Prices unavailable: monetary benefit and hard bill ceiling not established",
+      "Missing candidates count as failures and no executed existing tests; coverage reported separately",
+      "Primary requires production workflow gate; secondary scores actual model candidate independently"
+    ]
+  },
+  "failure_analysis": {
+    "complete": true,
+    "arms": {
+      "baseline": {
+        "completed": 30,
+        "classifications": {
+          "reproduction_exact_quote_rejected": 30
+        },
+        "chat_tokens": 133288,
+        "embedding_tokens": 0,
+        "context_entered": 0,
+        "patch_agent_entered": 0,
+        "validation_entered": 0,
+        "review_entered": 0,
+        "tasks_with_retrieved_cases": 0,
+        "cleanup_ok": 30
+      },
+      "rag": {
+        "completed": 30,
+        "classifications": {
+          "reproduction_exact_quote_rejected": 28,
+          "reproduction_script_format_error": 1,
+          "reproduction_script_wrong_container_path": 1
+        },
+        "chat_tokens": 139448,
+        "embedding_tokens": 0,
+        "context_entered": 0,
+        "patch_agent_entered": 0,
+        "validation_entered": 0,
+        "review_entered": 0,
+        "tasks_with_retrieved_cases": 0,
+        "cleanup_ok": 30
+      }
+    },
+    "cases": [
+      {
+        "arm": "baseline",
+        "case_id": "case-01",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3748,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3748,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-02",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4149,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4149,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-03",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4095,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4095,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-04",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3847,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3847,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-05",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3839,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3839,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-06",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4418,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4418,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-07",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4082,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4082,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-08",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4456,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4456,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-09",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3985,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3985,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-10",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4006,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4006,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-11",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5778,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5778,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-12",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5022,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5022,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-13",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3596,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3596,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-14",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3743,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3743,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-15",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3484,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3484,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-16",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3874,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3874,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-17",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4814,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4814,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-18",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4674,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4674,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-19",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3067,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3067,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-20",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5457,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5457,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-21",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5064,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5064,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-22",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 6309,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 6309,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-23",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4121,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4121,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-24",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5059,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5059,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-25",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4792,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4792,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-26",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 6405,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 6405,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-27",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4402,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4402,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-28",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3818,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3818,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-29",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4201,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4201,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "baseline",
+        "case_id": "case-30",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4983,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4983,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-01",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 7051,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 7051,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-02",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 2985,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 2985,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-03",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4424,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4424,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-04",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4453,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4453,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-05",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5301,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5301,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-06",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3919,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3919,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-07",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4799,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4799,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-08",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3344,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3344,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-09",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4803,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4803,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-10",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3723,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3723,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-11",
+        "status": "needs_input",
+        "classification": "reproduction_script_format_error",
+        "chat_tokens": 6167,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 6167,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-12",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5336,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5336,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-13",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3269,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3269,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-14",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 7070,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 7070,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-15",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3564,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3564,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-16",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4223,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4223,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-17",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3394,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3394,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-18",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4937,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4937,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-19",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 3290,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 3290,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-20",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 6167,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 6167,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-21",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4393,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4393,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-22",
+        "status": "needs_input",
+        "classification": "reproduction_script_wrong_container_path",
+        "chat_tokens": 6658,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 6658,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-23",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4600,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4600,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-24",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4212,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4212,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-25",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 5074,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 5074,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-26",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4757,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4757,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-27",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4456,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4456,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-28",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4057,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4057,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-29",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4118,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4118,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      },
+      {
+        "arm": "rag",
+        "case_id": "case-30",
+        "status": "needs_input",
+        "classification": "reproduction_exact_quote_rejected",
+        "chat_tokens": 4904,
+        "embedding_tokens": 0,
+        "observed_total_tokens": 4904,
+        "context_entered": false,
+        "patch_agent_entered": false,
+        "validation_entered": false,
+        "review_entered": false,
+        "retrieved_cases": [],
+        "actual_model_ids": [
+          "deepseek-v4.1-flash-1017"
+        ],
+        "container_cleanup": true,
+        "workspace_cleanup": true
+      }
+    ]
+  },
+  "audit": {
+    "plan_hash_verified": true,
+    "arms": {
+      "baseline": {
+        "artifact_pairs": 30,
+        "trace_events": 784
+      },
+      "rag": {
+        "artifact_pairs": 30,
+        "trace_events": 788
+      }
+    },
+    "manifests_verified": 60,
+    "trace_copies_identical": 60,
+    "model_calls_observed_tasks": 60,
+    "state_snapshots": 120,
+    "worker_errors": [],
+    "actual_model_ids": [
+      "deepseek-v4.1-flash-1017"
+    ],
+    "complete": true
+  },
+  "regression_observation": {
+    "conditional_pass_rate": null,
+    "candidate_test_execution_tasks": 0,
+    "explanation": "两组没有候选补丁，未执行补丁独立验收；原始报告固定分母 0/90 是零通过证据，不是实际执行了 90 条测试并全部失败。"
+  },
+  "setup_usage": {
+    "tokens": 1771,
+    "cost_known": false,
+    "estimated_cost": null
+  },
+  "invalidated_first_attempt": {
+    "status": "invalidated",
+    "reason": "Concurrent project change: mcp_tool_client.py changed after registration; not a completed RAG experiment",
+    "completed_slots": 41,
+    "model_observed_slots": 2,
+    "observed_tokens": 6935,
+    "limitations": "Supervisor fallback elapsed 150s was a placeholder, not observed duration; excluded from results; original evidence retained"
+  },
+  "artifacts": {
+    "directory": "work/evaluation/rag-ab-real-20261112-v2",
+    "runtime_snapshot": "work/evaluation/rag-ab-real-20261112-v2-runtime",
+    "sha256": {
+      "experiment.json": "aacf88dd312e4005feb4e5559adaa3d6c55e1810a4872f053752c7b2bb866a7f",
+      "report.json": "a95b6c3ff0736fbcbb444e51d1f6678f6db5af904580675cc0928291096a73e1",
+      "analysis.json": "ddfe0250855e183aec322b49f12ad8d5f72529370e774964fd93046e5255e4e0",
+      "audit.json": "faddcc58bb066eed6fbf2d99307e28135626594b1238af905c7d949a46f9eb59"
+    }
+  },
+  "verification": [
+    "19 passed in 13.17s: evaluation/test_agent_ab.py + evaluation/test_benchmark.py",
+    "6 passed in 4.36s: final failure-attribution checks after classifying script format error"
+  ],
+  "production_code_modified_for_experiment": false
+}

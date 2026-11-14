@@ -1,0 +1,46 @@
+{
+  "status": "failed",
+  "created_at": "2026-11-14T05:12:39.184813+00:00",
+  "scope": "one live GitHub MCP write with a 50ms client deadline, followed by remote reconciliation",
+  "target": {
+    "owner": "mengqing88",
+    "repo": "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e",
+    "repo_id": 1456881117,
+    "path": "deadline-timeout-process-20261114.txt"
+  },
+  "timeout": {
+    "call_timeout_seconds": 0.05,
+    "injected_transport_fault": false,
+    "http_request_entered_transport": true,
+    "call_result": "mcp_outcome_unknown",
+    "operation_id": "769d00fa699dbc0f5de7ee447bace7328738b2a8353d39fdc18da9d3106e9132",
+    "durable_status_before_reconciliation": "unknown"
+  },
+  "checks": {
+    "exact_mcp_allowlist": {
+      "passed": true,
+      "tool_count": 3,
+      "warnings": 0
+    },
+    "dedicated_private_repository_identity": {
+      "passed": true,
+      "status": 200
+    },
+    "unique_file_absent_before_write": {
+      "passed": true,
+      "status": 404
+    },
+    "authorization_binds_exact_test_arguments": {
+      "passed": true
+    }
+  },
+  "limitations": [
+    "The timeout is caused by a deliberately short local deadline; this is not a naturally occurring provider outage",
+    "The test is limited to one unique file in the dedicated private repository",
+    "The GitHub Token was confirmed by the user as All repositories; this script does not verify token scope"
+  ],
+  "failure": {
+    "type": "unresolved_unknown_operation"
+  },
+  "test_file_absent_after_run": false
+}
