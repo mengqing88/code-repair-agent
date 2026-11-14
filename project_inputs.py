@@ -14,9 +14,11 @@ from zipfile import BadZipFile, ZIP_DEFLATED, ZIP_STORED, ZipFile
 from input_protection import sensitive_path
 
 MAX_PROJECT_FILES = 1000
-MAX_FILE_BYTES = 2_000_000
-MAX_PROJECT_BYTES = 20_000_000
-MAX_ARCHIVE_BYTES = 10_000_000
+MAX_FILE_BYTES = 20_000_000
+MAX_PROJECT_BYTES = 500_000_000
+MAX_ARCHIVE_BYTES = 100_000_000
+# Folder bytes expand by 4/3 in Base64; leave room for paths and JSON metadata.
+MAX_TASK_REQUEST_BYTES = 700_000_000
 MAX_COMPRESSION_RATIO = 200
 IGNORED_PARTS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".idea",
                  ".pytest_cache", ".mypy_cache", ".ruff_cache", "work", "__macosx"}
@@ -69,9 +71,9 @@ class ProjectImport:
                                     for name in self.names):
             raise ValueError("项目含重名、大小写冲突或文件与目录冲突")
         if len(data) > MAX_FILE_BYTES or len(self.files) >= MAX_PROJECT_FILES:
-            raise ValueError("项目超过限制：最多 1000 个文件，单文件最多 2 MB")
+            raise ValueError("项目超过限制：最多 1000 个文件，单文件最多 20 MB")
         if self.size + len(data) > MAX_PROJECT_BYTES:
-            raise ValueError("项目解压或导入后总大小不能超过 20 MB")
+            raise ValueError("项目解压或导入后总大小不能超过 500 MB")
         self.names.add(key)
         self.files[path] = data
         self.size += len(data)
@@ -190,7 +192,7 @@ def import_local_directory(source: Path) -> ProjectImport:
             if not stat.S_ISREG(before.st_mode) or before.st_nlink > 1:
                 raise ValueError("项目包含硬链接或非普通文件")
             if before.st_size > MAX_FILE_BYTES:
-                raise ValueError("项目单文件大小不能超过 2 MB")
+                raise ValueError("项目单文件大小不能超过 20 MB")
             with path.open("rb") as stream:
                 opened = os.fstat(stream.fileno())
                 if (opened.st_ino, opened.st_dev, opened.st_nlink) != (before.st_ino, before.st_dev, 1):

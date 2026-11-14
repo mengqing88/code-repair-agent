@@ -79,6 +79,33 @@ def test_project_total_and_count_limits(monkeypatch):
         inputs.import_zip(bundle([("a.py", "x"), ("b.py", "y")]))
 
 
+def test_twenty_mb_file_is_imported_and_one_extra_byte_is_rejected(tmp_path):
+    data = b"x" * 20_000_000
+    archive = inputs.import_zip(bundle([("asset.bin", data)]))
+    assert archive.files["asset.bin"] == data
+    source = tmp_path / "source"
+    source.mkdir()
+    path = source / "asset.bin"
+    path.write_bytes(data)
+    assert inputs.import_local_directory(source).files["asset.bin"] == data
+    with path.open("ab") as stream:
+        stream.write(b"x")
+    with pytest.raises(ValueError, match="20 MB"):
+        inputs.import_local_directory(source)
+    with pytest.raises(ValueError, match="大小"):
+        inputs.import_zip(bundle([("asset.bin", data + b"x")]))
+
+
+def test_five_hundred_mb_total_boundary_without_repeating_memory_allocations():
+    project = inputs.ProjectImport()
+    block = b"x" * 20_000_000
+    for index in range(25):
+        project.add(f"asset-{index}.bin", block)
+    assert project.size == 500_000_000
+    with pytest.raises(ValueError, match="500 MB"):
+        project.add("extra.bin", b"x")
+
+
 def test_invalid_base64_corrupt_archive_empty_and_reserved_input():
     for value in ["%%%%", encoded(b"not-a-zip")]:
         with pytest.raises(ValueError):

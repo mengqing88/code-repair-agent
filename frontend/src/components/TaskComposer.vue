@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import type { SourceType, TaskDraft } from "../types";
 import AppIcon from "./AppIcon.vue";
-import { fileBase64, readProjectFolder } from "../project-upload";
+import { fileBase64, readProjectFolder, validateArchive } from "../project-upload";
 
 // draft：父组件提供的表单草稿；emit：通知父组件确认已校验的输入。
 const draft = defineModel<TaskDraft>({ required: true });
@@ -77,7 +77,7 @@ async function readArchive(event: Event) {
   clearSelectedProject(); draft.value.path = "";
   error.value = ""; reading.value = true;
   try {
-    if (!file.name.toLowerCase().endsWith(".zip") || file.size > 10_000_000) throw new Error("请选择不超过 10 MB 的 ZIP 压缩包。");
+    validateArchive(file);
     draft.value.archiveBase64 = await fileBase64(file);
     draft.value.fileName = file.name; draft.value.path = file.name;
     importNotice.value = `已读取 ${file.name}（${(file.size / 1_000_000).toFixed(2)} MB）。`;
@@ -206,7 +206,7 @@ function submit() {
         <AppIcon name="upload" />{{ reading ? "读取中…" : "选择 ZIP 压缩包" }}
       </button>
       <input ref="archiveInput" type="file" accept=".zip,application/zip" class="visually-hidden" tabindex="-1" aria-label="选择 ZIP 压缩包" @change="readArchive" />
-      <p class="input-hint">{{ importNotice || "ZIP 最大 10 MB；导入后最多 1000 个文件、总共 20 MB，单文件最多 2 MB。" }}</p>
+      <p class="input-hint">{{ importNotice || "ZIP 最大 100 MB；导入后最多 1000 个文件、总共 500 MB，单文件最多 20 MB。" }}</p>
       <p class="input-hint">仅有一个外层文件夹时自动以该文件夹为项目根目录。凭据、依赖和缓存路径会排除；不支持加密 ZIP。</p>
     </div>
     <template v-else>
@@ -250,7 +250,7 @@ function submit() {
         <input ref="folderInput" type="file" webkitdirectory multiple class="visually-hidden" tabindex="-1" aria-label="选择项目文件夹" @change="readFolder" />
         <p class="input-hint">
           {{
-            draft.sourceType === 'directory' ? importNotice || "本机路径由修复服务读取；也可上传整个文件夹。最多 1000 个文件、总共 20 MB，单文件最多 2 MB。" : draft.fileContent !== null && !isRepository
+            draft.sourceType === 'directory' ? importNotice || "本机路径由修复服务读取；也可上传整个文件夹。最多 1000 个文件、总共 500 MB，单文件最多 20 MB。" : draft.fileContent !== null && !isRepository
               ? `已读取 ${draft.fileName}，共 ${draft.fileContent.split("\n").length} 行`
               : "文件路径由本地修复服务使用。"
           }}

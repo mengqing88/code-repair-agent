@@ -139,7 +139,7 @@ from execution_manifest import (SnapshotKnowledge, freeze as freeze_execution_ma
 from business_scope import require_software_request
 from language_support import (detect_language, detect_project_language, normalize_language, split_command,
                               validate_execution_commands)
-from project_inputs import (MAX_ARCHIVE_BYTES, MAX_FILE_BYTES, MAX_PROJECT_FILES, decode_base64,
+from project_inputs import (MAX_ARCHIVE_BYTES, MAX_FILE_BYTES, MAX_PROJECT_FILES, MAX_TASK_REQUEST_BYTES, decode_base64,
                             import_local_directory, import_uploaded_files, import_zip, project_path)
 
 
@@ -1596,19 +1596,19 @@ def create_app(data_root: Path | None = None):
                         raise HTTPException(403, "会话校验失败，请刷新页面后重试")
                 with diagnostic_scope(path=path, task_id=task_id):
                     if request.method == "POST" and request.url.path == "/api/tasks":
-                        limit = 30_000_000
+                        limit = MAX_TASK_REQUEST_BYTES
                         try:
                             declared = int(request.headers.get("content-length", "0"))
                         except ValueError:
                             raise HTTPException(400, "请求大小声明无效") from None
                         if declared < 0 or declared > limit:
-                            raise HTTPException(413, "项目上传请求不能超过 30 MB")
+                            raise HTTPException(413, "项目上传请求不能超过 700 MB（含 Base64 和 JSON）")
                         chunks = []
                         size = 0
                         async for chunk in request.stream():
                             size += len(chunk)
                             if size > limit:
-                                raise HTTPException(413, "项目上传请求不能超过 30 MB")
+                                raise HTTPException(413, "项目上传请求不能超过 700 MB（含 Base64 和 JSON）")
                             chunks.append(chunk)
                         # Starlette replays this cached body to the JSON endpoint.
                         request._body = b"".join(chunks)

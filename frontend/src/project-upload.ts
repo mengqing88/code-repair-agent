@@ -1,5 +1,15 @@
 import type { ProjectFileInput } from "./types";
 
+export const MAX_ARCHIVE_BYTES = 100_000_000;
+export const MAX_PROJECT_BYTES = 500_000_000;
+export const MAX_FILE_BYTES = 20_000_000;
+
+export function validateArchive(file: Pick<File, "name" | "size">): void {
+  if (!file.name.toLowerCase().endsWith(".zip") || file.size > MAX_ARCHIVE_BYTES) {
+    throw new Error("请选择不超过 100 MB 的 ZIP 压缩包。");
+  }
+}
+
 const ignoredParts = new Set([".git", ".venv", "venv", "node_modules", "__pycache__", ".idea",
   ".pytest_cache", ".mypy_cache", ".ruff_cache", "work", "__macosx", ".ssh", ".aws", ".azure", ".kube", ".gnupg", ".docker"]);
 const sensitiveNames = new Set([".mcp.json", ".netrc", "_netrc", ".npmrc", ".pypirc", ".git-credentials",
@@ -37,7 +47,7 @@ export async function readProjectFolder(selected: File[]): Promise<{ name: strin
   if (!candidates.length || candidates.length > 1000) throw new Error("项目需包含 1–1000 个文件，依赖、缓存和凭据不参与上传。");
   for (const { file } of candidates) {
     size += file.size;
-    if (file.size > 2_000_000 || size > 20_000_000) throw new Error("单文件最多 2 MB，项目总大小最多 20 MB。");
+    if (file.size > MAX_FILE_BYTES || size > MAX_PROJECT_BYTES) throw new Error("单文件最多 20 MB，项目总大小最多 500 MB。");
   }
   for (const { file, path } of candidates.sort((a, b) => a.path.localeCompare(b.path))) {
     files.push({ path, content_base64: await fileBase64(file) });

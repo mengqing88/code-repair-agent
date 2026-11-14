@@ -7,6 +7,7 @@ import pytest
 from test_account_support import TestClient
 from fastapi.testclient import TestClient as AnonymousClient
 from user_accounts import SESSION_COOKIE, csrf_token
+import repair_api
 from test_project_inputs import bundle, encoded
 from test_repair_api import CODE, app_at, finished, local_models
 
@@ -87,18 +88,34 @@ def test_rejected_archive_creates_no_task_or_leftover_input(tmp_path):
         assert not list((root / "tasks").glob("*"))
 
 
+def test_zip_larger_than_old_archive_and_http_limits_is_imported(tmp_path):
+    # 24 MB stored ZIP -> over 32 MB JSON; exercises all formerly smaller gates.
+    block = b"x" * 12_000_000
+    archive = bundle([("project/bug.py", CODE), ("project/data/a.bin", block),
+                      ("project/data/b.bin", block)])
+    with TestClient(queued_app(tmp_path / "data")) as client:
+        response = client.post("/api/tasks", json={"source_type": "zip_archive", "file_name": "large.zip",
+            "archive_base64": archive, "error_report": "修复 Python 加法代码", "language": "python"})
+        assert response.status_code == 202, response.text
+        task = response.json()
+        assert task["config"]["project_import"]["total_bytes"] == 24_000_000 + len(CODE.encode())
+        assert (Path(task["config"]["source_root"]) / "data/a.bin").stat().st_size == len(block)
+
+
 def test_upload_request_limit_checked_before_parsing_or_worker_submission(tmp_path):
     with TestClient(queued_app(tmp_path / "data")) as client:
-        response = client.post("/api/tasks", content=b"{}", headers={"Content-Length": "30000001", "Content-Type": "application/json"})
+        response = client.post("/api/tasks", content=b"{}", headers={"Content-Length": str(repair_api.MAX_TASK_REQUEST_BYTES + 1), "Content-Type": "application/json"})
         assert response.status_code == 413
         assert client.app.state.runner.store.list_tasks() == []
 
 
-def test_chunked_upload_limit_and_account_isolation(tmp_path):
+def test_chunked_upload_limit_and_account_isolation(tmp_path, monkeypatch):
     app = queued_app(tmp_path / "data")
     with TestClient(app) as client:
-        oversized = (b" " * 1_000_000 for _ in range(31))
-        response = client.post("/api/tasks", content=oversized, headers={"Content-Type": "application/json"})
+        with monkeypatch.context() as limits:
+            limits.setattr(repair_api, "MAX_TASK_REQUEST_BYTES", 1024)
+            oversized = (b" " * 512 for _ in range(3))
+            response = client.post("/api/tasks", content=oversized, headers={"Content-Type": "application/json"})
         assert response.status_code == 413
         task = client.post("/api/tasks", json=project_payload("zip_archive", tmp_path)).json()
         task_id = task["state"]["task_id"]

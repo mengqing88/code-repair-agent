@@ -77,8 +77,23 @@ test("folder selection retains relative paths and binary bytes, excluding creden
 test("folder selection rejects missing relative paths, oversized files and too many files", async () => {
   const client = uploads();
   await assert.rejects(client.readProjectFolder([selectedFile("", "x")]), /ZIP/);
-  await assert.rejects(client.readProjectFolder([selectedFile("demo/a.py", "x", 2_000_001)]), /2 MB/);
+  await assert.rejects(client.readProjectFolder([selectedFile("demo/a.py", "x", 20_000_001)]), /20 MB/);
   await assert.rejects(client.readProjectFolder(Array.from({ length: 1001 }, (_, i) => selectedFile(`demo/${i}.py`, "x"))), /1000/);
+});
+
+test("ZIP selection accepts 100 MB and rejects an extra byte or non-ZIP format", () => {
+  const client = uploads();
+  assert.doesNotThrow(() => client.validateArchive({ name: "project.ZIP", size: 100_000_000 }));
+  assert.throws(() => client.validateArchive({ name: "project.zip", size: 100_000_001 }), /100 MB/);
+  assert.throws(() => client.validateArchive({ name: "project.tar.gz", size: 1 }), /ZIP/);
+});
+
+test("folder size gate allows 20 MB files up to 500 MB total and rejects overflow", async () => {
+  const client = uploads();
+  // File metadata simulates large selections without allocating 500 MB in this unit test.
+  const selected = Array.from({ length: 25 }, (_, i) => selectedFile(`demo/${i}.bin`, "x", 20_000_000));
+  assert.equal((await client.readProjectFolder(selected)).files.length, 25);
+  await assert.rejects(client.readProjectFolder([...selected, selectedFile("demo/extra.bin", "x", 1)]), /500 MB/);
 });
 
 test("request timeout aborts fetch and reports uncertain outcome", async () => {
