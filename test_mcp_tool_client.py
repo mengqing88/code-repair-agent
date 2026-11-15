@@ -300,6 +300,33 @@ def test_read_only_mcp_calls_use_bounded_retries(tmp_path: Path, monkeypatch) ->
     assert len(attempts) == 2
 
 
+@pytest.mark.parametrize("succeeds", [True, False])
+def test_default_read_only_retry_budget_allows_three_retries(tmp_path: Path, monkeypatch, succeeds) -> None:
+    import resilience
+
+    # Isolate the retry budget: the normal three-failure circuit can stop earlier.
+    monkeypatch.setattr(resilience, "_DEFAULT_CIRCUIT", resilience.Circuit(threshold=10))
+    client = MCPToolClient(tmp_path / "absent.json")
+    binding = MCPToolBinding("docs", "search", {"type": "object"}, MCPToolPolicy(access="read_only"))
+    attempts = []
+
+    def invoke(_binding, _arguments, _timeout):
+        attempts.append(1)
+        if succeeds and len(attempts) == 4:
+            return {"result": "ok"}
+        raise Fault("mcp_tool_timeout", "timed out", category="transient", retryable=True)
+
+    monkeypatch.setattr(client, "_invoke_tool_once", invoke)
+    if succeeds:
+        assert client._invoke_tool(binding, {}, 1.0) == {"result": "ok"}
+    else:
+        with pytest.raises(Fault) as raised:
+            client._invoke_tool(binding, {}, 1.0)
+        assert raised.value.code == "mcp_tool_timeout"
+        assert raised.value.budget_kind == "request_retries"
+    assert len(attempts) == 4
+
+
 def test_external_write_policy_never_retries(tmp_path: Path, monkeypatch) -> None:
     client = MCPToolClient(tmp_path / "absent.json")
     binding = MCPToolBinding("shop", "write", {"type": "object"},

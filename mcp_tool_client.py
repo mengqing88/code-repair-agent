@@ -75,7 +75,7 @@ class MCPToolPolicy(BaseModel):
         if self.access == "external_write" and self.status_query and not self.resource_argument:
             raise ValueError("配置结果核对的外部写工具必须声明 resource_argument")
         if self.max_retries is None:
-            self.max_retries = 2 if self.access == "read_only" else 0
+            self.max_retries = 3 if self.access == "read_only" else 0
         if self.access == "external_write" and self.max_retries != 0:
             raise ValueError("外部写工具必须配置 max_retries=0")
         return self

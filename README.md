@@ -120,6 +120,8 @@ PostgreSQL/pgvector 独立在线验收使用真实 Linux Docker 容器、合成�
 
 项目支持从根目录 `.mcp.json` 连接本地 `stdio` 或远程 Streamable HTTP MCP 服务。配置模板见 `.mcp.example.json`；每个服务都必须通过 `allow_tools` 明确列出允许暴露给模型的 MCP 工具。模型侧工具名会加上 `mcp__服务名__` 前缀，参数按服务提供的 JSON Schema 校验。没有配置 MCP 服务时，模型仅可使用 read_code、search_code、retrieve_repair_experience 三个本地只读工具；补丁应用和测试由固定节点执行。
 
+MCP 只读工具对连接失败、超时及指定的瞬时 HTTP 错误默认最多重试 3 次，可在 `tool_policies.<tool>.max_retries` 中配置为 0–3；外部写工具固定为 0 次。重试只在调用可安全重放且剩余预算充足时执行，并使用抖动退避、`Retry-After` 和熔断。
+
 `stdio` 配置示例：
 
 ```json
