@@ -199,7 +199,7 @@ def parse_object(text):
     return value
 
 
-def generate_object(prompt, call, contract, *, validate=None, max_corrections=2):
+def generate_object(prompt, call, contract, *, validate=None, max_corrections=10):
     original = prompt
     tokens = cost = 0
     input_tokens = output_tokens = 0

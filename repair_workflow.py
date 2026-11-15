@@ -48,7 +48,7 @@ class WorkflowContractError(RuntimeError):
     """服务回调没有遵守工作流约定时抛出的错误。"""
 
 
-MAX_REACT_TOOL_CALLS = 30
+MAX_REACT_TOOL_CALLS = 60
 MAX_REACT_TOOL_OUTPUT_CHARS = 20_000
 
 

@@ -181,7 +181,7 @@ def test_schema_correction_is_bounded_and_accounts_all_generations():
     calls = []
     with pytest.raises(Fault) as caught:
         generate_object("task", lambda prompt: calls.append(prompt) or "invalid JSON", PatchProposal)
-    assert caught.value.code == "schema_invalid" and len(calls) == 3
+    assert caught.value.code == "schema_invalid" and len(calls) == 11
 
 
 @pytest.mark.parametrize("contract,payload", [
