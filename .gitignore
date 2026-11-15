@@ -15,3 +15,4 @@ dist/
 *.sqlite3-wal
 .help.out
 .help.err
+docs/local/

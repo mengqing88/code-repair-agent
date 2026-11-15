@@ -1,6 +1,6 @@
 # Incoming 候选评测集
 
-按根目录《评测要求.md》v1.0 整理，当前状态为**结构与执行自检通过、已做分组划分和候选冻结的合成集**；独立人工复核与正式准入仍未完成。后续治理说明见 [RAG_VALIDATION.md](../RAG_VALIDATION.md)。
+按 [docs/evaluation/评测要求.md](../../docs/evaluation/评测要求.md) v1.0 整理，当前状态为**结构与执行自检通过、已做分组划分和候选冻结的合成集**；独立人工复核与正式准入仍未完成。后续治理说明见 [RAG_VALIDATION.md](../RAG_VALIDATION.md)。
 
 ## 来源与产物
 
