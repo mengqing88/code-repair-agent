@@ -159,9 +159,9 @@ def test_hybrid_uses_wrrf_before_cross_encoder_reranking(tmp_path, monkeypatch):
     initial = knowledge.search("query", limit=3, min_similarity=0.35, rerank=False)
 
     assert [item["case_id"] for item in initial] == ["a-vector", "b-both", "c-keyword"]
-    assert initial[0]["score"] == pytest.approx(0.7 / 61 + 0.3 / 63)
-    assert initial[1]["score"] == pytest.approx(0.7 / 62 + 0.3 / 61)
-    assert initial[2]["score"] == pytest.approx(0.3 / 62)
+    assert initial[0]["score"] == pytest.approx(0.93 / 61 + 0.07 / 63)
+    assert initial[1]["score"] == pytest.approx(0.93 / 62 + 0.07 / 61)
+    assert initial[2]["score"] == pytest.approx(0.07 / 62)
 
     class CandidateReranker:
         candidate_count = 2

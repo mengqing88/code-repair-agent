@@ -2,6 +2,8 @@
 
 当前本机 RAG 配置（2026-11-14）：已启用多语言 Cross-Encoder 的 ONNX FP32 / DirectML、10 候选、首次加载预热和 CPU 8 线程降级。用户已允许恢复 Docker 验收，本机 Linux Engine、Qdrant 及真实 Embedding / DirectML 联合检索已通过本轮冒烟；8 项快照、账号隔离与重排检查通过，临时 collection 已清理。客户端与服务端对齐为 Qdrant 1.16.2；服务离线仍降级 SQLite。合成接线验证不证明生产相关性或修复率。配置模板见 [rag.env.example](rag.env.example)，历史记录见 [RAG 激活记录](evaluation/RAG_ACTIVATION_20261113.md)。使用项目虚拟环境启动新进程；旧任务不追溯升级配置。
 
+混合召回默认参数（2026-11-16）：采用 WRRF，向量权重 `0.93`、BM25 权重 `0.07`、`k=60`，融合后沿用 Cross-Encoder 重排。该权重由用户依据 30 条合成开发查询的细扫结果确认采用，不代表生产最优；逐题证据见 [权重细扫报告](evaluation/results-wrrf-weight-fine-20261116.json)。新启动的进程加载新默认值，已运行进程需重启，旧冻结任务不追溯改写。
+
 模型/工具升级的契约与行为退化评测入口：`python -m evaluation.upgrade_gate`；预注册、配对重复运行、验收证据与门禁说明见 [evaluation/UPGRADE_EVALUATION.md](evaluation/UPGRADE_EVALUATION.md)。
 
 > 本文主要供在此仓库工作的 AI 智能体了解项目背景、当前实现和协作方式。开始任务前请先阅读；描述功能状态时仍以当前代码和测试为准。

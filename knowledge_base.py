@@ -43,8 +43,8 @@ from semantic_dedup import (
 EmbeddingFunction = Callable[[str], Sequence[float]]
 
 WRRF_RANK_CONSTANT = 60
-WRRF_VECTOR_WEIGHT = 0.7
-WRRF_KEYWORD_WEIGHT = 0.3
+WRRF_VECTOR_WEIGHT = 0.93
+WRRF_KEYWORD_WEIGHT = 0.07
 
 
 class KnowledgeBaseError(RuntimeError):
