@@ -111,6 +111,47 @@ def test_no_agent_submissions_does_not_make_up_successes(tmp_path):
     assert "baseline" not in report and "rag" not in report
 
 
+def test_fine_wrrf_grid_reuses_embeddings_and_excludes_zero_weight_candidates(tmp_path, monkeypatch):
+    document = json.loads((evaluator.ROOT / "history_cases" / "experience-01.json").read_text(encoding="utf-8"))
+    record = first_record()
+    embedding_batches = []
+
+    def embeddings(texts, *, batch_size):
+        embedding_batches.append(list(texts))
+        return [[1.0, 0.0] for _ in texts]
+
+    class CandidateKnowledgeBase:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def save_case(self, _state):
+            pass
+
+        def search(self, *_args, **_kwargs):
+            return [
+                {"case_id": "vector", "vector_score": 0.9, "keyword_score": 0.0, "retrieval_mode": "hybrid"},
+                {"case_id": "keyword", "vector_score": 0.0, "keyword_score": 0.8, "retrieval_mode": "hybrid"},
+            ]
+
+    monkeypatch.setattr("llm_client.embed_texts", embeddings)
+    monkeypatch.setattr("retrieval_reranker.CrossEncoderReranker.from_environment", lambda: None)
+    monkeypatch.setattr(evaluator, "KnowledgeBase", CandidateKnowledgeBase)
+    report = evaluator.evaluate_retrieval(
+        [record], [document], {record["case_id"]: ["vector"]}, tmp_path,
+        "configured-embeddings", 0.35, wrrf_weight_grid="fine",
+    )
+    sweep = report["metrics_by_strategy"]["hybrid_wrrf_weight_sweep"]
+    assert sweep["grid"] == "fine"
+    assert sweep["rank_constant"] == 60
+    assert len(sweep["weights"]) == 21
+    assert list(sweep["weights"])[0] == "0.80/0.20"
+    assert list(sweep["weights"])[-1] == "1.00/0.00"
+    assert sweep["weights"]["0.99/0.01"]["details"][0]["ranked"] == ["vector", "keyword"]
+    assert sweep["weights"]["1.00/0.00"]["details"][0]["ranked"] == ["vector"]
+    assert len(embedding_batches) == 1
+    assert len(embedding_batches[0]) == 2
+
+
 def test_ranking_metrics_use_relevant_count_and_fixed_k_denominator():
     metrics = evaluator.ranking_metrics(["irrelevant", "target", "another"], ["target", "also-relevant"])
     assert metrics["recall@3"] == 0.5

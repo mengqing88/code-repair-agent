@@ -241,7 +241,12 @@ def evaluate_outcome_and_scope_filters(directory: Path) -> dict:
 
 
 def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
-                       directory: Path, mode: str, min_similarity: float) -> dict:
+                       directory: Path, mode: str, min_similarity: float,
+                       *, wrrf_weight_grid: str = "coarse") -> dict:
+    if wrrf_weight_grid not in {"coarse", "fine"}:
+        raise ValueError("WRRF weight grid must be coarse or fine")
+    weight_percents = range(10, 100, 10) if wrrf_weight_grid == "coarse" else range(80, 101)
+    weight_precision = 1 if wrrf_weight_grid == "coarse" else 2
     if mode == "configured-embeddings":
         from llm_client import embed_texts
     else:
@@ -291,8 +296,8 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
     evaluations = {}
     legacy_per_query = []
     legacy_details = []
-    wrrf_weight_per_query = {weight: [] for weight in range(1, 10)}
-    wrrf_weight_details = {weight: [] for weight in range(1, 10)}
+    wrrf_weight_per_query = {weight: [] for weight in weight_percents}
+    wrrf_weight_details = {weight: [] for weight in weight_percents}
     for strategy in strategies:
         strategy_name = "hybrid" if strategy == "hybrid+cross_encoder" else strategy
         per_query = []
@@ -320,8 +325,8 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
                 )
                 vector_ids = [str(item["case_id"]) for item in vector_ranking]
                 keyword_ids = [str(item["case_id"]) for item in keyword_ranking]
-                for vector_tenths in range(1, 10):
-                    vector_weight = vector_tenths / 10
+                for vector_percent in weight_percents:
+                    vector_weight = vector_percent / 100
                     keyword_weight = 1 - vector_weight
                     fused = _weighted_reciprocal_rank_scores(
                         vector_ids,
@@ -329,10 +334,13 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
                         vector_weight=vector_weight,
                         keyword_weight=keyword_weight,
                     )
-                    fused_ids = sorted(fused, key=lambda case_id: (-fused[case_id], case_id))
+                    fused_ids = sorted(
+                        (case_id for case_id, score in fused.items() if score > 0),
+                        key=lambda case_id: (-fused[case_id], case_id),
+                    )
                     fused_metrics = ranking_metrics(fused_ids[:10], relevant)
-                    wrrf_weight_per_query[vector_tenths].append(fused_metrics)
-                    wrrf_weight_details[vector_tenths].append({
+                    wrrf_weight_per_query[vector_percent].append(fused_metrics)
+                    wrrf_weight_details[vector_percent].append({
                         "case_id": record["case_id"],
                         "ranked": fused_ids,
                         "relevant": relevant,
@@ -364,12 +372,13 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
         }
         evaluations["hybrid_wrrf_weight_sweep"] = {
             "rank_constant": WRRF_RANK_CONSTANT,
+            "grid": wrrf_weight_grid,
             "weights": {
-                f"{vector_tenths / 10:.1f}/{1 - vector_tenths / 10:.1f}": {
-                    "metrics": aggregate_ranking_metrics(wrrf_weight_per_query[vector_tenths]),
-                    "details": wrrf_weight_details[vector_tenths],
+                f"{vector_percent / 100:.{weight_precision}f}/{1 - vector_percent / 100:.{weight_precision}f}": {
+                    "metrics": aggregate_ranking_metrics(wrrf_weight_per_query[vector_percent]),
+                    "details": wrrf_weight_details[vector_percent],
                 }
-                for vector_tenths in range(1, 10)
+                for vector_percent in weight_percents
             },
             "comparison_scope": "same full eligible result pool, query embeddings, and vector/keyword ranks; top-10 metrics",
         }
@@ -530,6 +539,8 @@ def main() -> int:
     parser.add_argument("--retrieval-mode", choices=("keyword", "configured-embeddings"), default="keyword",
                         help="configured-embeddings explicitly calls the configured external embedding service")
     parser.add_argument("--min-similarity", type=float, default=0.35)
+    parser.add_argument("--wrrf-weight-grid", choices=("coarse", "fine"), default="coarse",
+                        help="coarse: vector weights 0.1-0.9 step 0.1; fine: 0.80-1.00 step 0.01; k=60")
     parser.add_argument("--baseline-patches", type=Path)
     parser.add_argument("--rag-patches", type=Path)
     parser.add_argument("--experiment-manifest", type=Path,
@@ -572,7 +583,10 @@ def main() -> int:
             experiences.append(result)
             print(f"history {document['experience_id']}: {'valid' if result['valid'] else 'INVALID'}", flush=True)
         valid = len(cases) == len(experiences) == 30 and all(item["valid"] for item in cases + experiences)
-        retrieval = evaluate_retrieval(records, histories, labels, directory, args.retrieval_mode, args.min_similarity) if valid else {"measured": False, "reason": "Invalid dataset"}
+        retrieval = evaluate_retrieval(
+            records, histories, labels, directory, args.retrieval_mode, args.min_similarity,
+            wrrf_weight_grid=args.wrrf_weight_grid,
+        ) if valid else {"measured": False, "reason": "Invalid dataset"}
         filter_evaluation = evaluate_outcome_and_scope_filters(directory) if valid else {"measured": False, "reason": "Invalid dataset"}
         agent = evaluate_agent(records, baseline_patches, rag_patches, directory, experiment) if valid else {"measured": False, "reason": "Invalid dataset"}
     report = {"benchmark": payload["version"], "targets": TARGETS,

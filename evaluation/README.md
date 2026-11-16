@@ -52,6 +52,12 @@
 
 `configured-embeddings` 会分别测量 keyword、vector 和 hybrid，输出 Recall@K、MRR、Precision@K；若设置了 `CROSS_ENCODER_MODEL`，还会测量 `hybrid+cross_encoder`。Cross-Encoder 是可选依赖：先运行 `pip install -e ".[rerank]"`。没有配置或模型不可用时，该策略不会被报告为实测。评测还输出 `hybrid_legacy_score`：在完整 WRRF 候选池上按旧的 `0.7×向量相似度 + 0.3×归一化 BM25` 公式重排；以及 `hybrid_wrrf_weight_sweep`：固定 `k=60`，扫描向量/BM25 比例 `0.1/0.9` 到 `0.9/0.1`，用同一批查询向量和候选排名对照融合权重，不在这组权重扫描中执行 Cross-Encoder。两者用于隔离排序公式的诊断，不单独测量旧算法的候选生成差异。报告另含成功/失败经验分开召回及仓库、文件、依赖范围严格过滤的合成自检。
 
+增加 `--wrrf-weight-grid fine` 可将权重扫描改为向量/BM25 `0.80/0.20` 至 `1.00/0.00`，步长 0.01，共 21 组，仍固定 `k=60`；默认 `coarse` 保留原九组粗扫。各组复用同一次 Embedding 和候选池，`1.00/0.00` 不返回只有 BM25 零权重贡献的候选。该端点仅作同候选池上的纯向量排名对照，不修改生产默认权重。示例：
+
+```powershell
+.venv\Scripts\python.exe -B evaluation\run_benchmark.py --retrieval-mode configured-embeddings --wrrf-weight-grid fine --output evaluation/results-wrrf-weight-fine-20261116.json
+```
+
 ## 本轮真实 Agent 结果（2026-11-12）
 
 最新有效复跑 `rag-ab-real-20261112-v4` 完成同一批 30 个合成缺陷的 30×2 次真实模型/Docker 运行。原复现阻塞已改善：关闭 RAG 有 28/30、开启 RAG 有 29/30 确认复现；开启组 22/30 完成混合检索，共暴露 110 条经验。但两组均为 **0/30 自动修复成功**，没有任何候选补丁：19/30 与 21/30 在保守 Token 输入预检处停止，另有模型生成的嵌套测试函数没有执行断言而被基线失败门禁拦住。所有候选独立测试均未运行，不能声称达到 96%，也不能据此判断 RAG 带来修复收益。详情见 [复跑报告](AGENT_RAG_AB_RERUN_20261112.md)、[逐题归因](results-agent-ab-rerun-20261112.json) 和 [原始运行/Trace/审计产物](../work/evaluation/rag-ab-real-20261112-v4/)；上一轮复现失败证据仍保留在 [v2 报告](AGENT_RAG_AB_20261112.md) 与 [v2 结果](results-agent-ab-20261112.json)。
