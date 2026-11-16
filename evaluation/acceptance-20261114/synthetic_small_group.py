@@ -152,7 +152,7 @@ def main():
     try:
         with (WORK / "api-server.log").open("w", encoding="utf-8") as log:
             process = subprocess.Popen(
-                [sys.executable, "-B", "-m", "uvicorn", "repair_api:app",
+                [sys.executable, "-B", "-m", "uvicorn", "code_repair.repair_api:app",
                  "--host", "127.0.0.1", "--port", str(port)],
                 cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,

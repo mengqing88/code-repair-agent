@@ -16,11 +16,11 @@ import httpx
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from mcp_tool_client import MCPToolClient
-from operation_store import OperationStore
-from resilience import Fault, execution_scope
-from tool_authorization import ToolAuthorizations
-from tool_context import tool_call_scope
+from code_repair.mcp_tool_client import MCPToolClient
+from code_repair.operation_store import OperationStore
+from code_repair.resilience import Fault, execution_scope
+from code_repair.tool_authorization import ToolAuthorizations
+from code_repair.tool_context import tool_call_scope
 
 OUT = Path(__file__).resolve().parent
 REPORT = OUT / "github-mcp-deadline-timeout-process-recovery-verified.json"
@@ -41,10 +41,10 @@ import sys
 
 import httpx
 
-from mcp_tool_client import MCPToolClient
-from operation_store import OperationStore
-from resilience import Fault
-from tool_context import tool_call_scope
+from code_repair.mcp_tool_client import MCPToolClient
+from code_repair.operation_store import OperationStore
+from code_repair.resilience import Fault
+from code_repair.tool_context import tool_call_scope
 
 data = json.load(sys.stdin)
 store = OperationStore(data["store_path"])

@@ -8,8 +8,8 @@ import itertools
 import json
 from pathlib import Path
 
-from knowledge_base import _case_search_text
-from semantic_dedup import merge_similar_cases, scope_key
+from code_repair.knowledge_base import _case_search_text
+from code_repair.semantic_dedup import merge_similar_cases, scope_key
 
 
 def records_digest(records):

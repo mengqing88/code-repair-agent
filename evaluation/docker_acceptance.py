@@ -12,15 +12,15 @@ import tempfile
 from unittest.mock import patch
 from uuid import uuid4
 
-from docker_executor import BindMount, cleanup_docker_task, run_execution
-from execution_manifest import freeze, task_configuration
-from failure_regression import FailureRegressions, review_content_hash
-from knowledge_base import KnowledgeBase
-from repair_state import create_initial_state
-from repair_tools import RepairToolbox, create_checkpoint_workspace, remove_checkpoint_workspace
-from repair_workflow import build_repair_workflow
-from reproduction import execute_reproduction
-from resilience import cleanup_scope, digest, execution_scope
+from code_repair.docker_executor import BindMount, cleanup_docker_task, run_execution
+from code_repair.execution_manifest import freeze, task_configuration
+from code_repair.failure_regression import FailureRegressions, review_content_hash
+from code_repair.knowledge_base import KnowledgeBase
+from code_repair.repair_state import create_initial_state
+from code_repair.repair_tools import RepairToolbox, create_checkpoint_workspace, remove_checkpoint_workspace
+from code_repair.repair_workflow import build_repair_workflow
+from code_repair.reproduction import execute_reproduction
+from code_repair.resilience import cleanup_scope, digest, execution_scope
 
 
 def acceptance(root, report):
@@ -70,9 +70,9 @@ def acceptance(root, report):
                     {"aspect": aspect, "verdict": "pass", "path": "bug.py", "quote": "return a + b",
                      "reasoning": "固定模型样本仅隔离外部模型服务，实际源码与测试执行来自真实容器"}
                     for aspect in ("boundary_inputs", "behavior_compatibility", "patch_risk")]})
-            with patch("defect_regression.ask_model_with_usage", return_value=json.dumps({
+            with patch("code_repair.defect_regression.ask_model_with_usage", return_value=json.dumps({
                 "test_body": "from bug import add\nassert add(2,1) == 3", "clarification_required": False,
-                "clarification_reasons": [], "question": ""})), patch("adversarial_review.ask_model_with_usage", review_model):
+                "clarification_reasons": [], "question": ""})), patch("code_repair.adversarial_review.ask_model_with_usage", review_model):
                 services = toolbox.as_repair_services(baseline, propose_patch=lambda _: {
                     "diagnosis": "将减法更正为加法", "patch_diff": patch_text,
                     "patch_hash": hashlib.sha256(patch_text.encode()).hexdigest()})

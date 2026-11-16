@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from repair_workflow import _project_case_matches
+from code_repair.repair_workflow import _project_case_matches
 
 
 def encoded_size(value):

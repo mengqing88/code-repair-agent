@@ -133,8 +133,8 @@ def test_fine_wrrf_grid_reuses_embeddings_and_excludes_zero_weight_candidates(tm
                 {"case_id": "keyword", "vector_score": 0.0, "keyword_score": 0.8, "retrieval_mode": "hybrid"},
             ]
 
-    monkeypatch.setattr("llm_client.embed_texts", embeddings)
-    monkeypatch.setattr("retrieval_reranker.CrossEncoderReranker.from_environment", lambda: None)
+    monkeypatch.setattr("code_repair.llm_client.embed_texts", embeddings)
+    monkeypatch.setattr("code_repair.retrieval_reranker.CrossEncoderReranker.from_environment", lambda: None)
     monkeypatch.setattr(evaluator, "KnowledgeBase", CandidateKnowledgeBase)
     report = evaluator.evaluate_retrieval(
         [record], [document], {record["case_id"]: ["vector"]}, tmp_path,

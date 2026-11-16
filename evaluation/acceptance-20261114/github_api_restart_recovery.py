@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from resilience import Fault, digest, execution_scope
+from code_repair.resilience import Fault, digest, execution_scope
 
 OWNER = "mengqing88"
 REPO = "project1-mcp-acceptance-91cdc1aa61a94ec6a2d9f87974470b1e"
@@ -47,7 +47,7 @@ os.environ.update({
     "REPAIR_MAX_WORKERS": "1",
     "MCP_SERVERS_CONFIG": mcp_config,
 })
-from repair_api import create_app
+from code_repair.repair_api import create_app
 app = create_app(Path(data_root))
 app.state.runner.submit = lambda *args, **kwargs: None
 app.state.runner.start_dispatcher = lambda: None
@@ -168,14 +168,14 @@ def main() -> int:
         raise RuntimeError(f"API process {number} did not become healthy")
 
     def call(tool: str, arguments: dict, call_id: str, timeout: float = 30):
-        from tool_context import tool_call_scope
+        from code_repair.tool_context import tool_call_scope
         with tool_call_scope(call_id):
             return mcp.call_tool(tool, arguments, timeout_seconds=timeout)
 
     def mark_task_waiting(error, node: str) -> None:
         from copy import deepcopy as copy_value
-        from resilience import digest
-        from repair_api import TaskStore
+        from code_repair.resilience import digest
+        from code_repair.repair_api import TaskStore
         task_store = TaskStore(data_root)
         task = task_store.get(task_id)
         state = task["state"]
@@ -219,9 +219,9 @@ def main() -> int:
               status=task_response.status_code)
         task_id = task_response.json()["state"]["task_id"]
 
-        from mcp_tool_client import MCPToolClient
-        from operation_store import OperationStore
-        from tool_authorization import ToolAuthorizations
+        from code_repair.mcp_tool_client import MCPToolClient
+        from code_repair.operation_store import OperationStore
+        from code_repair.tool_authorization import ToolAuthorizations
         store = OperationStore(data_root / "operations.sqlite3")
         authorizations = ToolAuthorizations(store)
         mcp = MCPToolClient(config_path, operation_store=store,
@@ -353,7 +353,7 @@ def main() -> int:
                                               "blob_sha": remote_sha}
                 persist()
 
-                from resilience import Fault as WorkflowFault
+                from code_repair.resilience import Fault as WorkflowFault
                 unknown_fault = WorkflowFault("mcp_outcome_unknown", "result unknown", category="unknown",
                                               outcome_unknown=True, operation_id=operation_id)
                 mark_task_waiting(unknown_fault, "tool_outcome")
@@ -555,7 +555,7 @@ def main() -> int:
                                     "operation_status": previous_delete[1],
                                     "note": "The delete request may already have run; it was not replayed."}
                             else:
-                                from tool_context import tool_call_scope
+                                from code_repair.tool_context import tool_call_scope
                                 try:
                                     with execution_scope(90, task_id=task_id,
                                         trace_path=data_root / "tasks" / task_id / "trace.jsonl"), \

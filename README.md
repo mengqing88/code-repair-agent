@@ -1,6 +1,6 @@
 # 代码仓库缺陷修复 Agent
 
-当前本机 RAG 配置（2026-11-14）：已启用多语言 Cross-Encoder 的 ONNX FP32 / DirectML、10 候选、首次加载预热和 CPU 8 线程降级。用户已允许恢复 Docker 验收，本机 Linux Engine、Qdrant 及真实 Embedding / DirectML 联合检索已通过本轮冒烟；8 项快照、账号隔离与重排检查通过，临时 collection 已清理。客户端与服务端对齐为 Qdrant 1.16.2；服务离线仍降级 SQLite。合成接线验证不证明生产相关性或修复率。配置模板见 [rag.env.example](rag.env.example)，历史记录见 [RAG 激活记录](evaluation/RAG_ACTIVATION_20261113.md)。使用项目虚拟环境启动新进程；旧任务不追溯升级配置。
+当前本机 RAG 配置（2026-11-14）：已启用多语言 Cross-Encoder 的 ONNX FP32 / DirectML、10 候选、首次加载预热和 CPU 8 线程降级。用户已允许恢复 Docker 验收，本机 Linux Engine、Qdrant 及真实 Embedding / DirectML 联合检索已通过本轮冒烟；8 项快照、账号隔离与重排检查通过，临时 collection 已清理。客户端与服务端对齐为 Qdrant 1.16.2；服务离线仍降级 SQLite。合成接线验证不证明生产相关性或修复率。配置模板见 [RAG 配置示例](deploy/rag.env.example)，历史记录见 [RAG 激活记录](evaluation/RAG_ACTIVATION_20261113.md)。使用项目虚拟环境启动新进程；旧任务不追溯升级配置。
 
 混合召回默认参数（2026-11-16）：采用 WRRF，向量权重 `0.93`、BM25 权重 `0.07`、`k=60`，融合后沿用 Cross-Encoder 重排。该权重由用户依据 30 条合成开发查询的细扫结果确认采用，不代表生产最优；逐题证据见 [权重细扫报告](evaluation/results-wrrf-weight-fine-20261116.json)。新启动的进程加载新默认值，已运行进程需重启，旧冻结任务不追溯改写。
 
@@ -41,18 +41,26 @@ Web、CLI 和对话入口在接触模型、Embedding 或 MCP 前执行确定性�
 
 ## 当前代码结构
 
-- `agent_cli.py`：命令行任务入口，校验代码来源、固定 Git commit、错误报告和测试目标，然后启动修复工作流。
-- `reproduction.py`：借助模型补全复现步骤和脚本，在源码副本中执行并保存原始报告、复现过程及实际结果。
-- `repair_state.py`：定义 LangGraph 各节点共享的任务状态和默认预算。
-- `repair_workflow.py`：定义 LangGraph 节点、条件路由、补丁重试、预算扣减和人工审核流程。
-- `multi_agent.py`：定义调度、复现、调查、经验检索、补丁、验证和对抗审查代理的角色权限、交接消息与回合 Trace。
-- `repair_tools.py`：提供工作区读写边界、代码读取和搜索、修复经验检索、补丁应用、pytest 执行及 PostgreSQL/pgvector 知识库。
-- `llm_client.py`：封装兼容 OpenAI Responses API 的聊天、函数工具调用和 embeddings 请求。
-- `business_scope.py`：在模型、Embedding、MCP 和任务工作流前执行软件开发范围门禁。
-- `knowledge_base.py`：定义修复经验文档以及本地知识库实现。
-- `test_*.py`：覆盖 CLI、复现、状态、工作流、工具、模型客户端和知识库的离线测试。
-- `frontend/`：已连接本地 API 的 Vue 3、TypeScript 和 Vite 工作台；具体范围见 `frontend/README.md`。
-- `project_inputs.py`：Web 多文件项目导入，支持本机文件夹、浏览器文件夹上传与 ZIP；统一校验路径、凭据排除、链接和解压资源上限，再保存任务私有源码快照。
+```text
+src/code_repair/   Python 业务包：工作流、工具、API、worker 与 CLI
+  agent_cli.py     CLI 任务入口
+  repair_api.py    FastAPI 与任务调度
+  repair_workflow.py / multi_agent.py    图编排、角色权限与交接
+  repair_tools.py / llm_client.py        受限工具与模型客户端
+  paths.py         项目资源与安装包源码的路径定位
+tests/            离线回归测试与共享夹具
+deploy/           Qdrant Compose、RAG 配置示例、Docker runner
+frontend/         Vue 3、TypeScript、Vite 工作台
+evaluation/       评测代码、数据集与历史验收证据
+docs/             项目、评测和跨项目参考文档
+history_cases/    外部案例导入说明
+```
+
+业务模块统一通过 `code_repair.*` 导入。先执行下文的 `uv sync` 安装包，再从项目根目录启动；API 入口为 `python -m uvicorn code_repair.repair_api:app`，CLI 为 `python -m code_repair.agent_cli`（或安装后的 `code-repair`）。测试默认只收集 `tests/`；评测测试需显式传入 `evaluation/test_*.py`。
+
+源码开发时，`.env`、`.mcp.json`、`work/`、`frontend/dist/` 和 `history_cases/` 仍相对项目根目录定位；配置与现有数据没有搬迁。安装 wheel 后默认以启动工作目录为资源根，也可通过 `REPAIR_PROJECT_ROOT` 明确指定。源码/依赖哈希变化仍会阻止旧冻结任务在不同环境中恢复，目录迁移不会改写历史清单。
+
+部署与容器启动命令见 [deploy/README.md](deploy/README.md)。
 
 ## 当前实现边界
 
@@ -102,7 +110,7 @@ CLI 与 Web 都在任务目录保存 `execution-manifest.json`、知识库快照
 真实容器验收命令如下；固定模型回复只用于消除模型服务依赖，Git、pytest、复现、挂载探测和超时清理必须使用真实 Docker：
 
 ```powershell
-docker build -t code-repair-sandbox:py311 .\docker\runner
+docker build -t code-repair-sandbox:py311 .\deploy\docker\runner
 .venv\Scripts\python.exe -m evaluation.docker_acceptance --output evaluation/docker-acceptance.json
 ```
 
@@ -159,7 +167,7 @@ uv sync --frozen --extra dev --extra rerank-onnx
 查看 CLI 参数：
 
 ```powershell
-python agent_cli.py --help
+python -m code_repair.agent_cli --help
 ```
 
 运行前端预览或构建：

@@ -9,8 +9,8 @@ import psycopg
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
-from repair_state import create_initial_state
-from repair_tools import PostgresKnowledgeBase
+from code_repair.repair_state import create_initial_state
+from code_repair.repair_tools import PostgresKnowledgeBase
 
 MARKER_PREFIX = "repair-postgres-acceptance:"
 DATABASE_PATTERN = r"repair_integration_test_[a-f0-9]{12}"

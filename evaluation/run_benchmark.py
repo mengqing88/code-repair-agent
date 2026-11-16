@@ -14,17 +14,17 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+if str(PROJECT_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from knowledge_base import (
+from code_repair.knowledge_base import (
     WRRF_RANK_CONSTANT,
     KnowledgeBase,
     _case_search_text,
     _weighted_reciprocal_rank_scores,
     build_case_document,
 )
-from repair_state import create_initial_state
+from code_repair.repair_state import create_initial_state
 
 ROOT = Path(__file__).resolve().parent
 TARGETS = {"top5_hit_rate": 0.82, "baseline_successes": 16,
@@ -248,10 +248,10 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
     weight_percents = range(10, 100, 10) if wrrf_weight_grid == "coarse" else range(80, 101)
     weight_precision = 1 if wrrf_weight_grid == "coarse" else 2
     if mode == "configured-embeddings":
-        from llm_client import embed_texts
+        from code_repair.llm_client import embed_texts
     else:
         embed_texts = None
-    from retrieval_reranker import CrossEncoderReranker
+    from code_repair.retrieval_reranker import CrossEncoderReranker
     reranker = CrossEncoderReranker.from_environment() if mode == "configured-embeddings" else None
     strategies = ["keyword"] if mode == "keyword" else ["keyword", "vector", "hybrid"]
     if reranker is not None:

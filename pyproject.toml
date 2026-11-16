@@ -48,13 +48,19 @@ rerank-onnx = [
     "onnxruntime==1.23.0; sys_platform != 'win32'",
 ]
 
-# setuptools 的打包范围配置。
-[tool.setuptools]
-# py-modules：打包 CLI、模型调用、独立错误复现、修复状态、工作流和知识库模块，不收录测试模块。
-py-modules = ["agent_cli", "llm_client", "reproduction", "defect_regression", "repair_state", "repair_workflow", "knowledge_base", "knowledge_cli", "knowledge_review", "repair_tools", "repair_api", "repair_worker", "resilience", "trace_store", "model_contracts", "operation_store", "diagnostics", "docker_executor", "recovery_store", "recovery_manager", "recovery_agent", "user_accounts", "personal_memory", "conversation_memory", "mcp_tool_client", "account_cli", "qdrant_store", "semantic_dedup", "retrieval_reranker", "tool_context", "input_protection", "project_inputs", "tool_authorization", "execution_manifest", "execution_replay", "runtime_config", "business_scope", "adversarial_review", "failure_regression", "multi_agent", "language_support", "workflow_checkpoint", "workflow_replay", "native_regression"]
+# 安装正式包与 CLI 入口；测试和评测资产不进入 wheel。
+[project.scripts]
+code-repair = "code_repair.agent_cli:main"
+code-repair-knowledge = "code_repair.knowledge_cli:main"
+code-repair-account = "code_repair.account_cli:main"
 
-# pytest 的项目级配置。
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["code_repair*"]
+
 [tool.pytest.ini_options]
-# testpaths：从项目根目录开始收集符合 pytest 命名规则的测试。
-testpaths = ["."]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+# 在收集 API 前隔离真实 RAG，并同时覆盖显式执行的 evaluation 测试。
+addopts = ["-p", "tests.pytest_config"]
 norecursedirs = ["work", ".venv", "frontend", "evaluation", ".git"]

@@ -50,7 +50,7 @@ def summarize(samples, rows):
 
 def make_rows(embedding_path):
     from sentence_transformers import SentenceTransformer
-    from knowledge_base import KnowledgeBase, _case_search_text, build_case_document
+    from code_repair.knowledge_base import KnowledgeBase, _case_search_text, build_case_document
 
     records = json.loads((ROOT / "benchmark.json").read_text(encoding="utf-8"))["cases"]
     histories = [json.loads(file.read_text(encoding="utf-8")) for file in sorted((ROOT / "history_cases").glob("*.json"))]

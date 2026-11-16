@@ -14,9 +14,9 @@ import time
 import numpy as np
 
 from evaluation.run_benchmark import aggregate_ranking_metrics, ranking_metrics
-from knowledge_base import KnowledgeBase, _case_search_text, build_case_document
-from retrieval_reranker import CrossEncoderReranker
-from semantic_dedup import merge_similar_cases
+from code_repair.knowledge_base import KnowledgeBase, _case_search_text, build_case_document
+from code_repair.retrieval_reranker import CrossEncoderReranker
+from code_repair.semantic_dedup import merge_similar_cases
 
 ROOT = Path(__file__).resolve().parent
 

@@ -25,11 +25,11 @@ DELETE_TOOL = "mcp__github_deadline_acceptance__delete_file"
 
 sys.path.insert(0, str(ROOT))
 
-from mcp_tool_client import MCPToolClient
-from operation_store import OperationStore
-from resilience import Fault, digest
-from tool_authorization import ToolAuthorizations
-from tool_context import tool_call_scope
+from code_repair.mcp_tool_client import MCPToolClient
+from code_repair.operation_store import OperationStore
+from code_repair.resilience import Fault, digest
+from code_repair.tool_authorization import ToolAuthorizations
+from code_repair.tool_context import tool_call_scope
 
 
 def main() -> int:

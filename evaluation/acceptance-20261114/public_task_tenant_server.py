@@ -33,7 +33,7 @@ def main():
         "REPAIR_MAX_WORKERS": "1",
     })
 
-    from repair_api import create_app
+    from code_repair.repair_api import create_app
 
     app = create_app(data_dir)
     runner = app.state.runner

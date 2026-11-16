@@ -10,7 +10,7 @@ Vue 3 + TypeScript + Vite 前端已连接本地 FastAPI / LangGraph 服务。
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 npm.cmd --prefix frontend install
 npm.cmd --prefix frontend run build
-.\.venv\Scripts\python.exe -m uvicorn repair_api:app --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe -m uvicorn code_repair.repair_api:app --host 127.0.0.1 --port 8000
 ```
 
 打开 http://127.0.0.1:8000 。Python 服务同时提供构建后的前端，无需再启动 Vite。
@@ -35,7 +35,7 @@ npm.cmd --prefix frontend run build
 - “我的长期记忆”增加修复经验待审区：展示经验审核员无法确认的来源、完整候选及审核证据缺口。用户填写理由批准或拒绝收录，批准请求绑定当前内容哈希；已批准但发布失败的记录可继续发布。成功知识和拒绝补丁失败经验分开存储。
 - Git 仓库任务从固定 commit 创建任务私有仓库中的 detached worktree；不会在用户源仓库登记任务 worktree。
 - 基线复现、缺陷回归用例和 pytest 默认在 Docker 中执行：无网络、只读容器根目录、移除 Linux capabilities，并限制内存、CPU 和进程数。任务代码工作区可写，模型密钥不会传入容器。
-- runner 镜像基于 Python 3.11，默认只含 pytest；项目额外依赖需加入 `docker/runner/Dockerfile` 并重建镜像。开发机先启动 Docker Desktop，再从仓库根目录运行 `docker build -t code-repair-sandbox:py311 .\docker\runner`。
+- runner 镜像基于 Python 3.11，默认只含 pytest；项目额外依赖需加入 `deploy/docker/runner/Dockerfile` 并重建镜像。开发机先启动 Docker Desktop，再从仓库根目录运行 `docker build -t code-repair-sandbox:py311 .\deploy\docker\runner`。
 - CLI 也默认使用 Docker；仅处理可信代码且 Docker 不可用时，可通过 `REPAIR_EXECUTION_MODE=host` 或 `--execution-mode host` 明确选择宿主机执行。宿主机模式不提供操作系统隔离。
 - 可下载补丁。接受不会自动修改原始代码，需审阅并自行应用。
 - 页面 URL 的 `?task=<id>` 用于刷新后恢复。没有提交的表单草稿仍只在页面内存中。
@@ -43,7 +43,7 @@ npm.cmd --prefix frontend run build
 - 创建任务前保存幂等键与参数指纹，提交超时先查询原请求；同一键再次提交返回同一任务，参数变化返回 409。浏览器存储不保存源码和报告草稿。
 - 请求等待最多 15 秒；状态查询临时失败最多自动重连 3 次，之后手动查询。网络重连不重启后端修复任务。
 - 首次打开工作台需要登录或注册。会话使用 HttpOnly、SameSite cookie，写请求还需要内存中的 CSRF token；任务、审核、Trace、诊断、知识库和个人记忆均按用户隔离。每个用户最多保存 20 条偏好/编码规范，新任务只读取创建时冻结的快照。
-- 旧的共享任务与 `knowledge.sqlite3` 不会被首个注册者自动认领。停止服务后，运维者用 `account_cli.py --username mengq --migrate-legacy` 明确绑定到指定账号；命令只打印一次随机初始密码。
+- 旧的共享任务与 `knowledge.sqlite3` 不会被首个注册者自动认领。停止服务后，运维者用 `python -m code_repair.account_cli --username mengq --migrate-legacy` 明确绑定到指定账号；命令只打印一次随机初始密码。
 
 ## 数据和接口
 
@@ -100,7 +100,7 @@ npm.cmd --prefix frontend test
 npm.cmd --prefix frontend run build
 ```
 
-`test_repair_api.py` 替换外部模型响应和向量服务，但真正运行 LangGraph、Git、pytest 和 SQLite，覆盖审核、上传、固定仓库、错误路径、哈希冲突、缺测试、案例保存失败及重启恢复。
+`tests/test_repair_api.py` 替换外部模型响应和向量服务，但真正运行 LangGraph、Git、pytest 和 SQLite，覆盖审核、上传、固定仓库、错误路径、哈希冲突、缺测试、案例保存失败及重启恢复。
 
 `test_resilience.py` 还覆盖重试上限、Retry-After、熔断恢复、Schema 纠错、未知副作用、重复提交、补丁回滚后再次应用、进程树超时；本地 HTTP 模型替身让真实 SDK 在生产 worker 中跑完整审核及重启核对。
 

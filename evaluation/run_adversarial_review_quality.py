@@ -10,11 +10,11 @@ import tempfile
 import time
 from pathlib import Path
 
-from adversarial_review import review_patch, static_findings
-from llm_client import _chat_configuration, _estimate_cost_yuan, ask_model_with_usage
-from repair_state import create_initial_state
-from repair_tools import RepairToolbox, create_checkpoint_workspace, remove_checkpoint_workspace
-from resilience import Fault, execution_scope
+from code_repair.adversarial_review import review_patch, static_findings
+from code_repair.llm_client import _chat_configuration, _estimate_cost_yuan, ask_model_with_usage
+from code_repair.repair_state import create_initial_state
+from code_repair.repair_tools import RepairToolbox, create_checkpoint_workspace, remove_checkpoint_workspace
+from code_repair.resilience import Fault, execution_scope
 
 
 ROOT = Path(__file__).resolve().parents[1]

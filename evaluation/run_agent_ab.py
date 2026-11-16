@@ -18,17 +18,17 @@ import time
 import xml.etree.ElementTree as ET
 
 from evaluation import run_benchmark as bench
-from docker_executor import BindMount, cleanup_docker_task, run_execution
-from execution_manifest import (SnapshotKnowledge, freeze, runtime_identity,
+from code_repair.docker_executor import BindMount, cleanup_docker_task, run_execution
+from code_repair.execution_manifest import (SnapshotKnowledge, freeze, runtime_identity,
                                 task_configuration, write_once, _settings_and_mcp, _image)
-from input_protection import protect_input
-from knowledge_base import KnowledgeBase, _case_search_text, build_case_document
-from llm_client import _chat_configuration, embed_texts
-from repair_state import create_initial_state
-from repair_tools import RepairToolbox, create_checkpoint_workspace, remove_checkpoint_workspace
-from repair_workflow import build_repair_workflow
-from reproduction import reproduce
-from resilience import (cleanup_scope, digest, error_info, execution_scope, run_process,
+from code_repair.input_protection import protect_input
+from code_repair.knowledge_base import KnowledgeBase, _case_search_text, build_case_document
+from code_repair.llm_client import _chat_configuration, embed_texts
+from code_repair.repair_state import create_initial_state
+from code_repair.repair_tools import RepairToolbox, create_checkpoint_workspace, remove_checkpoint_workspace
+from code_repair.repair_workflow import build_repair_workflow
+from code_repair.reproduction import reproduce
+from code_repair.resilience import (cleanup_scope, digest, error_info, execution_scope, run_process,
                         trace, trace_workflow_end, current, Fault)
 
 
@@ -131,11 +131,11 @@ def prepare(output, case_ids=None, *, task_tokens=None):
         save(directory / "task.json", task)
         inputs.append({"case_id": record["case_id"], "files": {p.name: sha(p) for p in directory.iterdir()}})
     settings, _, _, model = _chat_configuration(None)
-    from runtime_config import setting
+    from code_repair.runtime_config import setting
     empty_mcp = output / "empty-mcp.json"
     save(empty_mcp, {"servers": []})
     configure(output)
-    from docker_executor import DEFAULT_IMAGE
+    from code_repair.docker_executor import DEFAULT_IMAGE
     image = _image(setting("REPAIR_DOCKER_IMAGE", settings) or DEFAULT_IMAGE, "docker")
     if not image["image_id"]:
         raise ValueError("Real Docker image identity unavailable")

@@ -20,7 +20,7 @@ def run_reranker(report):
     """不启动 Docker、不连接 Qdrant，仅验证当前本地重排配置及实际算子归属。"""
     from collections import Counter
     import onnxruntime as ort
-    from retrieval_reranker import configured_reranker
+    from code_repair.retrieval_reranker import configured_reranker
     reranker = configured_reranker()
     if reranker is None or reranker.backend != "onnx":
         raise RuntimeError("需要已配置的 ONNX Cross-Encoder")
@@ -62,14 +62,14 @@ def run_reranker(report):
 
 
 def run(report):
-    from execution_manifest import SnapshotKnowledge, freeze
-    from knowledge_base import KnowledgeBase, _case_search_text, build_case_document, build_rejection_document
-    from llm_client import embed_texts
-    from qdrant_store import QdrantVectorIndex
-    from repair_state import create_initial_state
-    from resilience import execution_scope
-    from retrieval_reranker import configured_reranker
-    from runtime_config import load_settings, setting
+    from code_repair.execution_manifest import SnapshotKnowledge, freeze
+    from code_repair.knowledge_base import KnowledgeBase, _case_search_text, build_case_document, build_rejection_document
+    from code_repair.llm_client import embed_texts
+    from code_repair.qdrant_store import QdrantVectorIndex
+    from code_repair.repair_state import create_initial_state
+    from code_repair.resilience import execution_scope
+    from code_repair.retrieval_reranker import configured_reranker
+    from code_repair.runtime_config import load_settings, setting
     from urllib.parse import urlsplit
 
     url = setting("QDRANT_URL", load_settings()) or ""

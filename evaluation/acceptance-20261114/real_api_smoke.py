@@ -46,7 +46,7 @@ env = dict(os.environ, REPAIR_DATA_DIR=str(DATA), MCP_SERVERS_CONFIG=str(mcp),
 process = None
 try:
     with (OUT / "real-api-server.log").open("w", encoding="utf-8") as log:
-        process = subprocess.Popen([sys.executable, "-B", "-m", "uvicorn", "repair_api:app",
+        process = subprocess.Popen([sys.executable, "-B", "-m", "uvicorn", "code_repair.repair_api:app",
             "--host", "127.0.0.1", "--port", str(port)], cwd=ROOT, env=env,
             stdout=log, stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)

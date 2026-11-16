@@ -28,7 +28,7 @@ import sys
 import time
 from pathlib import Path
 import uvicorn
-from repair_api import RepairRunner, create_app
+from code_repair.repair_api import RepairRunner, create_app
 
 def log_dispatch(event, **details):
     path = os.environ.get("REPAIR_ACCEPTANCE_DISPATCH_LOG")
@@ -79,7 +79,7 @@ uvicorn.run(app, host="127.0.0.1", port=int(sys.argv[2]), log_level="warning")
 
 MODEL_STUB = r'''
 import json
-import reproduction
+from code_repair import reproduction
 
 def fixed_reproduction_model(prompt):
     payload = json.loads(prompt[prompt.rfind("\n") + 1:])
@@ -329,7 +329,7 @@ def main() -> int:
                   and queued_response.json()["config"]["execution_backend"] == "docker")
 
             task_store = None
-            from repair_api import TaskStore
+            from code_repair.repair_api import TaskStore
             task_store = TaskStore(data_root)
             initial_queued = task_store.get(queued_task_id)
             queued_containers = subprocess.run(
@@ -466,7 +466,7 @@ def main() -> int:
                 ).stdout.split()
                 check(f"task_{index + 1}_container_stopped_during_recovery", not container_rows,
                       remaining_containers=len(container_rows))
-                from resilience import recorded_worker_stopped
+                from code_repair.resilience import recorded_worker_stopped
                 saved_worker = task_store.get(task_id).get("worker")
                 check(f"task_{index + 1}_old_worker_stopped",
                       recorded_worker_stopped(saved_worker),
@@ -498,7 +498,7 @@ def main() -> int:
             ).stdout.split()
             check("resumed_queued_task_container_cleaned_after_timeout", not queued_containers,
                   remaining_containers=len(queued_containers))
-            from resilience import recorded_worker_stopped
+            from code_repair.resilience import recorded_worker_stopped
             queued_worker = task_store.get(queued_task_id).get("worker")
             check("resumed_queued_task_worker_stopped_after_timeout",
                   recorded_worker_stopped(queued_worker),

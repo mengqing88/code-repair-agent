@@ -30,9 +30,9 @@ def git(source: Path, *arguments: str) -> str:
 
 def score_saved_candidate(output: Path) -> int:
     """Independently test an already validated candidate without issuing model requests."""
-    from docker_executor import cleanup_docker_task, run_execution
-    from repair_api import TaskStore
-    from repair_tools import apply_patch
+    from code_repair.docker_executor import cleanup_docker_task, run_execution
+    from code_repair.repair_api import TaskStore
+    from code_repair.repair_tools import apply_patch
 
     report_path = output / "report.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -122,10 +122,10 @@ def main() -> int:
     source = output / "source"
     independent_id = "public417-" + uuid4().hex[:20]
     try:
-        from resilience import error_info
-        from repair_api import create_app
-        from docker_executor import cleanup_docker_task, run_execution
-        from repair_tools import apply_patch
+        from code_repair.resilience import error_info
+        from code_repair.repair_api import create_app
+        from code_repair.docker_executor import cleanup_docker_task, run_execution
+        from code_repair.repair_tools import apply_patch
 
         provenance = json.loads((FIXTURE / "provenance.json").read_text(encoding="utf-8"))
         recorded = provenance.get("observed_sha256", {})
@@ -267,11 +267,11 @@ def main() -> int:
             and report.get("independent_test", {}).get("passed")
             and report.get("independent_test", {}).get("container_cleaned")) else "failed"
     except Exception as error:
-        from resilience import error_info
+        from code_repair.resilience import error_info
         report["status"] = "failed"
         report["failure"] = error_info(error, operation="public_defect.acceptance")
     finally:
-        from docker_executor import cleanup_docker_task
+        from code_repair.docker_executor import cleanup_docker_task
         cleanup = {}
         if task_id:
             cleanup["agent_container_cleaned"] = cleanup_docker_task(task_id)

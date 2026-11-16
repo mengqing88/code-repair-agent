@@ -25,12 +25,12 @@ Web 导入会尝试核验当前账号有权访问的服务端任务、独立验�
 在项目根目录执行：
 
 ```powershell
-python -m knowledge_cli import .\history_cases
-python -m knowledge_cli candidates --status needs_human
+python -m code_repair.knowledge_cli import .\history_cases
+python -m code_repair.knowledge_cli candidates --status needs_human
 # 查看候选全文及审核依据后，将返回的 id 和完整 content_hash 代入：
-python -m knowledge_cli review <候选ID> --decision approve --reason "已核对原始验收材料" --content-hash <内容SHA256>
-python -m knowledge_cli stats
-python -m knowledge_cli search "空列表导致 IndexError" --limit 5
+python -m code_repair.knowledge_cli review <候选ID> --decision approve --reason "已核对原始验收材料" --content-hash <内容SHA256>
+python -m code_repair.knowledge_cli stats
+python -m code_repair.knowledge_cli search "空列表导致 IndexError" --limit 5
 ```
 
 逐条返回 `candidate_id`、内容哈希及 `needs_human`、`published`、`declined` 等状态；`queued` 表示新建待审记录，不等于入库成功，`imported` 只统计本次已发布记录。相同内容重复导入复用原记录，不反复调用模型；正文变化生成新候选，不覆盖旧案例。无法解析的 JSON 或超大记录标记 `failed`，其他条目继续；有失败时退出码为 1。`candidates --status approved` 可查询已批准但发布失败的记录，再执行相同 approve 命令重试。审核进程超过 180 秒未完成，列出候选时转人工核对。
@@ -38,8 +38,8 @@ python -m knowledge_cli search "空列表导致 IndexError" --limit 5
 默认数据库为 `work/web/knowledge.sqlite3`，与 Web 工作台、修复 CLI 共用；`REPAIR_DATA_DIR` 可调整默认目录。单独操作其他数据库：
 
 ```powershell
-python -m knowledge_cli --database .\work\custom.sqlite3 import .\history_cases
-python agent_cli.py --python-file .\example.py --error-text "缺陷描述" --knowledge-base .\work\custom.sqlite3
+python -m code_repair.knowledge_cli --database .\work\custom.sqlite3 import .\history_cases
+python -m code_repair.agent_cli --python-file .\example.py --error-text "缺陷描述" --knowledge-base .\work\custom.sqlite3
 ```
 
 审核 Agent 使用现有聊天模型配置；模型缺失或故障不丢候选，转人工处理。发布成功知识时使用已有 Embedding 配置；发布失败保留批准决定，可幂等续发。失败经验在 Embedding 不可用时保留关键词检索。CLI 是具有数据库文件权限的可信本机操作入口，Web 的账号隔离不等于操作系统隔离。

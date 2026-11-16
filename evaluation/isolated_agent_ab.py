@@ -23,9 +23,8 @@ def main():
     runtime = output.with_name(output.name + "-runtime")
     if args.mode == "prepare":
         runtime.mkdir(parents=True, exist_ok=False)
-        for path in ROOT.glob("*.py"):
-            if not path.name.startswith("test_") and path.name != "conftest.py":
-                shutil.copyfile(path, runtime / path.name)
+        shutil.copytree(ROOT / "src" / "code_repair", runtime / "src" / "code_repair",
+                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         for pattern in ("pyproject.toml", "requirements*.txt", "uv.lock", "poetry.lock", "Pipfile.lock"):
             for path in ROOT.glob(pattern):
                 shutil.copyfile(path, runtime / path.name)
@@ -39,6 +38,8 @@ def main():
     if not (runtime / "evaluation" / "run_agent_ab.py").is_file():
         raise ValueError("Private runtime missing; prepare a new experiment first")
     env = dict(os.environ)
+    env["PYTHONPATH"] = str(runtime / "src")
+    env["REPAIR_PROJECT_ROOT"] = str(runtime)
     # Resolve credentials only into child process memory; never copy .env to the snapshot.
     for name, value in dotenv_values(ROOT / ".env", encoding="utf-8-sig", interpolate=False).items():
         if value is not None and not env.get(name):

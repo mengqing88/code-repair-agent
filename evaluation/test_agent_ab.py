@@ -16,7 +16,7 @@ def test_invalid_task_budget_is_rejected_before_any_model_call(tmp_path, tokens,
 
 
 def test_unknown_evaluation_usage_stops_retry_and_keeps_incomplete_accounting():
-    from resilience import Fault, call_with_retry, execution_scope
+    from code_repair.resilience import Fault, call_with_retry, execution_scope
     calls = []
     def unavailable(timeout):
         calls.append(timeout)
@@ -151,3 +151,53 @@ def test_nested_test_definition_is_distinguished_from_a_weak_executed_test():
     assert classify(result, []) == "regression_did_not_fail_on_baseline"
     reproduction["regression"]["baseline"]["valid"] = False
     assert classify(result, []) == "regression_baseline_invalid"
+
+
+def test_isolated_snapshot_imports_its_package_instead_of_editable_checkout(tmp_path, monkeypatch):
+    import subprocess
+    import sys
+    from pathlib import Path
+    from evaluation import isolated_agent_ab as isolated
+    from code_repair.paths import PACKAGE_ROOT
+
+    source = tmp_path / "source"
+    package = source / "src" / "code_repair"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text('identity = "frozen fixture"', encoding="utf-8")
+    (package / "paths.py").write_bytes((PACKAGE_ROOT / "paths.py").read_bytes())
+    (source / "pyproject.toml").write_text("# fixture", encoding="utf-8")
+    evaluation = source / "evaluation"
+    evaluation.mkdir()
+    for name in ("run_agent_ab.py", "run_benchmark.py", "generate_benchmark.py", "benchmark.json", "relevance.json"):
+        (evaluation / name).write_text("# fixture", encoding="utf-8")
+    for name in ("sample_repo", "history_cases", "oracles"):
+        (evaluation / name).mkdir()
+    monkeypatch.setattr(isolated, "ROOT", source)
+    monkeypatch.setattr(isolated, "dotenv_values", lambda *a, **kw: {})
+    output = tmp_path / "experiment"
+    runtime = output.with_name(output.name + "-runtime")
+    run = subprocess.run
+    observed = []
+
+    def probe(command, *, cwd, env, check):
+        assert Path(cwd) == runtime
+        assert env["PYTHONPATH"] == str(runtime / "src")
+        script = ("from pathlib import Path; import code_repair; "
+                  "from code_repair.paths import PROJECT_ROOT; "
+                  "assert code_repair.identity == 'frozen fixture'; "
+                  "assert PROJECT_ROOT == Path.cwd(); "
+                  "assert Path(code_repair.__file__).is_relative_to(Path.cwd())")
+        result = run([sys.executable, "-B", "-c", script], cwd=cwd, env=env,
+                     capture_output=True, timeout=20, check=True)
+        observed.append(command)
+        return result
+
+    monkeypatch.setattr(isolated.subprocess, "run", probe)
+    for mode in ("prepare", "run"):
+        monkeypatch.setattr(sys, "argv", ["isolated_agent_ab", mode, "--output", str(output)])
+        with pytest.raises(SystemExit) as exited:
+            isolated.main()
+        assert exited.value.code == 0
+        (package / "__init__.py").write_text('identity = "changed live fixture"', encoding="utf-8")
+    assert len(observed) == 2
+    assert not (runtime / ".env").exists()

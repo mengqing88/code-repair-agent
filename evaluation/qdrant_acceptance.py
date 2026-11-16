@@ -15,8 +15,8 @@ from qdrant_client import QdrantClient
 
 from evaluation.postgres_acceptance import command, inspect_container
 from evaluation.postgres_fixtures import case_state
-from knowledge_base import KnowledgeBase
-from qdrant_store import QdrantVectorIndex, QdrantIndexError
+from code_repair.knowledge_base import KnowledgeBase
+from code_repair.qdrant_store import QdrantVectorIndex, QdrantIndexError
 
 IMAGE = "qdrant/qdrant:v1.16.2"
 LABEL = "code-repair.qdrant-acceptance-owner"

@@ -22,7 +22,7 @@ from psycopg.conninfo import make_conninfo
 from evaluation.postgres_fixtures import (
     MARKER_PREFIX, case_state, fixed_embedding, guarded_dsn,
 )
-from repair_tools import PostgresKnowledgeBase
+from code_repair.repair_tools import PostgresKnowledgeBase
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE = "pgvector/pgvector:pg16"

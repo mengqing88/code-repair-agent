@@ -13,11 +13,11 @@ import httpx
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from mcp_tool_client import MCPToolClient
-from operation_store import OperationStore
-from resilience import digest
-from tool_authorization import ToolAuthorizations
-from tool_context import tool_call_scope
+from code_repair.mcp_tool_client import MCPToolClient
+from code_repair.operation_store import OperationStore
+from code_repair.resilience import digest
+from code_repair.tool_authorization import ToolAuthorizations
+from code_repair.tool_context import tool_call_scope
 
 OUT = Path(__file__).resolve().parent
 SOURCE_REPORT = OUT / "github-mcp-deadline-timeout-recovery-verified.json"
@@ -129,7 +129,7 @@ def run():
                 invoke(client, DELETE_TOOL, delete_arguments, "deadline-cleanup-before-approval")
                 raise RuntimeError("Cleanup write unexpectedly ran without approval")
             except Exception as error:
-                from resilience import Fault
+                from code_repair.resilience import Fault
                 if not isinstance(error, Fault) or error.code != "tool_authorization_required":
                     raise
                 pending = next(item for item in authorizations.pending(TASK_ID, PRINCIPAL)
