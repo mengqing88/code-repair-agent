@@ -50,7 +50,7 @@
 .venv\Scripts\python.exe evaluation\run_benchmark.py --retrieval-mode configured-embeddings --output evaluation/embedding-results.json
 ```
 
-`configured-embeddings` 会分别测量 keyword、vector 和 hybrid，输出 Recall@K、MRR、Precision@K；若设置了 `CROSS_ENCODER_MODEL`，还会测量 `hybrid+cross_encoder`。Cross-Encoder 是可选依赖：先运行 `pip install -e ".[rerank]"`。没有配置或模型不可用时，该策略不会被报告为实测。报告另含成功/失败经验分开召回及仓库、文件、依赖范围严格过滤的合成自检。
+`configured-embeddings` 会分别测量 keyword、vector 和 hybrid，输出 Recall@K、MRR、Precision@K；若设置了 `CROSS_ENCODER_MODEL`，还会测量 `hybrid+cross_encoder`。Cross-Encoder 是可选依赖：先运行 `pip install -e ".[rerank]"`。没有配置或模型不可用时，该策略不会被报告为实测。评测还输出 `hybrid_legacy_score`：在 WRRF 当前候选池上按旧的 `0.7×向量相似度 + 0.3×归一化 BM25` 公式重新排序，用于同查询、同候选下隔离排序公式的诊断；它不单独测量旧算法的候选生成差异。报告另含成功/失败经验分开召回及仓库、文件、依赖范围严格过滤的合成自检。
 
 ## 本轮真实 Agent 结果（2026-11-12）
 

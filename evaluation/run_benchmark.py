@@ -191,9 +191,22 @@ def aggregate_ranking_metrics(per_query: list[dict[str, float]]) -> dict[str, fl
     return {key: sum(item[key] for item in per_query) / len(per_query) for key in keys}
 
 
+def legacy_hybrid_score(match: dict[str, object]) -> float:
+    """Reproduce the previous weighted-score fusion for same-candidate comparisons."""
+    keyword = float(match.get("keyword_score") or 0.0)
+    vector = match.get("vector_score")
+    if vector is None:
+        return keyword
+    return 0.7 * max(0.0, float(vector)) + 0.3 * keyword
+
+
 def evaluate_outcome_and_scope_filters(directory: Path) -> dict:
     """检查成功/失败经验分开召回，以及指定范围严格排除缺元数据案例。"""
-    knowledge = KnowledgeBase(directory / "filter-contract.sqlite3", embedder=lambda _text: [1.0, 0.0])
+    knowledge = KnowledgeBase(
+        directory / "filter-contract.sqlite3",
+        embedder=lambda _text: [1.0, 0.0],
+        qdrant_index=None,
+    )
     scope = {"repository_id": "repo-a", "file_paths": ["src/worker.py"],
              "dependency_versions": {"library": "2.1"}}
     accepted = create_initial_state(
@@ -260,32 +273,56 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
             raise RuntimeError("评测输入没有预生成 embedding")
         return embedding_cache[text]
 
+    # Keep synthetic retrieval runs isolated from the shared Qdrant collection.
     knowledge = KnowledgeBase(
         directory / "retrieval.sqlite3",
         embedder=cached_embed,
         reranker=reranker,
+        qdrant_index=None,
     )
     for state in case_states:
         knowledge.save_case(state)
     evaluations = {}
+    legacy_per_query = []
+    legacy_details = []
     for strategy in strategies:
         strategy_name = "hybrid" if strategy == "hybrid+cross_encoder" else strategy
         per_query = []
         details = []
         for record in records:
             matches = knowledge.search(
-                record["query"], limit=10, min_similarity=min_similarity,
+                record["query"], limit=len(histories), min_similarity=min_similarity,
                 strategy=strategy_name, rerank=(strategy == "hybrid+cross_encoder"),
             )
             identifiers = [match["case_id"] for match in matches]
             relevant = labels[record["case_id"]]
-            metrics = ranking_metrics(identifiers, relevant)
+            metrics = ranking_metrics(identifiers[:10], relevant)
             per_query.append(metrics)
+            if strategy == "hybrid":
+                legacy_matches = sorted(
+                    matches,
+                    key=lambda item: (-legacy_hybrid_score(item), str(item["case_id"])),
+                )
+                legacy_ranked_ids = [str(item["case_id"]) for item in legacy_matches]
+                legacy_metrics = ranking_metrics(legacy_ranked_ids[:10], relevant)
+                legacy_per_query.append(legacy_metrics)
+                legacy_details.append({
+                    "case_id": record["case_id"],
+                    "ranked": legacy_ranked_ids,
+                    "relevant": relevant,
+                    "metrics": legacy_metrics,
+                })
             details.append({"case_id": record["case_id"], "query": record["query"],
                             "ranked": identifiers, "relevant": relevant, "metrics": metrics,
                             "returned_modes": [match["retrieval_mode"] for match in matches]})
         aggregate = aggregate_ranking_metrics(per_query)
         evaluations[strategy] = {"metrics": aggregate, "details": details}
+    if legacy_per_query:
+        evaluations["hybrid_legacy_score"] = {
+            "metrics": aggregate_ranking_metrics(legacy_per_query),
+            "details": legacy_details,
+            "comparison_scope": "same full eligible result pool as WRRF; both rankings scored at top 10",
+        }
     primary = "hybrid" if mode == "configured-embeddings" else "keyword"
     primary_details = evaluations[primary]["details"]
     hits = sum(bool(set(item["ranked"][:5]).intersection(item["relevant"])) for item in primary_details)

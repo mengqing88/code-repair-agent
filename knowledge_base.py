@@ -42,6 +42,10 @@ from semantic_dedup import (
 
 EmbeddingFunction = Callable[[str], Sequence[float]]
 
+WRRF_RANK_CONSTANT = 60
+WRRF_VECTOR_WEIGHT = 0.7
+WRRF_KEYWORD_WEIGHT = 0.3
+
 
 class KnowledgeBaseError(RuntimeError):
     """知识库读写或向量格式不符合约定时抛出的错误。"""
@@ -348,6 +352,20 @@ def _lexical_scores(query: str, documents: list[str]) -> list[float]:
                 scores[index] += weight * occurrences * 2.5 / (
                     occurrences + 1.5 * (0.25 + 0.75 * sum(count.values()) / average)
                 )
+    return scores
+
+
+def _weighted_reciprocal_rank_scores(
+    vector_ranking: Sequence[str], keyword_ranking: Sequence[str],
+) -> dict[str, float]:
+    """Fuse independently ranked vector and keyword candidates with WRRF."""
+    scores: dict[str, float] = {}
+    for ranking, weight in (
+        (vector_ranking, WRRF_VECTOR_WEIGHT),
+        (keyword_ranking, WRRF_KEYWORD_WEIGHT),
+    ):
+        for rank, case_id in enumerate(ranking, start=1):
+            scores[case_id] = scores.get(case_id, 0.0) + weight / (WRRF_RANK_CONSTANT + rank)
     return scores
 
 
@@ -1183,6 +1201,7 @@ class KnowledgeBase:
         if not candidates:
             return []
         lexical = _lexical_scores(query, [text for _, text in candidates])
+        candidate_limit = max(10, limit * 3)
         query_vector = None
         if strategy != "keyword":
             try:
@@ -1221,7 +1240,7 @@ class KnowledgeBase:
                 matches = self.qdrant_index.search(
                     namespace=self.qdrant_namespace,
                     vector=query_vector,
-                    limit=max(10, limit * 3),
+                    limit=candidate_limit,
                     outcome=outcome,
                     filters=normalized_filters,
                 )
@@ -1236,7 +1255,7 @@ class KnowledgeBase:
                     if strategy == "hybrid":
                         lexical_indices = sorted(range(len(candidates)), key=lambda index: lexical[index], reverse=True)
                         candidate_ids.update(
-                            candidates[index][0]["case_id"] for index in lexical_indices[:max(10, limit * 3)]
+                            candidates[index][0]["case_id"] for index in lexical_indices[:candidate_limit]
                         )
             except QdrantIndexError as error:
                 trace("knowledge.qdrant", "degraded", fault=error, decision="sqlite_vector_scan")
@@ -1270,7 +1289,7 @@ class KnowledgeBase:
             else:
                 if not keyword_score and (semantic is None or semantic <= 0 or semantic < min_similarity):
                     continue
-                score = 0.7 * max(0.0, semantic or 0.0) + 0.3 * keyword_score if semantic is not None else keyword_score
+                score = 0.0
             result = {
                 "case_id": row["case_id"],
                 "revision": row["revision"],
@@ -1288,6 +1307,32 @@ class KnowledgeBase:
             if row["case_id"] in duplicate_provenance:
                 result["duplicate_cases"] = duplicate_provenance[row["case_id"]]
             results.append(result)
+        if strategy == "hybrid":
+            vector_ranking = sorted(
+                (item for item in results
+                 if item["vector_score"] is not None
+                 and float(item["vector_score"]) >= min_similarity
+                 and float(item["vector_score"]) > 0),
+                key=lambda item: (-float(item["vector_score"]), str(item["case_id"])),
+            )[:candidate_limit]
+            keyword_ranking = sorted(
+                (item for item in results if float(item["keyword_score"]) > 0),
+                key=lambda item: (-float(item["keyword_score"]), str(item["case_id"])),
+            )[:candidate_limit]
+            if vector_ranking:
+                fused_scores = _weighted_reciprocal_rank_scores(
+                    [str(item["case_id"]) for item in vector_ranking],
+                    [str(item["case_id"]) for item in keyword_ranking],
+                )
+                results = [item for item in results if str(item["case_id"]) in fused_scores]
+                for item in results:
+                    item["score"] = fused_scores[str(item["case_id"])]
+            else:
+                # With no usable vector ranking, retain the existing BM25-only fallback scale.
+                keyword_ids = {str(item["case_id"]) for item in keyword_ranking}
+                results = [item for item in results if str(item["case_id"]) in keyword_ids]
+                for item in results:
+                    item["score"] = float(item["keyword_score"])
         results.sort(key=lambda item: float(item["score"]), reverse=True)
         results = collapse_semantic_duplicates(results, stored_vectors)
         if rerank and self.reranker is not None and results:

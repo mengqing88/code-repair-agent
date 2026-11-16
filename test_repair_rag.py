@@ -136,6 +136,47 @@ def test_hybrid_ranks_exact_exception_and_rejects_unrelated_cases(tmp_path):
     assert same_vectors.search("ConnectionError")[0]["case_id"] == "connection"
 
 
+def test_hybrid_uses_wrrf_before_cross_encoder_reranking(tmp_path, monkeypatch):
+    def controlled_embed(text):
+        if text == "query":
+            return [1.0, 0.0]
+        if "vector-first" in text:
+            return [1.0, 0.0]
+        if "both-second" in text:
+            return [0.8, 0.6]
+        return [0.0, 1.0]
+
+    monkeypatch.setattr("knowledge_base._lexical_scores", lambda _query, _documents: [1.0, 3.0, 2.0])
+    knowledge = KnowledgeBase(
+        tmp_path / "wrrf.sqlite3", controlled_embed, qdrant_index=None, reranker=None,
+    )
+    seed_verified_cases(knowledge, [
+        historical_case("a-vector", "report", "vector-first"),
+        historical_case("b-both", "report", "both-second"),
+        historical_case("c-keyword", "report", "keyword-only"),
+    ])
+
+    initial = knowledge.search("query", limit=3, min_similarity=0.35, rerank=False)
+
+    assert [item["case_id"] for item in initial] == ["a-vector", "b-both", "c-keyword"]
+    assert initial[0]["score"] == pytest.approx(0.7 / 61 + 0.3 / 63)
+    assert initial[1]["score"] == pytest.approx(0.7 / 62 + 0.3 / 61)
+    assert initial[2]["score"] == pytest.approx(0.3 / 62)
+
+    class CandidateReranker:
+        candidate_count = 2
+
+        def score(self, _query, documents):
+            return [0.1 if "vector-first" in document else 0.9 for document in documents]
+
+    reranked = replace(knowledge, reranker=CandidateReranker()).search(
+        "query", limit=3, min_similarity=0.35,
+    )
+
+    assert [item["case_id"] for item in reranked] == ["b-both", "a-vector", "c-keyword"]
+    assert "rerank_score" not in reranked[2]
+
+
 def test_keyword_fallback_handles_model_failure_or_dimension_change(tmp_path):
     knowledge = KnowledgeBase(tmp_path / "kb.sqlite3", embed)
     seed_verified_cases(knowledge, [historical_case()])
