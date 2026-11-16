@@ -17,7 +17,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from knowledge_base import KnowledgeBase, _case_search_text, build_case_document
+from knowledge_base import (
+    WRRF_RANK_CONSTANT,
+    KnowledgeBase,
+    _case_search_text,
+    _weighted_reciprocal_rank_scores,
+    build_case_document,
+)
 from repair_state import create_initial_state
 
 ROOT = Path(__file__).resolve().parent
@@ -285,6 +291,8 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
     evaluations = {}
     legacy_per_query = []
     legacy_details = []
+    wrrf_weight_per_query = {weight: [] for weight in range(1, 10)}
+    wrrf_weight_details = {weight: [] for weight in range(1, 10)}
     for strategy in strategies:
         strategy_name = "hybrid" if strategy == "hybrid+cross_encoder" else strategy
         per_query = []
@@ -299,6 +307,37 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
             metrics = ranking_metrics(identifiers[:10], relevant)
             per_query.append(metrics)
             if strategy == "hybrid":
+                vector_ranking = sorted(
+                    (item for item in matches
+                     if item["vector_score"] is not None
+                     and float(item["vector_score"]) >= min_similarity
+                     and float(item["vector_score"]) > 0),
+                    key=lambda item: (-float(item["vector_score"]), str(item["case_id"])),
+                )
+                keyword_ranking = sorted(
+                    (item for item in matches if float(item["keyword_score"]) > 0),
+                    key=lambda item: (-float(item["keyword_score"]), str(item["case_id"])),
+                )
+                vector_ids = [str(item["case_id"]) for item in vector_ranking]
+                keyword_ids = [str(item["case_id"]) for item in keyword_ranking]
+                for vector_tenths in range(1, 10):
+                    vector_weight = vector_tenths / 10
+                    keyword_weight = 1 - vector_weight
+                    fused = _weighted_reciprocal_rank_scores(
+                        vector_ids,
+                        keyword_ids,
+                        vector_weight=vector_weight,
+                        keyword_weight=keyword_weight,
+                    )
+                    fused_ids = sorted(fused, key=lambda case_id: (-fused[case_id], case_id))
+                    fused_metrics = ranking_metrics(fused_ids[:10], relevant)
+                    wrrf_weight_per_query[vector_tenths].append(fused_metrics)
+                    wrrf_weight_details[vector_tenths].append({
+                        "case_id": record["case_id"],
+                        "ranked": fused_ids,
+                        "relevant": relevant,
+                        "metrics": fused_metrics,
+                    })
                 legacy_matches = sorted(
                     matches,
                     key=lambda item: (-legacy_hybrid_score(item), str(item["case_id"])),
@@ -322,6 +361,17 @@ def evaluate_retrieval(records: list[dict], histories: list[dict], labels: dict,
             "metrics": aggregate_ranking_metrics(legacy_per_query),
             "details": legacy_details,
             "comparison_scope": "same full eligible result pool as WRRF; both rankings scored at top 10",
+        }
+        evaluations["hybrid_wrrf_weight_sweep"] = {
+            "rank_constant": WRRF_RANK_CONSTANT,
+            "weights": {
+                f"{vector_tenths / 10:.1f}/{1 - vector_tenths / 10:.1f}": {
+                    "metrics": aggregate_ranking_metrics(wrrf_weight_per_query[vector_tenths]),
+                    "details": wrrf_weight_details[vector_tenths],
+                }
+                for vector_tenths in range(1, 10)
+            },
+            "comparison_scope": "same full eligible result pool, query embeddings, and vector/keyword ranks; top-10 metrics",
         }
     primary = "hybrid" if mode == "configured-embeddings" else "keyword"
     primary_details = evaluations[primary]["details"]

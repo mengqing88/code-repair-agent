@@ -11,7 +11,7 @@ from unittest.mock import patch
 from test_account_support import TestClient
 import pytest
 
-from knowledge_base import KnowledgeBase, normalize_historical_case
+from knowledge_base import KnowledgeBase, _weighted_reciprocal_rank_scores, normalize_historical_case
 from knowledge_review import KnowledgeReview
 from repair_api import create_app
 from repair_state import create_initial_state
@@ -175,6 +175,15 @@ def test_hybrid_uses_wrrf_before_cross_encoder_reranking(tmp_path, monkeypatch):
 
     assert [item["case_id"] for item in reranked] == ["b-both", "a-vector", "c-keyword"]
     assert "rerank_score" not in reranked[2]
+
+
+def test_wrrf_supports_alternative_weight_pairs():
+    scores = _weighted_reciprocal_rank_scores(
+        ["vector-first"], ["keyword-first"], vector_weight=0.8, keyword_weight=0.2,
+    )
+
+    assert scores["vector-first"] == pytest.approx(0.8 / 61)
+    assert scores["keyword-first"] == pytest.approx(0.2 / 61)
 
 
 def test_keyword_fallback_handles_model_failure_or_dimension_change(tmp_path):

@@ -357,12 +357,14 @@ def _lexical_scores(query: str, documents: list[str]) -> list[float]:
 
 def _weighted_reciprocal_rank_scores(
     vector_ranking: Sequence[str], keyword_ranking: Sequence[str],
+    *, vector_weight: float = WRRF_VECTOR_WEIGHT,
+    keyword_weight: float = WRRF_KEYWORD_WEIGHT,
 ) -> dict[str, float]:
     """Fuse independently ranked vector and keyword candidates with WRRF."""
     scores: dict[str, float] = {}
     for ranking, weight in (
-        (vector_ranking, WRRF_VECTOR_WEIGHT),
-        (keyword_ranking, WRRF_KEYWORD_WEIGHT),
+        (vector_ranking, vector_weight),
+        (keyword_ranking, keyword_weight),
     ):
         for rank, case_id in enumerate(ranking, start=1):
             scores[case_id] = scores.get(case_id, 0.0) + weight / (WRRF_RANK_CONSTANT + rank)
