@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+import code_repair.retrieval_reranker as reranker_module
 from code_repair.knowledge_base import KnowledgeBase
 from code_repair.repair_state import create_initial_state
 from code_repair.retrieval_reranker import CrossEncoderReranker, RerankerUnavailable, configured_reranker
@@ -61,6 +62,101 @@ def test_reranker_scores_only_initial_five_candidates(tmp_path):
     assert results[0]["case_id"] == "case-5"
     assert results[0]["rerank_score"] == 1.0
     assert all("_rerank_text" not in item for item in results)
+
+
+def test_knowledge_base_reuses_scores_only_within_user_namespace(tmp_path):
+    calls = []
+
+    class Session:
+        def get_inputs(self):
+            return [SimpleNamespace(name="input_ids"), SimpleNamespace(name="attention_mask")]
+
+        def run(self, _outputs, feeds):
+            return [feeds["input_ids"][:, :1].astype(float)]
+
+    def tokenizer(_queries, documents, **_kwargs):
+        calls.extend(documents)
+        ids = [[len(document)] for document in documents]
+        return {"input_ids": np.asarray(ids), "attention_mask": np.ones_like(ids)}
+
+    reranker = CrossEncoderReranker("fake", backend="onnx")
+    reranker._model = Session(), tokenizer
+    user_a = KnowledgeBase(tmp_path / "user-a.sqlite3", embedder=lambda _: [1., 0.],
+                           qdrant_index=None, reranker=reranker)
+    user_b = KnowledgeBase(tmp_path / "user-b.sqlite3", embedder=lambda _: [1., 0.],
+                           qdrant_index=None, reranker=reranker)
+    user_a.save_case(make_case("same-case"))
+    user_b.save_case(make_case("same-case"))
+    trace_path = tmp_path / "reranker-cache.jsonl"
+
+    with execution_scope(30, trace_path=trace_path):
+        for knowledge in (user_a, user_a, user_b):
+            knowledge.search("same query", limit=1, min_similarity=0.0, strategy="vector")
+
+    events = [json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines()]
+    rerank_events = [event for event in events if event.get("operation") == "knowledge.rerank"]
+    cache_stats = [event["details"]["score_cache"] for event in rerank_events]
+    assert [(item["hits"], item["computed"]) for item in cache_stats] == [(0, 1), (1, 0), (0, 1)]
+    assert len(calls) == 2
+
+
+def test_score_cache_hashes_exact_inputs_and_deduplicates_within_call():
+    calls = []
+
+    class Session:
+        def get_inputs(self):
+            return [SimpleNamespace(name="input_ids"), SimpleNamespace(name="attention_mask")]
+
+        def run(self, _outputs, feeds):
+            return [feeds["input_ids"][:, :1].astype(float)]
+
+    def tokenizer(_queries, documents, **_kwargs):
+        calls.extend(documents)
+        ids = [[{"alpha": 1, "beta": 2, "gamma": 3}[document]] for document in documents]
+        return {"input_ids": np.asarray(ids), "attention_mask": np.ones_like(ids)}
+
+    reranker = CrossEncoderReranker("fake", backend="onnx")
+    reranker._model = Session(), tokenizer
+    scores, stats = reranker.score_with_cache("query", ["alpha", "beta", "alpha"], cache_scope="user-a")
+    assert scores == [1.0, 2.0, 1.0]
+    assert stats == {"hits": 0, "computed": 2, "deduplicated": 1, "entries": 2}
+
+    scores, stats = reranker.score_with_cache("query", ["beta", "gamma"], cache_scope="user-a")
+    assert scores == [2.0, 3.0]
+    assert stats["hits"] == 1 and stats["computed"] == 1
+    scores, stats = reranker.score_with_cache("query", ["gamma"], cache_scope="user-b")
+    assert scores == [3.0] and stats["computed"] == 1
+    scores, stats = reranker.score_with_cache("changed query", ["gamma"], cache_scope="user-a")
+    assert scores == [3.0] and stats["computed"] == 1
+    assert len(calls) == 5
+    assert all("alpha" not in key and "beta" not in key and "gamma" not in key
+               for key in reranker._score_cache)
+
+
+def test_score_cache_evicts_least_recently_used_entries(monkeypatch):
+    monkeypatch.setattr(reranker_module, "_SCORE_CACHE_MAX_ENTRIES", 2)
+    values = {"alpha": 1, "beta": 2, "gamma": 3}
+
+    class Session:
+        def get_inputs(self):
+            return [SimpleNamespace(name="input_ids"), SimpleNamespace(name="attention_mask")]
+
+        def run(self, _outputs, feeds):
+            return [feeds["input_ids"][:, :1].astype(float)]
+
+    def tokenizer(_queries, documents, **_kwargs):
+        ids = [[values[document]] for document in documents]
+        return {"input_ids": np.asarray(ids), "attention_mask": np.ones_like(ids)}
+
+    reranker = CrossEncoderReranker("fake", backend="onnx")
+    reranker._model = Session(), tokenizer
+    reranker.score_with_cache("query", ["alpha", "beta"])
+    reranker.score_with_cache("query", ["alpha"])
+    reranker.score_with_cache("query", ["gamma"])
+    _, stats = reranker.score_with_cache("query", ["alpha", "beta"])
+    assert stats["hits"] == 1
+    assert stats["computed"] == 1
+    assert stats["entries"] == 2
 
 
 def test_reranker_failure_preserves_initial_results(tmp_path):

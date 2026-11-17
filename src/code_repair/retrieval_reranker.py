@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from functools import lru_cache
 import math
@@ -18,6 +19,18 @@ class RerankerUnavailable(RuntimeError):
     """Cross-Encoder 未安装、模型不可用或返回分数无效。"""
 
 
+_SCORE_CACHE_MAX_ENTRIES = 4096
+
+
+def _score_cache_key(scope: str, query: str, document: str) -> str:
+    digest = hashlib.sha256()
+    for value in (scope, query, document):
+        encoded = value.encode("utf-8")
+        digest.update(len(encoded).to_bytes(8, "big"))
+        digest.update(encoded)
+    return digest.hexdigest()
+
+
 @dataclass
 class CrossEncoderReranker:
     """按查询与候选案例成对预测相关度分数。"""
@@ -32,6 +45,7 @@ class CrossEncoderReranker:
     _lock: Lock = field(default_factory=Lock, init=False, repr=False)
     _inference_lock: Lock = field(default_factory=Lock, init=False, repr=False)
     _cpu_fallback: object | None = field(default=None, init=False, repr=False)
+    _score_cache: OrderedDict[str, float] = field(default_factory=OrderedDict, init=False, repr=False)
     active_provider: str = field(default="", init=False)
 
     @classmethod
@@ -133,43 +147,85 @@ class CrossEncoderReranker:
 
     def score(self, query: str, documents: Sequence[str]) -> list[float]:
         """返回与 documents 顺序一一对应的有限相关度分数。"""
+        scores, _ = self.score_with_cache(query, documents)
+        return scores
+
+    def score_with_cache(
+        self, query: str, documents: Sequence[str], *, cache_scope: str = "",
+    ) -> tuple[list[float], dict[str, int]]:
+        """复用同一隔离范围内精确相同的查询/候选分数，不缓存原文。"""
         if not documents:
-            return []
+            return [], {"hits": 0, "computed": 0, "deduplicated": 0, "entries": len(self._score_cache)}
         if self._cpu_fallback is not None:
-            return self._cpu_fallback.score(query, documents)
+            return self._cpu_fallback.score_with_cache(query, documents, cache_scope=cache_scope)
         model = self._load_model()
         if self._cpu_fallback is not None:
-            return self._cpu_fallback.score(query, documents)
+            return self._cpu_fallback.score_with_cache(query, documents, cache_scope=cache_scope)
         try:
             with self._inference_lock:
-                if self.backend == "onnx":
+                positions: dict[str, list[int]] = {}
+                for index, document in enumerate(documents):
+                    key = _score_cache_key(cache_scope, query, document)
+                    positions.setdefault(key, []).append(index)
+
+                scores: list[float | None] = [None] * len(documents)
+                missing: list[tuple[str, str, list[int]]] = []
+                hits = 0
+                deduplicated = 0
+                for key, indexes in positions.items():
+                    if key in self._score_cache:
+                        value = self._score_cache[key]
+                        self._score_cache.move_to_end(key)
+                        hits += len(indexes)
+                        for index in indexes:
+                            scores[index] = value
+                    else:
+                        missing.append((key, str(documents[indexes[0]]), indexes))
+                        deduplicated += len(indexes) - 1
+
+                computed_scores: list[float] = []
+                missing_documents = [document for _, document, _ in missing]
+                if missing_documents and self.backend == "onnx":
                     import numpy as np
                     session, tokenizer = model
-                    scores = []
-                    for start in range(0, len(documents), 16):
-                        batch = list(documents[start:start + 16])
+                    for start in range(0, len(missing_documents), 16):
+                        batch = missing_documents[start:start + 16]
                         tokens = tokenizer([query] * len(batch), batch, padding=True, truncation=True,
                                            max_length=512, return_tensors="np")
                         feeds = {item.name: np.asarray(tokens[item.name], dtype=np.int64)
                                  for item in session.get_inputs()}
-                        # 此适配器面向单输出回归重排模型，保留 Identity 原始 logits。
+                        # This adapter expects one raw regression logit per query/document pair.
                         raw = np.asarray(session.run(None, feeds)[0])
                         if raw.shape not in {(len(batch),), (len(batch), 1)}:
                             raise RerankerUnavailable("ONNX 重排必须每对文本返回一个分数")
-                        scores.extend(float(value) for value in raw.reshape(-1))
-                else:
+                        computed_scores.extend(float(value) for value in raw.reshape(-1))
+                elif missing_documents:
                     raw_scores = model.predict(
-                        [(query, document) for document in documents], batch_size=16, show_progress_bar=False,
+                        [(query, document) for document in missing_documents],
+                        batch_size=16, show_progress_bar=False,
                     )
-                    scores = [float(value) for value in raw_scores]
+                    computed_scores = [float(value) for value in raw_scores]
+
+                if (len(computed_scores) != len(missing)
+                        or any(not math.isfinite(value) for value in computed_scores)):
+                    raise RerankerUnavailable("Cross-Encoder 返回的分数数量或数值无效")
+                for (key, _, indexes), value in zip(missing, computed_scores):
+                    self._score_cache[key] = value
+                    self._score_cache.move_to_end(key)
+                    for index in indexes:
+                        scores[index] = value
+                while len(self._score_cache) > _SCORE_CACHE_MAX_ENTRIES:
+                    self._score_cache.popitem(last=False)
+                return [float(value) for value in scores], {
+                    "hits": hits, "computed": len(missing), "deduplicated": deduplicated,
+                    "entries": len(self._score_cache),
+                }
         except Exception as error:
             if self.backend == "onnx" and self.provider == "DmlExecutionProvider":
                 with self._lock:
-                    return self._fallback_cpu(error).score(query, documents)
+                    fallback = self._fallback_cpu(error)
+                return fallback.score_with_cache(query, documents, cache_scope=cache_scope)
             raise RerankerUnavailable("Cross-Encoder 预测失败") from error
-        if len(scores) != len(documents) or any(not math.isfinite(value) for value in scores):
-            raise RerankerUnavailable("Cross-Encoder 返回的分数数量或数值无效")
-        return scores
 
 
 @lru_cache(maxsize=16)

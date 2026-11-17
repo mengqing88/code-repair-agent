@@ -1343,7 +1343,15 @@ class KnowledgeBase:
             rerank_count = getattr(self.reranker, "candidate_count", 0) or max(5, min(10, max(limit, 5)))
             rerank_candidates = results[:rerank_count]
             try:
-                scores = self.reranker.score(query, [str(item["_rerank_text"]) for item in rerank_candidates])
+                rerank_texts = [str(item["_rerank_text"]) for item in rerank_candidates]
+                score_with_cache = getattr(self.reranker, "score_with_cache", None)
+                cache_stats = None
+                if callable(score_with_cache):
+                    scores, cache_stats = score_with_cache(
+                        query, rerank_texts, cache_scope=f"{self.qdrant_namespace}:{outcome}",
+                    )
+                else:
+                    scores = self.reranker.score(query, rerank_texts)
                 if len(scores) != len(rerank_candidates) or any(not math.isfinite(float(score)) for score in scores):
                     raise ValueError("重排器返回了无效分数")
                 for item, score in zip(rerank_candidates, scores):
@@ -1357,7 +1365,8 @@ class KnowledgeBase:
                       "unreranked_candidates": max(0, len(results) - len(rerank_candidates)),
                       "return_limit": limit,
                       "backend": getattr(self.reranker, "backend", "custom"),
-                      "provider": getattr(self.reranker, "active_provider", "") or getattr(self.reranker, "provider", None)})
+                      "provider": getattr(self.reranker, "active_provider", "") or getattr(self.reranker, "provider", None),
+                      "score_cache": cache_stats})
             except Exception as error:
                 if isinstance(error, Fault) and error.category == "budget":
                     raise
