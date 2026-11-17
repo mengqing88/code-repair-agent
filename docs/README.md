@@ -7,6 +7,7 @@
 - [MVP 目标与验收约定](project/mvp.md)
 - [待办事项](project/TODO.md)
 - [可靠性控制、外部写入与安全恢复](project/可靠性与安全恢复.md)
+- [模型上下文窗口与 ReAct 历史压缩](project/上下文压缩.md)
 
 ## 评测资料
 

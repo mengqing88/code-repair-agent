@@ -136,6 +136,7 @@ def test_every_sdk_input_is_protected_including_memory_and_tool_definitions(tmp_
             ask_model_with_usage(text, env)
         elif entry == "tools":
             ask_model_with_tools([{"role": "user", "content": text},
+                                  {"type": "function_call", "call_id": "x", "name": "read_code", "arguments": "{}"},
                                   {"type": "function_call_output", "call_id": "x", "output": text}],
                                  [{"type": "function", "name": "read_code", "description": text}], env)
         elif entry == "embedding":

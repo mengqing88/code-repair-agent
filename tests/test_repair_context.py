@@ -91,9 +91,12 @@ def test_rag_json_correction_reuses_candidate_and_observations_without_tool_repl
 
     def correct(prompt):
         corrections.append(prompt)
-        assert "candidate patch" in prompt
-        assert "read-once" in prompt
-        assert "诊断必须引用适用案例的编号和版本" in prompt
+        serialized = json.dumps(prompt, ensure_ascii=False)
+        assert "candidate patch" in serialized
+        assert "read-once" in serialized
+        assert "诊断必须引用适用案例的编号和版本" in serialized
+        assert "candidate patch" in prompt[-1]["content"]
+        assert prompt[1]["role"] == "user" and prompt[1]["_context_kind"] == "recorded_tool_observation"
         return ModelCallResult(json.dumps({**proposal, "diagnosis": "[boundary@1] 需要返回 2"}), 7, 3, 10, 0.003)
 
     monkeypatch.setattr("code_repair.repair_workflow.ask_model_with_tools", model)

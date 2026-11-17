@@ -5,6 +5,7 @@ import math
 import os
 import sys
 import json
+import time
 from functools import lru_cache
 # dataclass：定义不可变的模型调用结果，集中保存回复和用量统计。
 from dataclasses import dataclass
@@ -58,16 +59,23 @@ def _estimate_input_tokens(request, *, framing_tokens):
     return tokens + margin + framing_tokens, method.replace("+512", f"+{framing_tokens}")
 
 
-def limit_request_budget(request, settings):
+def limit_request_budget(request, settings, *, force_compaction=False):
     """Bound output using an explicitly approximate tokenizer estimate."""
+    from code_repair.context_compression import fit_request_context
     context = current()
+    if context is not None:
+        context.check()
+    request, policy, input_ceiling = fit_request_context(request, settings, _estimate_input_tokens, force=force_compaction)
+    window_output_limit = min(DEFAULT_MAX_OUTPUT_TOKENS, policy.window - input_ceiling)
+    if force_compaction:
+        window_output_limit = min(window_output_limit, policy.reserve)
+    request["max_output_tokens"] = window_output_limit
     if context is None:
         return request
-    context.check()
     input_ceiling, estimation_method = _estimate_input_tokens(request, framing_tokens=512)
     used_tokens = context.tokens
     remaining_tokens = (None if context.max_tokens is None else max(0, context.max_tokens - used_tokens))
-    output_limit = DEFAULT_MAX_OUTPUT_TOKENS
+    output_limit = window_output_limit
     limiting_kind = "tokens"
     if context.max_tokens is not None:
         output_limit = min(output_limit, context.max_tokens - context.tokens - input_ceiling)
@@ -92,6 +100,49 @@ def limit_request_budget(request, settings):
         "used_tokens": used_tokens, "remaining_tokens": remaining_tokens,
         "max_output_tokens": output_limit})
     return request
+
+
+def _is_context_rejection(error):
+    if not isinstance(error, APIStatusError) or error.status_code not in {400, 413, 422}:
+        return False
+    body = error.body if isinstance(error.body, dict) else {}
+    nested = body.get("error") if isinstance(body.get("error"), dict) else body
+    code = str(nested.get("code") or nested.get("type") or getattr(error, "code", "")).lower()
+    message = str(nested.get("message") or error.message).lower()
+    return code in {"context_length_exceeded", "context_window_exceeded", "input_token_limit_exceeded", "prompt_too_long"} or (
+        any(term in message for term in ("maximum context length", "context window", "context length", "input is too long"))
+        and any(term in message for term in ("exceed", "maximum", "too long")))
+
+
+def _send_context_request(client, request, settings, recovery, *, timeout=60.0):
+    """One context correction per logical model request, independent of network retries."""
+    deadline = time.monotonic() + timeout
+    while True:
+        prepared = limit_request_budget(request, settings, force_compaction=recovery["forced"])
+        if recovery.get("rejected") is not None:
+            previous = recovery.pop("rejected")
+            before, _ = _estimate_input_tokens(previous, framing_tokens=512)
+            after, _ = _estimate_input_tokens(prepared, framing_tokens=512)
+            if after >= before and prepared["max_output_tokens"] >= previous["max_output_tokens"]:
+                raise Fault("context_window_exceeded", "模型拒绝上下文后已无可安全压缩空间，停止重发相同请求",
+                            category="validation", next_action="缩小输入或核对模型实际上下文容量")
+        trace("model.request", "prepared", input_data=prepared, required=_trace_required(),
+              details={"context_recovery": recovery["forced"]})
+        request_remaining = deadline - time.monotonic()
+        if request_remaining <= 0:
+            raise Fault("deadline_exceeded", "本次模型请求时间预算已耗尽，未继续发送", category="budget")
+        remaining = bounded_timeout(min(request_remaining, timeout))
+        try:
+            options = {"timeout": remaining} if recovery["forced"] else {}
+            return client.responses.create(**prepared, **options)
+        except APIStatusError as error:
+            if not _is_context_rejection(error):
+                raise
+            trace("model.context", "provider_rejected", decision="stop" if recovery["forced"] else "compact_once")
+            if recovery["forced"]:
+                raise Fault("context_window_exceeded", "压缩后模型仍拒绝上下文，已停止；没有重新执行工具",
+                            category="validation", next_action="核对实际模型窗口或缩小任务输入") from error
+            recovery.update(forced=True, rejected=prepared)
 
 
 def check_embedding_budget(request, rate):
@@ -260,6 +311,7 @@ def _ask_model_with_tools(model_input, tools, env_path=None):
 
     settings, api_key, base_url, model = _chat_configuration(env_path)
     _estimate_cost_yuan(settings, 0, 0)
+    context_recovery = {"forced": False}
 
     def send(timeout: float):
         """发送一轮工具调用请求，并沿用普通模型调用的结构化输出设置。"""
@@ -279,9 +331,7 @@ def _ask_model_with_tools(model_input, tools, env_path=None):
             request = dict(model=model, input=protect_input(model_input, settings=settings),
                            tools=protect_input(list(tools), settings=settings, schema=True),
                            max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS, store=False, **model_options(options, settings=settings))
-            request = limit_request_budget(request, settings)
-            trace("model.request", "prepared", input_data=request, required=_trace_required())
-            return client.responses.create(**request)
+            return _send_context_request(client, request, settings, context_recovery, timeout=timeout)
 
     response = call_with_retry(
         "model.responses.tools",
@@ -342,7 +392,7 @@ def _service_fault(error, label):
     return Fault("upstream_protocol", f"{label}服务调用失败", category="protocol")
 
 
-def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCallResult:
+def ask_model_with_usage(prompt: str | Sequence[Mapping[str, object]], env_path: Path | None = None) -> ModelCallResult:
     """调用文字模型，记录回复、用量及协议错误。"""
     with traced_call("model.generate", parameters={"prompt": prompt}, input_data={"prompt": prompt}) as call:
         result = _ask_model_with_usage(prompt, env_path)
@@ -354,14 +404,14 @@ def ask_model_with_usage(prompt: str, env_path: Path | None = None) -> ModelCall
 
 def _ask_model_with_usage(prompt, env_path=None):
     """发送文字并返回模型回复及用量；prompt 是发送内容，env_path 可指定配置文件。"""
-    # str.strip() 返回去掉两端空格、换行等空白的新字符串，不修改原 prompt；空字符串视为 False。
-    if not prompt.strip():
-        # 内置 ValueError 表示调用者传入的内容不符合要求。
+    if ((isinstance(prompt, str) and not prompt.strip())
+            or (not isinstance(prompt, str) and (not isinstance(prompt, (list, tuple)) or not prompt))):
         raise ValueError("发送给模型的内容不能为空")
 
     settings, api_key, base_url, model = _chat_configuration(env_path)
 
     _estimate_cost_yuan(settings, 0, 0)  # Reject invalid pricing before sending a billable request.
+    context_recovery = {"forced": False}
     def send(timeout):
         with OpenAI(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=0) as client:
             options = memory_instructions()
@@ -372,9 +422,7 @@ def _ask_model_with_usage(prompt, env_path=None):
                     "schema": schema["schema"], "strict": True}}
             request = dict(model=model, input=protect_input(prompt, settings=settings), max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS,
                            store=False, **model_options(options, settings=settings))
-            request = limit_request_budget(request, settings)
-            trace("model.request", "prepared", input_data=request, required=_trace_required())
-            return client.responses.create(**request)
+            return _send_context_request(client, request, settings, context_recovery, timeout=timeout)
 
     response = call_with_retry("model.responses", send, classify=lambda e: _service_fault(e, "模型"),
                                replay_safe=True, parameters={"model": model, "prompt": prompt}, endpoint=base_url)
