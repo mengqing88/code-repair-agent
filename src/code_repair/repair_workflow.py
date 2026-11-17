@@ -247,6 +247,7 @@ def llm_propose_patch(
     payload = {
         "task_id": state["task_id"],
         "original_report": state["original_report"],
+        "external_tool_receipts": state.get("external_tool_receipts", []),
         "source": state["source"],
         "code_text": state["code_text"],
         "reproduction": _reproduction_context(state["reproduction"]),
@@ -508,6 +509,8 @@ def _run_model_tool_rounds(prompt, state, definitions, execute, additional_tool_
     cost, known = 0.0, True
     started = workflow_clock()
     round_number = 0
+    from code_repair.action_guard import ActionGuard
+    progress_guard = ActionGuard()
     while True:
         if current():
             current().check()
@@ -643,6 +646,9 @@ def _run_model_tool_rounds(prompt, state, definitions, execute, additional_tool_
                         tool_trace["failure"] = failure
                     else:
                         tool_trace["result"] = result
+                    warning = progress_guard.observe(tool.name, parsed_arguments, result)
+                    if warning:
+                        result = {**result, "progress_warning": warning} if isinstance(result, dict) else {"observation": result, "progress_warning": warning}
                     tool_trace["details"] = {"observation_truncated": len(json.dumps(result, ensure_ascii=False, default=str)) > MAX_REACT_TOOL_OUTPUT_CHARS}
             model_result = result
             if tool.name == "retrieve_repair_experience" and isinstance(result, list):
@@ -777,7 +783,10 @@ def analyze_and_propose_node(state: RepairState, services: RepairServices) -> di
     except Exception as error:  # noqa: BLE001 - 模型配置、网络和协议错误都要写入状态。
         update = _record_elapsed(state, workflow_clock() - started)
         info = error_info(error)
-        if info.get("code") == "tool_authorization_required":
+        if info.get("code") == "agent_no_progress":
+            update.update(status="needs_input", question=info["next_action"], awaiting_node="propose_patch",
+                          last_error=info["message"], error_info=info)
+        elif info.get("code") == "tool_authorization_required":
             update.update(status="needs_input", question=info["next_action"], awaiting_node="tool_authorization",
                           last_error=info["message"], error_info=info)
         elif info["outcome_unknown"]:
@@ -971,7 +980,9 @@ def validate_patch_node(state: RepairState, services: RepairServices) -> dict[st
                     raise WorkflowContractError(
                         "adversarial_review 必须返回 approved、summary 和 findings"
                     )
-                update["adversarial_review"] = dict(adversarial)
+                if adversarial.get("patch_hash", state["patch_hash"]) != state["patch_hash"]:
+                    raise WorkflowContractError("独立审查证据与当前补丁哈希不一致")
+                update["adversarial_review"] = {**dict(adversarial), "patch_hash": state["patch_hash"]}
                 update["agent_messages"] = append_message(
                     review_input, AgentRole.REVIEWER, AgentRole.SUPERVISOR, "result",
                     {"approved": approved, "findings": len(findings)}, node="adversarial_review",

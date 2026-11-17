@@ -196,6 +196,8 @@ class ProgressStore:
 
     def begin_step(self, task, node, state, run_id):
         self.assert_owner(task, run_id)
+        if node != task["progress"]["next_node"]:
+            raise Fault("invalid_task_transition", "开始节点与已提交续执行位置不一致", category="conflict")
         # Accounting may have already persisted a lower budget than the graph input.
         budget = task["state"]["remaining_budget"]
         task["state"] = deepcopy(state)
@@ -204,7 +206,7 @@ class ProgressStore:
         progress = task["progress"]
         progress.update(next_node=node, in_flight={"node": node, "attempt_id": uuid4().hex,
             "input_hash": digest(state), "input_state": deepcopy(state), "code_execution_started": False,
-            "model_tool_policy": "side_effecting" if node == "propose_patch" else "not_applicable"}, interrupted=False)
+            "model_tool_policy": "journaled" if node == "propose_patch" else "not_applicable"}, interrupted=False)
         self.put(task)
 
     def finish_step(self, task, node, state, update, next_node, run_id):
@@ -213,6 +215,10 @@ class ProgressStore:
         if not attempt or attempt["node"] != node:
             raise Fault("checkpoint_conflict", "节点完成记录与执行意图冲突", category="conflict")
         new_state = {**deepcopy(state), **deepcopy(update)}
+        from code_repair.repair_workflow import next_node_after
+        expected = "baseline_reproduction" if node == "prepare_workspace" else next_node_after(node, new_state)
+        if next_node != expected:
+            raise Fault("invalid_task_transition", "提交的下一节点不符合工作流路由", category="conflict")
         for key in ("seconds", "tokens", "cost", "attempts"):
             new_state["remaining_budget"][key] = min(new_state["remaining_budget"][key],
                                                    task["state"]["remaining_budget"][key])
@@ -341,6 +347,11 @@ class RecoveryBackup:
                        tuple(row[name] for name in columns))
 
     def restore(self):
+        from code_repair.task_lifecycle import transition_scope
+        with transition_scope("recovery"):
+            return self._restore()
+
+    def _restore(self):
         manifest = self.snapshot["manifest"]
         if manifest is None or file_manifest(self.directory / "files") != manifest:
             raise Fault("snapshot_corrupt", "恢复前检查点不完整或已损坏，拒绝覆盖", category="conflict")

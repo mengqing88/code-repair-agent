@@ -29,7 +29,7 @@ SETTING_NAMES = (
     "QDRANT_COLLECTION", "QDRANT_TIMEOUT_SECONDS", "CROSS_ENCODER_BACKEND",
     "CROSS_ENCODER_ONNX_PATH", "CROSS_ENCODER_PROVIDER", "CROSS_ENCODER_THREADS", "CROSS_ENCODER_CANDIDATES",
 )
-CREDENTIAL_NAMES = ("CHAT_API_KEY", "EMBEDDING_API_KEY", "API_KEY", "QDRANT_API_KEY")
+CREDENTIAL_NAMES = ("CHAT_API_KEY", "EMBEDDING_API_KEY", "API_KEY", "QDRANT_API_KEY", "REPAIR_COORDINATION_DB_URL")
 
 
 def sha256(path):
@@ -278,6 +278,8 @@ def freeze(task, directory, request, knowledge):
                  "deployment_mode": task["config"].get("deployment_mode", "local")},
         "evidence": {"trace": "trace.jsonl", "index": "computed_from_trace_and_artifacts",
                      "tool_contract": "mcp-tools.snapshot.json"}}
+    manifest["task"]["persistence"] = {key: task["config"].get(key) for key in
+        ("principal", "cli_task", "cli_knowledge_backend", "cli_knowledge_identity", "knowledge_path")}
     # Canonical JSON shape is shared by the file and DB (tuples become lists).
     manifest = json.loads(json.dumps(manifest, ensure_ascii=False))
     manifest_path = directory / "execution-manifest.json"
@@ -327,6 +329,9 @@ def verify(task, directory, *, runtime=False):
                 "execution_backend": task["config"]["execution_backend"],
                 "allowed_paths": task["config"]["allowed_paths"],
                 "source_fingerprint": task["config"]["source_fingerprint"]}
+    persistence = manifest["task"].get("persistence")
+    if persistence is not None and persistence != {key: task["config"].get(key) for key in persistence}:
+        raise Fault("configuration_changed", "任务持久化后端或账号绑定与冻结清单不一致", category="validation")
     if task["config"].get("deployment_mode", "local") != manifest["task"].get("deployment_mode", "local"):
         raise Fault("configuration_changed", "任务部署边界发生变化", category="validation")
     if protect_input(task["config"].get("user_memory_snapshot", [])) != manifest["task"].get("memory", []):

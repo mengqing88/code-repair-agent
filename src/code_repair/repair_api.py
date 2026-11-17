@@ -40,6 +40,7 @@ import hmac
 from code_repair.user_accounts import UserAccounts, SESSION_COOKIE, SESSION_SECONDS, csrf_token
 from code_repair.personal_memory import PersonalMemory, MemoryInput, memory_scope
 from code_repair.conversation_memory import Conversations, ChatInput, CandidateInput, conversation_lock
+from code_repair.task_lifecycle import transition_scope
 
 
 _LOCAL_HOSTS = {"127.0.0.1", "localhost", "testserver"}
@@ -250,6 +251,13 @@ class ClarificationInput(BaseModel):
     answer: str = Field(min_length=1, max_length=4000)
 
 
+class DeadLetterInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    decision: Literal["requeue", "dismiss"]
+    request_id: str = Field(pattern=r"^[A-Za-z0-9_-]{8,128}$")
+    reason: str = Field(min_length=1, max_length=2000)
+
+
 class BudgetExtensionInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
     seconds: float = Field(default=0.0, ge=0, le=3600)
@@ -330,6 +338,8 @@ class TaskStore(ProgressStore):
                 task_id TEXT PRIMARY KEY, decision TEXT NOT NULL, reason TEXT NOT NULL,
                 patch_hash TEXT NOT NULL, created_at TEXT NOT NULL)""")
             setup_recovery(db)
+            from code_repair.dead_letters import setup as setup_dead_letters
+            setup_dead_letters(db)
             db.execute("""CREATE TABLE IF NOT EXISTS budget_extensions
                 (task_id TEXT NOT NULL, request_id TEXT NOT NULL, parameters TEXT NOT NULL,
                  actor TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY(task_id,request_id))""")
@@ -369,6 +379,8 @@ class TaskStore(ProgressStore):
         task_id = task["state"]["task_id"]
         saved = db.execute("SELECT payload FROM tasks WHERE id=?", (task_id,)).fetchone()
         previous = json.loads(saved[0]) if saved else None
+        from code_repair.task_lifecycle import validate_transition
+        validate_transition(previous, task)
         frozen_hash = (previous or {}).get("config", {}).get("execution_manifest_hash")
         if frozen_hash and (task["config"].get("execution_manifest_hash") != frozen_hash
                             or task["config"].get("execution_manifest_path") != "execution-manifest.json"):
@@ -398,6 +410,8 @@ class TaskStore(ProgressStore):
                 raise Fault("stale_execution", "任务已被其他执行更新", category="conflict")
         else:
             db.execute("INSERT INTO tasks VALUES (?,?)", (task_id, payload))
+        from code_repair.dead_letters import capture
+        capture(db, previous, task)
 
     def put(self, task):
         with self.connect() as db:
@@ -563,6 +577,7 @@ class RepairRunner:
             embedder=self.knowledge.embedder,
         )
 
+    @transition_scope("budget_extension")
     def extend_budget(self, task_id, value, principal):
         parameters = value.model_dump()
         if not value.reason.strip() or not any(parameters[k] > 0 for k in ("seconds", "tokens", "cost", "attempts")):
@@ -618,6 +633,122 @@ class RepairRunner:
         self.submit(task_id, False)
         return self.store.get(task_id)
 
+    @transition_scope("dead_letter_requeue")
+    def decide_dead_letter(self, identifier, value, principal):
+        parameters = value.model_dump()
+        parameters["reason"] = redact(value.reason.strip(), limit=2000)
+        if not parameters["reason"]:
+            raise HTTPException(422, "处理失败任务必须填写原因")
+        duplicate, prepared = False, False
+        with self.lock, self.store.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT task_id,status FROM task_dead_letters WHERE id=?", (identifier,)).fetchone()
+            if not row:
+                raise HTTPException(404, "失败记录不存在")
+            task_id = row[0]
+            task = self.store.get_owned(task_id, principal)
+            saved = db.execute("SELECT parameters FROM dead_letter_decisions WHERE id=? AND request_id=?",
+                               (identifier, value.request_id)).fetchone()
+            if saved:
+                if json.loads(saved[0]) != parameters:
+                    raise HTTPException(409, "相同处理请求不能更换决定或原因")
+                duplicate = True
+            else:
+                if row[1] != "open":
+                    raise HTTPException(409, "失败记录已处理")
+                if value.decision == "requeue":
+                    self.validate_task_identity(task)
+                    if task["config"].get("execution_manifest_path"):
+                        verify_execution_manifest(task, self.store.root / "tasks" / task_id, runtime=True)
+                    state, progress = task["state"], task.get("progress")
+                    if (not progress or task["execution"] != "idle" or progress.get("run_id")
+                            or progress.get("in_flight") or progress.get("interrupted") or progress.get("pending_calls")
+                            or task.get("worker_stop_unconfirmed") or task.get("review")
+                            or (state.get("error_info") or {}).get("outcome_unknown")
+                            or self.operations.pending_for_task(task_id)
+                            or state["status"] not in {"failed", "timed_out", "needs_input"}):
+                        raise HTTPException(409, "任务仍有在途执行或未知结果，必须先核对，不能直接重投")
+                    count = db.execute("SELECT COUNT(*) FROM task_dead_letters WHERE task_id=? AND status='requeued'", (task_id,)).fetchone()[0]
+                    if count >= 3 or any(state["remaining_budget"][k] <= 0 for k in ("seconds", "tokens", "cost", "attempts")):
+                        raise HTTPException(409, "重投上限或原任务预算已耗尽；不会自动补充预算")
+                    trace("task.dead_letter", "restore_intent", task_id=task_id,
+                          path=self.store.root / "tasks" / task_id / "trace.jsonl", required=True,
+                          details={"id": identifier, "actor": principal, "request_id": value.request_id})
+                    # Commit intent before touching files; a crash cannot leave an invisible reset.
+                    state["remaining_budget"]["attempts"] -= 1
+                    state.update(failure_update(Fault("dead_letter_restore_in_progress", "正在恢复重投基线，禁止并发续跑",
+                                                    category="unknown", outcome_unknown=True)))
+                    progress.update(interrupted=True, clock={"boot": boot_identity(), "tick": time.monotonic(),
+                                                            "remaining": state["remaining_budget"]["seconds"]})
+                    task["redelivery_restore"] = {"id": identifier, "request_id": value.request_id}
+                    task["worker"] = None
+                    self.store._write(db, task)
+                    db.execute("UPDATE task_dead_letters SET status='preparing' WHERE id=?", (identifier,))
+                    prepared = True
+                else:
+                    db.execute("UPDATE task_dead_letters SET status='dismissed',reason=?,actor=? WHERE id=?",
+                               (parameters["reason"], principal, identifier))
+                    db.execute("INSERT INTO dead_letter_decisions VALUES (?,?,?)",
+                               (identifier, value.request_id, json.dumps(parameters, ensure_ascii=False)))
+        if prepared:
+            self._finish_dead_letter_restore(task, identifier, value, parameters, principal)
+        trace("task.dead_letter", value.decision, task_id=task_id,
+              path=self.store.root / "tasks" / task_id / "trace.jsonl",
+              details={"id": identifier, "actor": principal, "request_id": value.request_id, "duplicate": duplicate})
+        if value.decision == "requeue" and self.store.get(task_id)["execution"] == "queued":
+            self.submit(task_id, False)
+        return self.store.get_owned(task_id, principal)
+
+    def _finish_dead_letter_restore(self, task, identifier, value, parameters, principal):
+        state, progress, config = task["state"], task["progress"], task["config"]
+        started = progress["clock"]["tick"]
+        failure = None
+        try:
+            if config.get("checkpoint"):
+                with execution_scope(state["remaining_budget"]["seconds"]), cleanup_scope():
+                    restore_checkpoint_workspace(Path(config["workspace"]), config["checkpoint"])
+                actual = file_manifest(Path(config["workspace"]), source=True)
+                if actual != progress.get("baseline_manifest"):
+                    raise Fault("baseline_conflict", "重投前的工作区未恢复到可信基线", category="conflict")
+                progress["workspace_manifest"] = actual
+        except BaseException as error:
+            failure = error
+        elapsed = max(0.0, time.monotonic() - started)
+        state["remaining_budget"]["seconds"] = max(0.0, state["remaining_budget"]["seconds"] - elapsed)
+        state["elapsed_seconds"] += elapsed
+        progress["clock"] = None
+        if failure is not None:
+            fault = Fault("dead_letter_restore_failed", "重投恢复失败，保留意图并暂停；请核对任务副本后人工处理",
+                          category="unknown", outcome_unknown=True,
+                          causes=[error_info(failure, operation="dead_letter.restore")])
+            state.update(failure_update(fault))
+            task["execution"] = "idle"
+        else:
+            node = ("prepare_workspace" if not config.get("checkpoint") else
+                    "baseline_reproduction" if not state.get("reproduction") else
+                    "collect_context" if not state.get("code_evidence") else
+                    "retrieve_experience" if state.get("experience_retrieval_pending") else "propose_patch")
+            if state.get("awaiting_node") == "propose_patch":
+                state.setdefault("clarifications", []).append(parameters["reason"])
+            state.update(status="queued", error_info=None, last_error=None, question=None, awaiting_node=None,
+                         patch_diff=None, patch_hash=None, validation=None, adversarial_review=None)
+            if state["remaining_budget"]["seconds"] <= 0:
+                state.update(failure_update(Fault("deadline_exceeded", "重投恢复已耗尽任务时间预算", category="budget", budget_kind="runtime")))
+            progress.update(next_node=node, interrupted=False, committed_state=deepcopy(state), state_hash=digest(state))
+            task["execution"] = "queued" if state["status"] == "queued" else "idle"
+            task["redelivery_restore"] = None
+        with self.lock, self.store.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            self.store._write(db, task)
+            db.execute("UPDATE task_dead_letters SET status=?,reason=?,actor=? WHERE id=?",
+                       ("requeue_failed" if failure else "requeued", parameters["reason"], principal, identifier))
+            db.execute("INSERT INTO dead_letter_decisions VALUES (?,?,?)",
+                       (identifier, value.request_id, json.dumps(parameters, ensure_ascii=False)))
+        if failure is not None:
+            if not isinstance(failure, Exception):
+                raise failure
+            raise fault from failure
+
     def personal_memory(self, user_id):
         self.accounts.knowledge_path(user_id)  # Validate the authoritative user identity before building paths.
         return PersonalMemory(self.store.root / "users" / user_id / "personal_memory.sqlite3")
@@ -659,6 +790,7 @@ class RepairRunner:
         self.submit(task_id, False)
         return self.store.get(task_id)
 
+    @transition_scope("tool_outcome")
     def resolve_tool_outcome(self, task_id, request):
         evidence = redact(request.evidence.strip(), limit=2000)
         if len(evidence) < 10:
@@ -675,7 +807,13 @@ class RepairRunner:
             resolution = {"operation_id": request.operation_id, "outcome": request.outcome,
                           "evidence": evidence, "created_at": timestamp()}
             state.setdefault("tool_resolutions", []).append(resolution)
-            if request.outcome == "not_applied":
+            remaining = self.operations.pending_for_task(task_id)
+            completed = any(r.get("outcome") == "completed" for r in state["tool_resolutions"])
+            if remaining:
+                fault = Fault("mcp_outcome_unknown", "仍有其他外部操作未核实，继续暂停",
+                              category="unknown", outcome_unknown=True, operation_id=remaining[0]["operation_id"])
+                state.update(failure_update(fault))
+            elif not completed:
                 state.update(status="queued", question=None, last_error=None, error_info=None, awaiting_node=None)
                 progress.update(next_node="propose_patch", in_flight=None, interrupted=False,
                                 committed_state=deepcopy(state), state_hash=digest(state))
@@ -690,7 +828,7 @@ class RepairRunner:
             self.store.put(task)
         trace("mcp.operation", "manually_resolved", task_id=task_id,
               details={"operation_id": request.operation_id, "outcome": request.outcome})
-        if request.outcome == "not_applied":
+        if task["execution"] == "queued":
             self.submit(task_id, False)
         return self.store.get(task_id)
 
@@ -754,6 +892,18 @@ class RepairRunner:
         if owner is None:
             if principal != "local-user":
                 raise Fault("permission_denied", "任务缺少可信用户归属", category="permission")
+            if task["config"].get("cli_task"):
+                postgres = __import__("code_repair.repair_tools", fromlist=["PostgresKnowledgeBase"]).PostgresKnowledgeBase.from_environment()
+                if ("postgres" if postgres else "sqlite") != task["config"].get("cli_knowledge_backend", "sqlite"):
+                    raise Fault("configuration_changed", "CLI 知识库后端与原任务不一致", category="configuration")
+                if postgres:
+                    from psycopg.conninfo import conninfo_to_dict
+                    identity = digest({key: value for key, value in conninfo_to_dict(postgres.dsn).items()
+                                       if key not in {"password", "passfile"}})
+                    if task["config"].get("cli_knowledge_identity") != identity:
+                        raise Fault("configuration_changed", "CLI PostgreSQL 目标与原任务不一致", category="configuration")
+                    return replace(postgres, regression_path=Path(task["config"]["knowledge_path"]))
+                return KnowledgeBase(Path(task["config"]["knowledge_path"]), embedder=self.knowledge.embedder)
             return self.knowledge
         if principal != owner and not (principal == "local-user" and owner == self.accounts.legacy_owner()):
             raise Fault("permission_denied", "任务用户身份与持久化归属不一致", category="permission")
@@ -864,8 +1014,8 @@ class RepairRunner:
                        "deployment_mode": self.deployment_mode,
                        "effect_keys": {name: uuid4().hex for name in ("apply_patch", "save_case", "reject_patch")},
                        "principal": user_id or "local-user",
-                       **({"knowledge_path": str(self.accounts.knowledge_path(user_id)),
-                           "user_memory_snapshot": self.personal_memory(user_id).list()} if user_id else {}),
+                       "knowledge_path": str(self.accounts.knowledge_path(user_id) if user_id else self.knowledge.path),
+                       **({"user_memory_snapshot": self.personal_memory(user_id).list()} if user_id else {}),
                        "source_fingerprint": source_fingerprint(source, source_root),
                        "allowed_paths": [source_path.name] if request.source_type in ("python_file", "code_file") else
                                         [str(source.get("file_name", "target.py"))] if request.source_type == "pasted_code" else ["."]},
@@ -1020,7 +1170,6 @@ class RepairRunner:
     def services(self, task):
         config = task["config"]
         knowledge = self.validate_task_identity(task)
-        config["knowledge_path"] = str(knowledge.path)
         workspace = Path(config["workspace"])
         if config.get("execution_manifest_path"):
             manifest = verify_execution_manifest(task, workspace.parent)
@@ -1085,6 +1234,11 @@ class RepairRunner:
         if regression:
             toolbox._regression_case = {**regression,
                 "reproduction_code": (task["state"].get("reproduction") or {}).get("reproduction_code", "")}
+        return self.guard_services(task, services)
+
+    def guard_services(self, task, services):
+        config = task["config"]
+        workspace = Path(config["workspace"])
         def effect(name, state, action):
             keys = config.setdefault("effect_keys", {})
             key = keys.setdefault(name, uuid4().hex)
@@ -1358,6 +1512,46 @@ class RepairRunner:
                 if not context.workflow_ended:
                     trace_workflow_end(task["state"])
 
+    def configure_context(self, task, context, run_id):
+        task_id = task["state"]["task_id"]
+        prior = task["state"].get("accounting", {})
+        context.prior_accounting = prior
+        context.cost_known, context.usage_known = prior.get("cost_complete", True), prior.get("usage_complete", True)
+        context.warnings = list(task["state"].get("warnings", []))
+        context.before_node = lambda node, state: self.store.begin_step(task, node, state, run_id)
+
+        def code_execution():
+            self.store.assert_owner(task, run_id)
+            task["progress"]["in_flight"]["code_execution_started"] = True
+            self.store.put(task)
+
+        context.on_code_execution = code_execution
+
+        def completed(node, state, update):
+            self.store.assert_owner(task, run_id)
+            task["progress"]["workspace_manifest"] = file_manifest(Path(task["config"]["workspace"]), source=True)
+            self.store.finish_step(task, node, state, update, next_node_after(node, {**state, **update}), run_id)
+            trace("checkpoint", "committed", result={"state": task["state"],
+                  "next_node": task["progress"]["next_node"]}, details={"node": node})
+
+        def request(event, identifier, operation):
+            self.store.assert_owner(task, run_id)
+            calls = task["progress"]["pending_calls"]
+            if event == "started":
+                calls.append({"id": identifier, "operation": operation, "status": "pending",
+                              "reserved_tokens": max(0, context.max_tokens - context.tokens),
+                              "reserved_cost": max(0, context.max_cost - context.cost)})
+            elif event == "unknown":
+                for entry in calls:
+                    if entry["id"] == identifier:
+                        entry["status"] = "unknown"
+            else:
+                task["progress"]["pending_calls"] = [entry for entry in calls if entry["id"] != identifier]
+            # Charge and pending-call completion must be one task transaction.
+            self.store.account(task, context)
+
+        context.after_node, context.on_account, context.on_request = completed, lambda ctx: self.store.account(task, ctx), request
+
     def run_checkpointed_inline(self, task_id, reviewing, *, managed=False, run_id=None):
         task = self.store.get(task_id)
         self.validate_task_identity(task)
@@ -1380,43 +1574,7 @@ class RepairRunner:
                 circuit_path=self.store.root / "circuits.sqlite3",
                 max_tokens=task["state"]["remaining_budget"]["tokens"],
                 max_cost=task["state"]["remaining_budget"]["cost"]) as context:
-            prior = task["state"].get("accounting", {})
-            context.prior_accounting = prior
-            context.cost_known, context.usage_known = prior.get("cost_complete", True), prior.get("usage_complete", True)
-            context.warnings = list(task["state"].get("warnings", []))
-            context.before_node = lambda node, state: self.store.begin_step(task, node, state, run_id)
-
-            def code_execution():
-                self.store.assert_owner(task, run_id)
-                task["progress"]["in_flight"]["code_execution_started"] = True
-                self.store.put(task)
-
-            context.on_code_execution = code_execution
-
-            def completed(node, state, update):
-                self.store.assert_owner(task, run_id)
-                task["progress"]["workspace_manifest"] = file_manifest(Path(task["config"]["workspace"]), source=True)
-                self.store.finish_step(task, node, state, update, next_node_after(node, {**state, **update}), run_id)
-                trace("checkpoint", "committed", result={"state": task["state"],
-                      "next_node": task["progress"]["next_node"]}, details={"node": node})
-
-            def request(event, identifier, operation):
-                self.store.assert_owner(task, run_id)
-                calls = task["progress"]["pending_calls"]
-                if event == "started":
-                    calls.append({"id": identifier, "operation": operation, "status": "pending",
-                                  "reserved_tokens": max(0, context.max_tokens - context.tokens),
-                                  "reserved_cost": max(0, context.max_cost - context.cost)})
-                elif event == "unknown":
-                    for entry in calls:
-                        if entry["id"] == identifier:
-                            entry["status"] = "unknown"
-                else:
-                    task["progress"]["pending_calls"] = [entry for entry in calls if entry["id"] != identifier]
-                # Charge and pending-call completion must be one task transaction.
-                self.store.account(task, context)
-
-            context.after_node, context.on_account, context.on_request = completed, lambda ctx: self.store.account(task, ctx), request
+            self.configure_context(task, context, run_id)
             try:
                 self.store.account(task, context)
                 if task["progress"]["next_node"] == "prepare_workspace":
@@ -1904,6 +2062,15 @@ def create_app(data_root: Path | None = None):
     @app.post("/api/tasks/{task_id}/budget", status_code=202)
     def extend_task_budget(task_id: str, value: BudgetExtensionInput, request: Request):
         return runner.task_with_pending_operations(runner.extend_budget(task_id, value, request.state.user["id"]))
+
+    @app.get("/api/dead-letters")
+    def dead_letters(request: Request, limit: int = Query(100, ge=1, le=100)):
+        from code_repair.dead_letters import list_owned
+        return {"items": list_owned(runner.store, request.state.user["id"], limit)}
+
+    @app.post("/api/dead-letters/{identifier}/decision")
+    def decide_dead_letter(identifier: str, value: DeadLetterInput, request: Request):
+        return runner.task_with_pending_operations(runner.decide_dead_letter(identifier, value, request.state.user["id"]))
 
     @app.get("/api/failure-regressions")
     def failure_regressions(request: Request):

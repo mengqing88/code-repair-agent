@@ -110,7 +110,9 @@ def test_running_stream_delivers_before_task_finishes_and_reconnects_from_durabl
     append_trace(path, {"operation": "read_code", "event": "succeeded"})
     task = runner.store.get(task_id)
     task["execution"] = "idle"
-    task["state"]["status"] = "reviewable"
+    task["state"].update(status="reviewable", patch_hash="fixture-patch",
+                         validation={"passed": True, "patch_hash": "fixture-patch"},
+                         adversarial_review={"approved": True, "patch_hash": "fixture-patch"})
     runner.store.put(task)
     with client.stream("GET", f"/api/tasks/{task_id}/stream", headers={"Last-Event-ID": first["id"]}) as response:
         resumed = list(events(response))

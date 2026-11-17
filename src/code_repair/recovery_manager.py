@@ -14,6 +14,7 @@ from code_repair.recovery_store import (RecoveryBackup, WORKFLOW_VERSION, boot_i
 from code_repair.resilience import (Fault, cleanup_scope, digest, error_info, execution_scope, trace,
                         stop_recorded_worker, recorded_worker_stopped, trace_workflow_end)
 from code_repair.diagnostics import diagnostic_scope
+from code_repair.task_lifecycle import transition_scope
 
 
 def effect_key(task, name, state=None):
@@ -38,6 +39,9 @@ def effect_parameters(task, name, state=None):
 
 def probe_business(task, name, state=None):
     """Four outcomes. Absence proves nonexecution only AFTER the old writer was fenced/stopped."""
+    if task["config"].get("cli_knowledge_backend") == "postgres":
+        # The local regression database is not evidence for a PostgreSQL write.
+        return "unknown"
     state = state or task["state"]
     document = build_case_document(state) if name == "save_case" else build_rejection_document(state)
     path = Path(task["config"]["knowledge_path"])
@@ -65,8 +69,10 @@ class RecoveryManager:
         self.runner, self.store = runner, runner.store
         self.agent = agent or RecoveryAgent()
 
-    def recover_pending(self):
+    def recover_pending(self, task_ids=None):
         for task in self.store.list_tasks():
+            if task_ids is not None and task["state"]["task_id"] not in task_ids:
+                continue
             if not task.get("progress"):
                 continue
             with self.store.connect() as db:
@@ -107,6 +113,7 @@ class RecoveryManager:
         task["worker_stop_unconfirmed"] = False
         self.store.put(task)
 
+    @transition_scope("recovery")
     def recover(self, task_id, job_id=None):
         backup = None
         with diagnostic_scope(path=self.store.root / "tasks" / task_id / "errors.jsonl", task_id=task_id, operation="task.recovery"):
@@ -118,7 +125,7 @@ class RecoveryManager:
                     candidate = RecoveryBackup(self.store, job_id)
                     knowledge = self.runner.validate_task_identity(candidate.snapshot["task"])
                     if (candidate.task_id != task_id
-                            or Path(candidate.snapshot["business_path"]).resolve() != knowledge.path.resolve()):
+                            or Path(candidate.snapshot["business_path"]).resolve() != Path(getattr(knowledge, "path", None) or task["config"]["knowledge_path"]).resolve()):
                         raise Fault("permission_denied", "恢复快照归属或业务路径不一致，拒绝覆盖", category="permission")
                     backup = candidate
                     # Restore exactly the original A even when a previous rollback stopped halfway.
@@ -243,6 +250,13 @@ class RecoveryManager:
         from code_repair.repair_workflow import NODES
         from code_repair.repair_tools import restore_checkpoint_workspace, apply_patch
         progress, config = task["progress"], task["config"]
+        if task.get("redelivery_restore"):
+            raise Fault("dead_letter_restore_interrupted", "失败任务重投的文件恢复曾中断，需人工核对任务副本",
+                        category="unknown", outcome_unknown=True)
+        pending = self.runner.operations.pending_for_task(task["state"]["task_id"])
+        if pending:
+            raise Fault("mcp_outcome_unknown", "仍有未核实的外部写操作，禁止自动续跑", category="unknown", outcome_unknown=True,
+                        operation_id=pending[0]["operation_id"], next_action="先核对外部操作结果")
         expected_workspace = managed_task_path(self.store, task["state"]["task_id"]) / "workspace"
         assert_plain_path(Path(config["workspace"]))
         if Path(config["workspace"]).absolute() != expected_workspace.absolute():
@@ -269,7 +283,7 @@ class RecoveryManager:
             node = attempt["node"]
             if node in ("baseline_reproduction", "validate_patch") and attempt.get("code_execution_started") is not False:
                 raise Fault("test_outcome_unknown", "中断节点运行过用户代码，缺少可安全重放的证据", category="unknown", outcome_unknown=True)
-            if node == "propose_patch" and attempt.get("model_tool_policy") != "read_only":
+            if node == "propose_patch" and attempt.get("model_tool_policy") not in {"read_only", "journaled"}:
                 raise Fault("model_outcome_unknown", "模型节点未提交结果，不能确认中断调用的用量和输出", category="unknown", outcome_unknown=True)
             if node == "prepare_workspace":
                 if source_fingerprint(task["state"]["source"], Path(config["source_root"])) != config["source_fingerprint"]:

@@ -1757,8 +1757,13 @@ class RepairToolbox:
 
             try:
                 definitions = self.model_tool_definitions()
+                if self.mcp_client.operation_store and self.mcp_client.operation_store.outbox_for_task(self.mcp_client.task_id, self.mcp_client.principal):
+                    used_mcp_tool = True
+                receipts = self.mcp_client.dispatch_outbox(self.validate_model_tool)
+                if receipts:
+                    used_mcp_tool = True
                 return llm_propose_patch(
-                    state,
+                    {**state, "external_tool_receipts": receipts},
                     tool_definitions=definitions,
                     tool_executor=execute_tool,
                     additional_tool_names=tuple(self.mcp_client.tool_names),

@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import os
 # sys：访问当前进程的标准输出、标准错误等运行环境信息。
 import sys
 # uuid4：为每次 CLI 修复任务生成独立的状态标识。
@@ -292,6 +293,18 @@ def _run_repair_workflow(
     error_report: str,
     project_root: Path,
 ) -> tuple[RepairState, Path, str]:
+    from code_repair.recovery_store import ServiceLock
+    root = project_root / "work"
+    root.mkdir(parents=True, exist_ok=True)
+    lock = ServiceLock(root)
+    lock.acquire()
+    try:
+        return _run_locked_workflow(args, source, error_report, project_root)
+    finally:
+        lock.release()
+
+
+def _run_locked_workflow(args, source, error_report, project_root):
     with execution_scope(DEFAULT_MAX_RUNTIME_SECONDS, max_tokens=DEFAULT_MAX_MODEL_TOKENS,
                          max_cost=DEFAULT_MAX_COST_YUAN) as context:
         with diagnostic_scope(path=project_root / "work" / "errors.jsonl", operation="cli.workflow"):
@@ -395,7 +408,17 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
         "reproduce_command": list(toolbox.reproduce_command or ()),
         "regression_command": list(toolbox.regression_command or ()),
         "checkpoint": checkpoint, "execution_backend": toolbox.execution_backend,
-        "source_fingerprint": source_fingerprint(source, project_root)}}
+        "source_fingerprint": source_fingerprint(source, project_root),
+        "knowledge_path": str(Path(args.knowledge_base).resolve()),
+        "principal": "local-user", "cli_task": True,
+        "cli_knowledge_backend": "postgres" if postgres_knowledge_base is not None else "sqlite",
+        "effect_keys": {name: uuid4().hex for name in ("apply_patch", "save_case", "reject_patch")}},
+        "execution": "queued", "review": None, "source_label": "CLI"}
+    if postgres_knowledge_base is not None:
+        from psycopg.conninfo import conninfo_to_dict
+        from code_repair.resilience import digest
+        task["config"]["cli_knowledge_identity"] = digest({key: value for key, value in
+            conninfo_to_dict(postgres_knowledge_base.dsn).items() if key not in {"password", "passfile"}})
     manifest, identity = freeze(task, directory, {"source": source, "error_report": error_report,
                                                 "code_text": args.code_text}, knowledge_base)
     from code_repair.execution_manifest import write_once
@@ -403,21 +426,52 @@ def _run_repair_workflow_scoped(args, source, error_report, project_root):
     toolbox.knowledge_base = SnapshotKnowledge(knowledge_base, directory, manifest)
     # as_repair_services() 将复现、上下文收集、模型提议、补丁应用、测试和经验保存绑定到固定节点。
     services = toolbox.as_repair_services(reproduce_for_state)
+    from code_repair.repair_api import RepairRunner, timestamp
+    from code_repair.recovery_store import initial_progress, file_manifest
+    from code_repair.resilience import process_identity, failure_update, Fault
+    from code_repair.workflow_checkpoint import task_checkpointer
+    runner = RepairRunner(project_root / "work")
+    runner.knowledge = knowledge_base
+    progress = initial_progress()
+    baseline = file_manifest(workspace_root, source=True)
+    progress.update(next_node="baseline_reproduction", baseline_manifest=baseline, workspace_manifest=baseline)
+    task.update(progress=progress, created_at=timestamp())
+    runner.store.put(task)
+    task, run_id = runner.store.claim(task_id)
+    context.run_id = run_id
+    task.update(execution="running", worker={"pid": os.getpid(), "identity": process_identity(os.getpid()), "token": run_id})
+    runner.store.put(task)
+    callbacks = {name: getattr(context, name) for name in ("before_node", "after_node", "on_account", "on_request", "on_code_execution")}
+    runner.configure_context(task, context, run_id)
     # invoke() 执行编译后的 LangGraph；返回值包含每个节点写回的最终状态快照。
     try:
         with task_configuration(task, directory):
             toolbox.reset_mcp_client()
-            from langgraph.checkpoint.sqlite import SqliteSaver
             from code_repair.workflow_replay import recording_scope
-            with recording_scope(directory), SqliteSaver.from_conn_string(str(directory / "langgraph.sqlite3")) as saver:
-                state = build_repair_workflow(services, checkpointer=saver).invoke(initial_state,
-                    config={"configurable": {"thread_id": task_id}, "recursion_limit": 100}, durability="sync")
+            with recording_scope(directory), task_checkpointer(directory, runner.store, task) as (saver, graph_config):
+                state = build_repair_workflow(runner.guard_services(task, services), checkpointer=saver).invoke(initial_state,
+                    config=graph_config, durability="sync")
         from code_repair.input_protection import protect_input
         write_once(directory / "final-state.json", protect_input(state))
-    except Exception as error:
+    except BaseException as error:
         from code_repair.resilience import failure_update, trace_workflow_end
-        trace_workflow_end({**initial_state, **failure_update(error, operation="cli.workflow")})
+        task["progress"]["interrupted"] = True
+        task["state"].update(failure_update(error if isinstance(error, Exception) else
+            Fault("cli_interrupted", "CLI 被中断，需核对在途操作", category="unknown", outcome_unknown=True), operation="cli.workflow"))
+        trace_workflow_end(task["state"])
         raise
+    finally:
+        try:
+            runner.store.account(task, context)
+            task["execution"] = "idle"
+            task["worker"] = None
+            if not task["progress"]["interrupted"]:
+                task["progress"]["clock"] = None
+            runner.store.revoke(task)
+        finally:
+            for name, value in callbacks.items():
+                setattr(context, name, value)
+            runner.pool.shutdown(wait=True)
     return state, workspace_root, checkpoint
 
 
@@ -467,6 +521,10 @@ def _update_workflow_result(result: dict[str, object], state: RepairState) -> No
 
 def main(argv: Sequence[str] | None = None) -> int:
     """CLI 主流程：解析、校验并打印 JSON；argv 为参数序列，None 时读取真实命令行。"""
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] in {"resume", "worker"}:
+        from code_repair.recovery_cli import main as recovery_main
+        return recovery_main(arguments)
     # 内置 hasattr() 检查输出流是否有 reconfigure 属性，兼容不支持它的输出流。
     # sys.stdout 是标准输出流；reconfigure() 将其文本编码设为 UTF-8。
     if hasattr(sys.stdout, "reconfigure"):

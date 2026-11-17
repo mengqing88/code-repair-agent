@@ -35,6 +35,7 @@ class ToolAuthorizations:
                              (fingerprint,)).fetchone()
             if row and row[1] in ("pending", "approved") and row[2] <= time.time():
                 db.execute("UPDATE tool_authorizations SET status='expired' WHERE id=?", (row[0],))
+                db.execute("UPDATE tool_outbox SET status='expired' WHERE id=? AND status='pending'", (row[0],))
                 row = None
             # A confirmed non-application needs new explicit consent before another attempt.
             if row and row[1] == "consumed":
@@ -84,6 +85,7 @@ class ToolAuthorizations:
             if row[4] not in ("pending", "approved") or row[5] > time.time():
                 raise Fault("tool_authorization_stale", "只能重新申请已过期且未执行的授权", category="conflict")
             db.execute("UPDATE tool_authorizations SET status='expired' WHERE id=?", (identifier,))
+            db.execute("UPDATE tool_outbox SET status='expired' WHERE id=? AND status='pending'", (identifier,))
             fresh = digest(uuid4().hex)
             db.execute("INSERT INTO tool_authorizations VALUES (?,?,?,?,?,?,?,'pending',?,NULL,NULL,NULL)",
                        (fresh, row[0], task_id, principal, row[1], row[2], row[3], time.time() + AUTHORIZATION_TTL))
@@ -103,6 +105,11 @@ class ToolAuthorizations:
                 raise Fault("tool_authorization_stale", "授权已处理或过期，请刷新任务", category="conflict")
             db.execute("UPDATE tool_authorizations SET status=?,decided_by=?,reason=?,decided_at=? WHERE id=?",
                        (decision, principal, protect_input(reason.strip()), time.time(), identifier))
+            if decision == "approved":
+                item = db.execute("SELECT tool,parameters FROM tool_authorizations WHERE id=?", (identifier,)).fetchone()
+                db.execute("INSERT OR IGNORE INTO tool_outbox (id,task_id,principal,tool,parameters,status,updated_at) "
+                           "VALUES (?,?,?,?,?,'pending',strftime('%Y-%m-%dT%H:%M:%fZ','now'))",
+                           (identifier, task_id, principal, item[0], item[1]))
 
     def consume(self, identifier, task_id, principal):
         with closing(self.operations.connect()) as db, db:
@@ -114,6 +121,11 @@ class ToolAuthorizations:
             if row[0] == "consumed":
                 previous = self.operations.lookup(identifier)
                 if previous:
+                    if previous["status"] == "prepared" and row[1] <= time.time():
+                        db.execute("UPDATE operations SET status='failed' WHERE key=? AND status='prepared'", (identifier,))
+                        db.execute("UPDATE tool_outbox SET status='expired' WHERE id=?", (identifier,))
+                        db.commit()
+                        raise Fault("tool_authorization_stale", "尚未发送的操作授权已过期，未执行", category="permission")
                     return  # OperationStore will return its receipt or pause an unknown result.
                 # Materialize the interrupted intent so the ordinary outcome-verification UI can resolve it.
                 db.execute("INSERT INTO operations (key,task_id,name,params_hash,status,updated_at) "
@@ -125,3 +137,11 @@ class ToolAuthorizations:
             if row[0] != "approved" or row[1] <= time.time():
                 raise Fault("tool_authorization_stale", "外部操作授权无效或已过期", category="permission")
             db.execute("UPDATE tool_authorizations SET status='consumed' WHERE id=?", (identifier,))
+            # Approval consumption and a known-not-sent intent commit together.
+            db.execute("INSERT OR IGNORE INTO tool_outbox (id,task_id,principal,tool,parameters,status,updated_at) "
+                       "VALUES (?,?,?,?,?,'pending',strftime('%Y-%m-%dT%H:%M:%fZ','now'))",
+                       (identifier, task_id, principal, row[2], row[3]))
+            db.execute("INSERT INTO operations (key,task_id,name,params_hash,status,updated_at) "
+                       "VALUES (?,?,?,?,'prepared',strftime('%Y-%m-%dT%H:%M:%fZ','now'))",
+                       (identifier, task_id, row[2], digest(json.loads(row[3]))))
+            db.execute("UPDATE tool_outbox SET status='ready' WHERE id=?", (identifier,))

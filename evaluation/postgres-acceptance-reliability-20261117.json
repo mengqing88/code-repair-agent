@@ -1,0 +1,122 @@
+{
+  "status": "passed",
+  "created_at": "2026-11-17T04:44:51.145597+00:00",
+  "scope": "real PostgreSQL/pgvector + Docker restart; synthetic cases and fixed embeddings",
+  "limitations": [
+    "No production database or external embedding/model service used",
+    "No production-scale performance, HA or abrupt power-loss testing",
+    "Web knowledge storage remains SQLite; this validates the PostgreSQL adapter"
+  ],
+  "container": "repair-pg-acceptance-44643b3c2399",
+  "checks": {
+    "dedicated_database_guard": true,
+    "real_sql_integration": true,
+    "actual_restart_persistence": true
+  },
+  "docker_engine": "29.7.2",
+  "image": {
+    "tag": "pgvector/pgvector:pg16",
+    "id": "sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f",
+    "digests": [
+      "pgvector/pgvector@sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f"
+    ]
+  },
+  "pytest": {
+    "exit_code": 0,
+    "output": ".............                                                            [100%]\n13 passed in 7.98s\n",
+    "cases": [
+      {
+        "name": "test_schema_is_idempotent",
+        "status": "passed"
+      },
+      {
+        "name": "test_accepted_and_rejected_round_trip",
+        "status": "passed"
+      },
+      {
+        "name": "test_real_cosine_ordering_and_dimension_filter",
+        "status": "passed"
+      },
+      {
+        "name": "test_metadata_filters_are_strict[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_metadata_filters_are_strict[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_language_filter_excludes_other_and_missing_metadata[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_language_filter_excludes_other_and_missing_metadata[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_upsert_preserves_one_row_and_increments_revision[accepted]",
+        "status": "passed"
+      },
+      {
+        "name": "test_upsert_preserves_one_row_and_increments_revision[rejected]",
+        "status": "passed"
+      },
+      {
+        "name": "test_rejection_failure_rolls_back_review_and_case_together[False]",
+        "status": "passed"
+      },
+      {
+        "name": "test_rejection_failure_rolls_back_review_and_case_together[True]",
+        "status": "passed"
+      },
+      {
+        "name": "test_unaccepted_or_unverified_cases_do_not_write",
+        "status": "passed"
+      },
+      {
+        "name": "test_postgres_snapshot_exports_both_outcomes",
+        "status": "passed"
+      }
+    ]
+  },
+  "postgresql": "PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+  "pgvector": "0.8.7",
+  "restart": {
+    "before_server_started_at": "2026-11-17 04:44:52.782068+00",
+    "before_host_port": "1723",
+    "before": {
+      "repair_cases": {
+        "rows": 1,
+        "sha256": "cfa1d47152b92fee1f27175c70ee975757e5212609d93ce9bdf43aa1cbed7af3"
+      },
+      "repair_failures": {
+        "rows": 1,
+        "sha256": "10a27aef22cb5e3088ab1d92a33c760e56788ccfca9d6167ef10c8db8fcec0c3"
+      },
+      "repair_reviews": {
+        "rows": 1,
+        "sha256": "f642dd882aa662059c2c7d0719412c028bf0c17250a1ea93bb177fed1816cb28"
+      }
+    },
+    "after_host_port": "2019",
+    "after_server_started_at": "2026-11-17 04:45:03.222844+00",
+    "after": {
+      "repair_cases": {
+        "rows": 1,
+        "sha256": "cfa1d47152b92fee1f27175c70ee975757e5212609d93ce9bdf43aa1cbed7af3"
+      },
+      "repair_failures": {
+        "rows": 1,
+        "sha256": "10a27aef22cb5e3088ab1d92a33c760e56788ccfca9d6167ef10c8db8fcec0c3"
+      },
+      "repair_reviews": {
+        "rows": 1,
+        "sha256": "f642dd882aa662059c2c7d0719412c028bf0c17250a1ea93bb177fed1816cb28"
+      }
+    }
+  },
+  "cleanup": {
+    "container_removed": true,
+    "anonymous_volumes_removed": true
+  }
+}

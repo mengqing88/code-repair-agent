@@ -281,6 +281,7 @@ def accepted_task(runner):
     task = task_at(runner, workspace=True, node="save_case", status="reviewable")
     state = task["state"]
     state.update(review_decision="accepted", validation={"passed": True, "patch_hash": state["patch_hash"], "summary": "ok", "report_path": ""})
+    state["adversarial_review"] = {"approved": True, "patch_hash": state["patch_hash"], "summary": "recovery fixture", "findings": []}
     task["review"] = {"decision": "accepted", "patch_hash": state["patch_hash"], "reason": "", "created_at": timestamp()}
     runner.store.put(task)
     return in_flight(runner, task, "save_case")[0]
@@ -527,10 +528,12 @@ def test_unstarted_code_can_resume_when_usage_is_known(runner, node):
     assert saved["progress"]["in_flight"] is None
 
 
-def test_interrupted_model_tool_node_is_not_replayed_after_side_effects_are_enabled(runner):
+def test_legacy_interrupted_model_tool_node_without_journal_contract_is_not_replayed(runner):
     task = task_at(runner, workspace=True, node="propose_patch")
     task, _ = in_flight(runner, task, "propose_patch")
-    assert task["progress"]["in_flight"]["model_tool_policy"] == "side_effecting"
+    assert task["progress"]["in_flight"]["model_tool_policy"] == "journaled"
+    task["progress"]["in_flight"]["model_tool_policy"] = "side_effecting"
+    runner.store.put(task)
 
     manager(runner).recover_pending()
 

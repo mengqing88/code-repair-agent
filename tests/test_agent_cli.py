@@ -10,7 +10,35 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from code_repair.agent_cli import _run_repair_workflow, build_result, make_parser
+
+
+def test_cli_interrupt_trace_matches_persisted_unknown_outcome(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from code_repair.repair_api import TaskStore
+    from tests.test_repair_workflow import RepairWorkflowTests
+
+    monkeypatch.setattr("code_repair.agent_cli.PostgresKnowledgeBase.from_environment", lambda *_: None)
+    services = RepairWorkflowTests().make_services([], [True])
+    monkeypatch.setattr("code_repair.agent_cli.RepairToolbox.as_repair_services", lambda *_: services)
+    def interrupted(*args, **kwargs):
+        raise KeyboardInterrupt()
+    monkeypatch.setattr("code_repair.agent_cli.build_repair_workflow", lambda *a, **k: SimpleNamespace(invoke=interrupted))
+    args = make_parser().parse_args(["--code-text", "value = 1\n", "--error-text", "value should be 2",
+                                    "--knowledge-base", str(tmp_path / "knowledge.sqlite3"), "--execution-mode", "host"])
+    with pytest.raises(KeyboardInterrupt):
+        _run_repair_workflow(args, {"type": "pasted_code", "language": "python"}, "value should be 2", tmp_path)
+    task = TaskStore(tmp_path / "work").list_tasks()[0]
+    assert task["state"]["status"] == "needs_input"
+    assert task["state"]["error_info"]["code"] == "cli_interrupted"
+    assert task["state"]["error_info"]["outcome_unknown"] is True
+    trace_path = tmp_path / "work" / "tasks" / task["state"]["task_id"] / "trace.jsonl"
+    ended = [json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines()
+             if json.loads(line)["operation"] == "workflow"][-1]
+    assert ended["decision"] == "needs_input" and ended["event"] == "paused"
+    assert ended["error_code"] == task["state"]["error_info"]["code"]
 
 
 # unittest.TestCase 是标准库提供的测试基类；继承它就能使用下面的 assert... 断言方法。
@@ -125,7 +153,10 @@ class AgentCliTests(unittest.TestCase):
         source = {"type": "pasted_code", "character_count": 9}
         from code_repair.repair_tools import PostgresKnowledgeBase
         knowledge_base = PostgresKnowledgeBase(dsn="postgresql://fixture")
-        workspace = Path("task-workspace")
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        project_root = Path(temporary.name)
+        workspace = project_root / "task-workspace"
 
         with (
             patch("code_repair.agent_cli._workflow_workspace", return_value=(workspace, ("target.py",), "a" * 40)),
@@ -138,10 +169,18 @@ class AgentCliTests(unittest.TestCase):
             patch("code_repair.execution_manifest.task_configuration", return_value=__import__("contextlib").nullcontext()),
             patch("code_repair.recovery_store.source_fingerprint", return_value={}),
         ):
+            toolbox_factory.return_value.execution_backend = "host"
+            toolbox_factory.return_value.reproduce_command = ()
+            toolbox_factory.return_value.regression_command = ()
+            from code_repair.repair_workflow import RepairServices
+            toolbox_factory.return_value.as_repair_services.return_value = RepairServices(
+                reproduce=lambda _: {}, collect_context=lambda _: {}, propose_patch=lambda _: {},
+                apply_patch=lambda _: None, validate_patch=lambda _: {}, save_case=lambda _: None,
+            )
             workflow_factory.return_value.invoke.return_value = {
                 "status": "queued", "remaining_budget": {"seconds": 60.0},
             }
-            _run_repair_workflow(args, source, "结果错误", Path("project"))
+            _run_repair_workflow(args, source, "结果错误", project_root)
 
         configured = toolbox_factory.call_args.kwargs["knowledge_base"]
         self.assertEqual(configured.dsn, knowledge_base.dsn)

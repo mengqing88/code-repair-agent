@@ -1,0 +1,30 @@
+{
+  "servers": [{
+    "name": "workspace",
+    "transport": "streamable_http",
+    "url": "https://your-authorized-service.example/mcp",
+    "identity_mode": "per_user",
+    "allow_tools": ["lookup", "lookup_backup", "create", "status"],
+    "tool_policies": {
+      "lookup": {"access": "read_only", "fallback_tool": "lookup_backup"},
+      "lookup_backup": {"access": "read_only"},
+      "create": {
+        "access": "external_write", "resource_argument": "resource_id",
+        "idempotency_argument": "request_key", "max_retries": 0,
+        "status_query": {
+          "tool": "status", "argument_map": {"request_key": "request_key"},
+          "result_pointer": "/structuredContent/status",
+          "completed_values": ["completed"], "not_applied_values": ["not_applied"]
+        }
+      },
+      "status": {"access": "read_only"}
+    },
+    "principal_bindings": {
+      "REPLACE_WITH_SERVER_USER_ID": {
+        "subject": "REPLACE_WITH_UPSTREAM_SUBJECT",
+        "headers": {"Authorization": "Bearer ${MCP_USER_ACCESS_TOKEN}"},
+        "allow_tools": ["lookup", "lookup_backup", "create", "status"]
+      }
+    }
+  }]
+}

@@ -1,0 +1,67 @@
+{
+  "created_at": "2026-11-17T05:14:16.082314+00:00",
+  "status": "passed",
+  "scope": "Backend reliability controls; offline fault injection and separately reported disposable local PostgreSQL acceptance",
+  "base_commit": "56c2bb2cd1e36bb45bf3c34ae4763fd61b8f6c01",
+  "python_source_files": 51,
+  "python_source_tree_sha256": "ef0de37f75de3c1af57cdf23304bc113c8993f44e2d23db861dc0d1577b4dfec",
+  "regression": {
+    "command": ".venv\\Scripts\\python.exe -B -m pytest -q --tb=short",
+    "exit_code": 0,
+    "passed": 679,
+    "skipped": 19,
+    "subtests_passed": 47,
+    "duration_seconds": 780.38,
+    "skipped_cases": [
+      "test_resolved_alias_cannot_expose_sensitive_file",
+      "test_schema_is_idempotent",
+      "test_accepted_and_rejected_round_trip",
+      "test_real_cosine_ordering_and_dimension_filter",
+      "test_metadata_filters_are_strict[accepted]",
+      "test_metadata_filters_are_strict[rejected]",
+      "test_language_filter_excludes_other_and_missing_metadata[accepted]",
+      "test_language_filter_excludes_other_and_missing_metadata[rejected]",
+      "test_upsert_preserves_one_row_and_increments_revision[accepted]",
+      "test_upsert_preserves_one_row_and_increments_revision[rejected]",
+      "test_rejection_failure_rolls_back_review_and_case_together[False]",
+      "test_rejection_failure_rolls_back_review_and_case_together[True]",
+      "test_unaccepted_or_unverified_cases_do_not_write",
+      "test_postgres_snapshot_exports_both_outcomes",
+      "test_local_directory_missing_and_symlink",
+      "test_two_processes_contend_and_exited_holder_does_not_lose_its_claim",
+      "test_fencing_token_is_monotonic_and_stale_release_cannot_unlock_new_owner",
+      "test_independent_stores_share_locks_and_release_failure_survives_restart",
+      "test_changed_database_identity_and_missing_configuration_fail_closed"
+    ]
+  },
+  "evaluation_harness": {
+    "passed": 80,
+    "skipped": 0,
+    "duration_seconds_junit": 34.297
+  },
+  "local_postgresql": [
+    {
+      "report": "coordination-acceptance-20261117.json",
+      "status": "passed",
+      "owned_container_and_volumes_removed": true
+    },
+    {
+      "report": "postgres-acceptance-reliability-20261117.json",
+      "status": "passed",
+      "owned_container_and_volumes_removed": true
+    }
+  ],
+  "package_checks": {
+    "wheel_business_modules": 51,
+    "new_modules_included": true,
+    "isolated_wheel_resume_help": "passed",
+    "lockfile_check": "passed"
+  },
+  "limitations": [
+    "Default regression skips are not counted as passes; PostgreSQL acceptance has separate guarded reports",
+    "Models, MCP responses and independent review use test doubles in offline recovery tests",
+    "Per-user upstream credentials, readonly fallback and shared PostgreSQL coordination require explicit deployment configuration",
+    "No production capacity, real third-party idempotency/fencing compliance, or abrupt power-loss acceptance in this run",
+    "Existing business services were not restarted; frozen tasks must retain their original source/configuration identity"
+  ]
+}

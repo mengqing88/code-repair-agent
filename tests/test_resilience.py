@@ -483,7 +483,11 @@ def test_production_worker_sdk_graph_review_and_durable_restart(tmp_path, model_
         runner = client.app.state.runner
         task["execution"] = "running"
         task["state"].update(status="reviewable", memory_saved=False)
-        runner.store.put(task)
+        # Inject a lost snapshot below the transition guard; ordinary writes must reject this rollback.
+        with pytest.raises(Fault, match="succeeded"):
+            runner.store.put(task)
+        with runner.store.connect() as db:
+            db.execute("UPDATE tasks SET payload=? WHERE id=?", (json.dumps(task), task_id))
     with TestClient(create_app(root)) as restarted:
         assert restarted.get(f"/api/tasks/{task_id}").json()["state"]["status"] == "succeeded"
         assert restarted.get("/api/knowledge/stats").json()["total"] == 1

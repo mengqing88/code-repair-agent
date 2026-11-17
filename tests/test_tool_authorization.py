@@ -111,11 +111,12 @@ def test_approved_but_expired_or_consumed_without_receipt_fails_closed(tmp_path,
         db.execute("UPDATE tool_authorizations SET expires_at=? WHERE id=?", (time.time() - 1, identifier))
     identifier = pending(client)
     auth.decide(identifier, client.task_id, client.principal, "approved")
-    auth.consume(identifier, client.task_id, client.principal)  # Simulate death before writing the effect intent.
-    with pytest.raises(Fault) as raised:
-        call(client)
-    assert raised.value.outcome_unknown and calls == []
-    assert auth.operations.pending_for_task(client.task_id)[0]["operation_id"] == identifier
+    auth.consume(identifier, client.task_id, client.principal)  # The new atomic intent proves it has not been sent.
+    assert auth.operations.lookup(identifier)["status"] == "prepared"
+    assert auth.operations.outbox_for_task(client.task_id, client.principal)[0]["status"] == "ready"
+    call(client)
+    call(client, call_id="new-model-call")
+    assert calls == [ARGS]
 
 
 def test_renewal_does_not_approve_and_old_preview_cannot_be_reused(tmp_path, monkeypatch):

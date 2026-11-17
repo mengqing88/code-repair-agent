@@ -6,6 +6,7 @@ import asyncio
 from contextlib import AsyncExitStack
 from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
+from copy import deepcopy
 import hashlib
 import httpx
 import json
@@ -69,11 +70,19 @@ class MCPToolPolicy(BaseModel):
     business_schema: dict[str, Any] | None = None
     status_query: MCPStatusQuery | None = None
     max_retries: int | None = Field(default=None, ge=0, le=3)
+    idempotency_argument: str | None = Field(default=None, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")
+    fallback_tool: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,64}$")
 
     @model_validator(mode="after")
     def validate_policy(self):
         if self.access == "read_only" and (self.resource_argument or self.status_query):
             raise ValueError("只读工具不能配置资源锁或结果核对工具")
+        if self.access == "read_only" and self.idempotency_argument:
+            raise ValueError("只有外部写工具可以配置下游幂等参数")
+        if self.idempotency_argument and self.idempotency_argument == self.resource_argument:
+            raise ValueError("幂等字段不能同时用作业务资源标识")
+        if self.access == "external_write" and self.fallback_tool:
+            raise ValueError("外部写操作禁止自动切换备用工具")
         if self.access == "external_write" and self.status_query and not self.resource_argument:
             raise ValueError("配置结果核对的外部写工具必须声明 resource_argument")
         if self.max_retries is None:
@@ -81,6 +90,14 @@ class MCPToolPolicy(BaseModel):
         if self.access == "external_write" and self.max_retries != 0:
             raise ValueError("外部写工具必须配置 max_retries=0")
         return self
+
+
+class MCPPrincipalBinding(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    subject: str = Field(min_length=1, max_length=256)
+    env: dict[str, str] = Field(default_factory=dict)
+    headers: dict[str, str] = Field(default_factory=dict)
+    allow_tools: list[str] = Field(min_length=1)
 
 
 class MCPServerConfig(BaseModel):
@@ -99,6 +116,8 @@ class MCPServerConfig(BaseModel):
     url: str | None = None
     headers: dict[str, str] = Field(default_factory=dict)
     required_env: list[str] = Field(default_factory=list)
+    identity_mode: Literal["service_account", "per_user"] = "service_account"
+    principal_bindings: dict[str, MCPPrincipalBinding] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_transport_fields(self) -> MCPServerConfig:
@@ -111,6 +130,11 @@ class MCPServerConfig(BaseModel):
         if any(name not in self.allow_tools for name in self.tool_policies):
             raise ValueError("tool_policies 只能声明 allow_tools 中列出的工具")
         for tool_name, policy in self.tool_policies.items():
+            if policy.fallback_tool:
+                fallback = self.tool_policies.get(policy.fallback_tool)
+                if (policy.fallback_tool == tool_name or policy.fallback_tool not in self.allow_tools
+                        or not fallback or fallback.access != "read_only" or fallback.fallback_tool):
+                    raise ValueError("备用工具必须是白名单中的只读工具，且不能级联降级")
             if policy.status_query:
                 query_tool = policy.status_query.tool
                 query_policy = self.tool_policies.get(query_tool)
@@ -258,6 +282,19 @@ class MCPToolClient:
 
         result = []
         for server in config.servers:
+            if server.identity_mode == "per_user":
+                identity = server.principal_bindings.get(self.principal)
+                if identity is None:
+                    raise Fault("mcp_identity_missing", "当前用户没有此 MCP 服务的独立身份绑定", category="permission")
+                if (not set(identity.allow_tools) <= set(server.allow_tools)
+                        or (server.transport == "stdio" and (not identity.env or identity.headers))
+                        or (server.transport == "streamable_http" and (not identity.headers or identity.env))):
+                    raise MCPConfigurationError("用户身份必须配置相应传输的独立凭据及工具子集")
+                # Replace shared credentials completely; a missing user binding never falls back.
+                server = server.model_copy(update={"env": dict(identity.env), "headers": dict(identity.headers),
+                    "allow_tools": list(identity.allow_tools),
+                    "tool_policies": {k:v for k,v in server.tool_policies.items() if k in identity.allow_tools}})
+                server = MCPServerConfig.model_validate(server.model_dump())
             missing = [
                 key for key in server.required_env
                 if not (setting(key, dotenv_values_map) or "").strip()
@@ -395,6 +432,9 @@ class MCPToolClient:
             if policy.resource_argument and policy.resource_argument not in input_schema.get("properties", {}):
                 self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的资源参数不在 Schema 中，已跳过")
                 continue
+            if policy.idempotency_argument and input_schema.get("properties", {}).get(policy.idempotency_argument, {}).get("type") != "string":
+                self.warnings.append(f"MCP 工具 {server.name}.{tool_name} 的幂等字段必须是 Schema 中的字符串字段，已跳过")
+                continue
             if policy.status_query:
                 query_name = policy.status_query.tool
                 query_tool = found.get(query_name)
@@ -431,7 +471,7 @@ class MCPToolClient:
                 "type": "function",
                 "name": model_name,
                 "description": f"MCP 服务 {server.name}〔{access}〕：{description[:MAX_TOOL_DESCRIPTION_LENGTH]} {group}",
-                "parameters": _combined_input_schema(input_schema, policy.business_schema),
+                "parameters": _model_input_schema(input_schema, policy),
             }, settings=self._input_settings, schema=True))
 
     @staticmethod
@@ -492,7 +532,7 @@ class MCPToolClient:
         binding = self._bindings.get(name)
         return bool(binding and binding.policy.access == "external_write")
 
-    def _call_external_write(self, name, binding, arguments, timeout):
+    def _call_external_write(self, name, binding, arguments, timeout, expected_key=None):
         from code_repair.tool_context import current_tool_call_id
         call_id = current_tool_call_id()
         if not self.operation_store or not call_id:
@@ -508,20 +548,39 @@ class MCPToolClient:
             protect_input({"server": binding.server_name, "tool": binding.tool_name, "resource": resource,
              "endpoint": server.get("url") or {"command": server.get("command"), "args": server.get("args", [])}},
              settings=self._input_settings))
+        if expected_key is not None and key != expected_key:
+            raise Fault("outbox_binding_changed", "Outbox 与当前用户、工具或配置不一致，已阻止投递", category="permission")
+        previous = self.operation_store.lookup(key, task_id=self.task_id, name=name, parameters=arguments)
+        if previous and previous["status"] == "completed":
+            return previous["result"]
         endpoint_identity = server.get("url") or {"command": server.get("command"),
             "args": server.get("args", []), "cwd": server.get("cwd")}
         resource_key = digest({"endpoint": endpoint_identity, "resource": resource})
-        self.operation_store.acquire_resource(resource_key, key, self.task_id)
+        fence_token = self.operation_store.acquire_resource(resource_key, key, self.task_id)
         try:
             authorizations.consume(key, self.task_id, self.principal)
+            def deliver():
+                from code_repair.tool_context import delivery_scope
+                if current():
+                    current().check()
+                    if current().on_account:
+                        current().on_account(current())
+                effective = dict(arguments)
+                if binding.policy.idempotency_argument:
+                    effective[binding.policy.idempotency_argument] = key
+                with delivery_scope(key, self.principal, fence_token):
+                    return self._invoke_tool(binding, effective, timeout)
             result = self.operation_store.execute(key, self.task_id, name, arguments,
-                lambda: self._invoke_tool(binding, arguments, timeout), lambda: (False, None))
+                deliver, lambda: (False, None))
         except Fault as error:
             if error.outcome_unknown:
                 reconciliation_fault = None
                 if binding.policy.status_query:
                     try:
-                        outcome, status_value = self._query_external_status(binding, arguments, timeout)
+                        query_arguments = dict(arguments)
+                        if binding.policy.idempotency_argument:
+                            query_arguments[binding.policy.idempotency_argument] = key
+                        outcome, status_value = self._query_external_status(binding, query_arguments, timeout)
                     except Fault as query_error:
                         outcome, status_value = None, None
                         reconciliation_fault = query_error
@@ -570,6 +629,37 @@ class MCPToolClient:
         self.operation_store.release_resource(resource_key, key)
         return result
 
+    def dispatch_outbox(self, validator=None):
+        """Deliver exact approved intents inside the task's budget/configuration/role scope."""
+        if not self.operation_store:
+            return []
+        from code_repair.tool_context import tool_call_scope
+        receipts = []
+        for entry in self.operation_store.outbox_for_task(self.task_id, self.principal):
+            binding = self._bindings.get(entry["tool"])
+            if not binding or binding.policy.access != "external_write":
+                raise Fault("outbox_tool_unavailable", "已批准的工具不在当前白名单中，未投递", category="permission")
+            issue = self.validate_tool_arguments(entry["tool"], entry["parameters"])
+            if validator:
+                issue = issue or validator(entry["tool"], entry["parameters"])
+            if issue:
+                raise Fault("outbox_arguments_invalid", "已批准操作不符合当前 Schema，未投递", category="validation")
+            timeout = 30.0
+            if current():
+                current().check()
+                timeout = min(timeout, current().remaining() - 0.05)
+            if timeout < 0.05:
+                raise Fault("deadline_exceeded", "预算不足以投递已批准操作", category="budget")
+            with tool_call_scope("outbox-" + entry["id"]):
+                result = self._call_external_write(entry["tool"], binding, entry["parameters"], timeout, expected_key=entry["id"])
+            receipts.append({"tool": entry["tool"], "operation_id": entry["id"], "result": result})
+        known = {r["operation_id"] for r in receipts}
+        for entry in self.operation_store.outbox_for_task(self.task_id, self.principal, deliverable_only=False):
+            if entry["status"] == "completed" and entry["id"] not in known:
+                receipts.append({"tool": entry["tool"], "operation_id": entry["id"],
+                                 "result": self.operation_store.lookup(entry["id"])["result"]})
+        return receipts
+
     def _query_external_status(self, binding, arguments, timeout):
         policy = binding.policy.status_query
         if policy is None:
@@ -617,12 +707,27 @@ class MCPToolClient:
         server = next((item for item in (self._servers or []) if item.name == binding.server_name), None)
         endpoint = (server.url if server and server.url else
                     json.dumps({"command": server.command, "args": server.args}, sort_keys=True) if server else binding.server_name)
-        return call_with_retry("mcp.tool.read", invoke,
-            classify=lambda error: _mcp_read_fault(error), replay_safe=True,
-            parameters={"server": binding.server_name, "tool": binding.tool_name,
-                        "arguments_hash": hashlib.sha256(json.dumps(argument_data, sort_keys=True,
-                            ensure_ascii=False, default=str).encode()).hexdigest()},
-            endpoint=endpoint, max_retries=binding.policy.max_retries)
+        try:
+            return call_with_retry("mcp.tool.read", invoke,
+                classify=lambda error: _mcp_read_fault(error), replay_safe=True,
+                parameters={"server": binding.server_name, "tool": binding.tool_name,
+                            "arguments_hash": hashlib.sha256(json.dumps(argument_data, sort_keys=True,
+                                ensure_ascii=False, default=str).encode()).hexdigest()},
+                endpoint=digest([endpoint, binding.tool_name]), max_retries=binding.policy.max_retries)
+        except Fault as error:
+            fallback = binding.policy.fallback_tool
+            if not fallback or error.category != "transient" or not error.retryable or error.outcome_unknown:
+                raise
+            name = _model_tool_name(binding.server_name, fallback)
+            target = self._bindings.get(name)
+            if not target or target.policy.access != "read_only" or target.policy.fallback_tool:
+                raise Fault("mcp_fallback_unavailable", "备用只读工具不可用，停止降级", category="configuration") from error
+            from code_repair.multi_agent import current_agent_role, tool_allowed
+            role = current_agent_role()
+            if role is not None and not tool_allowed(name, role):
+                raise Fault("agent_tool_forbidden", "当前角色无权使用备用工具", category="permission") from error
+            trace("mcp.fallback", "selected", decision=name, details={"original_tool": binding.tool_name, "code": error.code})
+            return self.call_tool(name, argument_data, timeout_seconds=timeout)
 
     def _invoke_tool_once(self, binding, argument_data, timeout):
         future = asyncio.run_coroutine_threadsafe(
@@ -660,11 +765,19 @@ class MCPToolClient:
         """使用已初始化的 MCP 会话执行一次工具调用。"""
         session = self._sessions[binding.server_name]
         from datetime import timedelta
+        from code_repair.tool_context import delivery_metadata
+        server = next((s for s in (self._servers or []) if s.name == binding.server_name), None)
+        identity = server.principal_bindings.get(self.principal) if server and server.identity_mode == "per_user" else None
+        metadata = {"code_repair": {"principal": self.principal, "task_id": self.task_id,
+                                    "subject": identity.subject if identity else None,
+                                    "identity_mode": server.identity_mode if server else "service_account",
+                                    **(delivery_metadata() or {})}}
 
         return await session.call_tool(
             binding.tool_name,
             arguments=arguments,
             read_timeout_seconds=timedelta(seconds=timeout),
+            meta=metadata,
         )
 
     def close(self) -> None:
@@ -711,8 +824,27 @@ def _combined_input_schema(service_schema, business_schema):
     return {"allOf": [service_schema, business_schema]}
 
 
+def _model_input_schema(service_schema, policy):
+    def without_reserved(schema):
+        schema = deepcopy(schema)
+        field = policy.idempotency_argument
+        if field:
+            schema.get("properties", {}).pop(field, None)
+            if "required" in schema:
+                schema["required"] = [name for name in schema["required"] if name != field]
+        return schema
+    return _combined_input_schema(without_reserved(service_schema),
+                                  without_reserved(policy.business_schema) if policy.business_schema is not None else None)
+
+
 def _tool_argument_issues(binding, arguments):
     issues = []
+    arguments = dict(arguments)
+    reserved = binding.policy.idempotency_argument
+    if reserved:
+        if reserved in arguments:
+            return [{"path": [reserved], "type": "server_managed", "source": "business", "message": "此字段只能由服务端注入"}]
+        arguments[reserved] = "0" * 64
     schemas = [(binding.input_schema, "service")]
     if binding.policy.business_schema is not None:
         schemas.append((binding.policy.business_schema, "business"))

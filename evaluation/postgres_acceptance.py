@@ -137,7 +137,7 @@ def acceptance(report, *, image=IMAGE):
         with tempfile.TemporaryDirectory(prefix="repair-postgres-results-") as temporary:
             junit = Path(temporary) / "results.xml"
             result = command([sys.executable, "-m", "pytest", "-q", "--tb=short",
-                              "test_postgres_integration.py", f"--junitxml={junit}"],
+                              "tests/test_postgres_integration.py", f"--junitxml={junit}"],
                              env=test_env, timeout=180, check=False)
             # Keep a readable summary, redact ephemeral credentials even on a failed assertion.
             output = (result.stdout + result.stderr).replace(safe_dsn, "[TEST_DSN]")

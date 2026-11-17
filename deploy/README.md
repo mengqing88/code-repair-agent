@@ -18,3 +18,5 @@ docker compose -f deploy/compose.rag.yml up -d
 源码开发环境自动定位仓库根目录。安装 wheel 时，以启动工作目录定位配置和静态资源；需要固定位置时设置 `REPAIR_PROJECT_ROOT`。wheel 只包含 Python 业务包，前端产物、部署文件和评测资产需随部署单独准备。
 
 隔离措施与真实容器验收说明见 [runner 文档](docker/runner/README.md)。
+
+跨实例外部资源互斥可配置 `REPAIR_COORDINATION_DB_URL`，各实例必须指向同一 PostgreSQL 协调库；数据库不可用时外部写入拒绝执行。一个数据目录仍只允许运行一个 API/CLI worker。用户级上游身份、只读备用工具与写操作幂等参数模板见 [mcp.identity.example.json](mcp.identity.example.json)，需要按实际服务 Schema 和本地用户 ID 修改，不能直接作为有效授权使用。恢复命令、死信接口及保护条件见 [可靠性与安全恢复](../docs/project/可靠性与安全恢复.md)。
