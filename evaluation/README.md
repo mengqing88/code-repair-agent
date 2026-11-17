@@ -1,5 +1,7 @@
 # 30 缺陷 RAG 评测集
 
+最终补丁生成单项评测集的准入字段、隐藏答案隔离和 pass@1 口径见[专门要求文档](../docs/evaluation/最终补丁生成评测集要求.md)。下文现有 30 题用于检索、补丁应用和验收流程自检，不等同于经独立复核和冻结的正式 Agent 修复基准。
+
 最新模型只读策略后的服务与运行验收见 [2026-11-14 继续验收记录](COMPLETION_ACCEPTANCE_20261114.md)；保留原失败证据，不以合成冒烟替代正式效果评测。
 
 模型或工具升级的预注册、重复配对及行为退化门禁见 [UPGRADE_EVALUATION.md](UPGRADE_EVALUATION.md)，入口为 `python -m evaluation.upgrade_gate`。它与本页的相同模型 RAG 对照独立。
