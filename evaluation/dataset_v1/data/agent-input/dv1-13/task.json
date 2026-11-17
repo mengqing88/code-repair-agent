@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "retry.py"
+  ],
+  "case_id": "dv1-13",
+  "contract": "retry_call(fn, attempts) 中 attempts 是总调用次数：失败时恰好调用 attempts 次，两次尝试之间按 delays 睡眠，最后一次失败后不再睡眠并抛 RetryError(attempts, last)。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "配置 attempts=3 的重试只发出 2 次请求；只有第 3 次才能成功的下游调用直接失败，日志里的尝试次数也对不上。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "重试预算少调用一次"
+}

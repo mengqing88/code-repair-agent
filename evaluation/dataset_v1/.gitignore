@@ -1,0 +1,6 @@
+# Local-only source definitions and grading answers must not enter the public benchmark.
+/cases/
+/data/grader-only/
+/data/results/
+/.data-build-*/
+/.data-publish-*/

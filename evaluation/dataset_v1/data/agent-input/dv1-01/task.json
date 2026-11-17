@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "pagination.py"
+  ],
+  "case_id": "dv1-01",
+  "contract": "page_slice(items, page, size) 使用 1 起始页号和半开区间 [(page-1)*size, page*size)；满页返回 size 条，末页返回剩余元素，逐页拼接必须恰好等于原序列。page<1 或 size<1 抛 PageError。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "分页接口每页只返回 size-1 条：请求第 1 页、每页 10 条时只拿到 9 条，翻页还会漏掉每个分页边界上的元素。空集合和越界页表现正常。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "分页切片少返回一条"
+}

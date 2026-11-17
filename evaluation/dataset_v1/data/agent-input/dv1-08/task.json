@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "client.py"
+  ],
+  "case_id": "dv1-08",
+  "contract": "build_url 只丢弃值为 None 的参数；0、''、False 等假值必须原样序列化进查询串，None 不出现。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "调用方传 limit=0 想取零条，服务端却按默认值返回全部；传 q='' 想搜索空串也失效，只有非空参数才出现在 URL 上。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "查询参数丢掉 0 和空串"
+}

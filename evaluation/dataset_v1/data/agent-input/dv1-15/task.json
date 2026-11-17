@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "lru.py"
+  ],
+  "case_id": "dv1-15",
+  "contract": "get 命中必须把该 key 移到最近使用端；插入新 key 超容量时淘汰最久未使用的 key；get 未命中不改变任何 key 的顺序。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "缓存淘汰顺序不对：刚被读过的 key 仍然先被淘汰，热点数据在容量边界上被频繁抖动换出。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "LRU 命中也算新写入"
+}

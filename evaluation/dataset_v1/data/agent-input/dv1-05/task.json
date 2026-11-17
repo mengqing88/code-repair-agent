@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "filewriter.py"
+  ],
+  "case_id": "dv1-05",
+  "contract": "write_atomic(directory, name, chunks) 成功时原子替换目标文件；任一 chunk 非 str 时抛 AtomicWriteError，且不得留下临时文件、不得改动已存在的目标文件。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "导出接口遇到非法 chunk 时抛异常，但目录里留下 .out.txt.<uuid>.tmp；长期运行后导出目录堆积大量孤儿临时文件。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "写入失败后残留临时文件"
+}

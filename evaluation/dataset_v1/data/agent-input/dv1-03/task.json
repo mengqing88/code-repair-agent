@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "feed_reader.py"
+  ],
+  "case_id": "dv1-03",
+  "contract": "字段数不等于 2 或 id 非数字时抛 ParseError，消息需包含出错行号（如 'line 3'）；空行仍然跳过，合法行照常返回。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "导入接口收到格式错误的行时既不报错也不告警，坏行直接被跳过，调用方以为全部数据都导入成功。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "解析器静默丢弃非法行"
+}

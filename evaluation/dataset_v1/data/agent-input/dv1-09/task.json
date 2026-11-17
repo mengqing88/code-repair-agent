@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "confmerge/merge.py"
+  ],
+  "case_id": "dv1-09",
+  "contract": "load_config 按 DEFAULT_CONFIG -> 文件值 -> 环境值 三层合并；嵌套 dict 递归合并并保留未覆盖的同级键，列表等非 dict 值整体替换；合并不得就地修改入参。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "只在配置文件里写了 db.port，结果 db.host 和 db.ssl 全丢了，服务连不上库；环境变量覆盖 db.host 时也不保留文件里的 db.port。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "配置合并只做浅层覆盖"
+}

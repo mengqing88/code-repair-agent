@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "csvmini/parser.py"
+  ],
+  "case_id": "dv1-14",
+  "contract": "parse_line 必须按 RFC 4180 子集处理双引号：引号内的逗号属于字段内容，字段内 \"\" 还原为一个 \"，引号外的逗号才是分隔符；format_rows 的输出必须能被 parse 还原为同样的行。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "含逗号的字段被拆成两列，导出后列数错位；转义的双引号也没有还原，写成 \"\" 的内容读回来仍是两个引号。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "CSV 解析忽略引号"
+}

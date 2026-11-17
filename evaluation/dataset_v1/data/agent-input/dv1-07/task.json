@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "ttl_cache.py"
+  ],
+  "case_id": "dv1-07",
+  "contract": "条目在 set 时刻 + ttl 之前有效，达到 ttl 即过期：get 返回 default 并删除条目，purge 删除并统计这些条目；时钟由注入的 clock 提供。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "TTL=5 的条目在恰好第 5 秒仍被当作有效值返回，purge 也清不掉，缓存结果比约定多存活一个时间单位。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "TTL 到期边界仍返回旧值"
+}

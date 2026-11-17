@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "textfmt.py"
+  ],
+  "case_id": "dv1-10",
+  "contract": "truncate(text, width) 返回长度不超过 width 的字符串；超长时把省略号计入宽度，width<=len(ellipsis) 时只返回省略号的前 width 个字符，width=0 返回空串，width<0 抛 ValueError。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "UI 列宽固定 10 字符，但截断函数返回的字符串总是多一个字符，省略号把文字顶出容器，表格错位。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "截断后总长度超出上限"
+}

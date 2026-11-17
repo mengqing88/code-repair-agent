@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "orders.py"
+  ],
+  "case_id": "dv1-16",
+  "contract": "apply_coupon 每张券只生效一次；扣减后总额下界为 0，总额耗尽后继续用券仍返回 0；券金额为负抛 ValueError。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "面额 800 的券用在 500 元的订单上，订单总额变成 -300；多张券叠加后负数继续累加，结算和开票都出错。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "优惠券把订单总额减成负数"
+}

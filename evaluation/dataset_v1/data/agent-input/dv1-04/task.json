@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "ranking.py"
+  ],
+  "case_id": "dv1-04",
+  "contract": "top_k 先按分数降序，分数相同时按 name 升序；k=0 返回空列表，k<0 抛 ValueError。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "同一分数榜位顺序不稳定：分数相同的选手按请求里的先后出现，换个查询顺序榜单就变了。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "并列分数顺序取决于输入顺序"
+}

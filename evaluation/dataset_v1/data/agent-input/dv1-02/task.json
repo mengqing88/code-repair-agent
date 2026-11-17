@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "inventory.py"
+  ],
+  "case_id": "dv1-02",
+  "contract": "reserve(sku, qty) 在 qty<=available 时必须成功，把 qty 从 available 移入 reserved；qty>available 才抛 InventoryError。available+reserved 在预留/提交过程中守恒。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "库存有 5 件、下单 5 件时接口报库存不足；只有严格少于可用量才能预留，导致整库存量永远无法售出。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "库存恰好够时拒绝预留"
+}

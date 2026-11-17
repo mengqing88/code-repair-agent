@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "money.py"
+  ],
+  "case_id": "dv1-11",
+  "contract": "to_cents 使用十进制定点计算并按 ROUND_HALF_UP 保留两位后转整数分；接受 str、Decimal 或数值，0.005->1、2.675->268、1.005->101，负值保留符号。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "对账差一分钱：0.005 元转分得到 0，2.675 元转分得到 267，财务要求四舍五入（half up），实际结果偏低。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "金额转分用浮点导致舍入错误"
+}

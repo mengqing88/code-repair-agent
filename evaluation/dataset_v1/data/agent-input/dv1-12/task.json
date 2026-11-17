@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "storage.py"
+  ],
+  "case_id": "dv1-12",
+  "contract": "resolve 必须基于 realpath 判断结果是否位于 root 之内：绝对路径、逃出 root 的相对路径抛 PermissionError；文件名含 '..' 或 'sub/../x' 但最终仍在 root 内时正常返回。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "安全扫描发现传入 /etc/passwd 时 storage 直接把根目录之外的路径返回；同时 notes..txt 这类正常文件名被当成穿越路径拒绝。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "路径校验漏掉绝对路径且误杀合法文件名"
+}

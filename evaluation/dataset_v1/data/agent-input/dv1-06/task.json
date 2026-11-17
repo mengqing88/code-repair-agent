@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "cache.py"
+  ],
+  "case_id": "dv1-06",
+  "contract": "缓存键必须同时区分类型与取值：1 与 '1'、1.5 与 '1.5' 是不同条目，占用各自容量；容量满时写入新键抛 KeyError。",
+  "dataset_version": "dataset-v1-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "缓存命中错误值：以整数 1 写入后，用字符串 '1' 查询会拿到整数的值；1.5 与 '1.5' 同样互相覆盖。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "缓存键按字符串归一导致类型碰撞"
+}
