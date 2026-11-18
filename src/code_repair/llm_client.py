@@ -23,7 +23,7 @@ from code_repair.input_protection import protect_input, model_options
 # OpenAI：兼容接口客户端；其他三个类分别表示连接失败、HTTP 错误和请求超时。
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 from code_repair.resilience import (Fault, bounded_timeout, call_with_retry, charge_usage, current,
-                        retry_after_seconds, schema_context, error_info, traced_call, trace)
+                        retry_after_seconds, schema_context, output_token_limit, error_info, traced_call, trace)
 
 
 DEFAULT_MAX_OUTPUT_TOKENS = 40_960
@@ -66,7 +66,8 @@ def limit_request_budget(request, settings, *, force_compaction=False):
     if context is not None:
         context.check()
     request, policy, input_ceiling = fit_request_context(request, settings, _estimate_input_tokens, force=force_compaction)
-    window_output_limit = min(DEFAULT_MAX_OUTPUT_TOKENS, policy.window - input_ceiling)
+    requested_output_limit = output_token_limit() or DEFAULT_MAX_OUTPUT_TOKENS
+    window_output_limit = min(DEFAULT_MAX_OUTPUT_TOKENS, requested_output_limit, policy.window - input_ceiling)
     if force_compaction:
         window_output_limit = min(window_output_limit, policy.reserve)
     request["max_output_tokens"] = window_output_limit

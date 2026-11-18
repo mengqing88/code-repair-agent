@@ -17,13 +17,14 @@ from uuid import uuid4
 from zipfile import ZipFile
 
 # ask_model：已经封装好的模型调用函数，负责读取 .env 和请求模型。
-from code_repair.llm_client import ask_model
+from code_repair.llm_client import ask_model, ask_model_with_usage
 from code_repair.input_protection import sensitive_path, protect_input
 from code_repair.model_contracts import (generate_object, ReproductionPlan, FixedCommandReproductionPlan,
                              ReproductionComparison)
 from code_repair.docker_executor import BindMount, get_execution_backend, run_execution
 from code_repair.resilience import Fault, error_info, run_process, trace
 from code_repair.language_support import default_code_filename, detect_language, is_code_path, normalize_language
+from code_repair.source_context import compress_source_context
 
 
 def fenced(text: str, language: str = "text") -> str:
@@ -178,8 +179,8 @@ def prepare_source(source: dict[str, object], code_text: str | None, destination
         content = path.read_text(encoding="utf-8-sig")
         # len(content) 返回文本字符数；+= 将本次长度累加到 total 中。
         total += len(content)
-        if total > 100_000:
-            raise ValueError("源码超过本次分析范围，请提供最小复现代码或较小的仓库")
+        if total > 1_000_000:
+            raise ValueError("源码超过 1,000,000 字符的收集上限，请缩小分析范围")
         # Path.as_posix() 返回用 / 分隔的路径字符串，即使在 Windows 上也如此；这里用它作字典键。
         files[relative.as_posix()] = protect_input(content)
     if not files:
@@ -362,6 +363,15 @@ def reproduce(
         source_dir = task_dir / "source"
         # prepare_source() 创建源码副本，返回“相对文件名 -> 文件正文”的字典，不修改原始源码。
         files = prepare_source(source, code_text, source_dir)
+        source_context = None
+        model_files = files
+        if sum(len(content) for content in files.values()) > 100_000:
+            source_context, _ = compress_source_context(
+                [{"path": path, "content": content} for path, content in files.items()],
+                error_report + "\n" + "\n".join(clarifications),
+                summarize_call=model_call if model_call is not None else ask_model_with_usage)
+            model_files = {}
+            record["source_context"] = source_context
         backend = get_execution_backend(execution_backend)
         runtime = {"backend": backend, "source_root": "/workspace" if backend == "docker" else str(source_dir),
                    "script_path": "/task/reproduce.py" if backend == "docker" else str(task_dir / "reproduce.py"),
@@ -395,6 +405,8 @@ def reproduce(
             "未知事实注明待确认，不得编造预期值或用人为 raise/断言伪造原始缺陷。"
             + execution_instructions
             + "代码文件名以 files 中的相对路径为准；不要修复或改写源码。"
+            "若 source_context 存在，其路径和行号指向完整副本，摘要仅是导航线索；"
+            "省略内容不表示代码不存在。证据不足时提问，不得编造未展示实现。"
             "若错误描述存在多种合理解释、预期行为或必要业务前提不清，且差异会改变复现或修复方案，"
             "clarification_required 设为 true，在 clarification_reasons 列出具体未知项，"
             "把最关键的问题写入 question，且 reproduction_code 留空。"
@@ -404,7 +416,8 @@ def reproduce(
             "只返回 JSON 对象，字段类型为：revised_report、steps、reproduction_code、question 是字符串，"
             "clarification_required 是布尔值，clarification_reasons 是字符串数组。\n"
             + json.dumps({"original_report": error_report, "user_clarifications": clarifications,
-                          "files": files, "runtime": runtime, "python_version": platform.python_version()}, ensure_ascii=False)
+                          "files": model_files, **({"source_context": source_context} if source_context else {}),
+                          "runtime": runtime, "python_version": platform.python_version()}, ensure_ascii=False)
         )
         def validate_plan(value):
             if value["reproduction_code"].strip():

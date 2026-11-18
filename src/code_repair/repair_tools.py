@@ -387,33 +387,58 @@ def read_code(
     *,
     workspace_root: Path,
     max_bytes: int = 1_000_000,
+    start_line: int | None = None,
+    end_line: int | None = None,
 ) -> dict[str, object]:
     """读取工作区内的一个 UTF-8 文本文件。
 
     参数：
         path：相对于 workspace_root 的文件路径。
         workspace_root：工具允许访问的工作区根目录。
-        max_bytes：最多读取的 UTF-8 字节数，防止模型上下文被超大文件占满。
+        max_bytes：整文件读取时最多读取的 UTF-8 字节数。
+        start_line/end_line：同时提供时只返回指定的闭区间，最多 300 行。
     """
     if not isinstance(max_bytes, int) or isinstance(max_bytes, bool) or max_bytes <= 0:
         raise ValueError("max_bytes 必须是正整数")
+    if (start_line is None) != (end_line is None):
+        raise ValueError("start_line 和 end_line 必须同时提供")
+    if start_line is not None and (isinstance(start_line, bool) or isinstance(end_line, bool)
+            or not isinstance(start_line, int) or not isinstance(end_line, int)
+            or start_line < 1 or end_line < start_line or end_line - start_line >= 300):
+        raise ValueError("行范围必须有效且不超过 300 行")
     file_path = _workspace_path(workspace_root, path)
     if not file_path.is_file():
         raise RepairToolError(f"只能读取文件：{path}")
     try:
+        if file_path.stat().st_size > (max_bytes if start_line is None else 20_000_000):
+            raise RepairToolError(f"文件超过读取大小限制：{path}")
         raw = file_path.read_bytes()
     except OSError as error:
         raise RepairToolError(f"读取文件失败：{path}（{error}）") from error
-    if len(raw) > max_bytes:
+    if start_line is None and len(raw) > max_bytes:
         raise RepairToolError(f"文件超过读取大小限制：{path}")
     try:
         content = raw.decode("utf-8-sig")
     except UnicodeDecodeError as error:
         raise RepairToolError(f"文件不是有效的 UTF-8 文本：{path}") from error
+    lines = content.splitlines(keepends=True)
+    selected_start = start_line or 1
+    selected_end = end_line or max(1, len(lines))
+    if start_line is not None:
+        if start_line > len(lines):
+            raise RepairToolError(f"起始行超出文件范围：{path}")
+        content = "".join(lines[start_line - 1:min(end_line, len(lines))])
+    if len(content.encode("utf-8")) > max_bytes:
+        raise RepairToolError(f"读取内容超过字节限制：{path}")
+    content = protect_input(content)
+    from code_repair.source_context import source_digest
     return {
         "path": _relative_path(workspace_root, file_path),
-        "content": protect_input(content),
-        "line_count": len(content.splitlines()),
+        "content": content,
+        "line_count": len(lines),
+        "start_line": selected_start,
+        "end_line": min(selected_end, len(lines)),
+        "content_sha256": source_digest(content),
     }
 
 
@@ -1169,7 +1194,7 @@ def run_tests(
 
 
 TOOL_DESCRIPTIONS = {
-    "read_code": "读取工作区内指定的 UTF-8 代码文件。",
+    "read_code": "读取工作区内指定的 UTF-8 代码文件；需要原文时可提供 start_line/end_line 读取不超过 300 行。",
     "search_code": "在工作区中搜索文本并返回文件、行号、列号和匹配行。",
     "retrieve_repair_experience": "按 outcome 分开检索已验收案例或被拒绝的失败经验，并可按已读取文件路径缩小范围。",
 }
@@ -1283,9 +1308,11 @@ class RepairToolbox:
             return error or dict(arguments)
         return error
 
-    def read_code(self, path: str, max_bytes: int = 1_000_000) -> dict[str, object]:
+    def read_code(self, path: str, max_bytes: int = 1_000_000, *,
+                  start_line: int | None = None, end_line: int | None = None) -> dict[str, object]:
         """调用工作区文件读取工具。"""
-        return read_code(path, workspace_root=self.workspace_root, max_bytes=max_bytes)
+        return read_code(path, workspace_root=self.workspace_root, max_bytes=max_bytes,
+                         start_line=start_line, end_line=end_line)
 
     def search_code(self, query: str, path: str = ".", max_results: int = 50) -> dict[str, object]:
         """调用工作区文本搜索工具。"""
@@ -1833,7 +1860,8 @@ class RepairToolbox:
             raise RepairToolError("工具参数无效（Schema 校验失败）：请修正字段名称、类型和取值范围") from None
         trace(name, "authorized", parameters=arguments, decision="server_allowlist")
         if name == "read_code":
-            return self.read_code(arguments["path"])  # type: ignore[arg-type]
+            return self.read_code(arguments["path"], start_line=arguments.get("start_line"),
+                                  end_line=arguments.get("end_line"))  # type: ignore[arg-type]
         if name == "search_code":
             return self.search_code(
                 arguments["query"], arguments.get("path", "."), arguments.get("max_results", 50),  # type: ignore[arg-type]

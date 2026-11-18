@@ -151,6 +151,7 @@ class Execution:
 
 _current: ContextVar[Execution | None] = ContextVar("repair_execution", default=None)
 _schema: ContextVar[dict | None] = ContextVar("repair_output_schema", default=None)
+_output_token_limit: ContextVar[int | None] = ContextVar("repair_output_token_limit", default=None)
 
 
 def current():
@@ -180,16 +181,22 @@ def cleanup_scope():
 
 
 @contextmanager
-def output_schema(schema):
+def output_schema(schema, *, max_output_tokens=None):
     token = _schema.set(schema)
+    output_token = _output_token_limit.set(max_output_tokens)
     try:
         yield
     finally:
+        _output_token_limit.reset(output_token)
         _schema.reset(token)
 
 
 def schema_context():
     return _schema.get()
+
+
+def output_token_limit():
+    return _output_token_limit.get()
 
 
 def bounded_timeout(limit):

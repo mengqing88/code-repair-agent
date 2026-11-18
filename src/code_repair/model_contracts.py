@@ -103,6 +103,8 @@ class RagPatchProposal(PatchProposal):
 
 class ReadArguments(Contract):
     path: str = Field(min_length=1, max_length=4096)
+    start_line: int | None = Field(default=None, ge=1)
+    end_line: int | None = Field(default=None, ge=1)
 
     @field_validator("path")
     @classmethod
@@ -110,6 +112,14 @@ class ReadArguments(Contract):
         if not value.strip():
             raise ValueError("path 不能为空白字符串")
         return value
+
+    @model_validator(mode="after")
+    def validate_line_range(self):
+        if (self.start_line is None) != (self.end_line is None):
+            raise ValueError("start_line 和 end_line 必须同时提供")
+        if self.start_line is not None and not 0 <= self.end_line - self.start_line <= 299:
+            raise ValueError("行范围必须有效，单次 read_code 最多读取 300 行")
+        return self
 
 
 class SearchArguments(Contract):
