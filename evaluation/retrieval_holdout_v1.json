@@ -1,0 +1,119 @@
+{
+  "version": "query-holdout-v1-20261118",
+  "provenance": "New synthetic queries authored after weight selection, before retrieval measurement; same frozen 30-document corpus. Not independent human labels or new-domain production data.",
+  "label_policy": "Relevant means the documented repair principle and stated contract directly transfer to this query; generic programming similarity is not relevance. Labels are frozen before any retrieval scores are observed.",
+  "queries": [
+    {
+      "case_id": "hq-01",
+      "family": "empty-sequence-access",
+      "query": "消费程序偶尔拿到 []，pick_pending(items) 却直接访问 items[0] 而抛异常。要求没有待办时返回空值，有待办时仍取最早的一条。寻找类似修复。",
+      "relevant": ["experience-04"],
+      "rationale": "先判空再访问首元素，空序列契约为 None；取最后一项的经验不适用。"
+    },
+    {
+      "case_id": "hq-02",
+      "family": "cache-identity-dimensions",
+      "query": "两个客户读取同一个 resource=7 时会串数据：缓存键只包含资源编号，没有包含 tenant。不是过期时间问题，而是不同身份的请求撞到了同一个条目。",
+      "relevant": ["experience-27"],
+      "rationale": "缓存身份遗漏影响返回内容的维度；旧经验的 locale 换成 tenant，修复原则相同。"
+    },
+    {
+      "case_id": "hq-03",
+      "family": "stable-deduplication",
+      "query": "A notification export receives [b,a,b,c,a]. We need [b,a,c], preserving the first occurrence. Current unique-set conversion scrambles the result; sorting is not acceptable.",
+      "relevant": ["experience-11", "experience-24"],
+      "rationale": "有序去重和正确更新 seen 都直接满足首次出现顺序及去重契约，两条经验均标相关。"
+    },
+    {
+      "case_id": "hq-04",
+      "family": "batch-slice-step",
+      "query": "把记录编号 0..6 按容量 3 切成多个批次，当前拿到了 [0,1,2] 和 [4,5,6]，编号 3 丢失。这不是接口翻页，而是内存数组切片的步进错误。",
+      "relevant": ["experience-12"],
+      "rationale": "切片起点按批容量递增，不能额外加一；接口游标推进经验没有直接描述数组分批。"
+    },
+    {
+      "case_id": "hq-05",
+      "family": "whole-string-validation",
+      "query": "设备编号必须恰好由 4 个大写字母组成。校验器却接受合法前缀后面的任意尾巴，例如 ABCDxyz；希望只允许 ABCD，拒绝额外内容。",
+      "relevant": ["experience-20"],
+      "rationale": "正则仅检查合法前缀，应检查完整字符串，不涉及大小写规范化。"
+    },
+    {
+      "case_id": "hq-06",
+      "family": "normalized-boolean-text",
+      "query": "从环境文件读取的 enable_debug 是 ' TrUe\\t'，现有解析只与小写字面量直接比较，结果把开关关闭了。输入是文本，期望忽略两端空白与大小写。",
+      "relevant": ["experience-09"],
+      "rationale": "布尔文本先 strip 和大小写归一化；普通用户名归一化不能完整说明布尔解析。"
+    },
+    {
+      "case_id": "hq-07",
+      "family": "fixed-width-number-rendering",
+      "query": "账单导出列规定为带两位小数的文本：7 要显示为 '7.00'，7.5 显示为 '7.50'。目前 round 后仍传出数值 7.5，尾部零消失。不能改变计算精度来凑显示。",
+      "relevant": ["experience-26"],
+      "rationale": "固定小数宽度是字符串格式化问题，不是调整浮点数数值。"
+    },
+    {
+      "case_id": "hq-08",
+      "family": "even-median",
+      "query": "For latency observations [40,10,30,20], the monitor reports the middle statistic as 30, but the agreed value is 25. Odd-sized batches behave correctly. Find the even-count boundary repair.",
+      "relevant": ["experience-14"],
+      "rationale": "排序后偶数长度取中间两项均值，不是所有样本的算术平均。"
+    },
+    {
+      "case_id": "hq-09",
+      "family": "initial-plus-retry-count",
+      "query": "连接器参数 max_retries=0 表示不补发，仍应发送第一次；现在循环 range(max_retries) 使请求一次也没执行。设为 2 时则应最多尝试 3 次。",
+      "relevant": ["experience-16"],
+      "rationale": "总尝试等于初次加重试，不能把超时边界或无限递归当作对应修复。"
+    },
+    {
+      "case_id": "hq-10",
+      "family": "optional-field-default",
+      "query": "渲染表格时，记录缺少 label 要展示 '(untitled)'；label 明确是空字符串时必须保持空字符串。当前直接 row['label']，缺键就崩溃，不能用值为假的判断代替缺键判断。",
+      "relevant": ["experience-19"],
+      "rationale": "缺失时使用默认文本且保留显式空值；返回 None 的可选配置经验不满足这里的显示默认契约。"
+    },
+    {
+      "case_id": "hq-11",
+      "family": "nonpositive-recursion-base",
+      "query": "递归生成倒计时链表时，n==0 可以结束，传入 -2 却不停调用 n-1 直到栈溢出。业务约定所有非正数都直接给空结果，正数的序列不能变。",
+      "relevant": ["experience-29"],
+      "rationale": "递归基例须覆盖全部非正数，和请求重试计数问题不同。"
+    },
+    {
+      "case_id": "hq-12",
+      "family": "closed-interval-enumeration",
+      "query": "A report must enumerate every invoice number between lo and hi, including hi. For lo=4 and hi=6 it currently emits [4,5], and equal endpoints emit nothing. It uses a half-open range.",
+      "relevant": ["experience-07"],
+      "rationale": "range 的排他上界需要增加一，和数值钳制或时间门限契约不是同一操作。"
+    },
+    {
+      "case_id": "hq-13",
+      "family": "url-boundary-joining",
+      "query": "请求构造器收到根地址 https://example.invalid/v2/ 和端点 /items，拼出路径部分的双斜杠。需要仅处理连接处，绝不能把协议里的 // 也全局替换掉。",
+      "relevant": ["experience-22"],
+      "rationale": "分别清理地址尾部和端点头部斜杠，保留协议分隔符。"
+    },
+    {
+      "case_id": "hq-14",
+      "family": "explicit-role-allowlist",
+      "query": "知识文章更新规则允许 maintainer 和 contributor，访客必须拒绝。现在权限分支只比较 maintainer，导致 contributor 的合法更新也被拒绝。没有要求开放给其他人。",
+      "relevant": ["experience-28"],
+      "rationale": "将明确允许的第二种角色纳入固定集合，不能放宽为任意已登录用户。"
+    },
+    {
+      "case_id": "hq-15",
+      "family": "descending-stable-sort",
+      "query": "比赛积分清单希望高分在前，同分仍沿用报名次序。现在比较方向反了，最小分跑到了首位。请找保持稳定性的降序排序修复经验。",
+      "relevant": ["experience-23"],
+      "rationale": "仅改变排序方向，保持同分稳定性；去重或选最后元素都不满足需求。"
+    },
+    {
+      "case_id": "hq-16",
+      "family": "logical-line-count",
+      "query": "A text importer counts line terminators instead of logical records. The payload 'red\\nblue' is counted as one record, although it has two; a final newline is optional and an empty payload has zero records.",
+      "relevant": ["experience-30"],
+      "rationale": "使用 splitlines 处理无末尾换行的最后一条，而不是 CSV 跳表头。"
+    }
+  ]
+}

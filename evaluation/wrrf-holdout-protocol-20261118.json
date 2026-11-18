@@ -1,0 +1,176 @@
+{
+  "prepared_at": "2026-11-18T11:41:24.138077+00:00",
+  "identity": {
+    "dataset_sha256": "ca4ae5db732df8b9ed4df0dae9afae02dc6ae5d6a160391038b015a746b9f15e",
+    "corpus_sha256": "ba8570429d162214b8d196fe14d5a075731814c4998c46915132357516260eb9",
+    "development_sha256": "0916a55da81a51a8a200ca230e67747c1250508535563d39a2bf7ad87a13187b",
+    "rules": {
+      "strategies": {
+        "wrrf_093": [
+          0.93,
+          0.07
+        ],
+        "wrrf_070": [
+          0.7,
+          0.3
+        ],
+        "vector": [
+          1.0,
+          0.0
+        ],
+        "legacy_score": null
+      },
+      "rank_constant": 60,
+      "min_similarity": 0.35,
+      "return_limit": 5,
+      "per_route_candidate_limit": 15,
+      "rerank_candidates": 10,
+      "primary_metrics": [
+        "recall@5",
+        "mrr@10"
+      ],
+      "bootstrap_samples": 10000,
+      "bootstrap_seed": 20261118,
+      "baseline": "wrrf_070",
+      "observed_non_regression": "recall@5 delta >= 0 and mrr@10 delta >= -0.01, before and after reranking",
+      "superiority": "positive lower bound of paired 95% recall@5 delta CI; no observed mrr@10 regression beyond 0.01",
+      "retune": false,
+      "qdrant": false,
+      "scope": "new synthetic queries against unchanged 30-document development corpus; not a new-domain or production test"
+    },
+    "models": {
+      "embedding_model": "Qwen/Qwen3-VL-Embedding-8B",
+      "embedding_endpoint_sha256": "f8178791ce42f03e6957d2e4f33b8191c49d74f333efbd444fb38528ed4a9729",
+      "reranker": {
+        "model": "mmarco-mMiniLMv2",
+        "backend": "onnx",
+        "provider": "DmlExecutionProvider",
+        "threads": 8,
+        "candidate_count": 10,
+        "artifacts": {
+          "config.json": "cc2cfe51aa3fd759d21d21acf5dfd6994aa67a3c9210636d22e143699d336c77",
+          "tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
+          "tokenizer_config.json": "e7fbfbfa6347b4e414c1cee50d142e2c2f9a895dad68b068ae83a8b564c3837e",
+          "special_tokens_map.json": "378eb3bf733eb16e65792d7e3fda5b8a4631387ca04d2015199c4d4f22ae554d",
+          "sentencepiece.bpe.model": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+          "reranker-fp32.onnx": "23acebcbf4304019106e570c0dd77867f1e848a7c4d442aa076be9deb0d854c1"
+        }
+      }
+    },
+    "query_count": 16,
+    "corpus_size": 30,
+    "leakage_audit": {
+      "exact_query_overlap": 0,
+      "text_similarity_audit": [
+        {
+          "case_id": "hq-01",
+          "nearest_development_query_id": "case-08",
+          "character_sequence_similarity": 0.18045112781954886,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-02",
+          "nearest_development_query_id": "case-28",
+          "character_sequence_similarity": 0.2047244094488189,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-03",
+          "nearest_development_query_id": "case-05",
+          "character_sequence_similarity": 0.27358490566037735,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-04",
+          "nearest_development_query_id": "case-12",
+          "character_sequence_similarity": 0.13846153846153847,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-05",
+          "nearest_development_query_id": "case-24",
+          "character_sequence_similarity": 0.16393442622950818,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-06",
+          "nearest_development_query_id": "case-10",
+          "character_sequence_similarity": 0.19047619047619047,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-07",
+          "nearest_development_query_id": "case-14",
+          "character_sequence_similarity": 0.14492753623188406,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-08",
+          "nearest_development_query_id": "case-27",
+          "character_sequence_similarity": 0.29508196721311475,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-09",
+          "nearest_development_query_id": "case-05",
+          "character_sequence_similarity": 0.24,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-10",
+          "nearest_development_query_id": "case-29",
+          "character_sequence_similarity": 0.1917808219178082,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-11",
+          "nearest_development_query_id": "case-07",
+          "character_sequence_similarity": 0.13333333333333333,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-12",
+          "nearest_development_query_id": "case-10",
+          "character_sequence_similarity": 0.2608695652173913,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-13",
+          "nearest_development_query_id": "case-04",
+          "character_sequence_similarity": 0.19834710743801653,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-14",
+          "nearest_development_query_id": "case-30",
+          "character_sequence_similarity": 0.2987012987012987,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-15",
+          "nearest_development_query_id": "case-02",
+          "character_sequence_similarity": 0.0273972602739726,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-16",
+          "nearest_development_query_id": "case-30",
+          "character_sequence_similarity": 0.2471042471042471,
+          "review_suggested": false
+        }
+      ],
+      "semantic_family_overlap": "intentional: fixed corpus, query-level holdout; not family-disjoint",
+      "independent_human_review": false
+    },
+    "source_sha256": {
+      "wrrf_holdout.py": "70b923f969927406674c31e6e1c416c8483b2d102e8ef99dc73426384c82fbdc",
+      "run_benchmark.py": "4893ab06a6ba40cf2017ced52ed5119f75ed21f352a15081ddd6060d3a0602ac",
+      "knowledge_base.py": "d536376d67f980c7e4fab651dca45eecd31171ee2a96ea8a114cdea7b58dc75d",
+      "semantic_dedup.py": "cba950319b8f1ead3e7ea9f9925e7d3600ecec67f4eff813cfed57d4df639f7e",
+      "retrieval_reranker.py": "da6526e760edf091bfc6779a5599566bff3c9297baeeffde3dacb692a656ecd7",
+      "llm_client.py": "f71c260986bbf5241b174984795877e6373ccf6fa623dd6f00be2d4abad96687"
+    }
+  },
+  "status": "frozen_before_retrieval_measurement",
+  "no_weight_search": true
+}

@@ -1,0 +1,5389 @@
+{
+  "status": "measured",
+  "measured_at": "2026-11-18T11:43:42.201177+00:00",
+  "protocol_sha256": "3c360ec9d0e21fa39d4671cda6b084e6a3f76a75b90bfe833ec3a919acc9d917",
+  "frozen_identity": {
+    "dataset_sha256": "ca4ae5db732df8b9ed4df0dae9afae02dc6ae5d6a160391038b015a746b9f15e",
+    "corpus_sha256": "ba8570429d162214b8d196fe14d5a075731814c4998c46915132357516260eb9",
+    "development_sha256": "0916a55da81a51a8a200ca230e67747c1250508535563d39a2bf7ad87a13187b",
+    "rules": {
+      "strategies": {
+        "wrrf_093": [
+          0.93,
+          0.07
+        ],
+        "wrrf_070": [
+          0.7,
+          0.3
+        ],
+        "vector": [
+          1.0,
+          0.0
+        ],
+        "legacy_score": null
+      },
+      "rank_constant": 60,
+      "min_similarity": 0.35,
+      "return_limit": 5,
+      "per_route_candidate_limit": 15,
+      "rerank_candidates": 10,
+      "primary_metrics": [
+        "recall@5",
+        "mrr@10"
+      ],
+      "bootstrap_samples": 10000,
+      "bootstrap_seed": 20261118,
+      "baseline": "wrrf_070",
+      "observed_non_regression": "recall@5 delta >= 0 and mrr@10 delta >= -0.01, before and after reranking",
+      "superiority": "positive lower bound of paired 95% recall@5 delta CI; no observed mrr@10 regression beyond 0.01",
+      "retune": false,
+      "qdrant": false,
+      "scope": "new synthetic queries against unchanged 30-document development corpus; not a new-domain or production test"
+    },
+    "models": {
+      "embedding_model": "Qwen/Qwen3-VL-Embedding-8B",
+      "embedding_endpoint_sha256": "f8178791ce42f03e6957d2e4f33b8191c49d74f333efbd444fb38528ed4a9729",
+      "reranker": {
+        "model": "mmarco-mMiniLMv2",
+        "backend": "onnx",
+        "provider": "DmlExecutionProvider",
+        "threads": 8,
+        "candidate_count": 10,
+        "artifacts": {
+          "config.json": "cc2cfe51aa3fd759d21d21acf5dfd6994aa67a3c9210636d22e143699d336c77",
+          "tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
+          "tokenizer_config.json": "e7fbfbfa6347b4e414c1cee50d142e2c2f9a895dad68b068ae83a8b564c3837e",
+          "special_tokens_map.json": "378eb3bf733eb16e65792d7e3fda5b8a4631387ca04d2015199c4d4f22ae554d",
+          "sentencepiece.bpe.model": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+          "reranker-fp32.onnx": "23acebcbf4304019106e570c0dd77867f1e848a7c4d442aa076be9deb0d854c1"
+        }
+      }
+    },
+    "query_count": 16,
+    "corpus_size": 30,
+    "leakage_audit": {
+      "exact_query_overlap": 0,
+      "text_similarity_audit": [
+        {
+          "case_id": "hq-01",
+          "nearest_development_query_id": "case-08",
+          "character_sequence_similarity": 0.18045112781954886,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-02",
+          "nearest_development_query_id": "case-28",
+          "character_sequence_similarity": 0.2047244094488189,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-03",
+          "nearest_development_query_id": "case-05",
+          "character_sequence_similarity": 0.27358490566037735,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-04",
+          "nearest_development_query_id": "case-12",
+          "character_sequence_similarity": 0.13846153846153847,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-05",
+          "nearest_development_query_id": "case-24",
+          "character_sequence_similarity": 0.16393442622950818,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-06",
+          "nearest_development_query_id": "case-10",
+          "character_sequence_similarity": 0.19047619047619047,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-07",
+          "nearest_development_query_id": "case-14",
+          "character_sequence_similarity": 0.14492753623188406,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-08",
+          "nearest_development_query_id": "case-27",
+          "character_sequence_similarity": 0.29508196721311475,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-09",
+          "nearest_development_query_id": "case-05",
+          "character_sequence_similarity": 0.24,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-10",
+          "nearest_development_query_id": "case-29",
+          "character_sequence_similarity": 0.1917808219178082,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-11",
+          "nearest_development_query_id": "case-07",
+          "character_sequence_similarity": 0.13333333333333333,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-12",
+          "nearest_development_query_id": "case-10",
+          "character_sequence_similarity": 0.2608695652173913,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-13",
+          "nearest_development_query_id": "case-04",
+          "character_sequence_similarity": 0.19834710743801653,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-14",
+          "nearest_development_query_id": "case-30",
+          "character_sequence_similarity": 0.2987012987012987,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-15",
+          "nearest_development_query_id": "case-02",
+          "character_sequence_similarity": 0.0273972602739726,
+          "review_suggested": false
+        },
+        {
+          "case_id": "hq-16",
+          "nearest_development_query_id": "case-30",
+          "character_sequence_similarity": 0.2471042471042471,
+          "review_suggested": false
+        }
+      ],
+      "semantic_family_overlap": "intentional: fixed corpus, query-level holdout; not family-disjoint",
+      "independent_human_review": false
+    },
+    "source_sha256": {
+      "wrrf_holdout.py": "70b923f969927406674c31e6e1c416c8483b2d102e8ef99dc73426384c82fbdc",
+      "run_benchmark.py": "4893ab06a6ba40cf2017ced52ed5119f75ed21f352a15081ddd6060d3a0602ac",
+      "knowledge_base.py": "d536376d67f980c7e4fab651dca45eecd31171ee2a96ea8a114cdea7b58dc75d",
+      "semantic_dedup.py": "cba950319b8f1ead3e7ea9f9925e7d3600ecec67f4eff813cfed57d4df639f7e",
+      "retrieval_reranker.py": "da6526e760edf091bfc6779a5599566bff3c9297baeeffde3dacb692a656ecd7",
+      "llm_client.py": "f71c260986bbf5241b174984795877e6373ccf6fa623dd6f00be2d4abad96687"
+    }
+  },
+  "input_vector_sha256": "7ad4c2e37544d0d1b80ddcafafc66d079c95c0d3fabe880a25b562e31fe6bddc",
+  "embedding_dimension": 4096,
+  "observed_tokens": 2781,
+  "observed_cost_yuan": null,
+  "usage_complete": true,
+  "cost_complete": false,
+  "active_reranker_provider": "DmlExecutionProvider",
+  "production_fusion_parity_checks": 16,
+  "summary": {
+    "before_rerank": {
+      "strategies": {
+        "wrrf_093": {
+          "mrr": 0.6671874999999999,
+          "recall@1": 0.53125,
+          "precision@1": 0.5625,
+          "mrr@1": 0.5625,
+          "recall@3": 0.65625,
+          "precision@3": 0.22916666666666669,
+          "mrr@3": 0.625,
+          "recall@5": 0.8125,
+          "precision@5": 0.17500000000000002,
+          "mrr@5": 0.653125,
+          "recall@10": 0.9375,
+          "precision@10": 0.10000000000000002,
+          "mrr@10": 0.6671874999999999
+        },
+        "wrrf_070": {
+          "mrr": 0.6536458333333334,
+          "recall@1": 0.53125,
+          "precision@1": 0.5625,
+          "mrr@1": 0.5625,
+          "recall@3": 0.65625,
+          "precision@3": 0.22916666666666669,
+          "mrr@3": 0.6145833333333334,
+          "recall@5": 0.78125,
+          "precision@5": 0.1625,
+          "mrr@5": 0.6458333333333334,
+          "recall@10": 0.875,
+          "precision@10": 0.09375000000000001,
+          "mrr@10": 0.6536458333333334
+        },
+        "vector": {
+          "mrr": 0.6536458333333333,
+          "recall@1": 0.53125,
+          "precision@1": 0.5625,
+          "mrr@1": 0.5625,
+          "recall@3": 0.75,
+          "precision@3": 0.2708333333333333,
+          "mrr@3": 0.6458333333333333,
+          "recall@5": 0.75,
+          "precision@5": 0.1625,
+          "mrr@5": 0.6458333333333333,
+          "recall@10": 0.8125,
+          "precision@10": 0.08750000000000001,
+          "mrr@10": 0.6536458333333333
+        },
+        "legacy_score": {
+          "mrr": 0.7145833333333333,
+          "recall@1": 0.59375,
+          "precision@1": 0.625,
+          "mrr@1": 0.625,
+          "recall@3": 0.78125,
+          "precision@3": 0.2708333333333333,
+          "mrr@3": 0.7083333333333333,
+          "recall@5": 0.78125,
+          "precision@5": 0.1625,
+          "mrr@5": 0.7083333333333333,
+          "recall@10": 0.84375,
+          "precision@10": 0.08750000000000001,
+          "mrr@10": 0.7145833333333333
+        }
+      },
+      "paired_selected_vs_original": {
+        "recall@5": {
+          "mean_delta": 0.03125,
+          "paired_bootstrap_95_ci": [
+            -0.21875,
+            0.28125
+          ],
+          "wins": 3,
+          "losses": 2,
+          "ties": 11
+        },
+        "mrr@10": {
+          "mean_delta": 0.013541666666666669,
+          "paired_bootstrap_95_ci": [
+            -0.041666666666666664,
+            0.078125
+          ],
+          "wins": 2,
+          "losses": 2,
+          "ties": 12
+        },
+        "observed_non_regression": true,
+        "superiority_supported": false
+      }
+    },
+    "after_rerank": {
+      "strategies": {
+        "wrrf_093": {
+          "mrr": 0.6750744047619048,
+          "recall@1": 0.5625,
+          "precision@1": 0.5625,
+          "mrr@1": 0.5625,
+          "recall@3": 0.71875,
+          "precision@3": 0.25,
+          "mrr@3": 0.6458333333333333,
+          "recall@5": 0.8125,
+          "precision@5": 0.17500000000000002,
+          "mrr@5": 0.6583333333333333,
+          "recall@10": 0.9375,
+          "precision@10": 0.10000000000000002,
+          "mrr@10": 0.6750744047619048
+        },
+        "wrrf_070": {
+          "mrr": 0.6125744047619048,
+          "recall@1": 0.5,
+          "precision@1": 0.5,
+          "mrr@1": 0.5,
+          "recall@3": 0.65625,
+          "precision@3": 0.22916666666666669,
+          "mrr@3": 0.5833333333333333,
+          "recall@5": 0.75,
+          "precision@5": 0.1625,
+          "mrr@5": 0.5958333333333333,
+          "recall@10": 0.875,
+          "precision@10": 0.09375000000000001,
+          "mrr@10": 0.6125744047619048
+        },
+        "vector": {
+          "mrr": 0.5396577380952381,
+          "recall@1": 0.4375,
+          "precision@1": 0.4375,
+          "mrr@1": 0.4375,
+          "recall@3": 0.59375,
+          "precision@3": 0.20833333333333334,
+          "mrr@3": 0.5104166666666667,
+          "recall@5": 0.6875,
+          "precision@5": 0.15,
+          "mrr@5": 0.5229166666666667,
+          "recall@10": 0.8125,
+          "precision@10": 0.08750000000000001,
+          "mrr@10": 0.5396577380952381
+        },
+        "legacy_score": {
+          "mrr": 0.6443452380952381,
+          "recall@1": 0.5625,
+          "precision@1": 0.5625,
+          "mrr@1": 0.5625,
+          "recall@3": 0.59375,
+          "precision@3": 0.20833333333333334,
+          "mrr@3": 0.59375,
+          "recall@5": 0.71875,
+          "precision@5": 0.15,
+          "mrr@5": 0.625,
+          "recall@10": 0.84375,
+          "precision@10": 0.08750000000000001,
+          "mrr@10": 0.6443452380952381
+        }
+      },
+      "paired_selected_vs_original": {
+        "recall@5": {
+          "mean_delta": 0.0625,
+          "paired_bootstrap_95_ci": [
+            0.0,
+            0.1875
+          ],
+          "wins": 1,
+          "losses": 0,
+          "ties": 15
+        },
+        "mrr@10": {
+          "mean_delta": 0.0625,
+          "paired_bootstrap_95_ci": [
+            0.0,
+            0.1875
+          ],
+          "wins": 1,
+          "losses": 0,
+          "ties": 15
+        },
+        "observed_non_regression": true,
+        "superiority_supported": false
+      }
+    }
+  },
+  "details": [
+    {
+      "case_id": "hq-01",
+      "family": "empty-sequence-access",
+      "query": "消费程序偶尔拿到 []，pick_pending(items) 却直接访问 items[0] 而抛异常。要求没有待办时返回空值，有待办时仍取最早的一条。寻找类似修复。",
+      "relevant": [
+        "experience-04"
+      ],
+      "rationale": "先判空再访问首元素，空序列契约为 None；取最后一项的经验不适用。",
+      "vector_scores": {
+        "experience-04": 0.6167585300163717,
+        "experience-08": 0.4970074297324688,
+        "experience-16": 0.4786130197640155,
+        "experience-05": 0.5361100302166586,
+        "experience-13": 0.4958801777219101,
+        "experience-15": 0.4817338996657471,
+        "experience-03": 0.46411436493212666,
+        "experience-12": 0.40807941309345436,
+        "experience-07": 0.4361363691881071,
+        "experience-06": 0.3912183205225464,
+        "experience-25": 0.43454230491997037,
+        "experience-30": 0.39079359082715287,
+        "experience-29": 0.4217747959468285,
+        "experience-23": 0.41005984856255656,
+        "experience-11": 0.4085543933926484,
+        "experience-14": 0.39432504518768524,
+        "experience-24": 0.36525874972563777,
+        "experience-01": 0.3480534845118942,
+        "experience-26": 0.3230888516681451
+      },
+      "keyword_scores": {
+        "experience-04": 0.7518417292669426,
+        "experience-08": 0.8390147480929939,
+        "experience-16": 0.7228772871225347,
+        "experience-05": 0.0,
+        "experience-13": 0.0,
+        "experience-15": 0.0,
+        "experience-03": 0.0,
+        "experience-12": 0.7391489775697799,
+        "experience-07": 0.0,
+        "experience-06": 0.7605485476594662,
+        "experience-25": 0.0,
+        "experience-30": 0.7412345908588722,
+        "experience-29": 0.0,
+        "experience-23": 0.0,
+        "experience-11": 0.0,
+        "experience-14": 0.0,
+        "experience-24": 0.0,
+        "experience-01": 0.673532713702436,
+        "experience-26": 0.6503799727443504
+      },
+      "cross_encoder_scores": {
+        "experience-01": -4.536075592041016,
+        "experience-03": -6.102832794189453,
+        "experience-04": -5.658310890197754,
+        "experience-05": -5.549171447753906,
+        "experience-06": -5.823864459991455,
+        "experience-07": -6.358285903930664,
+        "experience-08": -5.4494829177856445,
+        "experience-12": -5.1915974617004395,
+        "experience-13": -5.67388916015625,
+        "experience-15": -5.433533668518066,
+        "experience-16": -6.09013557434082,
+        "experience-25": -5.043632507324219,
+        "experience-26": -4.501814842224121,
+        "experience-29": -6.1693644523620605,
+        "experience-30": -6.049553871154785
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-04",
+            "experience-08",
+            "experience-16",
+            "experience-05",
+            "experience-13",
+            "experience-15",
+            "experience-03",
+            "experience-12",
+            "experience-07",
+            "experience-06"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-04",
+            "experience-08",
+            "experience-16",
+            "experience-12",
+            "experience-06",
+            "experience-05",
+            "experience-13",
+            "experience-15",
+            "experience-03",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-04",
+            "experience-05",
+            "experience-08",
+            "experience-13",
+            "experience-15",
+            "experience-16",
+            "experience-03",
+            "experience-07",
+            "experience-25",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-04",
+            "experience-08",
+            "experience-16",
+            "experience-12",
+            "experience-06",
+            "experience-30",
+            "experience-01",
+            "experience-26",
+            "experience-05",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-12",
+            "experience-15",
+            "experience-08",
+            "experience-05",
+            "experience-04",
+            "experience-13",
+            "experience-06",
+            "experience-16",
+            "experience-03",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.2,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.2,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.2
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-12",
+            "experience-15",
+            "experience-08",
+            "experience-05",
+            "experience-04",
+            "experience-13",
+            "experience-06",
+            "experience-16",
+            "experience-03",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.2,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.2,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.2
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-25",
+            "experience-15",
+            "experience-08",
+            "experience-05",
+            "experience-04",
+            "experience-13",
+            "experience-16",
+            "experience-03",
+            "experience-29",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.2,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.2,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.2
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-26",
+            "experience-01",
+            "experience-12",
+            "experience-08",
+            "experience-05",
+            "experience-04",
+            "experience-13",
+            "experience-06",
+            "experience-30",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.16666666666666666,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.16666666666666666
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-02",
+      "family": "cache-identity-dimensions",
+      "query": "两个客户读取同一个 resource=7 时会串数据：缓存键只包含资源编号，没有包含 tenant。不是过期时间问题，而是不同身份的请求撞到了同一个条目。",
+      "relevant": [
+        "experience-27"
+      ],
+      "rationale": "缓存身份遗漏影响返回内容的维度；旧经验的 locale 换成 tenant，修复原则相同。",
+      "vector_scores": {
+        "experience-16": 0.5653226765161998,
+        "experience-24": 0.5324271688043473,
+        "experience-26": 0.48063011810373724,
+        "experience-27": 0.47057743061183754,
+        "experience-12": 0.5204427375036229,
+        "experience-05": 0.5177688015325591,
+        "experience-07": 0.44805295325710764,
+        "experience-29": 0.473268683066722,
+        "experience-06": 0.47133424310253796,
+        "experience-22": 0.46194639550924776,
+        "experience-13": 0.44500455296301655,
+        "experience-10": 0.42282853156138606,
+        "experience-17": 0.4389374434553727,
+        "experience-25": 0.43122759734094734,
+        "experience-15": 0.43081145819818206,
+        "experience-08": 0.38995448384757037,
+        "experience-04": 0.3814488492076995,
+        "experience-09": 0.4304364983644351,
+        "experience-14": 0.42616340509454037,
+        "experience-23": 0.41287083312507783,
+        "experience-11": 0.4095336150268469,
+        "experience-01": 0.401797020806212,
+        "experience-30": 0.3658647370599269,
+        "experience-21": 0.35593391837525806,
+        "experience-28": 0.3156848322914314
+      },
+      "keyword_scores": {
+        "experience-16": 0.8391512181692858,
+        "experience-24": 0.8445468223685851,
+        "experience-26": 0.7208935603611557,
+        "experience-27": 0.8697112738388844,
+        "experience-12": 0.0,
+        "experience-05": 0.0,
+        "experience-07": 0.7035890160080261,
+        "experience-29": 0.0,
+        "experience-06": 0.0,
+        "experience-22": 0.0,
+        "experience-13": 0.0,
+        "experience-10": 0.6459391308765026,
+        "experience-17": 0.0,
+        "experience-25": 0.0,
+        "experience-15": 0.0,
+        "experience-08": 0.7158012538277363,
+        "experience-04": 0.7158012538277363,
+        "experience-09": 0.0,
+        "experience-14": 0.0,
+        "experience-23": 0.0,
+        "experience-11": 0.0,
+        "experience-01": 0.0,
+        "experience-30": 0.0,
+        "experience-21": 0.0,
+        "experience-28": 0.673532713702436
+      },
+      "cross_encoder_scores": {
+        "experience-04": -6.455663204193115,
+        "experience-05": -6.669471740722656,
+        "experience-06": -6.24544620513916,
+        "experience-07": -7.252657890319824,
+        "experience-08": -5.8281049728393555,
+        "experience-10": -7.0053935050964355,
+        "experience-12": -6.8593316078186035,
+        "experience-16": -7.296142578125,
+        "experience-22": -7.21214485168457,
+        "experience-24": -6.686868667602539,
+        "experience-26": -6.572555065155029,
+        "experience-27": -7.084880828857422,
+        "experience-28": -7.79973030090332,
+        "experience-29": -6.029389381408691
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-16",
+            "experience-24",
+            "experience-26",
+            "experience-27",
+            "experience-12",
+            "experience-05",
+            "experience-07",
+            "experience-29",
+            "experience-06",
+            "experience-22"
+          ],
+          "metrics": {
+            "mrr": 0.25,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.25,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.25
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-16",
+            "experience-24",
+            "experience-26",
+            "experience-27",
+            "experience-07",
+            "experience-12",
+            "experience-05",
+            "experience-29",
+            "experience-06",
+            "experience-22"
+          ],
+          "metrics": {
+            "mrr": 0.25,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.25,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.25
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-24",
+            "experience-12",
+            "experience-05",
+            "experience-26",
+            "experience-29",
+            "experience-06",
+            "experience-27",
+            "experience-22",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.125,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.125
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-16",
+            "experience-24",
+            "experience-27",
+            "experience-26",
+            "experience-07",
+            "experience-10",
+            "experience-08",
+            "experience-04",
+            "experience-28",
+            "experience-12"
+          ],
+          "metrics": {
+            "mrr": 0.3333333333333333,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.3333333333333333,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.3333333333333333,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.3333333333333333
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-29",
+            "experience-06",
+            "experience-26",
+            "experience-05",
+            "experience-24",
+            "experience-12",
+            "experience-27",
+            "experience-22",
+            "experience-07",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.14285714285714285,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.14285714285714285
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-29",
+            "experience-06",
+            "experience-26",
+            "experience-05",
+            "experience-24",
+            "experience-12",
+            "experience-27",
+            "experience-22",
+            "experience-07",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.14285714285714285,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.14285714285714285
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-29",
+            "experience-06",
+            "experience-26",
+            "experience-05",
+            "experience-24",
+            "experience-12",
+            "experience-27",
+            "experience-22",
+            "experience-07",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.14285714285714285,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.14285714285714285
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-08",
+            "experience-04",
+            "experience-26",
+            "experience-24",
+            "experience-12",
+            "experience-10",
+            "experience-27",
+            "experience-07",
+            "experience-16",
+            "experience-28"
+          ],
+          "metrics": {
+            "mrr": 0.14285714285714285,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.14285714285714285
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-03",
+      "family": "stable-deduplication",
+      "query": "A notification export receives [b,a,b,c,a]. We need [b,a,c], preserving the first occurrence. Current unique-set conversion scrambles the result; sorting is not acceptable.",
+      "relevant": [
+        "experience-11",
+        "experience-24"
+      ],
+      "rationale": "有序去重和正确更新 seen 都直接满足首次出现顺序及去重契约，两条经验均标相关。",
+      "vector_scores": {
+        "experience-11": 0.6406686087595362,
+        "experience-23": 0.48677140444762373,
+        "experience-07": 0.4572765776666546,
+        "experience-05": 0.4309489142235834,
+        "experience-24": 0.5118989719089116,
+        "experience-16": 0.4988294203287873,
+        "experience-15": 0.4229966739972702,
+        "experience-21": 0.4162799842596525,
+        "experience-30": 0.4287511683564304,
+        "experience-10": 0.4222181325510146,
+        "experience-17": 0.3829993878730986,
+        "experience-04": 0.4127589190081214,
+        "experience-12": 0.4063062533548031,
+        "experience-03": 0.37152567970604433,
+        "experience-26": 0.39919892800871565,
+        "experience-29": 0.3661352081727846,
+        "experience-08": 0.38716204502564766,
+        "experience-13": 0.35263910036508866,
+        "experience-06": 0.3868415226585209,
+        "experience-14": 0.376513518905051,
+        "experience-09": 0.3744331558120655,
+        "experience-25": 0.3467549154442888,
+        "experience-19": 0.2758476591074662,
+        "experience-27": 0.3435855290115516
+      },
+      "keyword_scores": {
+        "experience-11": 0.8532728036869484,
+        "experience-23": 0.9126720667130112,
+        "experience-07": 0.7694651829656822,
+        "experience-05": 0.6481019156657863,
+        "experience-24": 0.0,
+        "experience-16": 0.0,
+        "experience-15": 0.5952249517158643,
+        "experience-21": 0.5596863918508166,
+        "experience-30": 0.0,
+        "experience-10": 0.0,
+        "experience-17": 0.7830070983089759,
+        "experience-04": 0.0,
+        "experience-12": 0.0,
+        "experience-03": 0.7365840456740065,
+        "experience-26": 0.0,
+        "experience-29": 0.6191776876743467,
+        "experience-08": 0.0,
+        "experience-13": 0.5627566105788567,
+        "experience-06": 0.0,
+        "experience-14": 0.0,
+        "experience-09": 0.0,
+        "experience-25": 0.8481331738868542,
+        "experience-19": 0.8339127382290746,
+        "experience-27": 0.6440332169108276
+      },
+      "cross_encoder_scores": {
+        "experience-03": -4.592339038848877,
+        "experience-05": -4.31192684173584,
+        "experience-07": -4.862170696258545,
+        "experience-10": -4.53236198425293,
+        "experience-11": -3.499830722808838,
+        "experience-15": -4.803036689758301,
+        "experience-16": -3.384591817855835,
+        "experience-17": -4.34725284576416,
+        "experience-19": -5.212687969207764,
+        "experience-21": -5.254570007324219,
+        "experience-23": -4.57871150970459,
+        "experience-24": -3.3734006881713867,
+        "experience-25": -1.5735825300216675,
+        "experience-30": -3.1539998054504395
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-11",
+            "experience-23",
+            "experience-07",
+            "experience-05",
+            "experience-24",
+            "experience-16",
+            "experience-15",
+            "experience-21",
+            "experience-30",
+            "experience-10"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 0.5,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 0.5,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.4,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.2,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-11",
+            "experience-23",
+            "experience-07",
+            "experience-05",
+            "experience-15",
+            "experience-21",
+            "experience-24",
+            "experience-16",
+            "experience-30",
+            "experience-10"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 0.5,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 0.5,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 0.5,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.2,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-11",
+            "experience-24",
+            "experience-16",
+            "experience-23",
+            "experience-07",
+            "experience-05",
+            "experience-30",
+            "experience-15",
+            "experience-10",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 0.5,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.6666666666666666,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.4,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.2,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-11",
+            "experience-23",
+            "experience-07",
+            "experience-17",
+            "experience-25",
+            "experience-05",
+            "experience-03",
+            "experience-15",
+            "experience-21",
+            "experience-19"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 0.5,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 0.5,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 0.5,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 0.5,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-30",
+            "experience-24",
+            "experience-16",
+            "experience-11",
+            "experience-05",
+            "experience-10",
+            "experience-23",
+            "experience-15",
+            "experience-07",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.5,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.4,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.2,
+            "mrr@10": 0.5
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-30",
+            "experience-24",
+            "experience-16",
+            "experience-11",
+            "experience-05",
+            "experience-10",
+            "experience-23",
+            "experience-15",
+            "experience-07",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.5,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.4,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.2,
+            "mrr@10": 0.5
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-30",
+            "experience-24",
+            "experience-16",
+            "experience-11",
+            "experience-05",
+            "experience-10",
+            "experience-23",
+            "experience-15",
+            "experience-07",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.5,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.4,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.2,
+            "mrr@10": 0.5
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-25",
+            "experience-11",
+            "experience-05",
+            "experience-17",
+            "experience-23",
+            "experience-03",
+            "experience-15",
+            "experience-07",
+            "experience-19",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.5,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 0.5,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 0.5,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-04",
+      "family": "batch-slice-step",
+      "query": "把记录编号 0..6 按容量 3 切成多个批次，当前拿到了 [0,1,2] 和 [4,5,6]，编号 3 丢失。这不是接口翻页，而是内存数组切片的步进错误。",
+      "relevant": [
+        "experience-12"
+      ],
+      "rationale": "切片起点按批容量递增，不能额外加一；接口游标推进经验没有直接描述数组分批。",
+      "vector_scores": {
+        "experience-12": 0.6501962520074882,
+        "experience-05": 0.6166599871603425,
+        "experience-26": 0.5255703331436539,
+        "experience-16": 0.6823863639869551,
+        "experience-24": 0.5162863400775648,
+        "experience-07": 0.5349636000698833,
+        "experience-06": 0.5196113092080337,
+        "experience-14": 0.465543908282706,
+        "experience-15": 0.48045159540132404,
+        "experience-29": 0.4712690421153523,
+        "experience-13": 0.46624791367834395,
+        "experience-17": 0.46582002200110956,
+        "experience-23": 0.4636882614112834,
+        "experience-01": 0.4018398218903439,
+        "experience-04": 0.4634474934931055,
+        "experience-30": 0.3984680273872549,
+        "experience-09": 0.4464467410859442,
+        "experience-18": 0.3717002298971493,
+        "experience-25": 0.4398724771051203,
+        "experience-22": 0.4326287054807853,
+        "experience-10": 0.42880737353997334,
+        "experience-11": 0.40534014092066223,
+        "experience-21": 0.37265554143924795,
+        "experience-27": 0.36505925472135026,
+        "experience-08": 0.35817261798794947
+      },
+      "keyword_scores": {
+        "experience-12": 0.8891705029235936,
+        "experience-05": 0.7739935745073093,
+        "experience-26": 0.8378130721924082,
+        "experience-16": 0.0,
+        "experience-24": 0.730922584072024,
+        "experience-07": 0.0,
+        "experience-06": 0.0,
+        "experience-14": 0.6908915522645009,
+        "experience-15": 0.0,
+        "experience-29": 0.0,
+        "experience-13": 0.0,
+        "experience-17": 0.0,
+        "experience-23": 0.0,
+        "experience-01": 0.7412345908588722,
+        "experience-04": 0.0,
+        "experience-30": 0.7042595818911715,
+        "experience-09": 0.0,
+        "experience-18": 0.836971200704983,
+        "experience-25": 0.0,
+        "experience-22": 0.0,
+        "experience-10": 0.0,
+        "experience-11": 0.0,
+        "experience-21": 0.0,
+        "experience-27": 0.0,
+        "experience-08": 0.0
+      },
+      "cross_encoder_scores": {
+        "experience-01": -4.079579830169678,
+        "experience-05": -1.8941367864608765,
+        "experience-06": -3.232206344604492,
+        "experience-07": -3.445253372192383,
+        "experience-12": -1.6708496809005737,
+        "experience-13": -2.5911059379577637,
+        "experience-14": -2.0321948528289795,
+        "experience-15": -3.631894588470459,
+        "experience-16": -3.840049982070923,
+        "experience-18": -2.033980131149292,
+        "experience-24": -2.8083858489990234,
+        "experience-26": -3.512298107147217,
+        "experience-29": -3.1995298862457275,
+        "experience-30": -3.4341001510620117
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-12",
+            "experience-05",
+            "experience-26",
+            "experience-16",
+            "experience-24",
+            "experience-07",
+            "experience-06",
+            "experience-14",
+            "experience-15",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-12",
+            "experience-05",
+            "experience-26",
+            "experience-24",
+            "experience-14",
+            "experience-16",
+            "experience-07",
+            "experience-06",
+            "experience-15",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-12",
+            "experience-05",
+            "experience-07",
+            "experience-26",
+            "experience-06",
+            "experience-24",
+            "experience-15",
+            "experience-29",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-12",
+            "experience-05",
+            "experience-26",
+            "experience-24",
+            "experience-14",
+            "experience-18",
+            "experience-01",
+            "experience-30",
+            "experience-16",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-12",
+            "experience-05",
+            "experience-14",
+            "experience-24",
+            "experience-29",
+            "experience-06",
+            "experience-07",
+            "experience-26",
+            "experience-15",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-12",
+            "experience-05",
+            "experience-14",
+            "experience-24",
+            "experience-29",
+            "experience-06",
+            "experience-07",
+            "experience-26",
+            "experience-15",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-12",
+            "experience-05",
+            "experience-13",
+            "experience-24",
+            "experience-29",
+            "experience-06",
+            "experience-07",
+            "experience-26",
+            "experience-15",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-12",
+            "experience-05",
+            "experience-14",
+            "experience-18",
+            "experience-24",
+            "experience-30",
+            "experience-07",
+            "experience-26",
+            "experience-16",
+            "experience-01"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-05",
+      "family": "whole-string-validation",
+      "query": "设备编号必须恰好由 4 个大写字母组成。校验器却接受合法前缀后面的任意尾巴，例如 ABCDxyz；希望只允许 ABCD，拒绝额外内容。",
+      "relevant": [
+        "experience-20"
+      ],
+      "rationale": "正则仅检查合法前缀，应检查完整字符串，不涉及大小写规范化。",
+      "vector_scores": {
+        "experience-06": 0.5058819324186543,
+        "experience-16": 0.5663148560734738,
+        "experience-26": 0.5007012558120788,
+        "experience-24": 0.43158979045124024,
+        "experience-12": 0.49504736150649303,
+        "experience-05": 0.4866005707471881,
+        "experience-07": 0.468994740307071,
+        "experience-20": 0.4097331286974946,
+        "experience-09": 0.45877700328468135,
+        "experience-15": 0.43817120547300104,
+        "experience-10": 0.430229729961709,
+        "experience-17": 0.415473438525832,
+        "experience-29": 0.409166564013199,
+        "experience-14": 0.40516182971370945,
+        "experience-22": 0.39072897895965747,
+        "experience-13": 0.38544103873490376,
+        "experience-25": 0.3803469641393354,
+        "experience-23": 0.37833008890300013,
+        "experience-21": 0.3701903899680875,
+        "experience-04": 0.36736795593582244,
+        "experience-01": 0.357161709373895,
+        "experience-28": 0.250265587285361,
+        "experience-18": 0.24283138086462183
+      },
+      "keyword_scores": {
+        "experience-06": 0.7253105848041905,
+        "experience-16": 0.0,
+        "experience-26": 0.0,
+        "experience-24": 0.730922584072024,
+        "experience-12": 0.0,
+        "experience-05": 0.0,
+        "experience-07": 0.0,
+        "experience-20": 0.9565010136079536,
+        "experience-09": 0.0,
+        "experience-15": 0.0,
+        "experience-10": 0.0,
+        "experience-17": 0.0,
+        "experience-29": 0.0,
+        "experience-14": 0.0,
+        "experience-22": 0.0,
+        "experience-13": 0.0,
+        "experience-25": 0.0,
+        "experience-23": 0.0,
+        "experience-21": 0.0,
+        "experience-04": 0.0,
+        "experience-01": 0.0,
+        "experience-28": 0.923365184785103,
+        "experience-18": 0.7370750679388618
+      },
+      "cross_encoder_scores": {
+        "experience-05": -5.974573612213135,
+        "experience-06": -6.088254928588867,
+        "experience-07": -6.240156173706055,
+        "experience-09": -6.25944709777832,
+        "experience-10": -6.405213356018066,
+        "experience-12": -6.58526611328125,
+        "experience-15": -6.137732028961182,
+        "experience-16": -6.762078285217285,
+        "experience-18": -6.440461158752441,
+        "experience-20": -5.962090492248535,
+        "experience-24": -6.4768877029418945,
+        "experience-26": -6.01052188873291,
+        "experience-28": -6.993912696838379
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-06",
+            "experience-16",
+            "experience-26",
+            "experience-24",
+            "experience-12",
+            "experience-05",
+            "experience-07",
+            "experience-20",
+            "experience-09",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 0.125,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.125
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-06",
+            "experience-24",
+            "experience-20",
+            "experience-16",
+            "experience-26",
+            "experience-12",
+            "experience-05",
+            "experience-07",
+            "experience-09",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 0.3333333333333333,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.3333333333333333,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.3333333333333333,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.3333333333333333
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-06",
+            "experience-26",
+            "experience-12",
+            "experience-05",
+            "experience-07",
+            "experience-09",
+            "experience-15",
+            "experience-24",
+            "experience-10"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-20",
+            "experience-06",
+            "experience-24",
+            "experience-28",
+            "experience-16",
+            "experience-18",
+            "experience-26",
+            "experience-12",
+            "experience-05",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-20",
+            "experience-05",
+            "experience-26",
+            "experience-06",
+            "experience-15",
+            "experience-07",
+            "experience-09",
+            "experience-24",
+            "experience-12",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-20",
+            "experience-05",
+            "experience-26",
+            "experience-06",
+            "experience-15",
+            "experience-07",
+            "experience-09",
+            "experience-24",
+            "experience-12",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-05",
+            "experience-26",
+            "experience-06",
+            "experience-15",
+            "experience-07",
+            "experience-09",
+            "experience-10",
+            "experience-24",
+            "experience-12",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-20",
+            "experience-05",
+            "experience-26",
+            "experience-06",
+            "experience-07",
+            "experience-18",
+            "experience-24",
+            "experience-12",
+            "experience-16",
+            "experience-28"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-06",
+      "family": "normalized-boolean-text",
+      "query": "从环境文件读取的 enable_debug 是 ' TrUe\\t'，现有解析只与小写字面量直接比较，结果把开关关闭了。输入是文本，期望忽略两端空白与大小写。",
+      "relevant": [
+        "experience-09"
+      ],
+      "rationale": "布尔文本先 strip 和大小写归一化；普通用户名归一化不能完整说明布尔解析。",
+      "vector_scores": {
+        "experience-09": 0.6307340049997487,
+        "experience-26": 0.536567280600852,
+        "experience-16": 0.5777093193512545,
+        "experience-30": 0.48056129082229554,
+        "experience-05": 0.5692787666692802,
+        "experience-10": 0.4678162257700368,
+        "experience-12": 0.505763689650591,
+        "experience-06": 0.4980612032362674,
+        "experience-13": 0.48288066850653705,
+        "experience-29": 0.4789708832975859,
+        "experience-15": 0.4584458483385078,
+        "experience-07": 0.4583692887439809,
+        "experience-08": 0.41168663974724573,
+        "experience-25": 0.44128013197573235,
+        "experience-21": 0.3881335767676294,
+        "experience-17": 0.4392577162415014,
+        "experience-14": 0.4380597291557796,
+        "experience-04": 0.3850454342473653,
+        "experience-23": 0.43610127494920764,
+        "experience-01": 0.41480141561945183,
+        "experience-22": 0.4117525867787363,
+        "experience-24": 0.40274708089678973,
+        "experience-20": 0.3867042014860317,
+        "experience-27": 0.374669047899343,
+        "experience-11": 0.36782342535197926,
+        "experience-19": 0.2627055897904375,
+        "experience-18": 0.24029050475558422
+      },
+      "keyword_scores": {
+        "experience-09": 0.8857325786250989,
+        "experience-26": 0.7208935603611557,
+        "experience-16": 0.0,
+        "experience-30": 0.9129806406125731,
+        "experience-05": 0.0,
+        "experience-10": 0.9331967953182131,
+        "experience-12": 0.0,
+        "experience-06": 0.0,
+        "experience-13": 0.0,
+        "experience-29": 0.0,
+        "experience-15": 0.0,
+        "experience-07": 0.0,
+        "experience-08": 0.7158012538277363,
+        "experience-25": 0.0,
+        "experience-21": 0.8808740206697587,
+        "experience-17": 0.0,
+        "experience-14": 0.0,
+        "experience-04": 0.7158012538277363,
+        "experience-23": 0.0,
+        "experience-01": 0.0,
+        "experience-22": 0.0,
+        "experience-24": 0.0,
+        "experience-20": 0.0,
+        "experience-27": 0.0,
+        "experience-11": 0.0,
+        "experience-19": 0.7229096435409067,
+        "experience-18": 0.6687712242457884
+      },
+      "cross_encoder_scores": {
+        "experience-04": -4.817511558532715,
+        "experience-05": -5.077786922454834,
+        "experience-06": -4.757835865020752,
+        "experience-08": -4.364657402038574,
+        "experience-09": -3.5589704513549805,
+        "experience-10": -5.260894775390625,
+        "experience-12": -5.232912540435791,
+        "experience-13": -4.782932281494141,
+        "experience-16": -5.0003461837768555,
+        "experience-19": -6.090533256530762,
+        "experience-21": -5.78023099899292,
+        "experience-26": -5.346886157989502,
+        "experience-29": -5.744632720947266,
+        "experience-30": -5.394721508026123
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-09",
+            "experience-26",
+            "experience-16",
+            "experience-30",
+            "experience-05",
+            "experience-10",
+            "experience-12",
+            "experience-06",
+            "experience-13",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-09",
+            "experience-26",
+            "experience-30",
+            "experience-10",
+            "experience-16",
+            "experience-05",
+            "experience-12",
+            "experience-06",
+            "experience-13",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-09",
+            "experience-16",
+            "experience-05",
+            "experience-26",
+            "experience-12",
+            "experience-06",
+            "experience-13",
+            "experience-30",
+            "experience-29",
+            "experience-10"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-09",
+            "experience-30",
+            "experience-10",
+            "experience-26",
+            "experience-21",
+            "experience-08",
+            "experience-04",
+            "experience-16",
+            "experience-19",
+            "experience-05"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-09",
+            "experience-06",
+            "experience-13",
+            "experience-16",
+            "experience-05",
+            "experience-12",
+            "experience-10",
+            "experience-26",
+            "experience-30",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-09",
+            "experience-06",
+            "experience-13",
+            "experience-16",
+            "experience-05",
+            "experience-12",
+            "experience-10",
+            "experience-26",
+            "experience-30",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-09",
+            "experience-06",
+            "experience-13",
+            "experience-16",
+            "experience-05",
+            "experience-12",
+            "experience-10",
+            "experience-26",
+            "experience-30",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-09",
+            "experience-08",
+            "experience-04",
+            "experience-16",
+            "experience-05",
+            "experience-10",
+            "experience-26",
+            "experience-30",
+            "experience-21",
+            "experience-19"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-07",
+      "family": "fixed-width-number-rendering",
+      "query": "账单导出列规定为带两位小数的文本：7 要显示为 '7.00'，7.5 显示为 '7.50'。目前 round 后仍传出数值 7.5，尾部零消失。不能改变计算精度来凑显示。",
+      "relevant": [
+        "experience-26"
+      ],
+      "rationale": "固定小数宽度是字符串格式化问题，不是调整浮点数数值。",
+      "vector_scores": {
+        "experience-26": 0.7303101534849514,
+        "experience-16": 0.5601082610423713,
+        "experience-06": 0.4711130270982405,
+        "experience-15": 0.5077996502028411,
+        "experience-05": 0.5004802138542046,
+        "experience-12": 0.48918886587973615,
+        "experience-10": 0.4331283503153769,
+        "experience-09": 0.48813274009672214,
+        "experience-07": 0.47408805961775696,
+        "experience-13": 0.44921934716800627,
+        "experience-23": 0.4380688290364701,
+        "experience-22": 0.4005703112317398,
+        "experience-30": 0.3974335444487299,
+        "experience-14": 0.42689262967964714,
+        "experience-17": 0.4251502583048805,
+        "experience-29": 0.4216653043025303,
+        "experience-01": 0.4157346289705024,
+        "experience-24": 0.40657335269415407,
+        "experience-25": 0.3967782916087782,
+        "experience-20": 0.3914063501011224,
+        "experience-21": 0.3887778049913853,
+        "experience-03": 0.3875475573115581,
+        "experience-04": 0.3544653826635643,
+        "experience-08": 0.35310600776664064,
+        "experience-27": 0.3504246415829071,
+        "experience-18": 0.22741141715464167,
+        "experience-19": 0.2605569458434753
+      },
+      "keyword_scores": {
+        "experience-26": 0.9425317088259136,
+        "experience-16": 0.0,
+        "experience-06": 0.7605485476594662,
+        "experience-15": 0.0,
+        "experience-05": 0.0,
+        "experience-12": 0.0,
+        "experience-10": 0.716958591122678,
+        "experience-09": 0.0,
+        "experience-07": 0.0,
+        "experience-13": 0.0,
+        "experience-23": 0.0,
+        "experience-22": 0.7350127637271272,
+        "experience-30": 0.7042595818911715,
+        "experience-14": 0.0,
+        "experience-17": 0.0,
+        "experience-29": 0.0,
+        "experience-01": 0.0,
+        "experience-24": 0.0,
+        "experience-25": 0.0,
+        "experience-20": 0.0,
+        "experience-21": 0.0,
+        "experience-03": 0.0,
+        "experience-04": 0.0,
+        "experience-08": 0.0,
+        "experience-27": 0.0,
+        "experience-18": 0.7370750679388618,
+        "experience-19": 0.7229096435409067
+      },
+      "cross_encoder_scores": {
+        "experience-05": -3.21421480178833,
+        "experience-06": -3.654465436935425,
+        "experience-07": -2.9311835765838623,
+        "experience-09": -1.3335769176483154,
+        "experience-10": -3.816284656524658,
+        "experience-12": -4.030766487121582,
+        "experience-13": -3.985004425048828,
+        "experience-15": -3.077519178390503,
+        "experience-16": -4.370449066162109,
+        "experience-18": -3.66835355758667,
+        "experience-19": -3.187304973602295,
+        "experience-22": -4.732076644897461,
+        "experience-23": -2.2765583992004395,
+        "experience-26": -2.388507843017578,
+        "experience-30": -3.453721523284912
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-26",
+            "experience-16",
+            "experience-06",
+            "experience-15",
+            "experience-05",
+            "experience-12",
+            "experience-10",
+            "experience-09",
+            "experience-07",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-26",
+            "experience-06",
+            "experience-10",
+            "experience-16",
+            "experience-15",
+            "experience-05",
+            "experience-12",
+            "experience-09",
+            "experience-07",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-26",
+            "experience-16",
+            "experience-15",
+            "experience-05",
+            "experience-12",
+            "experience-09",
+            "experience-07",
+            "experience-06",
+            "experience-13",
+            "experience-23"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-26",
+            "experience-06",
+            "experience-10",
+            "experience-22",
+            "experience-30",
+            "experience-19",
+            "experience-16",
+            "experience-18",
+            "experience-15",
+            "experience-05"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-09",
+            "experience-26",
+            "experience-07",
+            "experience-15",
+            "experience-05",
+            "experience-06",
+            "experience-10",
+            "experience-13",
+            "experience-12",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-09",
+            "experience-26",
+            "experience-07",
+            "experience-15",
+            "experience-05",
+            "experience-06",
+            "experience-10",
+            "experience-13",
+            "experience-12",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-09",
+            "experience-23",
+            "experience-26",
+            "experience-07",
+            "experience-15",
+            "experience-05",
+            "experience-06",
+            "experience-13",
+            "experience-12",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.3333333333333333,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.3333333333333333,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.3333333333333333,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.3333333333333333
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-26",
+            "experience-15",
+            "experience-19",
+            "experience-05",
+            "experience-30",
+            "experience-06",
+            "experience-18",
+            "experience-10",
+            "experience-16",
+            "experience-22"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-08",
+      "family": "even-median",
+      "query": "For latency observations [40,10,30,20], the monitor reports the middle statistic as 30, but the agreed value is 25. Odd-sized batches behave correctly. Find the even-count boundary repair.",
+      "relevant": [
+        "experience-14"
+      ],
+      "rationale": "排序后偶数长度取中间两项均值，不是所有样本的算术平均。",
+      "vector_scores": {
+        "experience-15": 0.47495400807481875,
+        "experience-14": 0.627216719964709,
+        "experience-07": 0.4583767796842551,
+        "experience-16": 0.5503125555438204,
+        "experience-06": 0.47975121788600333,
+        "experience-05": 0.42124935559684057,
+        "experience-17": 0.3976712796085794,
+        "experience-23": 0.39432852647874983,
+        "experience-12": 0.4620371697705092,
+        "experience-26": 0.4336626636708839,
+        "experience-29": 0.3745444302475614,
+        "experience-03": 0.36625909366324855,
+        "experience-04": 0.38844296869840517,
+        "experience-24": 0.3863606794795377,
+        "experience-13": 0.363205996672865,
+        "experience-10": 0.37677755346807973,
+        "experience-09": 0.36454631461096904,
+        "experience-30": 0.36454359009929155,
+        "experience-25": 0.3257767685266,
+        "experience-21": 0.34998676003739765,
+        "experience-19": 0.2122617239814789,
+        "experience-27": 0.3238617805702532,
+        "experience-11": 0.3492891902922385
+      },
+      "keyword_scores": {
+        "experience-15": 0.6181449062137708,
+        "experience-14": 0.0,
+        "experience-07": 0.819275782926233,
+        "experience-16": 0.0,
+        "experience-06": 0.0,
+        "experience-05": 0.6481019156657863,
+        "experience-17": 0.82770499686158,
+        "experience-23": 0.8644895851571355,
+        "experience-12": 0.0,
+        "experience-26": 0.0,
+        "experience-29": 0.64155810094958,
+        "experience-03": 0.8497592581613186,
+        "experience-04": 0.0,
+        "experience-24": 0.0,
+        "experience-13": 0.5627566105788567,
+        "experience-10": 0.0,
+        "experience-09": 0.0,
+        "experience-30": 0.0,
+        "experience-25": 0.8160213605055818,
+        "experience-21": 0.7468402952403351,
+        "experience-19": 0.7229096435409067,
+        "experience-27": 0.6440332169108276,
+        "experience-11": 0.6355400849384881
+      },
+      "cross_encoder_scores": {
+        "experience-03": -8.25758171081543,
+        "experience-05": -6.974796295166016,
+        "experience-06": -6.219184398651123,
+        "experience-07": -7.516876697540283,
+        "experience-12": -6.493537902832031,
+        "experience-14": -2.688326835632324,
+        "experience-15": -7.916129112243652,
+        "experience-16": -5.393065452575684,
+        "experience-17": -7.656097412109375,
+        "experience-21": -8.358209609985352,
+        "experience-23": -7.690270900726318,
+        "experience-25": -8.161759376525879,
+        "experience-26": -6.1177978515625,
+        "experience-29": -7.8715081214904785
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-15",
+            "experience-14",
+            "experience-07",
+            "experience-16",
+            "experience-06",
+            "experience-05",
+            "experience-17",
+            "experience-23",
+            "experience-12",
+            "experience-26"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-07",
+            "experience-15",
+            "experience-23",
+            "experience-17",
+            "experience-05",
+            "experience-03",
+            "experience-29",
+            "experience-14",
+            "experience-16",
+            "experience-06"
+          ],
+          "metrics": {
+            "mrr": 0.125,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.125
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-14",
+            "experience-16",
+            "experience-06",
+            "experience-15",
+            "experience-12",
+            "experience-07",
+            "experience-26",
+            "experience-05",
+            "experience-17",
+            "experience-23"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-07",
+            "experience-23",
+            "experience-17",
+            "experience-15",
+            "experience-03",
+            "experience-05",
+            "experience-25",
+            "experience-21",
+            "experience-29",
+            "experience-14"
+          ],
+          "metrics": {
+            "mrr": 0.1,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.1
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-14",
+            "experience-16",
+            "experience-26",
+            "experience-06",
+            "experience-12",
+            "experience-05",
+            "experience-07",
+            "experience-17",
+            "experience-23",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-14",
+            "experience-16",
+            "experience-06",
+            "experience-05",
+            "experience-07",
+            "experience-17",
+            "experience-23",
+            "experience-29",
+            "experience-15",
+            "experience-03"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-14",
+            "experience-16",
+            "experience-26",
+            "experience-06",
+            "experience-12",
+            "experience-05",
+            "experience-07",
+            "experience-17",
+            "experience-23",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-14",
+            "experience-05",
+            "experience-07",
+            "experience-17",
+            "experience-23",
+            "experience-29",
+            "experience-15",
+            "experience-25",
+            "experience-03",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-09",
+      "family": "initial-plus-retry-count",
+      "query": "连接器参数 max_retries=0 表示不补发，仍应发送第一次；现在循环 range(max_retries) 使请求一次也没执行。设为 2 时则应最多尝试 3 次。",
+      "relevant": [
+        "experience-16"
+      ],
+      "rationale": "总尝试等于初次加重试，不能把超时边界或无限递归当作对应修复。",
+      "vector_scores": {
+        "experience-16": 0.7081845636947843,
+        "experience-07": 0.49742120586063937,
+        "experience-12": 0.5444298075158859,
+        "experience-26": 0.519880517975766,
+        "experience-05": 0.5172176033698741,
+        "experience-06": 0.5109327486416527,
+        "experience-15": 0.49836525025258643,
+        "experience-29": 0.45928772289679654,
+        "experience-25": 0.418707280027045,
+        "experience-24": 0.4591058685561703,
+        "experience-17": 0.448087765660417,
+        "experience-13": 0.4315802627279007,
+        "experience-04": 0.43120783836728055,
+        "experience-23": 0.4306465910274713,
+        "experience-01": 0.41820189297990784,
+        "experience-14": 0.41567082492168606,
+        "experience-27": 0.371752174787967,
+        "experience-09": 0.41083410764836364,
+        "experience-08": 0.41059807939499066,
+        "experience-22": 0.4023953480998147,
+        "experience-30": 0.4000769755716104,
+        "experience-03": 0.39638018787136814,
+        "experience-11": 0.3879344013447657,
+        "experience-10": 0.3774606993823372
+      },
+      "keyword_scores": {
+        "experience-16": 0.921295303649122,
+        "experience-07": 0.8211872733142043,
+        "experience-12": 0.0,
+        "experience-26": 0.0,
+        "experience-05": 0.0,
+        "experience-06": 0.0,
+        "experience-15": 0.0,
+        "experience-29": 0.0,
+        "experience-25": 0.7627568533244177,
+        "experience-24": 0.0,
+        "experience-17": 0.0,
+        "experience-13": 0.0,
+        "experience-04": 0.0,
+        "experience-23": 0.0,
+        "experience-01": 0.0,
+        "experience-14": 0.0,
+        "experience-27": 0.7694593900734992,
+        "experience-09": 0.0,
+        "experience-08": 0.0,
+        "experience-22": 0.0,
+        "experience-30": 0.0,
+        "experience-03": 0.0,
+        "experience-11": 0.0,
+        "experience-10": 0.0
+      },
+      "cross_encoder_scores": {
+        "experience-05": -1.686753511428833,
+        "experience-06": -1.2496154308319092,
+        "experience-07": -2.219538450241089,
+        "experience-12": -2.473395824432373,
+        "experience-15": -1.4962959289550781,
+        "experience-16": -1.3079947233200073,
+        "experience-17": -1.392317771911621,
+        "experience-24": -1.6157722473144531,
+        "experience-25": -1.5668575763702393,
+        "experience-26": -1.2550585269927979,
+        "experience-27": -1.2374022006988525,
+        "experience-29": -1.328521728515625
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-16",
+            "experience-07",
+            "experience-12",
+            "experience-26",
+            "experience-05",
+            "experience-06",
+            "experience-15",
+            "experience-29",
+            "experience-25",
+            "experience-24"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-16",
+            "experience-07",
+            "experience-25",
+            "experience-12",
+            "experience-26",
+            "experience-05",
+            "experience-06",
+            "experience-15",
+            "experience-29",
+            "experience-24"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-12",
+            "experience-26",
+            "experience-05",
+            "experience-06",
+            "experience-15",
+            "experience-07",
+            "experience-29",
+            "experience-24",
+            "experience-17"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-16",
+            "experience-07",
+            "experience-25",
+            "experience-27",
+            "experience-12",
+            "experience-26",
+            "experience-05",
+            "experience-06",
+            "experience-15",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-06",
+            "experience-26",
+            "experience-16",
+            "experience-29",
+            "experience-15",
+            "experience-25",
+            "experience-24",
+            "experience-05",
+            "experience-07",
+            "experience-12"
+          ],
+          "metrics": {
+            "mrr": 0.3333333333333333,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.3333333333333333,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.3333333333333333,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.3333333333333333
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-06",
+            "experience-26",
+            "experience-16",
+            "experience-29",
+            "experience-15",
+            "experience-25",
+            "experience-24",
+            "experience-05",
+            "experience-07",
+            "experience-12"
+          ],
+          "metrics": {
+            "mrr": 0.3333333333333333,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.3333333333333333,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.3333333333333333,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.3333333333333333
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-06",
+            "experience-26",
+            "experience-16",
+            "experience-29",
+            "experience-17",
+            "experience-15",
+            "experience-24",
+            "experience-05",
+            "experience-07",
+            "experience-12"
+          ],
+          "metrics": {
+            "mrr": 0.3333333333333333,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.3333333333333333,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.3333333333333333,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.3333333333333333
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-27",
+            "experience-06",
+            "experience-26",
+            "experience-16",
+            "experience-29",
+            "experience-15",
+            "experience-25",
+            "experience-05",
+            "experience-07",
+            "experience-12"
+          ],
+          "metrics": {
+            "mrr": 0.25,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.25,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.25
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-10",
+      "family": "optional-field-default",
+      "query": "渲染表格时，记录缺少 label 要展示 '(untitled)'；label 明确是空字符串时必须保持空字符串。当前直接 row['label']，缺键就崩溃，不能用值为假的判断代替缺键判断。",
+      "relevant": [
+        "experience-19"
+      ],
+      "rationale": "缺失时使用默认文本且保留显式空值；返回 None 的可选配置经验不满足这里的显示默认契约。",
+      "vector_scores": {
+        "experience-26": 0.5541319945473993,
+        "experience-16": 0.5642410736547148,
+        "experience-05": 0.5557436961360155,
+        "experience-10": 0.5169765983997681,
+        "experience-25": 0.5072047747845584,
+        "experience-09": 0.5036713121987779,
+        "experience-15": 0.5503394909780133,
+        "experience-12": 0.5188155523212791,
+        "experience-08": 0.517833131338545,
+        "experience-07": 0.48836775409586,
+        "experience-30": 0.46317359016970133,
+        "experience-13": 0.4859357961241273,
+        "experience-04": 0.47704473635648775,
+        "experience-06": 0.4763388762267473,
+        "experience-24": 0.47388223640247346,
+        "experience-23": 0.4691002968058565,
+        "experience-11": 0.4113190638507698,
+        "experience-03": 0.46840656416332527,
+        "experience-29": 0.463101647630937,
+        "experience-17": 0.446886306253712,
+        "experience-20": 0.35872938972243734,
+        "experience-22": 0.44681998205208096,
+        "experience-27": 0.43995390224580677,
+        "experience-14": 0.42770804386530703,
+        "experience-21": 0.40935517354529033,
+        "experience-01": 0.3955413915206344,
+        "experience-19": 0.395069795955136,
+        "experience-18": 0.2676810752281472,
+        "experience-28": 0.30610085698552725
+      },
+      "keyword_scores": {
+        "experience-26": 0.839451264033381,
+        "experience-16": 0.0,
+        "experience-05": 0.0,
+        "experience-10": 0.8374798171826664,
+        "experience-25": 0.7627568533244177,
+        "experience-09": 0.8117334773710719,
+        "experience-15": 0.0,
+        "experience-12": 0.0,
+        "experience-08": 0.0,
+        "experience-07": 0.0,
+        "experience-30": 0.8398936345780166,
+        "experience-13": 0.0,
+        "experience-04": 0.0,
+        "experience-06": 0.0,
+        "experience-24": 0.0,
+        "experience-23": 0.0,
+        "experience-11": 0.7717198222790687,
+        "experience-03": 0.0,
+        "experience-29": 0.0,
+        "experience-17": 0.0,
+        "experience-20": 0.7212372593708793,
+        "experience-22": 0.0,
+        "experience-27": 0.0,
+        "experience-14": 0.0,
+        "experience-21": 0.0,
+        "experience-01": 0.0,
+        "experience-19": 0.0,
+        "experience-18": 0.8881087900216817,
+        "experience-28": 0.7412345908588722
+      },
+      "cross_encoder_scores": {
+        "experience-05": -2.4201173782348633,
+        "experience-07": -4.219211578369141,
+        "experience-08": -3.020700693130493,
+        "experience-09": -3.6387698650360107,
+        "experience-10": -4.480358123779297,
+        "experience-11": -3.735485076904297,
+        "experience-12": -3.3850414752960205,
+        "experience-15": -4.1990885734558105,
+        "experience-16": -4.5685858726501465,
+        "experience-18": -3.1148622035980225,
+        "experience-20": -3.7477545738220215,
+        "experience-25": -1.7828574180603027,
+        "experience-26": -4.199989318847656,
+        "experience-28": -4.154003143310547,
+        "experience-30": -3.1557366847991943
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-26",
+            "experience-16",
+            "experience-05",
+            "experience-10",
+            "experience-25",
+            "experience-09",
+            "experience-15",
+            "experience-12",
+            "experience-08",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-26",
+            "experience-10",
+            "experience-25",
+            "experience-09",
+            "experience-16",
+            "experience-05",
+            "experience-15",
+            "experience-12",
+            "experience-08",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-05",
+            "experience-26",
+            "experience-15",
+            "experience-12",
+            "experience-08",
+            "experience-10",
+            "experience-25",
+            "experience-09",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-26",
+            "experience-10",
+            "experience-09",
+            "experience-25",
+            "experience-30",
+            "experience-11",
+            "experience-20",
+            "experience-18",
+            "experience-28",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-25",
+            "experience-05",
+            "experience-08",
+            "experience-12",
+            "experience-09",
+            "experience-15",
+            "experience-26",
+            "experience-07",
+            "experience-10",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-25",
+            "experience-05",
+            "experience-08",
+            "experience-12",
+            "experience-09",
+            "experience-15",
+            "experience-26",
+            "experience-07",
+            "experience-10",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-25",
+            "experience-05",
+            "experience-08",
+            "experience-12",
+            "experience-09",
+            "experience-15",
+            "experience-26",
+            "experience-07",
+            "experience-10",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-25",
+            "experience-18",
+            "experience-30",
+            "experience-09",
+            "experience-11",
+            "experience-20",
+            "experience-28",
+            "experience-26",
+            "experience-10",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-11",
+      "family": "nonpositive-recursion-base",
+      "query": "递归生成倒计时链表时，n==0 可以结束，传入 -2 却不停调用 n-1 直到栈溢出。业务约定所有非正数都直接给空结果，正数的序列不能变。",
+      "relevant": [
+        "experience-29"
+      ],
+      "rationale": "递归基例须覆盖全部非正数，和请求重试计数问题不同。",
+      "vector_scores": {
+        "experience-05": 0.6570255083812037,
+        "experience-29": 0.6049338653890569,
+        "experience-16": 0.6883488480645445,
+        "experience-26": 0.5336972543116469,
+        "experience-12": 0.5809209231704254,
+        "experience-06": 0.5443417154580151,
+        "experience-07": 0.5381612442310221,
+        "experience-13": 0.529168697985183,
+        "experience-04": 0.46283642107228057,
+        "experience-15": 0.5032433222462334,
+        "experience-14": 0.4862094123737673,
+        "experience-01": 0.4841763279169992,
+        "experience-09": 0.4736263160094831,
+        "experience-17": 0.4735062795577538,
+        "experience-30": 0.38544809667712465,
+        "experience-23": 0.4481347445695672,
+        "experience-25": 0.4456894713950597,
+        "experience-24": 0.4349994543594402,
+        "experience-22": 0.41502694149610714,
+        "experience-10": 0.40744244988162004,
+        "experience-08": 0.3990297662376469,
+        "experience-03": 0.3943350208203746,
+        "experience-11": 0.36391396400048087,
+        "experience-20": 0.3529209487086635,
+        "experience-18": 0.24335834850630655
+      },
+      "keyword_scores": {
+        "experience-05": 0.7739935745073093,
+        "experience-29": 0.7762807648422518,
+        "experience-16": 0.0,
+        "experience-26": 0.8378130721924082,
+        "experience-12": 0.0,
+        "experience-06": 0.0,
+        "experience-07": 0.0,
+        "experience-13": 0.0,
+        "experience-04": 0.7518417292669426,
+        "experience-15": 0.0,
+        "experience-14": 0.0,
+        "experience-01": 0.0,
+        "experience-09": 0.0,
+        "experience-17": 0.0,
+        "experience-30": 0.7412345908588722,
+        "experience-23": 0.0,
+        "experience-25": 0.0,
+        "experience-24": 0.0,
+        "experience-22": 0.0,
+        "experience-10": 0.0,
+        "experience-08": 0.0,
+        "experience-03": 0.0,
+        "experience-11": 0.0,
+        "experience-20": 0.0,
+        "experience-18": 0.7370750679388618
+      },
+      "cross_encoder_scores": {
+        "experience-04": -5.734381675720215,
+        "experience-05": -4.502530097961426,
+        "experience-06": -5.471202373504639,
+        "experience-07": -4.394142150878906,
+        "experience-12": -4.948156356811523,
+        "experience-13": -4.277842998504639,
+        "experience-14": -4.925809383392334,
+        "experience-15": -3.5866947174072266,
+        "experience-16": -6.045808792114258,
+        "experience-18": -4.490560531616211,
+        "experience-26": -5.456028461456299,
+        "experience-29": 0.5756345987319946,
+        "experience-30": -5.1181960105896
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-05",
+            "experience-29",
+            "experience-16",
+            "experience-26",
+            "experience-12",
+            "experience-06",
+            "experience-07",
+            "experience-13",
+            "experience-04",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-05",
+            "experience-29",
+            "experience-26",
+            "experience-04",
+            "experience-16",
+            "experience-12",
+            "experience-06",
+            "experience-07",
+            "experience-13",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-05",
+            "experience-29",
+            "experience-12",
+            "experience-06",
+            "experience-07",
+            "experience-26",
+            "experience-13",
+            "experience-15",
+            "experience-14"
+          ],
+          "metrics": {
+            "mrr": 0.3333333333333333,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.3333333333333333,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.3333333333333333,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.3333333333333333
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-05",
+            "experience-29",
+            "experience-26",
+            "experience-04",
+            "experience-30",
+            "experience-16",
+            "experience-12",
+            "experience-18",
+            "experience-06",
+            "experience-07"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-29",
+            "experience-15",
+            "experience-13",
+            "experience-07",
+            "experience-05",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-04",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-29",
+            "experience-15",
+            "experience-13",
+            "experience-07",
+            "experience-05",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-04",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-29",
+            "experience-15",
+            "experience-13",
+            "experience-07",
+            "experience-05",
+            "experience-14",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-29",
+            "experience-07",
+            "experience-18",
+            "experience-05",
+            "experience-12",
+            "experience-30",
+            "experience-26",
+            "experience-06",
+            "experience-04",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-12",
+      "family": "closed-interval-enumeration",
+      "query": "A report must enumerate every invoice number between lo and hi, including hi. For lo=4 and hi=6 it currently emits [4,5], and equal endpoints emit nothing. It uses a half-open range.",
+      "relevant": [
+        "experience-07"
+      ],
+      "rationale": "range 的排他上界需要增加一，和数值钳制或时间门限契约不是同一操作。",
+      "vector_scores": {
+        "experience-07": 0.6218075535613115,
+        "experience-17": 0.4520648593126831,
+        "experience-15": 0.4378963144619813,
+        "experience-16": 0.5736480630949984,
+        "experience-12": 0.46667853255282504,
+        "experience-05": 0.36840489496768264,
+        "experience-26": 0.4470629294853561,
+        "experience-21": 0.36574167378770644,
+        "experience-06": 0.39580326867190296,
+        "experience-24": 0.38186333061628785,
+        "experience-04": 0.3642766122119105,
+        "experience-10": 0.35796736741025315,
+        "experience-23": 0.34080716646066944,
+        "experience-09": 0.3268567516227973,
+        "experience-29": 0.2983926639590338,
+        "experience-13": 0.24503385458536567,
+        "experience-03": 0.29904498942952806,
+        "experience-02": 0.24881816865914164,
+        "experience-19": 0.14118076089763418,
+        "experience-11": 0.28345584663038775,
+        "experience-25": 0.30372843392938886
+      },
+      "keyword_scores": {
+        "experience-07": 0.8598801271829862,
+        "experience-17": 0.6069650992105285,
+        "experience-15": 0.8507069075052289,
+        "experience-16": 0.0,
+        "experience-12": 0.0,
+        "experience-05": 0.7400579521162715,
+        "experience-26": 0.0,
+        "experience-21": 0.6267218144461008,
+        "experience-06": 0.0,
+        "experience-24": 0.0,
+        "experience-04": 0.0,
+        "experience-10": 0.0,
+        "experience-23": 0.8199547630203862,
+        "experience-09": 0.8173547027330016,
+        "experience-29": 0.7735378518672322,
+        "experience-13": 0.7672121611860412,
+        "experience-03": 0.7621389914980224,
+        "experience-02": 0.7425743492096353,
+        "experience-19": 0.706916786728178,
+        "experience-11": 0.6355400849384881,
+        "experience-25": 0.6010377004740691
+      },
+      "cross_encoder_scores": {
+        "experience-03": -3.168356418609619,
+        "experience-05": -1.9503741264343262,
+        "experience-06": -0.8569246530532837,
+        "experience-07": -2.2653021812438965,
+        "experience-09": -3.4107131958007812,
+        "experience-12": -0.8286407589912415,
+        "experience-13": -2.3874144554138184,
+        "experience-15": -2.036996841430664,
+        "experience-16": -1.126068353652954,
+        "experience-17": -2.734333038330078,
+        "experience-21": -4.324334144592285,
+        "experience-23": -2.6637604236602783,
+        "experience-24": -2.09879732131958,
+        "experience-26": -1.6860038042068481,
+        "experience-29": -1.8353497982025146
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-07",
+            "experience-17",
+            "experience-15",
+            "experience-16",
+            "experience-12",
+            "experience-05",
+            "experience-26",
+            "experience-21",
+            "experience-06",
+            "experience-24"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-07",
+            "experience-15",
+            "experience-17",
+            "experience-05",
+            "experience-21",
+            "experience-16",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-24"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-07",
+            "experience-16",
+            "experience-12",
+            "experience-17",
+            "experience-26",
+            "experience-15",
+            "experience-06",
+            "experience-24",
+            "experience-05",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-07",
+            "experience-15",
+            "experience-17",
+            "experience-23",
+            "experience-05",
+            "experience-09",
+            "experience-21",
+            "experience-29",
+            "experience-03",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-12",
+            "experience-06",
+            "experience-16",
+            "experience-26",
+            "experience-05",
+            "experience-15",
+            "experience-24",
+            "experience-07",
+            "experience-17",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.125,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.125
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-12",
+            "experience-06",
+            "experience-16",
+            "experience-26",
+            "experience-05",
+            "experience-15",
+            "experience-24",
+            "experience-07",
+            "experience-17",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.125,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.125
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-12",
+            "experience-06",
+            "experience-16",
+            "experience-26",
+            "experience-05",
+            "experience-15",
+            "experience-24",
+            "experience-07",
+            "experience-17",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.125,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.125
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-29",
+            "experience-05",
+            "experience-15",
+            "experience-07",
+            "experience-13",
+            "experience-23",
+            "experience-17",
+            "experience-03",
+            "experience-09",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.25,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.25,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.25
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-13",
+      "family": "url-boundary-joining",
+      "query": "请求构造器收到根地址 https://example.invalid/v2/ 和端点 /items，拼出路径部分的双斜杠。需要仅处理连接处，绝不能把协议里的 // 也全局替换掉。",
+      "relevant": [
+        "experience-22"
+      ],
+      "rationale": "分别清理地址尾部和端点头部斜杠，保留协议分隔符。",
+      "vector_scores": {
+        "experience-22": 0.700531073152101,
+        "experience-24": 0.47910174776126024,
+        "experience-10": 0.4720572907941484,
+        "experience-16": 0.4146202972927503,
+        "experience-21": 0.5360670622614324,
+        "experience-26": 0.4434402883627678,
+        "experience-05": 0.413123511797221,
+        "experience-12": 0.4107530288081611,
+        "experience-30": 0.39822754837293517,
+        "experience-14": 0.38933657575876,
+        "experience-09": 0.38490914018974215,
+        "experience-23": 0.3825107323553613,
+        "experience-29": 0.38213107031990473,
+        "experience-06": 0.381573384879023,
+        "experience-27": 0.3780387852698365,
+        "experience-20": 0.37551574584622804,
+        "experience-07": 0.3720052546770167,
+        "experience-11": 0.3699503452670214,
+        "experience-01": 0.3682677809231343,
+        "experience-15": 0.36694525622551216,
+        "experience-25": 0.3599714605646961,
+        "experience-17": 0.35406375105663956,
+        "experience-13": 0.35396866732888366,
+        "experience-18": 0.3157778248772312
+      },
+      "keyword_scores": {
+        "experience-22": 0.9550440546883463,
+        "experience-24": 0.730922584072024,
+        "experience-10": 0.716958591122678,
+        "experience-16": 0.7228772871225347,
+        "experience-21": 0.0,
+        "experience-26": 0.0,
+        "experience-05": 0.0,
+        "experience-12": 0.0,
+        "experience-30": 0.0,
+        "experience-14": 0.0,
+        "experience-09": 0.0,
+        "experience-23": 0.0,
+        "experience-29": 0.0,
+        "experience-06": 0.0,
+        "experience-27": 0.0,
+        "experience-20": 0.0,
+        "experience-07": 0.0,
+        "experience-11": 0.0,
+        "experience-01": 0.0,
+        "experience-15": 0.0,
+        "experience-25": 0.0,
+        "experience-17": 0.0,
+        "experience-13": 0.0,
+        "experience-18": 0.7370750679388618
+      },
+      "cross_encoder_scores": {
+        "experience-05": -5.013606071472168,
+        "experience-10": -5.953470230102539,
+        "experience-12": -5.369340896606445,
+        "experience-14": -5.170494079589844,
+        "experience-16": -4.04549503326416,
+        "experience-18": -5.034467697143555,
+        "experience-21": -6.071447849273682,
+        "experience-22": -3.6163644790649414,
+        "experience-24": -5.078554630279541,
+        "experience-26": -4.948239326477051,
+        "experience-30": -5.608666896820068
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-22",
+            "experience-24",
+            "experience-10",
+            "experience-16",
+            "experience-21",
+            "experience-26",
+            "experience-05",
+            "experience-12",
+            "experience-30",
+            "experience-14"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-22",
+            "experience-24",
+            "experience-10",
+            "experience-16",
+            "experience-21",
+            "experience-26",
+            "experience-05",
+            "experience-12",
+            "experience-30",
+            "experience-14"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-22",
+            "experience-21",
+            "experience-24",
+            "experience-10",
+            "experience-26",
+            "experience-16",
+            "experience-05",
+            "experience-12",
+            "experience-30",
+            "experience-14"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-22",
+            "experience-24",
+            "experience-10",
+            "experience-16",
+            "experience-18",
+            "experience-21",
+            "experience-26",
+            "experience-05",
+            "experience-12",
+            "experience-30"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-22",
+            "experience-16",
+            "experience-26",
+            "experience-05",
+            "experience-24",
+            "experience-14",
+            "experience-12",
+            "experience-30",
+            "experience-10",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-22",
+            "experience-16",
+            "experience-26",
+            "experience-05",
+            "experience-24",
+            "experience-14",
+            "experience-12",
+            "experience-30",
+            "experience-10",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-22",
+            "experience-16",
+            "experience-26",
+            "experience-05",
+            "experience-24",
+            "experience-14",
+            "experience-12",
+            "experience-30",
+            "experience-10",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-22",
+            "experience-16",
+            "experience-26",
+            "experience-05",
+            "experience-18",
+            "experience-24",
+            "experience-12",
+            "experience-30",
+            "experience-10",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-14",
+      "family": "explicit-role-allowlist",
+      "query": "知识文章更新规则允许 maintainer 和 contributor，访客必须拒绝。现在权限分支只比较 maintainer，导致 contributor 的合法更新也被拒绝。没有要求开放给其他人。",
+      "relevant": [
+        "experience-28"
+      ],
+      "rationale": "将明确允许的第二种角色纳入固定集合，不能放宽为任意已登录用户。",
+      "vector_scores": {
+        "experience-16": 0.513576596439138,
+        "experience-06": 0.4509067939347661,
+        "experience-05": 0.47282598612409865,
+        "experience-12": 0.45032828341259445,
+        "experience-24": 0.4138124506844549,
+        "experience-26": 0.43253954844410486,
+        "experience-29": 0.42955084829325174,
+        "experience-07": 0.42808112062279047,
+        "experience-09": 0.41681698948299273,
+        "experience-28": 0.39301220510288853,
+        "experience-13": 0.41434325786391657,
+        "experience-10": 0.3803741860621858,
+        "experience-15": 0.405856276798869,
+        "experience-14": 0.37653645464714147,
+        "experience-23": 0.40420240456529594,
+        "experience-22": 0.40056943730683275,
+        "experience-17": 0.3945763885124677,
+        "experience-25": 0.39117983032002634,
+        "experience-27": 0.3671773845045118,
+        "experience-11": 0.36362701227092475,
+        "experience-01": 0.35667884694683893,
+        "experience-20": 0.3138699885236935,
+        "experience-08": 0.3368102331910918
+      },
+      "keyword_scores": {
+        "experience-16": 0.7228772871225347,
+        "experience-06": 0.7253105848041905,
+        "experience-05": 0.0,
+        "experience-12": 0.0,
+        "experience-24": 0.730922584072024,
+        "experience-26": 0.0,
+        "experience-29": 0.0,
+        "experience-07": 0.0,
+        "experience-09": 0.0,
+        "experience-28": 0.9302691737571055,
+        "experience-13": 0.0,
+        "experience-10": 0.678021564277342,
+        "experience-15": 0.0,
+        "experience-14": 0.7288945175719463,
+        "experience-23": 0.0,
+        "experience-22": 0.0,
+        "experience-17": 0.0,
+        "experience-25": 0.0,
+        "experience-27": 0.0,
+        "experience-11": 0.0,
+        "experience-01": 0.0,
+        "experience-20": 0.7350127637271272,
+        "experience-08": 0.7158012538277363
+      },
+      "cross_encoder_scores": {
+        "experience-05": -0.1224227100610733,
+        "experience-06": 0.014583545736968517,
+        "experience-07": -1.3054509162902832,
+        "experience-08": -1.0157206058502197,
+        "experience-09": -0.16403865814208984,
+        "experience-10": -1.3108630180358887,
+        "experience-12": -0.5657995939254761,
+        "experience-13": -0.4880557358264923,
+        "experience-14": 0.12385199964046478,
+        "experience-16": -1.5487841367721558,
+        "experience-20": -1.3821622133255005,
+        "experience-24": -0.2800632417201996,
+        "experience-26": -0.6762306690216064,
+        "experience-28": 1.381205677986145,
+        "experience-29": -0.9669044613838196
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-16",
+            "experience-06",
+            "experience-05",
+            "experience-12",
+            "experience-24",
+            "experience-26",
+            "experience-29",
+            "experience-07",
+            "experience-09",
+            "experience-28"
+          ],
+          "metrics": {
+            "mrr": 0.1,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.1
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-16",
+            "experience-06",
+            "experience-24",
+            "experience-28",
+            "experience-05",
+            "experience-12",
+            "experience-26",
+            "experience-29",
+            "experience-07",
+            "experience-09"
+          ],
+          "metrics": {
+            "mrr": 0.25,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.25,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.25
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-05",
+            "experience-06",
+            "experience-12",
+            "experience-26",
+            "experience-29",
+            "experience-07",
+            "experience-09",
+            "experience-13",
+            "experience-24"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-16",
+            "experience-28",
+            "experience-06",
+            "experience-24",
+            "experience-14",
+            "experience-10",
+            "experience-08",
+            "experience-20",
+            "experience-05",
+            "experience-12"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-28",
+            "experience-06",
+            "experience-05",
+            "experience-09",
+            "experience-24",
+            "experience-12",
+            "experience-26",
+            "experience-29",
+            "experience-07",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-28",
+            "experience-06",
+            "experience-05",
+            "experience-09",
+            "experience-24",
+            "experience-12",
+            "experience-26",
+            "experience-29",
+            "experience-07",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-06",
+            "experience-05",
+            "experience-09",
+            "experience-24",
+            "experience-13",
+            "experience-12",
+            "experience-26",
+            "experience-29",
+            "experience-07",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-28",
+            "experience-14",
+            "experience-06",
+            "experience-05",
+            "experience-24",
+            "experience-12",
+            "experience-08",
+            "experience-10",
+            "experience-20",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-15",
+      "family": "descending-stable-sort",
+      "query": "比赛积分清单希望高分在前，同分仍沿用报名次序。现在比较方向反了，最小分跑到了首位。请找保持稳定性的降序排序修复经验。",
+      "relevant": [
+        "experience-23"
+      ],
+      "rationale": "仅改变排序方向，保持同分稳定性；去重或选最后元素都不满足需求。",
+      "vector_scores": {
+        "experience-23": 0.7588265500930474,
+        "experience-05": 0.5639592910601268,
+        "experience-14": 0.46150287236547666,
+        "experience-16": 0.5376725811881856,
+        "experience-12": 0.5336213656990507,
+        "experience-26": 0.4966145908638537,
+        "experience-06": 0.480682962935294,
+        "experience-24": 0.46563520814213116,
+        "experience-11": 0.4486259261856385,
+        "experience-13": 0.4595034203679048,
+        "experience-25": 0.4580587564435521,
+        "experience-07": 0.4548776866562624,
+        "experience-15": 0.4525173158066959,
+        "experience-17": 0.4513400506465791,
+        "experience-29": 0.44798846222744887,
+        "experience-04": 0.44371713198228574,
+        "experience-22": 0.44127366247672295,
+        "experience-01": 0.44010639106002825,
+        "experience-09": 0.43842768538588905,
+        "experience-30": 0.41665493380238533,
+        "experience-10": 0.40488266696024383,
+        "experience-21": 0.38199806276179726,
+        "experience-08": 0.3765559463092068,
+        "experience-27": 0.36955230297476244,
+        "experience-03": 0.3660555441768065
+      },
+      "keyword_scores": {
+        "experience-23": 0.860936423568265,
+        "experience-05": 0.0,
+        "experience-14": 0.6908915522645009,
+        "experience-16": 0.0,
+        "experience-12": 0.0,
+        "experience-26": 0.0,
+        "experience-06": 0.0,
+        "experience-24": 0.0,
+        "experience-11": 0.7717198222790687,
+        "experience-13": 0.0,
+        "experience-25": 0.0,
+        "experience-07": 0.0,
+        "experience-15": 0.0,
+        "experience-17": 0.0,
+        "experience-29": 0.0,
+        "experience-04": 0.0,
+        "experience-22": 0.0,
+        "experience-01": 0.0,
+        "experience-09": 0.0,
+        "experience-30": 0.0,
+        "experience-10": 0.0,
+        "experience-21": 0.0,
+        "experience-08": 0.0,
+        "experience-27": 0.0,
+        "experience-03": 0.0
+      },
+      "cross_encoder_scores": {
+        "experience-05": -4.880339622497559,
+        "experience-06": -5.70772123336792,
+        "experience-11": -4.699455261230469,
+        "experience-12": -5.936849594116211,
+        "experience-13": -7.132883071899414,
+        "experience-14": -5.783012390136719,
+        "experience-16": -6.4930009841918945,
+        "experience-23": -2.4970126152038574,
+        "experience-24": -6.518612861633301,
+        "experience-25": -5.091095924377441,
+        "experience-26": -5.821253776550293
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-23",
+            "experience-05",
+            "experience-14",
+            "experience-16",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-24",
+            "experience-11",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-23",
+            "experience-14",
+            "experience-11",
+            "experience-05",
+            "experience-16",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-24",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-23",
+            "experience-05",
+            "experience-16",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-24",
+            "experience-14",
+            "experience-13",
+            "experience-25"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-23",
+            "experience-11",
+            "experience-14",
+            "experience-05",
+            "experience-16",
+            "experience-12",
+            "experience-26",
+            "experience-06",
+            "experience-24",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-23",
+            "experience-11",
+            "experience-05",
+            "experience-06",
+            "experience-14",
+            "experience-26",
+            "experience-12",
+            "experience-16",
+            "experience-24",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-23",
+            "experience-11",
+            "experience-05",
+            "experience-06",
+            "experience-14",
+            "experience-26",
+            "experience-12",
+            "experience-16",
+            "experience-24",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-23",
+            "experience-05",
+            "experience-25",
+            "experience-06",
+            "experience-14",
+            "experience-26",
+            "experience-12",
+            "experience-16",
+            "experience-24",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-23",
+            "experience-11",
+            "experience-05",
+            "experience-06",
+            "experience-14",
+            "experience-26",
+            "experience-12",
+            "experience-16",
+            "experience-24",
+            "experience-13"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "hq-16",
+      "family": "logical-line-count",
+      "query": "A text importer counts line terminators instead of logical records. The payload 'red\\nblue' is counted as one record, although it has two; a final newline is optional and an empty payload has zero records.",
+      "relevant": [
+        "experience-30"
+      ],
+      "rationale": "使用 splitlines 处理无末尾换行的最后一条，而不是 CSV 跳表头。",
+      "vector_scores": {
+        "experience-07": 0.49282189970255724,
+        "experience-15": 0.4918715433975734,
+        "experience-16": 0.5566282789936253,
+        "experience-25": 0.4196386148354653,
+        "experience-30": 0.5126416591157794,
+        "experience-05": 0.4160271688325806,
+        "experience-26": 0.44309544781672155,
+        "experience-29": 0.4080781596632115,
+        "experience-10": 0.4205156951068188,
+        "experience-17": 0.40652882322503614,
+        "experience-09": 0.40595614100957333,
+        "experience-03": 0.39977145651209467,
+        "experience-12": 0.41258779811412216,
+        "experience-21": 0.38823912559659585,
+        "experience-23": 0.360615805090054,
+        "experience-06": 0.39491833684422006,
+        "experience-13": 0.3502466093467723,
+        "experience-24": 0.3748327167474039,
+        "experience-01": 0.36972273931479444,
+        "experience-20": 0.36591334339077525,
+        "experience-04": 0.3621620353479913,
+        "experience-08": 0.35140461483757873,
+        "experience-19": 0.28522061951205685,
+        "experience-11": 0.3015688445472163,
+        "experience-02": 0.30195074497102575,
+        "experience-27": 0.34752039923044914
+      },
+      "keyword_scores": {
+        "experience-07": 0.9171731830291655,
+        "experience-15": 0.8235202030509645,
+        "experience-16": 0.0,
+        "experience-25": 0.9404896612878808,
+        "experience-30": 0.0,
+        "experience-05": 0.8828457402422676,
+        "experience-26": 0.0,
+        "experience-29": 0.6191776876743467,
+        "experience-10": 0.0,
+        "experience-17": 0.7830070983089759,
+        "experience-09": 0.8844105014678234,
+        "experience-03": 0.9275592113108492,
+        "experience-12": 0.0,
+        "experience-21": 0.5596863918508166,
+        "experience-23": 0.8225604025100772,
+        "experience-06": 0.0,
+        "experience-13": 0.8965700986863832,
+        "experience-24": 0.0,
+        "experience-01": 0.0,
+        "experience-20": 0.0,
+        "experience-04": 0.0,
+        "experience-08": 0.0,
+        "experience-19": 0.9346342231266973,
+        "experience-11": 0.8686519572312368,
+        "experience-02": 0.833283776578773,
+        "experience-27": 0.6440332169108276
+      },
+      "cross_encoder_scores": {
+        "experience-03": -6.697528839111328,
+        "experience-05": -6.160165786743164,
+        "experience-07": -6.089880466461182,
+        "experience-09": -5.504398345947266,
+        "experience-10": -5.196681022644043,
+        "experience-12": -4.1990437507629395,
+        "experience-13": -6.542147636413574,
+        "experience-15": -6.1809539794921875,
+        "experience-16": -4.353111267089844,
+        "experience-17": -6.152522087097168,
+        "experience-19": -5.3098835945129395,
+        "experience-21": -7.009956359863281,
+        "experience-23": -6.2057366371154785,
+        "experience-25": -2.998873233795166,
+        "experience-26": -3.6424973011016846,
+        "experience-29": -5.482221603393555,
+        "experience-30": -1.9689431190490723
+      },
+      "before_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-07",
+            "experience-15",
+            "experience-16",
+            "experience-25",
+            "experience-30",
+            "experience-05",
+            "experience-26",
+            "experience-29",
+            "experience-10",
+            "experience-17"
+          ],
+          "metrics": {
+            "mrr": 0.2,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.2,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.2
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-07",
+            "experience-25",
+            "experience-15",
+            "experience-05",
+            "experience-03",
+            "experience-09",
+            "experience-29",
+            "experience-17",
+            "experience-21",
+            "experience-16"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-16",
+            "experience-30",
+            "experience-07",
+            "experience-15",
+            "experience-26",
+            "experience-10",
+            "experience-25",
+            "experience-05",
+            "experience-12",
+            "experience-29"
+          ],
+          "metrics": {
+            "mrr": 0.5,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 0.5,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 0.5,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 0.5
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-07",
+            "experience-15",
+            "experience-25",
+            "experience-03",
+            "experience-05",
+            "experience-09",
+            "experience-17",
+            "experience-13",
+            "experience-23",
+            "experience-19"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        }
+      },
+      "after_rerank": {
+        "wrrf_093": {
+          "ranked": [
+            "experience-30",
+            "experience-25",
+            "experience-26",
+            "experience-16",
+            "experience-10",
+            "experience-29",
+            "experience-07",
+            "experience-17",
+            "experience-05",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "wrrf_070": {
+          "ranked": [
+            "experience-25",
+            "experience-16",
+            "experience-29",
+            "experience-09",
+            "experience-07",
+            "experience-17",
+            "experience-05",
+            "experience-15",
+            "experience-03",
+            "experience-21"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        },
+        "vector": {
+          "ranked": [
+            "experience-30",
+            "experience-25",
+            "experience-26",
+            "experience-12",
+            "experience-16",
+            "experience-10",
+            "experience-29",
+            "experience-07",
+            "experience-05",
+            "experience-15"
+          ],
+          "metrics": {
+            "mrr": 1.0,
+            "recall@1": 1.0,
+            "precision@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@3": 1.0,
+            "precision@3": 0.3333333333333333,
+            "mrr@3": 1.0,
+            "recall@5": 1.0,
+            "precision@5": 0.2,
+            "mrr@5": 1.0,
+            "recall@10": 1.0,
+            "precision@10": 0.1,
+            "mrr@10": 1.0
+          }
+        },
+        "legacy_score": {
+          "ranked": [
+            "experience-25",
+            "experience-19",
+            "experience-09",
+            "experience-07",
+            "experience-17",
+            "experience-05",
+            "experience-15",
+            "experience-23",
+            "experience-13",
+            "experience-03"
+          ],
+          "metrics": {
+            "mrr": 0.0,
+            "recall@1": 0.0,
+            "precision@1": 0.0,
+            "mrr@1": 0.0,
+            "recall@3": 0.0,
+            "precision@3": 0.0,
+            "mrr@3": 0.0,
+            "recall@5": 0.0,
+            "precision@5": 0.0,
+            "mrr@5": 0.0,
+            "recall@10": 0.0,
+            "precision@10": 0.0,
+            "mrr@10": 0.0
+          }
+        }
+      }
+    }
+  ],
+  "conclusion": {
+    "observed_non_regression": true,
+    "production_generalization_verified": false,
+    "weights_changed": false,
+    "independent_human_labels": false
+  }
+}
