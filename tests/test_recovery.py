@@ -1,4 +1,5 @@
 """Crash injection uses real SQLite and files; no paid model or external business calls."""
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 import hashlib
 import json
@@ -13,8 +14,8 @@ from code_repair.knowledge_base import KnowledgeBase
 from code_repair.operation_store import business_effect
 from code_repair.recovery_agent import RecoveryAgent
 from code_repair.recovery_manager import RecoveryManager, effect_key, effect_parameters, probe_business
-from code_repair.recovery_store import RecoveryBackup, ServiceLock, file_manifest, initial_progress, filesystem_path
-from code_repair.repair_api import RepairRunner, create_app, timestamp
+from code_repair.recovery_store import DISPATCH_READY, RecoveryBackup, ServiceLock, file_manifest, initial_progress, filesystem_path
+from code_repair.repair_api import RepairRunner, TaskStore, create_app, timestamp
 from code_repair.repair_state import create_initial_state
 from code_repair.repair_tools import create_checkpoint_workspace
 from code_repair.repair_workflow import RepairServices
@@ -64,6 +65,72 @@ def in_flight(runner, task, node):
     task["execution"] = "running"
     runner.store.begin_step(task, node, task["state"], token)
     return task, token
+
+
+def test_queued_task_query_uses_index_and_limits_json_decoding(runner, monkeypatch):
+    tasks = [task_at(runner) for _ in range(4)]
+    first_ids = [task["state"]["task_id"] for task in tasks[:2]]
+    with runner.store.connect() as db:
+        plan = db.execute(
+            f"EXPLAIN QUERY PLAN SELECT payload FROM tasks WHERE {DISPATCH_READY} ORDER BY rowid LIMIT ?",
+            (2,),
+        ).fetchall()
+    assert any("tasks_dispatch_ready" in row[3] for row in plan), plan
+    assert all("TEMP B-TREE" not in row[3] for row in plan), plan
+
+    from code_repair import recovery_store
+    original_loads = recovery_store.json.loads
+    decoded = []
+
+    def count_loads(payload):
+        decoded.append(payload)
+        return original_loads(payload)
+
+    monkeypatch.setattr(recovery_store.json, "loads", count_loads)
+    selected = runner.store.list_queued_tasks(2)
+    assert [task["state"]["task_id"] for task in selected] == first_ids
+    assert len(decoded) == 2
+    assert runner.store.list_queued_tasks(0) == []
+
+
+def test_queued_task_query_excludes_claimed_tasks(runner):
+    task = task_at(runner)
+    runner.store.claim(task["state"]["task_id"])
+    assert runner.store.list_queued_tasks(10) == []
+
+
+def test_task_store_adds_dispatch_index_to_existing_database(tmp_path):
+    root = tmp_path / "legacy-store"
+    root.mkdir()
+    path = root / "workbench.sqlite3"
+    legacy = {"state": {"task_id": "legacy"}, "execution": "queued",
+              "progress": {"run_id": None}}
+    with sqlite3.connect(path) as db:
+        db.execute("CREATE TABLE tasks (id TEXT PRIMARY KEY, payload TEXT NOT NULL)")
+        db.execute("INSERT INTO tasks VALUES (?, ?)", ("no-progress", json.dumps({"execution": "queued"})))
+        db.execute("INSERT INTO tasks VALUES (?, ?)", ("completed", json.dumps({**legacy, "execution": "done"})))
+        db.execute("INSERT INTO tasks VALUES (?, ?)", ("legacy", json.dumps(legacy)))
+
+    store = TaskStore(root)
+
+    assert [task["state"]["task_id"] for task in store.list_queued_tasks(1)] == ["legacy"]
+    with store.connect() as db:
+        index = db.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='tasks_dispatch_ready'"
+        ).fetchone()
+    assert index is not None
+
+
+def test_concurrent_claims_only_grant_one_run_id(runner):
+    task = task_at(runner)
+    task_id = task["state"]["task_id"]
+    with ThreadPoolExecutor(max_workers=8) as workers:
+        claims = list(workers.map(lambda _: runner.store.claim(task_id), range(8)))
+
+    successful = [(claimed, token) for claimed, token in claims if claimed is not None]
+    assert len(successful) == 1
+    assert successful[0][1]
+    assert runner.store.get(task_id)["progress"]["run_id"] == successful[0][1]
 
 
 def no_agent(*args):

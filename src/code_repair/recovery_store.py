@@ -19,6 +19,8 @@ from code_repair.resilience import Fault, digest
 WORKFLOW_VERSION = 1
 AUDIT_FILES = {"errors.jsonl", "trace.jsonl"}
 BUSINESS_KEYS = {"repair_cases": "case_id", "repair_reviews": "task_id"}
+DISPATCH_READY = ("json_extract(payload, '$.execution') = 'queued' "
+                  "AND json_type(payload, '$.progress.run_id') = 'null'")
 
 
 def boot_identity():
@@ -147,6 +149,16 @@ class ProgressStore:
     def list_tasks(self):
         with self.connect() as db:
             return [json.loads(row[0]) for row in db.execute("SELECT payload FROM tasks ORDER BY rowid")]
+
+    def list_queued_tasks(self, limit):
+        if limit <= 0:
+            return []
+        with self.connect() as db:
+            rows = db.execute(
+                f"SELECT payload FROM tasks WHERE {DISPATCH_READY} ORDER BY rowid LIMIT ?",
+                (limit,),
+            )
+            return [json.loads(row[0]) for row in rows]
 
     def owns(self, task_id, run_id):
         return self.get(task_id).get("progress", {}).get("run_id") == run_id

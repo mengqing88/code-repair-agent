@@ -127,7 +127,7 @@ from code_repair.knowledge_base import KnowledgeBase
 from code_repair.repair_state import create_initial_state
 from code_repair.repair_tools import RepairToolbox, create_checkpoint_workspace, restore_checkpoint_workspace
 from code_repair.repair_workflow import build_repair_workflow, next_node_after
-from code_repair.recovery_store import (ProgressStore, initial_progress, setup_recovery, ServiceLock,
+from code_repair.recovery_store import (DISPATCH_READY, ProgressStore, initial_progress, setup_recovery, ServiceLock,
                             source_fingerprint, file_manifest, boot_identity)
 from code_repair.reproduction import reproduce
 from code_repair.operation_store import OperationStore
@@ -333,6 +333,11 @@ class TaskStore(ProgressStore):
         self.path = self.root / "workbench.sqlite3"
         with self.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, payload TEXT NOT NULL)")
+            db.execute(
+                "CREATE INDEX IF NOT EXISTS tasks_dispatch_ready "
+                "ON tasks(json_extract(payload, '$.execution')) "
+                f"WHERE {DISPATCH_READY}"
+            )
             db.execute("CREATE TABLE IF NOT EXISTS requests (key TEXT PRIMARY KEY, params_hash TEXT NOT NULL, task_id TEXT NOT NULL)")
             db.execute("""CREATE TABLE IF NOT EXISTS repair_reviews (
                 task_id TEXT PRIMARY KEY, decision TEXT NOT NULL, reason TEXT NOT NULL,
@@ -1135,10 +1140,10 @@ class RepairRunner:
         def dispatch():
             while not self.dispatch_stop.wait(0.5):
                 try:
-                    for task in self.store.list_tasks():
-                        progress = task.get("progress")
-                        if progress and task["execution"] == "queued" and progress["run_id"] is None:
-                            self.submit(task["state"]["task_id"], bool(task.get("review")))
+                    with self.submit_lock:
+                        available = self.max_workers - len(self.submitted)
+                    for task in self.store.list_queued_tasks(available):
+                        self.submit(task["state"]["task_id"], bool(task.get("review")))
                 except Exception as error:
                     error_info(error, operation="task.dispatch")
         self.dispatch_thread = Thread(target=dispatch, name="repair-dispatch", daemon=True)
@@ -1772,6 +1777,7 @@ def create_app(data_root: Path | None = None):
                             chunks.append(chunk)
                         # Starlette replays this cached body to the JSON endpoint.
                         request._body = b"".join(chunks)
+                        del chunks
                     response = await call_next(request)
             except Fault as error:
                 response = await fault_response(request, error)
