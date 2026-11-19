@@ -161,6 +161,8 @@ MCP 服务在修复 worker 所在主机运行，不受 Docker 代码执行容器
 
 ## 本地检查
 
+推送和 PR 会触发[离线回归](.github/workflows/offline-regression.yml)：Windows 上按 `uv.lock` 跑 Python 测试，Ubuntu 上用 `npm ci` 安装前端锁定依赖并运行测试和构建。真实模型、Docker 和外部数据库验收不作为普通回归的前置条件；真实公开缺陷的独立 Docker 验收用法见[准入说明](evaluation/PUBLIC_REPAIR_BENCHMARK.md)。
+
 评测集去重/划分/冻结、独立审核材料、公开真实缺陷、真实 Qdrant 和 Cross-Encoder 的命令与实测边界见 [评测与知识库验收](evaluation/RAG_VALIDATION.md)。当前工程及真实本机服务验收有证据，正式基准独立审核和生产语料效果仍分别待验收。
 
 在仓库根目录按 uv.lock 安装锁定依赖并运行测试（需要已安装 uv 和 Python 3.11+；rerank-onnx 为当前重排后端）：

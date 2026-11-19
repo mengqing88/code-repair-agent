@@ -396,18 +396,17 @@ def test_case_write_is_idempotent_and_deadline_does_not_degrade(tmp_path):
 def model_http_server(monkeypatch):
     """Use the real SDK in a real worker, with no external model traffic."""
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-    from threading import Thread
-    import time
-    requests = []
+    from threading import Event, Thread
     mode = {"slow": False}
+    slow_request_received, release_response = Event(), Event()
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
         def do_POST(self):
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-            requests.append(body)
             if mode["slow"]:
-                time.sleep(60)
+                slow_request_received.set()
+                release_response.wait()
             if self.path.endswith("embeddings"):
                 response = {"object": "list", "model": "fixture", "data": [{"object": "embedding", "index": 0, "embedding": [1.0, 0.0]}],
                             "usage": {"prompt_tokens": 10, "total_tokens": 10}}
@@ -451,9 +450,12 @@ def model_http_server(monkeypatch):
         "EMBEDDING_MODEL": "fixture-embedding-model", "EMBEDDING_PRICE_PER_1K_TOKENS": "0.001",
     }.items():
         monkeypatch.setenv(name, value)
-    yield requests, mode
-    server.shutdown()
-    server.server_close()
+    try:
+        yield mode, slow_request_received
+    finally:
+        release_response.set()
+        server.shutdown()
+        server.server_close()
 
 
 def test_production_worker_sdk_graph_review_and_durable_restart(tmp_path, model_http_server):
@@ -495,29 +497,45 @@ def test_production_worker_sdk_graph_review_and_durable_restart(tmp_path, model_
 
 def test_production_watchdog_stops_slow_upstream_and_rolls_back(tmp_path, model_http_server, monkeypatch):
     from tests.test_repair_api import finished
-    model_http_server[1]["slow"] = True
-    # Leave enough headroom for the production worker to reach the upstream under suite load.
-    def short_budget_state(*args, **kwargs):
-        kwargs["remaining_seconds"] = 45
-        return create_initial_state(*args, **kwargs)
-    monkeypatch.setattr("code_repair.repair_api.create_initial_state", short_budget_state)
+    mode, slow_request_received = model_http_server
+    mode["slow"] = True
     app = create_app(tmp_path / "data")
+    store = app.state.runner.store
+    file_name = "target.py"
+
+    def run_with_blocked_response(command, *, on_started, **kwargs):
+        def install_timeout(process):
+            on_started(process)
+            communicate = process.communicate
+
+            def wait_for_response(input=None, timeout=None):
+                process.communicate = communicate
+                assert slow_request_received.wait(90), "worker never reached the model HTTP fixture"
+                task = store.get(command[-3])
+                target = Path(task["config"]["workspace"]) / file_name
+                assert target.read_text(encoding="utf-8") == "value=1\n"
+                target.write_text("value=2\n", encoding="utf-8")
+                return communicate(input, timeout=2)
+
+            process.communicate = wait_for_response
+
+        return run_process(command, on_started=install_timeout, **kwargs)
+
+    monkeypatch.setattr("code_repair.repair_api.run_process", run_with_blocked_response)
     with TestClient(app) as client:
         response = client.post("/api/tasks", json={"source_type": "pasted_code", "language": "python",
-                                                    "code_text": "value=1\n", "error_report": "wrong value"})
+                                                    "file_name": file_name, "code_text": "value=1\n",
+                                                    "error_report": "wrong value"})
         assert response.status_code == 202, response.text
-        task = finished(client, response.json()["state"]["task_id"], timeout=90)
+        task = finished(client, response.json()["state"]["task_id"], timeout=110)
         assert task["state"]["status"] == "budget_exceeded", task["state"]
         assert task["state"]["error_info"]["code"] == "deadline_exceeded"
-        assert task["state"]["remaining_budget"]["seconds"] == 0
         assert process_identity(task["worker"]["pid"]) != task["worker"]["identity"]
-        assert model_http_server[0], "must reach the slow upstream before watchdog cutoff"
         events = client.get(f"/api/tasks/{task['state']['task_id']}/trace").json()["events"]
         assert any(event["operation"] == "task.worker" and event["event"] == "stopped"
                    and event["task_id"] == task["state"]["task_id"] for event in events)
         workspace = Path(task["config"]["workspace"])
-        if (workspace / "target.py").exists():
-            assert (workspace / "target.py").read_text() == "value=1\n"
+        assert (workspace / file_name).read_text(encoding="utf-8") == "value=1\n"
 
 
 @pytest.mark.parametrize("node,code_started,expected", [

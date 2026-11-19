@@ -9,6 +9,7 @@
 - [x] **Cross-Encoder 重排**（真实权重技术验收完成）：对初召回 5–10 条成对打分，支持懒加载及失败回退。已在独立虚拟环境加载固定 revision 的多语言 mMARCO MiniLM 权重，对 30 条作者标签开发诊断执行真实重排；结果和 CPU 延迟见 `evaluation/reranker-acceptance-20261112-verified.json`。不是独立冻结测试或生产效果验收，业务默认配置未改。
 - [x] **检索评测工具**（实现完成）：输出 Recall@1/3/5/10、MRR、Precision@K，对比关键词、向量、混合及配置可用时的重排，并自检成功/失败分开召回与严格范围过滤。离线关键词结果为当前运行数据；向量与重排结果见 `evaluation/results.json`，只对显式运行且真实调用成功的模式计为实测。
 - [x] **配对 Agent 实验评测入口**（实现完成）：实验清单要求固定模型、提示词哈希、数据集哈希及相同预算，并核对每个案例的补丁和 Trace；没有成对真实产物时 `agent_outcomes.measured` 保持 `false`。
+- [x] **推送与 PR 离线回归**（配置已写入）：自动从锁文件安装依赖，检查 Python 测试和前端测试、构建，不依赖在线模型、数据库或 Docker 服务。
 
 ## 外部验收
 
@@ -16,10 +17,11 @@
 - [x] **MCP 本机只读服务验收**：Context7、GitHub、Sentry 三个服务共注册 19 个只读工具，完整启动约 35.55 秒且无连接警告；文档库解析、公开仓库搜索和 Sentry 组织查询均收到真实响应。专项测试 14 项通过。结果与限制见 `evaluation/MCP_DEPLOYMENT_ACCEPTANCE_20261112.md`。
 - [x] **本机 Docker 与 API staging 验收**：Docker Engine 29.7.2/Linux 的合成缺陷端到端验收通过；本机 API 的三任务/两 worker 重启后队列恢复验收 30/30 通过，临时 Uvicorn 双账号个人记忆隔离通过，健康端点 100 次请求/并发 16 全部 HTTP 200，P95 42.01 ms。仅为有限本机场景，不代表公网生产隔离或容量验收。
 - [ ] **第三方 MCP 写操作与公网多租户验收**：日常 MCP 保持只读；2026-11-14 官方 GitHub MCP 在专用私有仓库通过真实写入/审批/幂等/受控超时与服务重启恢复检查，失败与清理记录见 `evaluation/acceptance-20261114`；自然公网故障仍未诱发。临时 Cloudflare HTTPS 双用户真实 worker + Docker 验收为 20/20，确认两个任务并发运行在分离容器挂载中，API 重启后旧 worker/容器停止，未知代码执行不重放且账号间读取返回 404。另有本机三任务/两 worker 持久队列恢复验收 30/30，通过报告 `public-worker-queue-recovery-final.json`。此项仍标待验收：临时隧道与两个并发任务不代表正式公网部署、生产主机隔离或容量测试；GitHub Token 当前范围为 All repositories，测试脚本约束到专用仓库和单个文件。
-- [ ] **部署专项高负载测试稳定性**：组合测试 `115 passed, 1 failed`；20 秒 watchdog 场景整组高负载时失败，单独复测通过。需定位高负载下的时序/调度敏感性后才能将该专项组合标为通过。
+- [ ] **部署专项高负载测试稳定性**：保留旧组合 `115 passed, 1 failed`；旧 20 秒 watchdog 场景在高负载时未到达模拟模型。测试已改为等 HTTP 夹具收到请求后触发真实子进程超时，强制核对文件回滚。历史组合与生产负载不因测试改造而视为通过。
 - [x] **真实模型补丁审查质量样例评测**（评测已完成，生产质量仍待验收）：保留初测 2/8 完整的失败记录；后续在四类作者编写的合成补丁上各重复 2 次，共 8 次真实模型审查，样例预期判断 8/8 正确、源码引用 8/8 可核验，有限 pytest fixture 均通过。标签未经独立复核，不能外推生产误放率/误拒率或复杂仓库质量；聊天费率未配置，费用未知。详见 `evaluation/REAL_MODEL_REVIEW_QUALITY_20261112.md` 和 `evaluation/REAL_MODEL_REVIEW_QUALITY_CONTROLLED_20261112.json`。
 - [x] **真实 Qdrant 在线与索引负载验收**：`evaluation/qdrant-acceptance-20261112.json` 为 passed，Qdrant 1.16.2；验证命名空间、元数据、版本、维度拒绝、合并点删除/恢复、重启持久化、实际停服时 SQLite 降级及恢复补索引。1 万条 64 维合成向量/100 查询的 Recall@10=1.0，P95≈128ms；只测索引，不含 Embedding/SQLite/全链路语义合并，不代表生产负载。
 - [x] **候选集近重复分组、划分与冻结工具**：162 任务与 162 经验形成 100 个泄漏组，开发/验证/测试为 126/19/17；哈希候选快照、只导出单题输入与开发语料、独立审阅模板已生成。另补 3 个有固定提交及 BSD 许可的公开真实缺陷，Docker 中旧版失败/修复版通过。
+- [x] **第二批公开真实缺陷准入**：Click 和 attrs 各一例，Docker 实测基线失败、参考版本通过，2/2 准入。详见 [公开真实缺陷准入](../../evaluation/PUBLIC_REPAIR_BENCHMARK.md)；未运行真实 Agent，不计修复率。
 - [ ] **正式基准准入与生产误合并率**：冻结候选仍 `formal_eligible=false`；待真实审核者核对契约、语义组、来源许可与跨组相关性，另需授权脱敏的代表性生产语料及独立重复标签。3 个公开 Issue 的合并探针不能替代生产误合并率。见 `evaluation/RAG_VALIDATION.md` 及冻结审阅包。
 - [x] **PostgreSQL/pgvector 在线验收**（一次性测试库已验收）：`python -m evaluation.postgres_acceptance --output evaluation/postgres-acceptance-20261112-verified.json` 在真实 PostgreSQL 16.15 / pgvector 0.8.7 上通过 11 项集成测试，覆盖建表幂等、成功/拒绝案例与审核记录、余弦检索与维度过滤、严格元数据过滤、upsert 版本、插入/更新事务回滚、验收前置条件和 SQLite 快照导出；另实际重启容器核对三表数据与版本，清理容器及匿名卷。首次重启连接超时报告保留；验收器已处理重启后的随机端口变化。固定向量/合成案例不证明真实 Embedding 质量、生产负载、高可用或断电恢复，Web 仍使用 SQLite 正文。
 - [x] **Docker 端到端验收**（当前合成场景已验收）：`python -m evaluation.docker_acceptance --output evaluation/docker-acceptance-20261112-verified.json` 在真实 Engine 29.7.2/Linux 容器上返回 `passed`，覆盖修复/复现/pytest、敏感遮蔽、只读挂载、网络/能力限制、超时清理、失败回归和结果回传，容器与工作区清理均通过。较早 Engine 不可连接的两个 `blocked` 报告及 `docker-acceptance-20261112-cleanup-failed.json` 保留；后者暴露的 Windows 只读 Git 对象删除问题已修复。模型回复固定，缺陷为合成样例，不能据此声称真实模型质量、第三方写入或公网生产隔离通过。
