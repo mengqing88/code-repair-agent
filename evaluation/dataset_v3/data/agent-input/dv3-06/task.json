@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "config_layers.py"
+  ],
+  "case_id": "dv3-06",
+  "contract": "只有 None 表示未设置；''、0、False 都是有效覆盖值，按 默认值 -> 文件 -> 环境 逐层覆盖。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "想把重试次数设成 0 关掉重试，结果仍然是默认 3 次；想把 region 清空也改不动，环境变量里的空串被忽略。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "配置里的空串与 0 被当成未设置"
+}

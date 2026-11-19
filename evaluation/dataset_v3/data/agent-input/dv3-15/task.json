@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "wrapper.py"
+  ],
+  "case_id": "dv3-15",
+  "contract": "TimeoutError 包装成 UpstreamError('upstream timeout') 并保留 cause/__cause__；ValueError 包装且消息包含原始原因；其他异常原样透出，不得包装。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "线上只看到 upstream failed，抓不到是超时还是返回格式坏了；自己代码里的 bug 也被吞成上游错误，排查方向被带偏。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "上游异常一律包装并丢掉原因"
+}

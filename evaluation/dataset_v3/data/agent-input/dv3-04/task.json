@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "executor.py"
+  ],
+  "case_id": "dv3-04",
+  "contract": "run 在每次失败后检查已用时间，达到或超过 budget_seconds 立即停止，不再发起下一次尝试；attempts 不超过 max_attempts；耗尽时抛 BudgetExceeded 并带上尝试次数。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "下游超时后仍然按次数重试，一个 5 秒预算的请求实际跑了 12 秒，把上游的整体超时也拖爆了。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "重试忽略时间预算只按次数"
+}

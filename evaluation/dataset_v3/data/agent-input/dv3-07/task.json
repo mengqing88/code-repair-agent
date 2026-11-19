@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "dedup.py"
+  ],
+  "case_id": "dv3-07",
+  "contract": "窗口为半开区间：事件在 t 时刻进入，到 t+window 起重新算新事件；每次判断前必须清空所有已过期条目（不是一条）。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "窗口正好到期的那一刻仍然判为重复，用户在同一秒重试被吞掉；另外过期条目一次只清一条，内存随 key 增长。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "去重窗口边界与清理数量都不对"
+}

@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "editor.py"
+  ],
+  "case_id": "dv3-12",
+  "contract": "新的 type 必须清空 redo 栈；undo/redo 在各自栈之间迁移状态；栈空时抛 StateError。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "撤销之后再输入新内容，按重做竟然回到了被放弃的旧版本，用户看到的内容和自己的编辑顺序对不上。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "新输入后 redo 仍能回到旧分支"
+}

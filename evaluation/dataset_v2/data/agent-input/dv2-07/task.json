@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "acl.py"
+  ],
+  "case_id": "dv2-07",
+  "contract": "字面段数更多的规则优先；字面段数相同时 deny 优先于 allow；没有任何规则匹配时默认 deny；通配符 * 只匹配单段，不跨 /。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "安全评审发现：把 deny 规则写在 allow 之后就不生效，/docs/secret 仍可访问；没有任何规则匹配的路径也被放行，等于默认全开。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "ACL 取首个命中且默认放行"
+}

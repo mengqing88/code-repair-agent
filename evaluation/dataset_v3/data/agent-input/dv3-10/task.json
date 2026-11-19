@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "singleflight.py"
+  ],
+  "case_id": "dv3-10",
+  "contract": "失败路径必须清除 in-flight 标记且不缓存异常值，允许下一次重试；成功值缓存后不再调用 loader；执行期间的重入仍然被拒绝。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "下游偶发失败一次之后，这个 key 就再也加载不了：后续请求全被判成重入并抛错，只能重启进程恢复。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "加载失败后卡死在 in-flight 标记"
+}

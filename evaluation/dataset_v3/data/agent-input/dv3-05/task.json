@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "bulk.py"
+  ],
+  "case_id": "dv3-05",
+  "contract": "delete_many 要么删掉全部给定 key 并返回被删内容，要么一条都不动；任一 key 不存在时抛 StoreError 且行集合与调用前一致。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "批量删除里有一个 key 不存在时接口报错，但排在它前面的记录已经被删掉，重试又报同样的错，数据对不上。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "批量删除中途失败留下半份数据"
+}

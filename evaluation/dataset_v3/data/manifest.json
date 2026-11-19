@@ -1,0 +1,2387 @@
+{
+  "case_count": 16,
+  "cases": [
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:42:32+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "paging.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "paging.py": "f3145ae473c2c0a86c5c541486d6f4d0a68695a0daf45f5fd41478d4879a3991",
+          "task.json": "0ec7d056c5f89d19981921253c88b682cd2b5fb6e98dd787da43a71daecd9e24",
+          "test_existing.py": "e9d2b28799ab3bd756d244e4f899228ddf43f4f8af34014a1fbd996f587070ac"
+        },
+        "grader_only": {
+          "labels.json": "386985aaf24eaa8a39c8acf60499055bb93a79deb57ff11d76a7c86f5a362dbd",
+          "reference.patch": "0d4d6f6b0545f4f3b2127e9d058b87de468b618d53ada92a5198daff364606c9",
+          "test_acceptance.py": "0d6d856d24f05e7b3f958e8a5623db5f28728dd11d22ee6dfe11b90237d16137"
+        }
+      },
+      "base_revision": "synthetic-dv3-01",
+      "case_id": "dv3-01",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "boundary",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "e9d2b28799ab3bd756d244e4f899228ddf43f4f8af34014a1fbd996f587070ac"
+      },
+      "expected_behavior": "slice_page(items, offset, limit) 要求 offset>=0 且 limit>=1，越界返回空列表；负 offset 或非正 limit 抛 ValueError。",
+      "group_id": "grp-offset-paging",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "0d6d856d24f05e7b3f958e8a5623db5f28728dd11d22ee6dfe11b90237d16137",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 2,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 2,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "offset_check_removed"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "limit_zero_allowed"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:42:32+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "0d4d6f6b0545f4f3b2127e9d058b87de468b618d53ada92a5198daff364606c9",
+      "report": "传入负偏移时接口没有报错，反而返回了列表末尾的数据；调用方把它当成第一页处理，出现数据重复展示。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-01",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "542fe93a2937f0429cdca783a3a79342b70fd58f282e67a8fe7737dfc1467ed4",
+        "files": {
+          "paging.py": "f3145ae473c2c0a86c5c541486d6f4d0a68695a0daf45f5fd41478d4879a3991"
+        }
+      },
+      "split": "validation",
+      "title": "负 offset 被当成尾部切片"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:42:40+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "ranges.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "ranges.py": "3990f8ebc2802a1c3dcd0c21f562f7d8d8cee88546ae1e5d0704ce6a247e1b55",
+          "task.json": "bdbcd60ecdbc0da338cdce95eefd23389877375a1b58740c3167f30ebf161c81",
+          "test_existing.py": "ddacfc8cf8172d1ee8a239801a3c4dd1441646684891412da671f14656022725"
+        },
+        "grader_only": {
+          "labels.json": "b382313f7b06ed097f943ee9eb92d8fb0ebfdefeade5ac2dba339006751b363c",
+          "reference.patch": "a3e571aa185981ef286fe8d1ec2e20049a9b5071f6f50433590aa1b4acaa85ff",
+          "test_acceptance.py": "a342f01a0625e3ed48d59cf16d64a2e3f3dd2437c693c03856abb6c8eba92e40"
+        }
+      },
+      "base_revision": "synthetic-dv3-02",
+      "case_id": "dv3-02",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "ordering",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "ddacfc8cf8172d1ee8a239801a3c4dd1441646684891412da671f14656022725"
+      },
+      "expected_behavior": "merge_ranges 处理半开区间 [start, end)：重叠或首尾相接（start == 前一段 end）都要合并；输入顺序不影响结果；start > end 抛 ValueError。",
+      "group_id": "grp-range-merge",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "a342f01a0625e3ed48d59cf16d64a2e3f3dd2437c693c03856abb6c8eba92e40",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 4
+        },
+        "expected_tests": 4,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 2,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 4,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "strict_overlap_only"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 4,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "input_order_kept"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 4
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:42:40+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "a3e571aa185981ef286fe8d1ec2e20049a9b5071f6f50433590aa1b4acaa85ff",
+      "report": "排班可用时段没有合并干净：首尾相接的两段被当成两段，乱序传入时还会出现重叠段未合并。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-02",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "b1de37f4baa119a95c8c7b0d7478ba753ac441870c8df3613e0f2abc9c78b06d",
+        "files": {
+          "ranges.py": "3990f8ebc2802a1c3dcd0c21f562f7d8d8cee88546ae1e5d0704ce6a247e1b55"
+        }
+      },
+      "split": "validation",
+      "title": "相邻区间不合并且依赖输入顺序"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:42:47+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "duration.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "duration.py": "c6df1f1cf4e771f072208ec962a4e3572ca942c2b122f6451c771820d381c04e",
+          "task.json": "6ebee5d5cbe5333c8d06e5a80cc36162de012572362ed53de68d6876976c4305",
+          "test_existing.py": "0b90366080d6ba96ec38d008ff5c97e9b09193f562131f1ac9b34fe492fa140e"
+        },
+        "grader_only": {
+          "labels.json": "5b7da17876c328be895313125ff9a0142b0fd944bd557ed234210a993f5ba5fa",
+          "reference.patch": "26a8c80a7fefb07c7ae2ef5e0a4c421b16d46230a3eb00500bf0c0c3dd36af65",
+          "test_acceptance.py": "11549e254124e41ebb50b6dddacfc3664db402a174f99c7ad87e32add730f2f2"
+        }
+      },
+      "base_revision": "synthetic-dv3-03",
+      "case_id": "dv3-03",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "parsing",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "0b90366080d6ba96ec38d008ff5c97e9b09193f562131f1ac9b34fe492fa140e"
+      },
+      "expected_behavior": "parse_duration 支持 s/m/h 三种单位并可组合（1h30m15s=5415）；空串、未知单位、缺数字、裸数字、重复单位都抛 ValueError。",
+      "group_id": "grp-duration",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "11549e254124e41ebb50b6dddacfc3664db402a174f99c7ad87e32add730f2f2",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 2,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "seconds_missing"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "duplicate_unit_allowed"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:42:47+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "26a8c80a7fefb07c7ae2ef5e0a4c421b16d46230a3eb00500bf0c0c3dd36af65",
+      "report": "配置里写 45s 直接报未知单位；写 1h1h 不报错，实际按两小时生效，两次误写的超时值叠在一起。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-03",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "8c89e09a99df74cb1395be315739ad0553b7f1cbb77210fc90f23df7d2518646",
+        "files": {
+          "duration.py": "c6df1f1cf4e771f072208ec962a4e3572ca942c2b122f6451c771820d381c04e"
+        }
+      },
+      "split": "dev",
+      "title": "时长解析不支持秒且忽略重复单位"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:42:54+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "executor.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "executor.py": "aa968653354078525ed1bb3004e78edc7f9161e33732cae83243e04bd355b653",
+          "task.json": "9d856c0ffeb04abcdc30919eff39b240bcc052b26fd2bfe822471555f0e7dc8c",
+          "test_existing.py": "0c72a8a330d481af834ff5dd1ff02acc79ca0c8c3735c90417ae31d92853d945"
+        },
+        "grader_only": {
+          "labels.json": "a2a5b9260b078235898f2c4adf89c4800f59c60c10fff6cd8d1169165165eac0",
+          "reference.patch": "33d051c94a4bbb2995ef89ea0e97378d5a5f86f440f0e5d59e4391c86d67b8a3",
+          "test_acceptance.py": "8336be90bd2d6a0df23ee1c6b3114f2920e1314fa7014c913cc8f8da99e49850"
+        }
+      },
+      "base_revision": "synthetic-dv3-04",
+      "case_id": "dv3-04",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "resource_budget",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "hard",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "0c72a8a330d481af834ff5dd1ff02acc79ca0c8c3735c90417ae31d92853d945"
+      },
+      "expected_behavior": "run 在每次失败后检查已用时间，达到或超过 budget_seconds 立即停止，不再发起下一次尝试；attempts 不超过 max_attempts；耗尽时抛 BudgetExceeded 并带上尝试次数。",
+      "group_id": "grp-budget-executor",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "8336be90bd2d6a0df23ee1c6b3114f2920e1314fa7014c913cc8f8da99e49850",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "budget_ignored"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "budget_exclusive"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:42:54+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "33d051c94a4bbb2995ef89ea0e97378d5a5f86f440f0e5d59e4391c86d67b8a3",
+      "report": "下游超时后仍然按次数重试，一个 5 秒预算的请求实际跑了 12 秒，把上游的整体超时也拖爆了。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-04",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "4e3b8315ef97c70510b050caf1c9f917edd51f9077436731cbc862d11918da99",
+        "files": {
+          "executor.py": "aa968653354078525ed1bb3004e78edc7f9161e33732cae83243e04bd355b653"
+        }
+      },
+      "split": "dev",
+      "title": "重试忽略时间预算只按次数"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:02+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "bulk.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "bulk.py": "fcc2636c3d8beb8f01738f46f907fd9f2d522970e0c50b1553adf81eda98ceba",
+          "task.json": "ffcabf320ef1d2bad361c77ce8dc5746e3db77f98bd8f0ef665848805abac6c6",
+          "test_existing.py": "e4a318d3420bebe5757f848a24c2b7015db67adac4d713f2b5263c3763030959"
+        },
+        "grader_only": {
+          "labels.json": "0cd741dbfd210a9a42ed9c354ae1981783d1e0a36724752d6413f4eed34a03b4",
+          "reference.patch": "aad21b9c967f4518c48ce6fd13d1acf0ddcfa1dc903693274e9acd5ca54221d5",
+          "test_acceptance.py": "0657ae4b607d21dd274ec903547625a972fd44846bc872859e7d5ce7822984d3"
+        }
+      },
+      "base_revision": "synthetic-dv3-05",
+      "case_id": "dv3-05",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "transaction_atomicity",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "hard",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "e4a318d3420bebe5757f848a24c2b7015db67adac4d713f2b5263c3763030959"
+      },
+      "expected_behavior": "delete_many 要么删掉全部给定 key 并返回被删内容，要么一条都不动；任一 key 不存在时抛 StoreError 且行集合与调用前一致。",
+      "group_id": "grp-bulk-delete",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "0657ae4b607d21dd274ec903547625a972fd44846bc872859e7d5ce7822984d3",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "delete_while_validating"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "validate_only_multiple"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:02+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "aad21b9c967f4518c48ce6fd13d1acf0ddcfa1dc903693274e9acd5ca54221d5",
+      "report": "批量删除里有一个 key 不存在时接口报错，但排在它前面的记录已经被删掉，重试又报同样的错，数据对不上。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-05",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "f9d73c26070b4da06e01ede212753c32b3329a63256a74bd2e97eaa0815f2875",
+        "files": {
+          "bulk.py": "fcc2636c3d8beb8f01738f46f907fd9f2d522970e0c50b1553adf81eda98ceba"
+        }
+      },
+      "split": "dev",
+      "title": "批量删除中途失败留下半份数据"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:09+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "config_layers.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "config_layers.py": "5bade1f70924d17d3a05840f15a6d25fa4a88317cd8d89ebebac7b51f8f472db",
+          "task.json": "30f4884af0c131e077255e3f50ea405afd3f1ff981145cfd6337420808173b8b",
+          "test_existing.py": "d310ed619f9f11f6cef878ac526d6eb8c3c223c3ef3c9e5fc5e5c5ec3f2a2a8a"
+        },
+        "grader_only": {
+          "labels.json": "31b9b6d6afc650f5ba1c726096f3c80ba2990a2dd98fc7073fc609ec09229a9c",
+          "reference.patch": "4ff9c24289a9a48a33bc803c95f938f6cc15437c1317040d10e52aef6a2865a8",
+          "test_acceptance.py": "0e5be11fc9c14c86a8f6c3f5273da42237aab5cf9dc8d5e1d6550e17b393157b"
+        }
+      },
+      "base_revision": "synthetic-dv3-06",
+      "case_id": "dv3-06",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "config_precedence",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "d310ed619f9f11f6cef878ac526d6eb8c3c223c3ef3c9e5fc5e5c5ec3f2a2a8a"
+      },
+      "expected_behavior": "只有 None 表示未设置；''、0、False 都是有效覆盖值，按 默认值 -> 文件 -> 环境 逐层覆盖。",
+      "group_id": "grp-config-precedence",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "0e5be11fc9c14c86a8f6c3f5273da42237aab5cf9dc8d5e1d6550e17b393157b",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "truthiness_filter"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "environment_ignored"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:09+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "4ff9c24289a9a48a33bc803c95f938f6cc15437c1317040d10e52aef6a2865a8",
+      "report": "想把重试次数设成 0 关掉重试，结果仍然是默认 3 次；想把 region 清空也改不动，环境变量里的空串被忽略。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-06",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "f22e5fa22a09466dfecfb836f434958c1e392bf9a17442c9732770e3f969f1c5",
+        "files": {
+          "config_layers.py": "5bade1f70924d17d3a05840f15a6d25fa4a88317cd8d89ebebac7b51f8f472db"
+        }
+      },
+      "split": "dev",
+      "title": "配置里的空串与 0 被当成未设置"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:17+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "dedup.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "dedup.py": "709f99993154cc45ccdd3106e8218161828144bedbfa6464b55949f77384c30c",
+          "task.json": "45a99d6ac721b357f916ffe869a2d6d325cab3a79c5ab08dc5d3c57b63e215b6",
+          "test_existing.py": "a42024a54a76514ab60a158bf4ae2be79956e894d4a790cc5c78755aefc80283"
+        },
+        "grader_only": {
+          "labels.json": "1ee7c71b8f4c7c296d0ce95bd780fea75dd25d4a5d009d2322dcd54ac0a959f9",
+          "reference.patch": "57c647d478102cb9bcfd38dd87ed579a5185241b6737c2bc50a63e271d76bdf6",
+          "test_acceptance.py": "0b7c345783520d3f5bde2db04786c2b0c537fa2ba2951d7d53706896cabac55c"
+        }
+      },
+      "base_revision": "synthetic-dv3-07",
+      "case_id": "dv3-07",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "window_boundary",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "hard",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "a42024a54a76514ab60a158bf4ae2be79956e894d4a790cc5c78755aefc80283"
+      },
+      "expected_behavior": "窗口为半开区间：事件在 t 时刻进入，到 t+window 起重新算新事件；每次判断前必须清空所有已过期条目（不是一条）。",
+      "group_id": "grp-dedup-window",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "0b7c345783520d3f5bde2db04786c2b0c537fa2ba2951d7d53706896cabac55c",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 2,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "window_exclusive"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "prune_single_key"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:17+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "57c647d478102cb9bcfd38dd87ed579a5185241b6737c2bc50a63e271d76bdf6",
+      "report": "窗口正好到期的那一刻仍然判为重复，用户在同一秒重试被吞掉；另外过期条目一次只清一条，内存随 key 增长。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-07",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "6faa7c617937e5dbe9fb06896afb021247ab9b1ac9df06c73f8f0e1d57e63a90",
+        "files": {
+          "dedup.py": "709f99993154cc45ccdd3106e8218161828144bedbfa6464b55949f77384c30c"
+        }
+      },
+      "split": "dev",
+      "title": "去重窗口边界与清理数量都不对"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:25+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "wrap.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "task.json": "822eb8b259a883084b6c1fac940363e0727b756a9f1c53f1510dff9f505613e2",
+          "test_existing.py": "491d49df5aee369fe5f018cc16a334fec56944ab26ab7259351c13594c9161e3",
+          "wrap.py": "14731d6764ac10d23f42b3716f0f149bdb6987e9edaff3fe44217201328cda72"
+        },
+        "grader_only": {
+          "labels.json": "ee3d311e94a0493f0be65e1a8c45b4d84748a3e93a9d0f97da3ca4918f7fad91",
+          "reference.patch": "a0bb947c80b51e499f8026b40fac05f48a1f85aba03a0af7aa79a515f4da2766",
+          "test_acceptance.py": "a2f829840212f15531676079fba483d7ff60aee6826bbdbe633a1ba63bdaeded"
+        }
+      },
+      "base_revision": "synthetic-dv3-08",
+      "case_id": "dv3-08",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "text_layout",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "491d49df5aee369fe5f018cc16a334fec56944ab26ab7259351c13594c9161e3"
+      },
+      "expected_behavior": "wrap 保留源文本的换行（每段独立折行），空段落输出空串，超过 width 的单词整体保留不截断；width<1 抛 ValueError。",
+      "group_id": "grp-wrap",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "a2f829840212f15531676079fba483d7ff60aee6826bbdbe633a1ba63bdaeded",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 2,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 2,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "paragraphs_merged"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "long_word_split"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:25+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "a0bb947c80b51e499f8026b40fac05f48a1f85aba03a0af7aa79a515f4da2766",
+      "report": "渲染出来的邮件通知所有段落挤成一坨，原文里的换行和空行全没了；只有超长单词被正确保留。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-08",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "456ac5e57b004299868c734ee675fc28d986e7cf6a7750c6ce71e0984af32155",
+        "files": {
+          "wrap.py": "14731d6764ac10d23f42b3716f0f149bdb6987e9edaff3fe44217201328cda72"
+        }
+      },
+      "split": "test",
+      "title": "折行把段落边界吃掉"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:33+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "money_total.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "money_total.py": "fd49de65dbe83f87678fd7b656183d26f8d2a076621729a8beb423e2026e0b4b",
+          "task.json": "ac873ac83bce599f9aa541e48dea63d5640b416b6bc5a1a372c772bbe2828727",
+          "test_existing.py": "45f713bd74b6bb1be9f704f3f807eb9e3024fe886181e401d8fa5c38cd9f241f"
+        },
+        "grader_only": {
+          "labels.json": "394a62316bac14c0485b2f7443d5b639b3b0841b44c9c083a4c9764b97e77878",
+          "reference.patch": "f4941e4581325711b2ff6b954da73b022b9eb11f69fb66cae20f316310e31423",
+          "test_acceptance.py": "ea2ab30e9fd5a177afb396eeba0a4a4daa1239e8fdd61663b3d554780a339faa"
+        }
+      },
+      "base_revision": "synthetic-dv3-09",
+      "case_id": "dv3-09",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "numeric_precision",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "45f713bd74b6bb1be9f704f3f807eb9e3024fe886181e401d8fa5c38cd9f241f"
+      },
+      "expected_behavior": "total 必须用 Decimal 精确求和并返回 Decimal：0.1+0.2 恰好 0.3，大额整数不丢位，空列表返回 Decimal('0')。",
+      "group_id": "grp-decimal-total",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "ea2ab30e9fd5a177afb396eeba0a4a4daa1239e8fdd61663b3d554780a339faa",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "float_sum"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 2,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "returns_float"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:33+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "f4941e4581325711b2ff6b954da73b022b9eb11f69fb66cae20f316310e31423",
+      "report": "发票合计偶尔差一分钱：0.1+0.2 得到 0.30000000000000004，超大金额相加时末位直接丢掉。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-09",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "3075fcb0bd7bb1ca3c6b9798b2022a53889e8107e6dcdf834c3c7674877a3929",
+        "files": {
+          "money_total.py": "fd49de65dbe83f87678fd7b656183d26f8d2a076621729a8beb423e2026e0b4b"
+        }
+      },
+      "split": "dev",
+      "title": "发票合计用浮点丢精度"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:41+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "singleflight.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "singleflight.py": "1920918a631a1016e50a25faf5939b9ceece275d3da79e961ae30a56bd490aac",
+          "task.json": "039d12ffb260b66a1b5b710fe32e71fdc0b0eb7cdb6f2c8fa342dd56ae399bee",
+          "test_existing.py": "8637c8c850c4745346e2bb2e8ed9b94117b302d6f5121699471cb37b7bfc0b44"
+        },
+        "grader_only": {
+          "labels.json": "bf62e5e30ece31fb729b5366187cd895086d78267e6c36587a86e5be89b47c8f",
+          "reference.patch": "fdd2a1c4ef2ba875236b188a56177192f70fedf5081137389a1b7e7ca9bcd6a0",
+          "test_acceptance.py": "418c5795dedaee008d3a0b6edfb05ed014f69e18645ded5d95585b9bf5383892"
+        }
+      },
+      "base_revision": "synthetic-dv3-10",
+      "case_id": "dv3-10",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "state_cleanup",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "hard",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "8637c8c850c4745346e2bb2e8ed9b94117b302d6f5121699471cb37b7bfc0b44"
+      },
+      "expected_behavior": "失败路径必须清除 in-flight 标记且不缓存异常值，允许下一次重试；成功值缓存后不再调用 loader；执行期间的重入仍然被拒绝。",
+      "group_id": "grp-singleflight",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "418c5795dedaee008d3a0b6edfb05ed014f69e18645ded5d95585b9bf5383892",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "inflight_not_cleared"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "placeholder_cached"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:41+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "fdd2a1c4ef2ba875236b188a56177192f70fedf5081137389a1b7e7ca9bcd6a0",
+      "report": "下游偶发失败一次之后，这个 key 就再也加载不了：后续请求全被判成重入并抛错，只能重启进程恢复。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-10",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "9959d9a7b392f3d90e4222cd80eceb008b025f8d05dee93cfe8b41bb47793876",
+        "files": {
+          "singleflight.py": "1920918a631a1016e50a25faf5939b9ceece275d3da79e961ae30a56bd490aac"
+        }
+      },
+      "split": "validation",
+      "title": "加载失败后卡死在 in-flight 标记"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:49+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "render.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "render.py": "bed8e67ffb023b2d6d8bebf805997f6b9285c39cf7b7cd54eeb95ad53a1aecc0",
+          "task.json": "de3307a6101f6c6aa79f8c4420e29ed3b8cfc1853a10d512ddc27e31c16b4218",
+          "test_existing.py": "8db796182fd85bf7afd812ce852a0ffeaaf80a0815f8c23a55575463d5aee4c8"
+        },
+        "grader_only": {
+          "labels.json": "cdc444b8d8813c1c8c96d3ccfc6a95ce53906659aa591f472ddc04bf3ddfd3c6",
+          "reference.patch": "882a906e484ec7f293600217d57c867c7a64973097b9527484781648fff9cb7d",
+          "test_acceptance.py": "154fa4ae2e7810555da2d42a8f9bdbe80783f27939a0a56dfb8755e784ed825f"
+        }
+      },
+      "base_revision": "synthetic-dv3-11",
+      "case_id": "dv3-11",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "error_contract",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "8db796182fd85bf7afd812ce852a0ffeaaf80a0815f8c23a55575463d5aee4c8"
+      },
+      "expected_behavior": "render 遇到未提供的变量抛 KeyError，遇到未闭合的占位符抛 ValueError；合法占位符照常替换，非字符串值转成字符串。",
+      "group_id": "grp-template",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "154fa4ae2e7810555da2d42a8f9bdbe80783f27939a0a56dfb8755e784ed825f",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 2,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "missing_value_silent"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "unclosed_allowed"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:49+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "882a906e484ec7f293600217d57c867c7a64973097b9527484781648fff9cb7d",
+      "report": "通知里客户名丢了但接口返回成功，排查很久才发现是模板变量没传；占位符少写一个右括号时也会把原文直接发出去。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-11",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "a2d7aabaf300d9e504b83f9aa8bd4ec7a52723cc254e7e8358f861de003d974d",
+        "files": {
+          "render.py": "bed8e67ffb023b2d6d8bebf805997f6b9285c39cf7b7cd54eeb95ad53a1aecc0"
+        }
+      },
+      "split": "test",
+      "title": "模板缺失变量被静默替换成空"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:43:57+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "editor.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "editor.py": "ae6f5e2e8929c38dda3e259c73ef1c3f5aa03bc50a0858543b8469b3b706cb43",
+          "task.json": "6bf71b89a71bd06259aee3e7bdfed064f08b3940c3b67df5d5c1aa0d680d37a2",
+          "test_existing.py": "ab55c076f616a541a7301e756d9839f8b3a829c4c487a82d476a6f1adb56e6cb"
+        },
+        "grader_only": {
+          "labels.json": "279f7e5324e5fadfe07ae3b08eb281a2defde88a96a133d8fe7147864f52ba03",
+          "reference.patch": "45f7d06a003c3c5bb90c203601541aefa74ab7634cadfbedd1b882910d7704d9",
+          "test_acceptance.py": "891d6da55cfc04acb01871f2e41ffa2e880bffc5368d97dbed1f9c571d399a66"
+        }
+      },
+      "base_revision": "synthetic-dv3-12",
+      "case_id": "dv3-12",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "state_machine",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "ab55c076f616a541a7301e756d9839f8b3a829c4c487a82d476a6f1adb56e6cb"
+      },
+      "expected_behavior": "新的 type 必须清空 redo 栈；undo/redo 在各自栈之间迁移状态；栈空时抛 StateError。",
+      "group_id": "grp-undo-redo",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "891d6da55cfc04acb01871f2e41ffa2e880bffc5368d97dbed1f9c571d399a66",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 2,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 2,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "redo_not_cleared"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "redo_from_undo_stack"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:43:57+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "45f7d06a003c3c5bb90c203601541aefa74ab7634cadfbedd1b882910d7704d9",
+      "report": "撤销之后再输入新内容，按重做竟然回到了被放弃的旧版本，用户看到的内容和自己的编辑顺序对不上。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-12",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "f23d331bc33557498cdca3f871b66ddc027e718dbbb3d60e7bd53579943bb9c6",
+        "files": {
+          "editor.py": "ae6f5e2e8929c38dda3e259c73ef1c3f5aa03bc50a0858543b8469b3b706cb43"
+        }
+      },
+      "split": "test",
+      "title": "新输入后 redo 仍能回到旧分支"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:44:04+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "migrate.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "migrate.py": "2d55961e1c399a89f873bcc8057e8859b16755209c18a629dea7a04009ce5f87",
+          "task.json": "dc7300b46918301f184e45f3f500bfb7f14d6e854a73dc7a6a5245b77546fe96",
+          "test_existing.py": "96073bc1708ddc18b03c8d314a4feb358f921027303b2d80fc8d443907632026"
+        },
+        "grader_only": {
+          "labels.json": "c9a7a5d3fa75e66376f3f71b56f248c33fe68fdbafbafdafd9016f58609095f2",
+          "reference.patch": "03b6f8b07365245f2251db0557b0719bbe2fc528ae1793e6450ca4a920ead7d6",
+          "test_acceptance.py": "fe623856ef9cf08e19f01c3aeb9c07562694ff905efa0b1abaa62db16685e702"
+        }
+      },
+      "base_revision": "synthetic-dv3-13",
+      "case_id": "dv3-13",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "idempotent_migration",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "96073bc1708ddc18b03c8d314a4feb358f921027303b2d80fc8d443907632026"
+      },
+      "expected_behavior": "apply 只接受 version == 当前版本 + 1 的步骤；重复版本或跳版本抛 MigrationError，且 schema 与版本号都不变。",
+      "group_id": "grp-migrate",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "fe623856ef9cf08e19f01c3aeb9c07562694ff905efa0b1abaa62db16685e702",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "version_check_removed"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 2,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "version_not_updated"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:44:04+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "03b6f8b07365245f2251db0557b0719bbe2fc528ae1793e6450ca4a920ead7d6",
+      "report": "发布脚本重跑了一次，columns 里出现两个同名条目，schema 版本号也没挡住重复执行。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-13",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "c2319b1554c970aac8b8347aba6618ba4c89f9441d88c404d8926700ebed4b46",
+        "files": {
+          "migrate.py": "2d55961e1c399a89f873bcc8057e8859b16755209c18a629dea7a04009ce5f87"
+        }
+      },
+      "split": "dev",
+      "title": "迁移重复执行导致重复加列"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:44:12+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "sort_multi.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "sort_multi.py": "f982da2b377876b5a8eed0fe9267078d1a096380054597e6d3f2e772cbdcf9d9",
+          "task.json": "903e7577ac76336a83f702fa6d86e766904b104b27293d8374d0de2bc640de70",
+          "test_existing.py": "73890035465dc5b2402d1b3a4564920e7beace5b2b1ee5323a1e166d2dba6353"
+        },
+        "grader_only": {
+          "labels.json": "f9ecd8265f20d54cd07eabe98aaf307309fc860c8ca98802cf935e2694748830",
+          "reference.patch": "8c042447ba1fb4728df3fe8ac3478cf05dd998c2dc2cd7019e189e75fe65ec61",
+          "test_acceptance.py": "ecf6953ed7336242249663050f1d87a1cff4f13f3945bc94d80eb05cb663949b"
+        }
+      },
+      "base_revision": "synthetic-dv3-14",
+      "case_id": "dv3-14",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "multi_key_sort",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "73890035465dc5b2402d1b3a4564920e7beace5b2b1ee5323a1e166d2dba6353"
+      },
+      "expected_behavior": "rank 先按 group 升序、同组内按 score 降序；(group, score) 完全相同的保持输入顺序。",
+      "group_id": "grp-multi-sort",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "ecf6953ed7336242249663050f1d87a1cff4f13f3945bc94d80eb05cb663949b",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 1,
+          "skipped": 0,
+          "tests": 4
+        },
+        "expected_tests": 4,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 4,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "keys_swapped"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 4,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "score_ascending"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 4
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:44:12+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "8c042447ba1fb4728df3fe8ac3478cf05dd998c2dc2cd7019e189e75fe65ec61",
+      "report": "榜单没有按组聚合：高分选手跨组窜到最前面，同分时才按组排，运营按组发奖时顺序全乱。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-14",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "4b00ceba2f91df99a11336299dbae86fdff222b9eb82d176d56d66c8ecbebd87",
+        "files": {
+          "sort_multi.py": "f982da2b377876b5a8eed0fe9267078d1a096380054597e6d3f2e772cbdcf9d9"
+        }
+      },
+      "split": "dev",
+      "title": "组别与分数的主次排序写反"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:44:19+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "wrapper.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "task.json": "2759e31b8c89ec54202c1a7c80db6ca8fa6c7829d94204f12502e31c4cda3d03",
+          "test_existing.py": "b2ec04fcfd36f0edf6301934578dea1e1af95ee4681a06b27f6f546ab96993be",
+          "wrapper.py": "0dffb8fcf4c2e023b1de308997bd104ad49c6f0b0ef92444a8741624a1dac8de"
+        },
+        "grader_only": {
+          "labels.json": "159962fca5cdf57ebb9b3d7a314bbfbff7488e21c6f7ae6bb2dbc74ea354e88a",
+          "reference.patch": "8429f546ad9d6b29405b78f7c37a7f5a4280e9224572f9b3f3bf31b0e27a8e07",
+          "test_acceptance.py": "e5027fde019ac4d951b41ea2abfb08ada5da199714263f7c8b7d467cdbac3d5c"
+        }
+      },
+      "base_revision": "synthetic-dv3-15",
+      "case_id": "dv3-15",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "exception_wrapping",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "b2ec04fcfd36f0edf6301934578dea1e1af95ee4681a06b27f6f546ab96993be"
+      },
+      "expected_behavior": "TimeoutError 包装成 UpstreamError('upstream timeout') 并保留 cause/__cause__；ValueError 包装且消息包含原始原因；其他异常原样透出，不得包装。",
+      "group_id": "grp-upstream-wrapper",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "e5027fde019ac4d951b41ea2abfb08ada5da199714263f7c8b7d467cdbac3d5c",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 3,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 3,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "catch_all_without_cause"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "cause_dropped"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:44:19+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "8429f546ad9d6b29405b78f7c37a7f5a4280e9224572f9b3f3bf31b0e27a8e07",
+      "report": "线上只看到 upstream failed，抓不到是超时还是返回格式坏了；自己代码里的 bug 也被吞成上游错误，排查方向被带偏。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-15",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "a1ac7e34af3f74d22484fa3a8d303e4fcee01911650e229f5e95d72014e22a6a",
+        "files": {
+          "wrapper.py": "0dffb8fcf4c2e023b1de308997bd104ad49c6f0b0ef92444a8741624a1dac8de"
+        }
+      },
+      "split": "test",
+      "title": "上游异常一律包装并丢掉原因"
+    },
+    {
+      "admission": {
+        "checked_at": "2026-11-17T10:44:26+00:00",
+        "failures": [],
+        "ok": true,
+        "patch_apply_exit_code": 0
+      },
+      "allowed_paths": [
+        "validation.py"
+      ],
+      "artifact_sha256": {
+        "agent_input": {
+          "task.json": "9e7018a8b430c3b5221cc0bf0ecda8db9f6123f45a02a753216506fd4641fa81",
+          "test_existing.py": "76724cba24477da3946564c93b2f6e4c70bced36783704220dadeb68c00cc167",
+          "validation.py": "73cf0f9e843b740daabb3adec6b7893b3ebdac6c4de10b55b13eedd78245e985"
+        },
+        "grader_only": {
+          "labels.json": "6dc1c159d2f14157513b3f203c6be91f16a1daf5f62ba6b5b758e0d70f675565",
+          "reference.patch": "38754a951107782ef148f6110d7517fccd43a0ecf27ff95d035d842ccf1f04ae",
+          "test_acceptance.py": "8c2ebc1ad2255bda83bac6f23dc4c4ae7aece51a7bfcf9327e6381d788fb8e97"
+        }
+      },
+      "base_revision": "synthetic-dv3-16",
+      "case_id": "dv3-16",
+      "dataset_version": "dataset-v3-20261117",
+      "defect_family": "validation",
+      "dependencies": [
+        "pytest==9.1.1"
+      ],
+      "difficulty": "medium",
+      "existing_test_manifest": {
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "file": "test_existing.py",
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        },
+        "sha256": "76724cba24477da3946564c93b2f6e4c70bced36783704220dadeb68c00cc167"
+      },
+      "expected_behavior": "缺字段报 'missing field: X'；类型不符报 'field X must be <type>'；bool 不算 int，int 也不算 bool；全部合法时返回空列表。",
+      "group_id": "grp-payload-validation",
+      "language": "python",
+      "oracle_manifest": {
+        "acceptance_file": "test_acceptance.py",
+        "acceptance_sha256": "8c2ebc1ad2255bda83bac6f23dc4c4ae7aece51a7bfcf9327e6381d788fb8e97",
+        "baseline_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 1,
+          "failures": 2,
+          "skipped": 0,
+          "tests": 3
+        },
+        "expected_tests": 3,
+        "mutation_probes": [
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "missing_field_not_reported"
+          },
+          {
+            "acceptance_errors": 0,
+            "acceptance_failures": 1,
+            "acceptance_skipped": 0,
+            "acceptance_tests": 3,
+            "container_cleanup": true,
+            "detected": true,
+            "exit_code": 1,
+            "name": "bool_accepted_as_int"
+          }
+        ],
+        "reference_result": {
+          "collected": true,
+          "container_cleanup": true,
+          "errors": 0,
+          "exit_code": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 3
+        }
+      },
+      "protected_paths": [
+        "test_existing.py",
+        "test_acceptance.py"
+      ],
+      "provenance": {
+        "collected_at": "2026-11-17T10:44:26+00:00",
+        "disclosure": "模型生成的合成题；需未参与生成的人复核后才可作为正式真值",
+        "generator": "evaluation/dataset_v3/cases",
+        "issue": null,
+        "kind": "synthetic",
+        "license": "project-internal",
+        "method": "hand-written analogue of a common defect, not a real issue",
+        "repository": null
+      },
+      "reference_patch_hash": "38754a951107782ef148f6110d7517fccd43a0ecf27ff95d035d842ccf1f04ae",
+      "report": "注册接口收了没有 active 的请求还返回成功；age 传 true 也被接受，入库后统计脚本把 True 当 1 算，年龄数据被污染。",
+      "reproduce_command": {
+        "acceptance": "python -m pytest -q test_acceptance.py",
+        "cwd": "agent-input/dv3-16",
+        "env": [
+          "PYTHONPATH=/workspace",
+          "PYTHONDONTWRITEBYTECODE=1"
+        ],
+        "existing": "python -m pytest -q test_existing.py",
+        "sandbox": "Docker; network disabled; read-only input mount",
+        "timeout_seconds": 180
+      },
+      "review": {
+        "annotator": "model-generated (this build)",
+        "decision": "pending",
+        "independent_reviewer": null,
+        "notes": "准入证据由程序执行产生；独立人工复核未完成"
+      },
+      "runtime": "python-3.11",
+      "source_sha256": {
+        "combined": "768f38915bcee95980ba5e374fd5a4faa026cbba8989aec74daa828717ee354a",
+        "files": {
+          "validation.py": "73cf0f9e843b740daabb3adec6b7893b3ebdac6c4de10b55b13eedd78245e985"
+        }
+      },
+      "split": "validation",
+      "title": "缺字段与 bool 冒充整数都漏检"
+    }
+  ],
+  "coverage": {
+    "defect_family": {
+      "boundary": 1,
+      "config_precedence": 1,
+      "error_contract": 1,
+      "exception_wrapping": 1,
+      "idempotent_migration": 1,
+      "multi_key_sort": 1,
+      "numeric_precision": 1,
+      "ordering": 1,
+      "parsing": 1,
+      "resource_budget": 1,
+      "state_cleanup": 1,
+      "state_machine": 1,
+      "text_layout": 1,
+      "transaction_atomicity": 1,
+      "validation": 1,
+      "window_boundary": 1
+    },
+    "difficulty": {
+      "hard": 4,
+      "medium": 12
+    },
+    "gaps": [
+      "并发/线程与异步竞态：仍无样本（v3 用状态清理与顺序缺陷替代）",
+      "真实 Issue 来源：本批全部为合成题，无真实仓库缺陷",
+      "跨仓库/跨语言：仅 Python，v3 题目均为单模块或单文件"
+    ],
+    "multi_file_cases": [],
+    "single_file_cases": [
+      "dv3-01",
+      "dv3-02",
+      "dv3-03",
+      "dv3-04",
+      "dv3-05",
+      "dv3-06",
+      "dv3-07",
+      "dv3-08",
+      "dv3-09",
+      "dv3-10",
+      "dv3-11",
+      "dv3-12",
+      "dv3-13",
+      "dv3-14",
+      "dv3-15",
+      "dv3-16"
+    ]
+  },
+  "created_at": "2026-11-17T10:44:26+00:00",
+  "dataset_version": "dataset-v3-20261117",
+  "formal_blockers": [
+    "全部为合成题，缺可核验的真实 Issue/提交来源与许可证记录",
+    "independent_reviewer 未签署，review.decision=pending",
+    "并发、跨仓库、多语言维度无样本",
+    "v3 单集 16 道，跨集合计 40 道仍需按版本分栏报告",
+    "评分器只覆盖单次 pass@1，未接入重复采样与预算统计"
+  ],
+  "formal_eligible": false,
+  "generator": "evaluation/dataset_v3/cases",
+  "isolation": {
+    "agent_visible": "data/agent-input/<case_id>",
+    "grader_only": "data/grader-only/<case_id>",
+    "rule": "只把单个 agent-input 目录挂载给被测 Agent；grader-only 不得进入 Agent 可读路径、RAG 语料或同一可枚举挂载"
+  },
+  "runtime": {
+    "engine_version": "29.7.2",
+    "host_platform": "Windows-10-10.0.26200-SP0",
+    "image": "code-repair-sandbox:py311",
+    "image_id": "sha256:388d80573e12ee314523c1234d453050b4f3a3b871717b9bc39984c6f7ce9168",
+    "pytest": "9.2.0",
+    "python": "3.11.18"
+  },
+  "schema_version": 2,
+  "splits": {
+    "dev": 8,
+    "test": 4,
+    "validation": 4
+  }
+}

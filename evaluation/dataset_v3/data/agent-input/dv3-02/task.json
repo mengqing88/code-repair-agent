@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "ranges.py"
+  ],
+  "case_id": "dv3-02",
+  "contract": "merge_ranges 处理半开区间 [start, end)：重叠或首尾相接（start == 前一段 end）都要合并；输入顺序不影响结果；start > end 抛 ValueError。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "排班可用时段没有合并干净：首尾相接的两段被当成两段，乱序传入时还会出现重叠段未合并。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "相邻区间不合并且依赖输入顺序"
+}

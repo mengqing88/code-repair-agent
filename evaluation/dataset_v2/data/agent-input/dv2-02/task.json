@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "store.py"
+  ],
+  "case_id": "dv2-02",
+  "contract": "bulk_put 写入的每一个 key 都必须让对应缓存失效；读路径只缓存真实存在的行；空批量不改变现有缓存与数据。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "批量导入后页面仍显示旧值：只有第一个被导入的记录刷新了，其余记录要等到缓存被清空才更新。单条写入没有这个问题。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "批量写入只失效第一个缓存键"
+}

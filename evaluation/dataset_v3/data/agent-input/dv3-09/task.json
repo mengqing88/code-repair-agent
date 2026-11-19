@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "money_total.py"
+  ],
+  "case_id": "dv3-09",
+  "contract": "total 必须用 Decimal 精确求和并返回 Decimal：0.1+0.2 恰好 0.3，大额整数不丢位，空列表返回 Decimal('0')。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "发票合计偶尔差一分钱：0.1+0.2 得到 0.30000000000000004，超大金额相加时末位直接丢掉。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "发票合计用浮点丢精度"
+}

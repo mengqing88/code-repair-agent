@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "idempotency.py"
+  ],
+  "case_id": "dv2-05",
+  "contract": "幂等键必须同时覆盖 HTTP 方法、路径与请求体；相同三元组重放首次响应且不重复执行，任一维度不同即视为不同请求；返回给调用方的是缓存副本，改动它不得影响后续重放。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "给订单下单返回的响应被退款接口直接复用：两个接口请求体一样时，第二个接口没有真正执行，返回的还是第一个接口的结果。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "幂等键不含路径与方法导致跨端点复用响应"
+}

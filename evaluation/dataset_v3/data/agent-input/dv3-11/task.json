@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "render.py"
+  ],
+  "case_id": "dv3-11",
+  "contract": "render 遇到未提供的变量抛 KeyError，遇到未闭合的占位符抛 ValueError；合法占位符照常替换，非字符串值转成字符串。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "通知里客户名丢了但接口返回成功，排查很久才发现是模板变量没传；占位符少写一个右括号时也会把原文直接发出去。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "模板缺失变量被静默替换成空"
+}

@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "build_graph.py"
+  ],
+  "case_id": "dv2-08",
+  "contract": "invalidate 必须沿反向依赖做传递闭包，覆盖所有层级的下游节点；order 在遇到环时抛 CycleError，正常图返回满足依赖的拓扑序。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "改底层模块后二级依赖没有重建，产出仍是旧的；另外依赖配置写错成环时构建没有报错，只是顺序诡异。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "增量失效只传播一跳且不报环"
+}

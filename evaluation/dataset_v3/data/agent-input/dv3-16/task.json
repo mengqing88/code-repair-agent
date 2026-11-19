@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "validation.py"
+  ],
+  "case_id": "dv3-16",
+  "contract": "缺字段报 'missing field: X'；类型不符报 'field X must be <type>'；bool 不算 int，int 也不算 bool；全部合法时返回空列表。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "注册接口收了没有 active 的请求还返回成功；age 传 true 也被接受，入库后统计脚本把 True 当 1 算，年龄数据被污染。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "缺字段与 bool 冒充整数都漏检"
+}

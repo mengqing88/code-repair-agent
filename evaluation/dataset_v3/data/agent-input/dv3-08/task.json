@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "wrap.py"
+  ],
+  "case_id": "dv3-08",
+  "contract": "wrap 保留源文本的换行（每段独立折行），空段落输出空串，超过 width 的单词整体保留不截断；width<1 抛 ValueError。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "渲染出来的邮件通知所有段落挤成一坨，原文里的换行和空行全没了；只有超长单词被正确保留。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "折行把段落边界吃掉"
+}

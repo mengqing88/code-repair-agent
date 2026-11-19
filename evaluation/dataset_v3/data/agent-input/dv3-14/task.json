@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "sort_multi.py"
+  ],
+  "case_id": "dv3-14",
+  "contract": "rank 先按 group 升序、同组内按 score 降序；(group, score) 完全相同的保持输入顺序。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "榜单没有按组聚合：高分选手跨组窜到最前面，同分时才按组排，运营按组发奖时顺序全乱。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "组别与分数的主次排序写反"
+}

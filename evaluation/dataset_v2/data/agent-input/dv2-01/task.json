@@ -1,0 +1,19 @@
+{
+  "allowed_paths": [
+    "ledger/journal.py",
+    "ledger/service.py"
+  ],
+  "case_id": "dv2-01",
+  "contract": "transfer 必须原子：付款方余额不足、付款方或收款方不存在、任一账户被冻结时，两个账户余额与流水都必须保持调用前的状态；成功时恰好一条流水、金额守恒。流水需要支持按位置撤销已写入的条目。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "收款账户被冻结时转账抛错，但付款方余额已经扣掉，流水里还多出一条记录；对账时发现余额和流水对不上，且失败的转账无法撤销。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "转账失败留下脏账与未回滚余额"
+}

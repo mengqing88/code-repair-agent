@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "duration.py"
+  ],
+  "case_id": "dv3-03",
+  "contract": "parse_duration 支持 s/m/h 三种单位并可组合（1h30m15s=5415）；空串、未知单位、缺数字、裸数字、重复单位都抛 ValueError。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "配置里写 45s 直接报未知单位；写 1h1h 不报错，实际按两小时生效，两次误写的超时值叠在一起。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "时长解析不支持秒且忽略重复单位"
+}

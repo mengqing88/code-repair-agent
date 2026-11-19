@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "workflow.py"
+  ],
+  "case_id": "dv2-03",
+  "contract": "只允许 ALLOWED 表中列出的转移，非法转移抛 TransitionError 且状态与提醒保持不变；进入 cancelled 时清空全部提醒；未知状态一律拒绝。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "已完成的订单还能被取消，取消后系统又给客户发了一遍提醒；另外取消订单时只清掉了一条待发提醒，其余提醒仍在队列里。",
+  "runtime": "python-3.11",
+  "split": "test",
+  "title": "状态机不校验转移且清理不完全"
+}

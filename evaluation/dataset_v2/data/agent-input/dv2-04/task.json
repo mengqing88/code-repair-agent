@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "cursor.py"
+  ],
+  "case_id": "dv2-04",
+  "contract": "排序为分数降序、同分按 id 升序；游标必须能唯一定位一个位置（分数与 id 一起编码），逐页拼接的结果必须与一次性排序完全一致，不重不漏；非法游标抛 ValueError。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "榜单翻页时偶发少数据：一页正好在分数变化处结束时，下一页会跳过若干条，把全部页拼起来比总数少。分数相同的记录之间看起来正常。",
+  "runtime": "python-3.11",
+  "split": "dev",
+  "title": "游标只带 id 导致跨分数页丢行"
+}

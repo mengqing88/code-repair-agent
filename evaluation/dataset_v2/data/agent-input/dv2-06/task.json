@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "pool.py"
+  ],
+  "case_id": "dv2-06",
+  "contract": "lease 必须在正常返回与异常退出时都归还连接；重复归还同一连接不得让空闲数超过容量；归还外来对象抛 PoolError；close 后 acquire 抛 PoolError。",
+  "dataset_version": "dataset-v2-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "高峰期之后连接池慢慢耗尽：只要业务代码在 with 里抛异常，连接就再也回不来；另外重复归还同一个连接会让池里的空闲数超过容量，最后拿到同一个连接两次。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "上下文退出异常时连接泄漏与重复归还"
+}

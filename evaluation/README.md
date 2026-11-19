@@ -2,6 +2,14 @@
 
 最终补丁生成单项评测集的准入字段、隐藏答案隔离和 pass@1 口径见[专门要求文档](../docs/evaluation/最终补丁生成评测集要求.md)。下文现有 30 题用于检索、补丁应用和验收流程自检，不等同于经独立复核和冻结的正式 Agent 修复基准。
 
+按该要求建的新集位于 [dataset_v1](dataset_v1/README.md)：16 题、`agent-input`/`grader-only` 物理隔离、逐题准入执行证据与 `pass@1` 评分器。它仍是合成集，`formal_eligible=false`，与本页 30 题的检索自检互不替代。
+
+更难的一批在 [dataset_v2](dataset_v2/README.md)：8 道 hard 题（跨文件事务、缓存失效、状态机、游标分页、幂等键、连接池泄漏、ACL 优先级、增量失效传播），复用同一套准入与评分实现，冻结目录独立，`pass@1` 不与 v1 混算。
+
+补充批次 [dataset_v3](dataset_v3/README.md) 再添 16 题（预算重试、批量删除原子性、去重窗口、decimal 合计、in-flight 清理、模板缺变量、迁移幂等、多键排序、异常包装、payload 校验等），三套集合计 **40 题**；跨版本视图用 `python -m evaluation.dataset_suite --run-id <run>` 生成，按版本分栏、不合并分母。
+
+三个版本均只公开基线题面、清单、准入摘要和工具；生成定义、隐藏评分材料和逐题结果留在本机。公开克隆可查看题量和分组，但不能独立重建隐藏答案或运行隐藏评分。
+
 最新模型只读策略后的服务与运行验收见 [2026-11-14 继续验收记录](COMPLETION_ACCEPTANCE_20261114.md)；保留原失败证据，不以合成冒烟替代正式效果评测。
 
 模型或工具升级的预注册、重复配对及行为退化门禁见 [UPGRADE_EVALUATION.md](UPGRADE_EVALUATION.md)，入口为 `python -m evaluation.upgrade_gate`。它与本页的相同模型 RAG 对照独立。

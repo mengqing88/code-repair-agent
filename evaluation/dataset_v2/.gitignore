@@ -1,0 +1,5 @@
+/cases/
+/data/grader-only/
+/data/results/
+/.data-build-*/
+/.data-publish-*/

@@ -1,0 +1,18 @@
+{
+  "allowed_paths": [
+    "paging.py"
+  ],
+  "case_id": "dv3-01",
+  "contract": "slice_page(items, offset, limit) 要求 offset>=0 且 limit>=1，越界返回空列表；负 offset 或非正 limit 抛 ValueError。",
+  "dataset_version": "dataset-v3-20261117",
+  "existing_test_command": "python -m pytest -q test_existing.py",
+  "language": "python",
+  "protected_paths": [
+    "test_existing.py",
+    "test_acceptance.py"
+  ],
+  "report": "传入负偏移时接口没有报错，反而返回了列表末尾的数据；调用方把它当成第一页处理，出现数据重复展示。",
+  "runtime": "python-3.11",
+  "split": "validation",
+  "title": "负 offset 被当成尾部切片"
+}
