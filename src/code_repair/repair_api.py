@@ -941,9 +941,9 @@ class RepairRunner:
             existing = self.store.request_task(key, request_input, user_id)
             if existing:
                 return existing
-            return self._create(request, key, user_id)
+            return self._create(request, key, request_input, user_id)
 
-    def _create(self, request, key, user_id=None):
+    def _create(self, request, key, request_input, user_id=None):
         task_id = uuid4().hex
         directory = self.store.root / "tasks" / task_id
         input_dir = directory / "input"
@@ -1027,7 +1027,6 @@ class RepairRunner:
             "created_at": timestamp(), "updated_at": timestamp(),
         }
         knowledge = self.knowledge_for_user(user_id) if user_id else self.knowledge
-        request_input = request.persisted_input()
         manifest, manifest_hash = freeze_execution_manifest(task, directory, request_input, knowledge)
         try:
             self.store.create_once(task, key, request_input, user_id)

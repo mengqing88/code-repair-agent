@@ -1,13 +1,16 @@
 """New source modes retain existing ownership, freezing, and repair gates."""
+import base64
+import hashlib
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
 from tests.test_account_support import TestClient
 from fastapi.testclient import TestClient as AnonymousClient
 from code_repair.user_accounts import SESSION_COOKIE, csrf_token
-from code_repair import repair_api
+from code_repair import project_inputs, repair_api
 from tests.test_project_inputs import bundle, encoded
 from tests.test_repair_api import CODE, app_at, finished, local_models
 
@@ -49,19 +52,44 @@ def queued_app(path):
     return app
 
 
-def test_upload_idempotency_uses_content_hashes_and_blocks_changed_input(tmp_path):
+@pytest.mark.parametrize("kind", ["directory-upload", "zip_archive"])
+def test_upload_idempotency_reuses_content_hashes(tmp_path, monkeypatch, kind):
+    fingerprint_decode = Mock(wraps=repair_api.decode_base64)
+    import_decode = Mock(wraps=project_inputs.decode_base64)
+    monkeypatch.setattr(repair_api, "decode_base64", fingerprint_decode)
+    monkeypatch.setattr(project_inputs, "decode_base64", import_decode)
+    payload = project_payload(kind, tmp_path)
+    upload_fields = ("project_files", "archive_base64", "archive_sha256")
+    if kind == "directory-upload":
+        files = payload["project_files"]
+        expected = {"project_files": [
+            {"path": item["path"], "sha256": hashlib.sha256(base64.b64decode(item["content_base64"])).hexdigest()}
+            for item in files
+        ]}
+        decodes_per_pass = len(files)
+    else:
+        expected = {"archive_sha256": hashlib.sha256(base64.b64decode(payload["archive_base64"])).hexdigest()}
+        decodes_per_pass = 1
     with TestClient(queued_app(tmp_path / "data")) as client:
-        payload = project_payload("directory-upload", tmp_path)
         headers = {"Idempotency-Key": "project-upload-key"}
         first = client.post("/api/tasks", json=payload, headers=headers)
+        assert first.status_code == 202, first.text
+        assert fingerprint_decode.call_count == import_decode.call_count == decodes_per_pass
+        manifest_path = Path(first.json()["config"]["workspace"]).parent / "execution-manifest.json"
+        manifest_input = json.loads(manifest_path.read_text(encoding="utf-8"))["task"]["input"]
+        assert {field: manifest_input[field] for field in upload_fields if field in manifest_input} == expected
         again = client.post("/api/tasks", json=payload, headers=headers)
-        assert first.status_code == again.status_code == 202
+        assert again.status_code == 202, again.text
         assert first.json()["state"]["task_id"] == again.json()["state"]["task_id"]
-        manifest = json.loads((Path(first.json()["config"]["workspace"]).parent / "execution-manifest.json").read_text(encoding="utf-8"))
-        assert "content_base64" not in json.dumps(manifest["task"]["input"])
-        assert manifest["task"]["input"]["project_files"][0]["sha256"]
-        payload["project_files"][0]["content_base64"] = encoded(b"changed")
+        assert fingerprint_decode.call_count == 2 * decodes_per_pass
+        assert import_decode.call_count == decodes_per_pass
+        if kind == "directory-upload":
+            payload["project_files"][0]["content_base64"] = encoded(b"changed")
+        else:
+            payload["archive_base64"] = bundle([("project/bug.py", CODE + "\n")])
         assert client.post("/api/tasks", json=payload, headers=headers).status_code == 409
+        assert fingerprint_decode.call_count == 3 * decodes_per_pass
+        assert import_decode.call_count == decodes_per_pass
 
 
 def test_untrusted_accepts_uploads_but_never_server_directory(tmp_path):
