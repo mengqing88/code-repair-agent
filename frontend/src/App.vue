@@ -2,8 +2,9 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { BudgetKind, RepairTask, ReviewRecord, TaskDraft, TaskTracePage } from "./types";
 import { statusLabels } from "./types";
-import { ApiError, createTask, getRequest, getTask, reviewTask, clarifyTask, authorizeTool, resolveToolOutcome as resolveToolOutcomeApi, taskFingerprint, getSession, logout, setApiSession, type Session, type User } from "./api";
+import { ApiError, createTask, getRequest, getTask, reviewTask, clarifyTask, extendTaskBudget, authorizeTool, resolveToolOutcome as resolveToolOutcomeApi, taskFingerprint, getSession, logout, setApiSession, type BudgetExtensionRequest, type Session, type User } from "./api";
 import { subscribeTask, type StreamState } from "./task-stream";
+import { tokenBudgetExtensionBlocker, validTokenBudgetGrant } from "./task-budget";
 import AppIcon from "./components/AppIcon.vue";
 import TaskComposer from "./components/TaskComposer.vue";
 import ReviewPanel from "./components/ReviewPanel.vue";
@@ -22,6 +23,9 @@ const clarificationAnswer = ref("");
 const toolOutcomeEvidence = ref("");
 const resolvingToolOutcome = ref(false);
 const authorizationReason = ref("");
+const budgetTokens = ref<number | null>(null);
+const budgetReason = ref("");
+const pendingBudgetGrant = ref<(BudgetExtensionRequest & { task_id: string }) | null>(null);
 
 const page = ref<"new" | "prepared" | "review">("new");
 const task = ref<RepairTask | null>(null);
@@ -60,9 +64,55 @@ function clientError(event: Event) {
 function showTask(result: RepairTask) {
   if (task.value?.state.task_id !== result.state.task_id) {
     closeTaskStream(); liveEvents.value = []; traceCursor = 0;
+    pendingBudgetGrant.value = loadBudgetGrant(result.state.task_id);
+    budgetTokens.value = pendingBudgetGrant.value?.tokens ?? null;
+    budgetReason.value = pendingBudgetGrant.value?.reason ?? "";
   }
   task.value = result; page.value = "review"; remember(result.state.task_id);
+  const grant = pendingBudgetGrant.value;
+  if (grant?.task_id === result.state.task_id
+    && (result.execution !== "idle" || result.state.status !== "budget_exceeded"
+      || (result.state.budget_exhausted !== "tokens" && result.state.error_info?.budget_kind !== "tokens"))) {
+    clearBudgetGrant(result.state.task_id);
+    budgetTokens.value = null; budgetReason.value = "";
+  }
   if (result.review || result.execution === "idle") reviewUnknown.value = false;
+}
+function budgetGrantStorageKey(taskId: string) {
+  return `repair-budget-extension:${user.value?.id}:${taskId}`;
+}
+function loadBudgetGrant(taskId: string) {
+  if (!user.value) return null;
+  const key = budgetGrantStorageKey(taskId);
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(key) || "null");
+    if (saved === null) return null;
+    if (typeof saved !== "object" || saved.task_id !== taskId
+      || typeof saved.request_id !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(saved.request_id)
+      || !Number.isInteger(saved.tokens) || saved.tokens < 1 || saved.tokens > 200_000
+      || typeof saved.reason !== "string" || !saved.reason.trim() || saved.reason.length > 2000) {
+      throw new Error("invalid budget extension request");
+    }
+    return saved as BudgetExtensionRequest & { task_id: string };
+  } catch {
+    try { sessionStorage.removeItem(key); } catch {}
+    error.value = `无法读取本地预算请求记录，请检查浏览器存储设置（错误编号 ${captureClientError("storage_error")}）。`;
+    return null;
+  }
+}
+function saveBudgetGrant(taskId: string, grant: BudgetExtensionRequest & { task_id: string }) {
+  try {
+    sessionStorage.setItem(budgetGrantStorageKey(taskId), JSON.stringify(grant));
+    pendingBudgetGrant.value = grant;
+  } catch {
+    const id = captureClientError("storage_error");
+    throw new Error(`无法安全保存追加请求标识，尚未发送请求（错误编号 ${id}）。`);
+  }
+}
+function clearBudgetGrant(taskId: string) {
+  try { sessionStorage.removeItem(budgetGrantStorageKey(taskId)); }
+  catch { error.value = `追加请求已返回，但无法清除本地请求记录（错误编号 ${captureClientError("storage_error")}）。`; }
+  if (pendingBudgetGrant.value?.task_id === taskId) pendingBudgetGrant.value = null;
 }
 function closeTaskStream() {
   stopStream?.(); stopStream = null; streamTaskId = "";
@@ -115,6 +165,13 @@ const budgetMarker = computed(() => {
   if (!state || !["budget_exceeded", "failed", "needs_input"].includes(state.status)) return "";
   return state.error_info?.budget_label || (state.budget_exhausted ? budgetLabels[state.budget_exhausted] : "");
 });
+const tokenBudgetExhausted = computed(() => task.value?.state.status === "budget_exceeded"
+  && (task.value.state.budget_exhausted === "tokens" || task.value.state.error_info?.budget_kind === "tokens"));
+const tokenBudgetBlocker = computed(() => tokenBudgetExtensionBlocker(task.value));
+const showTokenBudgetExtension = computed(() => tokenBudgetExhausted.value && !tokenBudgetBlocker.value);
+const validTokenGrant = computed(() => validTokenBudgetGrant(budgetTokens.value, budgetReason.value));
+const canSubmitTokenGrant = computed(() => !busy.value && !tokenBudgetBlocker.value
+  && (pendingBudgetGrant.value?.task_id === task.value?.state.task_id || validTokenGrant.value));
 const taskStatusLabel = computed(() => {
   if (budgetMarker.value && task.value?.state.status !== "needs_input" && !task.value?.state.error_info?.outcome_unknown) return budgetMarker.value;
   return task.value ? statusLabels[task.value.state.status] || task.value.state.status : "";
@@ -258,6 +315,56 @@ async function submitClarification() {
   } catch (cause) { error.value = cause instanceof Error ? cause.message : "补充说明失败"; }
   finally { busy.value = false; }
 }
+async function submitTokenBudgetExtension() {
+  const current = task.value;
+  if (!current || busy.value || !showTokenBudgetExtension.value) return;
+  const version = generation;
+  const taskId = current.state.task_id;
+  let grant = pendingBudgetGrant.value?.task_id === taskId ? pendingBudgetGrant.value : null;
+  if (!grant) {
+    if (!validTokenGrant.value || budgetTokens.value === null) return;
+    grant = { task_id: taskId, request_id: crypto.randomUUID(), tokens: budgetTokens.value,
+      reason: budgetReason.value.trim() };
+    try { saveBudgetGrant(taskId, grant); }
+    catch (cause) { error.value = cause instanceof Error ? cause.message : "无法保存追加请求，尚未发送。"; return; }
+  } else {
+    busy.value = true; error.value = "";
+    let latest: RepairTask;
+    try {
+      latest = await getTask(taskId);
+    } catch (cause) {
+      if (version !== generation) return;
+      error.value = cause instanceof Error ? cause.message : "无法确认任务状态，请稍后重试。";
+      return;
+    } finally { if (version === generation) busy.value = false; }
+    if (version !== generation) return;
+    if (latest.execution !== "idle" || latest.state.status !== "budget_exceeded") {
+      clearBudgetGrant(taskId);
+      budgetTokens.value = null; budgetReason.value = "";
+      showTask(latest); startTaskStream(taskId); schedule();
+      announcement.value = "已读取原追加请求对应的任务状态，未重复提交额度。";
+      return;
+    }
+  }
+  busy.value = true; error.value = "";
+  try {
+    const result = await extendTaskBudget(taskId, { request_id: grant.request_id, tokens: grant.tokens, reason: grant.reason });
+    if (version !== generation) return;
+    clearBudgetGrant(taskId);
+    budgetTokens.value = null; budgetReason.value = "";
+    showTask(result); startTaskStream(result.state.task_id); schedule();
+    announcement.value = "Token 预算已追加，原任务已继续排队。";
+  } catch (cause) {
+    if (version !== generation) return;
+    error.value = cause instanceof Error ? cause.message : "追加 Token 失败。";
+    if (cause instanceof ApiError && cause.uncertain) {
+      error.value += " 请求结果尚未确认；再次提交会复用同一请求号，不会重复追加。";
+      void refresh(taskId);
+    } else {
+      clearBudgetGrant(taskId);
+    }
+  } finally { if (version === generation) busy.value = false; }
+}
 async function resolveToolOutcome(operationId: string, outcome: "completed" | "not_applied") {
   if (!task.value || busy.value || !toolOutcomeEvidence.value.trim()) return;
   busy.value = true; resolvingToolOutcome.value = true; error.value = "";
@@ -279,6 +386,7 @@ async function decideToolAuthorization(id: string, decision: "approved" | "rejec
 function clearPrivateState() {
   generation++; clearTimeout(poll); closeTaskStream(); pollFailures = 0; liveEvents.value = []; traceCursor = 0;
   task.value = null; preparedTask.value = null; draft.value = emptyDraft(); pending.value = null;
+  budgetTokens.value = null; budgetReason.value = ""; pendingBudgetGrant.value = null;
   busy.value = false; refreshing.value = false; reviewUnknown.value = false;
   showMemory.value = false; showChat.value = false; clarificationAnswer.value = ""; toolOutcomeEvidence.value = "";
   authorizationReason.value = "";
@@ -412,6 +520,15 @@ onUnmounted(() => { generation++; clearTimeout(poll); closeTaskStream(); window.
             <ul class="pending-operation-list"><li v-for="operation in task.pending_external_operations" :key="operation.operation_id"><span class="mono">{{ operation.tool }} · {{ operation.operation_id }}</span><div class="memory-actions"><button class="button subtle" :disabled="busy || toolOutcomeEvidence.trim().length < 10" @click="resolveToolOutcome(operation.operation_id, 'not_applied')">核实未执行</button><button class="button subtle" :disabled="busy || toolOutcomeEvidence.trim().length < 10" @click="resolveToolOutcome(operation.operation_id, 'completed')">核实已完成</button></div></li></ul>
           </div>
           <p v-if="budgetMarker" class="preview-notice">耗尽项：{{ budgetMarker }}</p>
+          <form v-if="showTokenBudgetExtension" class="resolution-form" @submit.prevent="submitTokenBudgetExtension">
+            <strong>追加模型 Token 预算</strong>
+            <p class="input-hint">追加额度用于当前任务后续模型输入与输出；不会增加时间或费用预算。单次最多 200,000 Token。</p>
+            <label class="field"><span>追加 Token 数量</span><input v-model.number="budgetTokens" type="number" min="1" max="200000" step="1" inputmode="numeric" :disabled="busy || pendingBudgetGrant?.task_id === task.state.task_id" required /></label>
+            <label class="field"><span>追加原因</span><textarea v-model="budgetReason" maxlength="2000" rows="2" :disabled="busy || pendingBudgetGrant?.task_id === task.state.task_id" placeholder="说明还需要预算完成什么" required /></label>
+            <p v-if="pendingBudgetGrant?.task_id === task.state.task_id" class="preview-notice">存在未确认的追加请求；重试将沿用原额度和请求号。</p>
+            <button class="button primary" type="submit" :disabled="!canSubmitTokenGrant">{{ busy ? '提交中…' : pendingBudgetGrant?.task_id === task.state.task_id ? '查询并继续' : '追加 Token 并继续' }}</button>
+          </form>
+          <p v-else-if="tokenBudgetExhausted && tokenBudgetBlocker" class="preview-notice">{{ tokenBudgetBlocker }}</p>
           <p v-if="task.state.last_error" class="error-message">{{ task.state.last_error }}</p>
           <p v-if="task.state.error_info" class="preview-notice">{{ task.state.error_info.outcome_unknown ? '操作结果待核对。' : '' }}{{ task.state.error_info.next_action }}</p>
           <p v-if="task.state.error_info?.error_id" class="mono muted">错误编号 {{ task.state.error_info.error_id }} · {{ task.state.error_info.operation || '执行阶段' }}</p>

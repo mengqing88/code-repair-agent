@@ -111,7 +111,7 @@ Web 与新 CLI 任务的原生 LangGraph SQLite checkpointer 保存任务各执�
 
 CLI 与 Web 都在任务目录保存 `execution-manifest.json`、知识库快照、MCP 配置和首次发现的工具 Schema。CLI 另存 `task-config.json` 与脱敏的 `final-state.json`；PostgreSQL 在一个只读可重复读事务中导出案例到任务 SQLite 快照。密钥只记录引用。程序/配置变化会被校验发现，缺少依赖锁或镜像身份时明确标为未解决，模型供应商状态仍会影响重新执行结果。
 
-拒绝补丁会自动保留失败回归候选。微型审核逻辑先脱敏并区分行为退化、原缺陷、偏好和未知预期；只有可确认的行为退化才在 Docker 副本中执行“基线通过、拒绝补丁失败”验证。`GET /api/failure-regressions` 返回当前用户候选及 `content_hash`；`POST /api/failure-regressions/{candidate_id}/review` 接收 `decision`（`approve`/`decline`）、非空 `reason` 和该哈希。哈希同时绑定反馈、生成测试和验证证据；未实际验证的用例不能批准发布，失败和不确定记录保留给人工。发布后仅同来源范围的新任务使用，任务创建后发布的用例不会改变已有快照。CLI 使用 PostgreSQL 时，回归候选单独保存在 `--knowledge-base` 指定的本地 SQLite，并随任务一起冻结。当前提供后端接口，前端尚无专用回归候选或预算追加面板；失败候选尚无后台自动重试器。
+拒绝补丁会自动保留失败回归候选。微型审核逻辑先脱敏并区分行为退化、原缺陷、偏好和未知预期；只有可确认的行为退化才在 Docker 副本中执行“基线通过、拒绝补丁失败”验证。`GET /api/failure-regressions` 返回当前用户候选及 `content_hash`；`POST /api/failure-regressions/{candidate_id}/review` 接收 `decision`（`approve`/`decline`）、非空 `reason` 和该哈希。哈希同时绑定反馈、生成测试和验证证据；未实际验证的用例不能批准发布，失败和不确定记录保留给人工。发布后仅同来源范围的新任务使用，任务创建后发布的用例不会改变已有快照。CLI 使用 PostgreSQL 时，回归候选单独保存在 `--knowledge-base` 指定的本地 SQLite，并随任务一起冻结。Web 已提供 Token 预算耗尽任务的追加与续跑入口；时间、费用或修复尝试次数没有对应的 Web 表单。失败候选尚无后台自动重试器或专用 Web 审核面板。
 
 真实容器验收命令如下；固定模型回复只用于消除模型服务依赖，Git、pytest、复现、挂载探测和超时清理必须使用真实 Docker：
 

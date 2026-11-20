@@ -81,9 +81,14 @@ export interface RepairTask {
   progress?: {
     revision: number;
     next_node: string;
+    run_id?: string | null;
     recovery_count: number;
     recovery: { id: string | null; status: "working" | "rolled_back" | "resumed" | "paused" | "rollback_pending"; error?: StructuredError } | null;
+    interrupted?: boolean;
+    in_flight?: Record<string, unknown> | null;
+    pending_calls?: Array<Record<string, unknown>>;
   };
+  worker_stop_unconfirmed?: boolean;
   pending_external_operations?: { operation_id: string; tool: string; status: "started" | "unknown"; updated_at: string }[];
   pending_tool_authorizations?: { authorization_id: string; tool: string; parameters: Record<string, unknown>; target: unknown; impact: string; expires_at: number }[];
   execution: "queued" | "running" | "idle";

@@ -10,6 +10,7 @@ export interface KnowledgeCandidate {
   id: string; content_hash: string; status: string; source: string; record: Record<string, unknown>; error: string | null;
   audit: Array<{ event: string; actor: string; details: Record<string, unknown> }>;
 }
+export interface BudgetExtensionRequest { request_id: string; tokens: number; reason: string }
 let csrfToken = "";
 let accountId = "";
 export function setApiSession(session: Session | null) {
@@ -97,6 +98,8 @@ export const reviewTask = (id: string, decision: ReviewRecord["decision"], reaso
   request<RepairTask>(`/api/tasks/${encodeURIComponent(id)}/review`, { decision, reason, patch_hash: patchHash });
 export const clarifyTask = (id: string, answer: string) =>
   request<RepairTask>(`/api/tasks/${encodeURIComponent(id)}/clarification`, { answer }, undefined, validTask);
+export const extendTaskBudget = (id: string, grant: BudgetExtensionRequest) =>
+  request<RepairTask>(`/api/tasks/${encodeURIComponent(id)}/budget`, grant, undefined, validTask);
 export const resolveToolOutcome = (id: string, operation_id: string, outcome: "completed" | "not_applied", evidence: string) =>
   request<RepairTask>(`/api/tasks/${encodeURIComponent(id)}/tool-outcome`, { operation_id, outcome, evidence }, undefined, validTask);
 export const authorizeTool = (id: string, authorization_id: string, decision: "approved" | "rejected" | "renew", reason: string) =>

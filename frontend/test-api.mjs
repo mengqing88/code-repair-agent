@@ -113,6 +113,70 @@ test("validation errors preserve server action and cannot be retried unchanged",
   await assert.rejects(client.createTask(draft, "key"), error => !error.retryable && !error.uncertain && error.detail.next_action === "补充字段");
 });
 
+test("budget extension posts the stable request ID with account and CSRF credentials", async () => {
+  const requests = [];
+  const response = { execution: "queued", source_label: "source", config: { test_targets: ["."] },
+    state: { task_id: "a".repeat(32), status: "queued", elapsed_seconds: 1, attempt_count: 0,
+      remaining_budget: { seconds: 100, tokens: 5000, attempts: 10, cost: 0.1 }, code_evidence: [], case_matches: [] } };
+  const client = api(async (url, options) => {
+    requests.push({ url, options });
+    return { ok: true, json: async () => response };
+  });
+  client.setApiSession({ user: { id: "b".repeat(32) }, csrf_token: "budget-csrf" });
+  const grant = { request_id: "budget-retry-001", tokens: 5000, reason: "继续修复并完成验证" };
+  await client.extendTaskBudget("a".repeat(32), grant);
+  await client.extendTaskBudget("a".repeat(32), grant);
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].url, `/api/tasks/${"a".repeat(32)}/budget`);
+  assert.equal(requests[0].options.headers["X-CSRF-Token"], "budget-csrf");
+  assert.equal(requests[0].options.headers["X-Account-ID"], "b".repeat(32));
+  assert.deepEqual(JSON.parse(requests[0].options.body), grant);
+  assert.deepEqual(JSON.parse(requests[1].options.body), grant);
+  assert.equal(JSON.parse(requests[1].options.body).request_id, JSON.parse(requests[0].options.body).request_id);
+});
+
+test("uncertain budget extension can retry only with its original id and parameters", async () => {
+  const requests = [];
+  const response = { execution: "queued", source_label: "source", config: { test_targets: ["."] },
+    state: { task_id: "c".repeat(32), status: "queued", elapsed_seconds: 1, attempt_count: 0,
+      remaining_budget: { seconds: 100, tokens: 5000, attempts: 10, cost: 0.1 }, code_evidence: [], case_matches: [] } };
+  const client = api(async (url, options) => {
+    requests.push({ url, options });
+    return requests.length === 1
+      ? { ok: false, status: 503, json: async () => ({ error: { code: "temporary_error", message: "try again" } }) }
+      : { ok: true, json: async () => response };
+  });
+  const grant = { request_id: "budget-retry-002", tokens: 7000, reason: "继续完成独立验证" };
+  await assert.rejects(client.extendTaskBudget("c".repeat(32), grant), error => error.uncertain);
+  await client.extendTaskBudget("c".repeat(32), grant);
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].url, requests[1].url);
+  assert.equal(requests[0].options.body, requests[1].options.body);
+});
+
+test("Token continuation requires a safely paused token-exhausted task with other budgets", async () => {
+  const source = ts.transpileModule(await readFile(new URL("./src/task-budget.ts", import.meta.url), "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const exports = {};
+  vm.runInNewContext(source, { exports });
+  const task = { execution: "idle", state: { status: "budget_exceeded", budget_exhausted: "tokens",
+    remaining_budget: { seconds: 100, tokens: 0, attempts: 3, cost: 0.1 } } };
+  assert.equal(exports.tokenBudgetExtensionBlocker(task), "");
+  assert.match(exports.tokenBudgetExtensionBlocker({ ...task, execution: "running" }), /仍在执行/);
+  assert.match(exports.tokenBudgetExtensionBlocker({ ...task, worker_stop_unconfirmed: true }), /未核实/);
+  assert.match(exports.tokenBudgetExtensionBlocker({ ...task, pending_external_operations: [{ operation_id: "unknown" }] }), /未核实/);
+  assert.match(exports.tokenBudgetExtensionBlocker({ ...task, progress: { run_id: "active" } }), /未核实/);
+  assert.match(exports.tokenBudgetExtensionBlocker({ ...task, progress: { pending_calls: [{ id: "model-call" }] } }), /未核实/);
+  assert.match(exports.tokenBudgetExtensionBlocker({ ...task, state: { ...task.state, remaining_budget: { ...task.state.remaining_budget, cost: 0 } } }), /费用预算也已耗尽/);
+  assert.match(exports.tokenBudgetExtensionBlocker({ ...task, state: { ...task.state, error_info: { outcome_unknown: true } } }), /未核实/);
+  assert.equal(exports.tokenBudgetExtensionBlocker({ ...task, state: { ...task.state, status: "failed" } }), "");
+  assert.equal(exports.validTokenBudgetGrant(200000, "继续验证"), true);
+  assert.equal(exports.validTokenBudgetGrant(200001, "继续验证"), false);
+  assert.equal(exports.validTokenBudgetGrant(0, "继续验证"), false);
+  assert.equal(exports.validTokenBudgetGrant(5000, "  "), false);
+});
+
 test("connection loss and invalid success body remain uncertain", async () => {
   for (const fetch of [async () => { throw new Error("offline"); }, async () => ({ ok: true, json: async () => { throw new Error("invalid JSON"); } }),
     async () => ({ ok: true, json: async () => ({ unexpected: "object" }) })]) {
