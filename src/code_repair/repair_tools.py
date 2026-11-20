@@ -1314,6 +1314,32 @@ class RepairToolbox:
         return read_code(path, workspace_root=self.workspace_root, max_bytes=max_bytes,
                          start_line=start_line, end_line=end_line)
 
+    def read_code_prefix(self, path: str, max_bytes: int, max_lines: int) -> dict[str, object]:
+        if not isinstance(max_bytes, int) or isinstance(max_bytes, bool) or max_bytes <= 0:
+            raise ValueError("max_bytes 必须是正整数")
+        if not isinstance(max_lines, int) or isinstance(max_lines, bool) or not 1 <= max_lines <= 300:
+            raise ValueError("max_lines 必须是 1–300 之间的正整数")
+        file_path = _workspace_path(self.workspace_root, path)
+        if not file_path.is_file():
+            raise RepairToolError(f"只能读取文件：{path}")
+        try:
+            with file_path.open("rb") as stream:
+                raw = stream.read(max_bytes + 1)
+        except OSError as error:
+            raise RepairToolError(f"读取文件失败：{path}（{error}）") from error
+        if len(raw) > max_bytes:
+            prefix = raw[:max_bytes]
+            if prefix.endswith(b"\r") and raw.endswith(b"\n"):
+                prefix = prefix[:-1]
+            last_break = max(prefix.rfind(b"\n"), prefix.rfind(b"\r"))
+            raw = prefix[:last_break + 1]
+        try:
+            lines = raw.decode("utf-8-sig").splitlines(keepends=True)[:max_lines]
+        except UnicodeDecodeError as error:
+            raise RepairToolError(f"文件不是有效的 UTF-8 文本：{path}") from error
+        return {"path": _relative_path(self.workspace_root, file_path),
+                "content": protect_input("".join(lines)), "end_line": len(lines)}
+
     def search_code(self, query: str, path: str = ".", max_results: int = 50) -> dict[str, object]:
         """调用工作区文本搜索工具。"""
         return search_code(query, workspace_root=self.workspace_root, path=path, max_results=max_results)

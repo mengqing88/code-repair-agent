@@ -226,6 +226,31 @@ def test_fixed_repository_has_real_code_context(tmp_path, local_models):
         assert task["state"]["code_evidence"][0]["path"] == "bug.py"
 
 
+@pytest.mark.parametrize("line", ["# 示例源码\r\n", "# " + "示" * 200 + "\r\n"])
+def test_workspace_context_reads_bounded_prefix_and_continues(tmp_path, line):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    large = workspace / "a_large.py"
+    encoded_line = line.encode("utf-8")
+    large.write_bytes(encoded_line * (110_000 // len(encoded_line) + 1))
+    (workspace / "b_long_line.py").write_bytes(b"#" * 110_000 + b"\n")
+    (workspace / "c_target.py").write_bytes(CODE.encode())
+
+    runner = app_at(tmp_path / "data").state.runner
+    state = create_initial_state("large-workspace", {"type": "git_repository"}, "Python add returns the wrong value")
+    task = {"state": state, "config": {"workspace": str(workspace), "source_root": str(workspace),
+            "allowed_paths": ["."], "test_targets": ["."], "checkpoint": None}}
+    evidence = runner.services(task).collect_context(state)["code_evidence"]
+
+    assert [item["path"] for item in evidence] == ["a_large.py", "c_target.py"]
+    assert evidence[0]["start_line"] == 1
+    assert evidence[0]["end_line"] == min(60, 4_000 // len(encoded_line))
+    assert evidence[0]["quote"] == line * evidence[0]["end_line"]
+    assert len(evidence[0]["quote"].encode("utf-8")) <= 4_000
+    assert evidence[1]["quote"] == CODE
+    assert large.stat().st_size > 100_000
+
+
 def test_imported_repair_experience_guides_real_patch_workflow(tmp_path, local_models, monkeypatch):
     """导入历史案例后，真实任务召回来源并在补丁诊断中引用固定版本。"""
     from code_repair import repair_workflow

@@ -173,6 +173,16 @@ def test_line_read_schema_permissions_and_hashes(tmp_path):
     assert data["content"] == "line-250\r\nline-251\r\nline-252\r\n"
     assert data["line_count"] == 500
     assert data["content_sha256"] == source_digest(data["content"])
+    toolbox = RepairToolbox(tmp_path)
+    prefix = toolbox.read_code_prefix("large.py", max_bytes=20, max_lines=2)
+    assert prefix["content"] == "line-1\r\nline-2\r\n"
+    assert prefix["end_line"] == 2
+    with pytest.raises(RepairToolError):
+        toolbox.read_code_prefix("../outside.py", max_bytes=20, max_lines=2)
+    with pytest.raises(ValueError):
+        toolbox.read_code_prefix("large.py", max_bytes=0, max_lines=2)
+    with pytest.raises(ValueError):
+        toolbox.read_code_prefix("large.py", max_bytes=20, max_lines=301)
     with pytest.raises(RepairToolError):
         read_code("../outside.py", workspace_root=tmp_path, start_line=1, end_line=2)
     for arguments in ({"start_line": 2}, {"start_line": 5, "end_line": 3},

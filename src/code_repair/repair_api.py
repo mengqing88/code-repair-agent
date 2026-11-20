@@ -1211,22 +1211,32 @@ class RepairRunner:
         def context(state):
             result = toolbox.collect_context_for_state(state, include_experience=False)
             if not result["code_evidence"]:
-                size = 0
+                remaining_bytes = 100_000
                 from code_repair.language_support import is_code_path
                 for path in sorted(workspace.rglob("*")):
+                    if remaining_bytes <= 0:
+                        break
                     if not path.is_file() or not is_code_path(path):
                         continue
                     relative = path.relative_to(workspace)
                     if any(part.startswith(".") or part in ("work", "node_modules", "__pycache__", "venv")
                            for part in relative.parts):
                         continue
-                    data = toolbox.read_code(relative.as_posix(), max_bytes=100_000)
+                    if path.stat().st_size <= remaining_bytes:
+                        read_limit = remaining_bytes
+                        data = toolbox.read_code(relative.as_posix(), max_bytes=read_limit)
+                        reason = "固定工作区源码"
+                    else:
+                        read_limit = min(4_000, remaining_bytes)
+                        data = toolbox.read_code_prefix(relative.as_posix(), max_bytes=read_limit, max_lines=60)
+                        reason = "固定工作区源码前缀，可按行回查其余内容"
                     quote = str(data["content"])
-                    if size + len(quote) > 100_000:
-                        break
-                    size += len(quote)
-                    result["code_evidence"].append({"path": relative.as_posix(), "start_line": 1,
-                        "end_line": max(1, len(quote.splitlines())), "quote": quote, "reason": "固定工作区源码"})
+                    size = len(quote.encode("utf-8"))
+                    if not size or size > read_limit:
+                        continue
+                    remaining_bytes -= size
+                    result["code_evidence"].append({"path": data["path"], "start_line": 1,
+                        "end_line": data["end_line"], "quote": quote, "reason": reason})
             return result
 
         def validate(state):
