@@ -110,6 +110,25 @@ def test_replay_marks_unclosed_calls_incomplete(frozen):
     assert result["status"] == "incomplete" and result["unclosed_calls"]
 
 
+def test_replay_compares_redacted_checkpoints_without_ignoring_validation_drift(frozen):
+    from code_repair.resilience import trace
+
+    task, directory, _ = frozen
+    task["state"].update(status="needs_input", awaiting_node="baseline_reproduction",
+                         validation={"passed": True, "stdout": "See https://example.com/pytest-warnings"})
+    trace("checkpoint", "committed", path=directory / "trace.jsonl",
+          result={"state": task["state"], "next_node": "finish"}, details={"node": "baseline_reproduction"})
+
+    result = replay(task, directory)
+    assert result["state"]["validation"]["stdout"] == "See [redacted-url]"
+    assert result["status"] == "replayed", result["differences"]
+
+    task["state"]["validation"]["passed"] = False
+    result = replay(task, directory)
+    assert result["status"] == "diverged"
+    assert result["differences"] == [{"field": "validation", "reason": "final_state_differs"}]
+
+
 def test_manifest_cannot_be_silently_overwritten(frozen):
     task, directory, manifest = frozen
     original = (directory / "execution-manifest.json").read_bytes()

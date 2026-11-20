@@ -294,6 +294,7 @@ def _run_repair_workflow(
     project_root: Path,
 ) -> tuple[RepairState, Path, str]:
     from code_repair.recovery_store import ServiceLock
+    project_root = project_root.resolve()
     root = project_root / "work"
     root.mkdir(parents=True, exist_ok=True)
     lock = ServiceLock(root)

@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from code_repair.execution_manifest import sha256, verify, write_once
 from code_repair.resilience import digest, Fault
+from code_repair.trace_store import safe_trace_data
 
 
 def events_at(directory):
@@ -75,8 +76,9 @@ def replay(task, directory):
     # Only compare fields committed by nodes. Wall time/accounting are settled again by the worker.
     keys = ("status", "patch_hash", "diagnosis", "patch_diff", "validation", "attempt_count", "memory_saved")
     if steps:
+        trace_state = safe_trace_data({key: task["state"].get(key) for key in keys})
         differences.extend({"field": key, "reason": "final_state_differs"}
-                           for key in keys if state.get(key) != task["state"].get(key))
+                           for key in keys if state.get(key) != trace_state[key])
     from code_repair.workflow_replay import replay_recording
     node_replays = []
     for event in records:

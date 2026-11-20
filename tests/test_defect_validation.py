@@ -283,7 +283,9 @@ class DefectValidationTests(unittest.TestCase):
                 10, 20, 30, 0.01,
             )),
         ):
-            result, workspace, _ = _run_repair_workflow(args, check_source(args), args.error_text, source)
+            result, workspace, _ = _run_repair_workflow(
+                args, check_source(args), args.error_text, source / ".." / source.name,
+            )
         self.assertEqual(result["status"], "reviewable")
         self.assertEqual(result["validation"]["reproduction"]["stdout"].splitlines(), ["2"])
         self.assertIn("value = expected - 1", original.read_text(encoding="utf-8"))
