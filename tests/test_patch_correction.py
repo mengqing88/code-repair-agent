@@ -203,6 +203,30 @@ def test_model_prompt_contains_git_diagnostic_and_rejected_patch(repair):
     assert llm_propose_patch(corrected, model_call=model)["patch_diff"] == GOOD
 
 
+def test_patch_prompt_requires_context_on_both_sides_of_interior_edit(repair):
+    from code_repair.repair_workflow import llm_propose_patch
+
+    root, _, state, _, _ = repair
+    target = root / "target.py"
+    original = "before = 0\nvalue = 1\nafter = 3\n"
+    target.write_bytes(original.encode("utf-8"))
+    incomplete = "--- a/target.py\n+++ b/target.py\n@@ -1,2 +1,2 @@\n before = 0\n-value = 1\n+value = 2\n"
+    complete = incomplete.replace("@@ -1,2 +1,2 @@", "@@ -1,3 +1,3 @@") + " after = 3\n"
+    with pytest.raises(repair_tools.PatchFormatError, match="patch does not apply"):
+        apply_patch(incomplete, workspace_root=root, allowed_paths=("target.py",))
+    assert target.read_bytes() == original.encode("utf-8")
+
+    def model(prompt):
+        assert "每个 hunk 在改动前后各保留 3 行未变的基线原文" in prompt
+        assert "文件中间的改动必须保留末尾上下文" in prompt
+        return json.dumps({"diagnosis": "修正默认值", "patch_diff": complete, "question": "",
+                           "clarification_required": False, "clarification_reasons": []})
+
+    result = llm_propose_patch(state, model_call=model)
+    apply_patch(result["patch_diff"], workspace_root=root, allowed_paths=("target.py",))
+    assert target.read_bytes() == original.replace("value = 1", "value = 2").encode("utf-8")
+
+
 def test_new_task_and_evaluation_defaults_are_twenty_minutes():
     from code_repair.repair_api import TaskInput
     from evaluation.run_agent_ab import BUDGET
